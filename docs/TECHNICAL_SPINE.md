@@ -6,6 +6,18 @@ The sequence below is organized by changes in what `retention` technically requi
 
 ## 0. Retained position before electronic computing
 
+### First case
+
+- [`Abacus as Retained Position`](../cases/00-abacus-retained-position.md) — **first-pass**.
+
+The first case already sharpens several distinctions that should remain visible throughout the repository:
+
+- a retained state can be operational without being archival;
+- `state retention` is not `history retention`;
+- physical persistence is insufficient if the interpretation or procedural context is lost;
+- selection, interpretation, protection, validation, and reset can be human labor before they become machine functions;
+- `register-like` is acceptable only as a bounded functional analogy, not as historical vocabulary or genealogy.
+
 ### Candidate cases
 
 - tally marks and durable inscription;
@@ -21,6 +33,8 @@ The sequence below is organized by changes in what `retention` technically requi
 - What makes an intermediate state stable enough to be resumed?
 - What is the difference between a human-readable mark and a machine-operational state?
 - When does a retained configuration become directly actionable by machinery?
+- When does `working retention` become too broad a category to remain useful?
+- What additional mechanism is required to preserve not only the current state but the history that produced it?
 
 ### Caution
 
@@ -47,6 +61,7 @@ This is an important challenge to the intuitive picture of storage as a thing si
 - Is storage a spatial location, a recurring temporal position, or both?
 - How does waiting become address geometry?
 - What work is necessary to keep circulation stable?
+- Does a recirculating memory retain only current state, or can its circulation itself expose a temporal history?
 
 ### Existing technical evidence
 
@@ -71,6 +86,7 @@ The retained state is not simply durable. Persistence is produced by **periodic 
 - At what point does repair become constitutive of persistence rather than an exceptional maintenance event?
 - Is the `same bit` still the same retained state after repeated restoration?
 - What temporal assumptions are hidden by a stable address interface?
+- Does restoration preserve identity, or repeatedly recreate an equivalent state?
 
 ---
 
@@ -92,6 +108,7 @@ A physical substrate can retain a distinction without continuous power, but acce
 - What does `nonvolatile` hide?
 - Which parts persist without power, and which metadata or control systems must survive for the retained state to be useful?
 - How do sequential and random access change the meaning of `having` information?
+- How does destructive read in core complicate the intuitive opposition between passive persistence and active maintenance?
 
 ---
 
@@ -116,6 +133,7 @@ Modern computers deliberately combine multiple retention mechanisms because no s
 - How is `memory` divided into temporal tiers?
 - What does the hierarchy ask software to forget about physical differences?
 - Which retained states exist only for nanoseconds, milliseconds, process lifetimes, boot lifetimes, or years?
+- Which levels retain only current state, and which systems add separate history-retention mechanisms such as logs or snapshots?
 
 ### Existing gap to coordinate
 
@@ -150,6 +168,7 @@ This is a major transition in the ontology of the retained object:
 - What exactly remains invariant across remapping?
 - How much hidden maintenance is needed to sustain the fiction of stable blocks?
 - What does deletion mean when logical invalidation and physical erasure are separated?
+- Can a physical trace survive after the logical state has been declared forgotten?
 
 ---
 
@@ -176,6 +195,7 @@ Software introduces additional retention semantics that may be more important to
 - When does a write count as having happened?
 - How is past state reconstructed after interruption?
 - How do logical histories coexist with destructive physical rewrites?
+- At what point do logs, journals, snapshots, and version stores become explicit **history-retention** systems rather than merely state-retention systems?
 
 ---
 
@@ -205,6 +225,7 @@ Persistence becomes a property of **protocol + redundancy + repair + identity ru
 - How much disagreement can exist before the object is no longer well-defined?
 - Is repair a background operation or part of the definition of persistence?
 - Can `durability` be probabilistic rather than absolute?
+- Which distributed systems retain current consensus state, and which retain the history needed to reconstruct or audit it?
 
 ---
 
@@ -231,6 +252,7 @@ Long-lived storage is often not a long-lived medium. It is a **migration regime*
 - What survives when every physical carrier is eventually replaced?
 - Which metadata, formats, software, keys, interfaces, organizations, and skills must also be retained?
 - When is `preservation` really repeated re-creation?
+- Can a bitstream survive while its interpretation becomes technically forgotten?
 
 ---
 
@@ -254,6 +276,8 @@ Every stage should eventually be mapped against:
 - location stability;
 - identity semantics;
 - deletion semantics;
+- state retention versus history retention;
+- interpretation / context dependence;
 - migration;
 - labor and infrastructure.
 
