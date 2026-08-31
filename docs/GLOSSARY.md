@@ -161,9 +161,53 @@ A read operation that disturbs or destroys the stored physical state and therefo
 
 Maintenance of logical identity while the physical location that embodies that identity changes.
 
-Examples include bad-sector replacement and Flash Translation Layers.
+Examples include bad-sector replacement and Flash address-translation systems.
 
 Remapping is central to the distinction between **identity persistence** and **location persistence**.
+
+Case 04 adds an important refinement: remapping metadata may itself be part of the retained state needed to decide which physical embodiment currently counts.
+
+## logical invalidation
+
+A change in metadata or allocation state by which a physical embodiment ceases to count as the current logical object, even though the underlying physical region has not necessarily been erased or destroyed.
+
+In the bounded 1993 M-Systems Flash case, a block can be marked `deleted and not writable` while the containing erase unit remains physically unerased until later reclamation.
+
+Do not assume that logical invalidation implies forensic recoverability. It establishes a semantic/architectural distinction from physical erasure, not a universal recovery result.
+
+## physical erasure
+
+A medium-specific operation that materially resets or destroys a previously retained physical state.
+
+Examples include:
+
+- electrically erasing a Flash erase unit;
+- degaussing or overwriting magnetic media, depending on the bounded mechanism;
+- physically destroying a carrier.
+
+Physical erasure must be kept separate from:
+
+- file deletion;
+- unlinking;
+- address deallocation;
+- controller invalidation;
+- key destruction;
+- policy expiration.
+
+Those operations may make data unavailable without performing the same physical transformation.
+
+## reclamation
+
+Maintenance that recovers storage capacity previously occupied by obsolete / invalid state while preserving state that still counts as current.
+
+A reclamation cycle may include:
+
+1. identifying a region containing a mixture of current and obsolete state;
+2. copying or reconstructing the current state elsewhere;
+3. erasing / freeing the old region;
+4. updating identity or allocation metadata.
+
+The term is broader than any one implementation's `garbage collection` algorithm. Do not use the two as automatic historical synonyms.
 
 ## migration
 
@@ -196,6 +240,15 @@ Maintenance may be performed by:
 - facilities;
 - preservation institutions.
 
+Maintenance triggers can differ. Current cases expose at least:
+
+- continuous maintenance (delay-line circulation);
+- access-triggered restoration (classic destructive-read core);
+- deadline-driven scheduled maintenance (DRAM refresh);
+- capacity/reclaim-triggered maintenance (mapped Flash).
+
+These categories remain provisional until more cases test them.
+
 ## technical forgetting
 
 Loss, invalidation, or inaccessibility of retained state through a specific mechanism.
@@ -209,10 +262,10 @@ Candidate mechanisms include:
 - refresh failure;
 - overwrite;
 - erase;
-- logical deletion;
-- garbage collection;
+- logical invalidation / deletion;
+- reclamation;
 - index loss;
-- metadata loss;
+- mapping or metadata loss;
 - key destruction;
 - corruption;
 - bit rot;
@@ -224,7 +277,7 @@ Candidate mechanisms include:
 
 The condition in which retained state can actually be called upon for use.
 
-A state may physically survive while becoming unavailable because its index, key, interface, software, interpretation, or institutional context has been lost.
+A state may physically survive while becoming unavailable because its index, map, key, interface, software, interpretation, or institutional context has been lost.
 
 Do not equate this working technical term with Heidegger's `Bestand`.
 
