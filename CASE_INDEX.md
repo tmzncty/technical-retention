@@ -60,7 +60,7 @@ A claim may have more than one label, for example `H/P` or `E/A`.
 | Case | Status | Retention regime | Main methodological use | Next work |
 | --- | --- | --- | --- | --- |
 | [Abacus as Retained Position](cases/00-abacus-retained-position.md) | **first-pass** | passive mechanical position + human interpretation | test `register-like` analogy; separate working state from archive; recover period vocabulary | facsimile folio locations; older counting-rod vocabulary; non-Chinese comparison |
-| Mercury delay-line memory | scouted | recirculation | persistence as continuous motion; time as address geometry | reuse `computing-archaeology` evidence + primary technical papers/manuals |
+| [Mercury Delay-Line Memory: Retention as Circulation](cases/01-mercury-delay-line-circulation.md) | **first-pass** | recirculation + regeneration | persistence as continuous activity; time as access geometry; identity through re-creation | exact patent/page anchors; direct 1949 IRE inspection; temperature-control primary source |
 | Magnetic core memory | scouted | remanence + destructive read/rewrite | nonvolatility, destructive read, maintenance labor | primary manuals/patents and core-weaving sources |
 | DRAM | scouted | decaying charge + refresh | persistence as scheduled restoration | coordinate technical history with `computing-archaeology` |
 | Flash / SSD | scouted | trapped charge + controller remapping | identity without location; deletion vs erasure; endurance | FTL/controller primary technical sources |
@@ -75,13 +75,23 @@ This matrix should become more precise as cases mature.
 | Case | State substrate | Active retention work | Read | Addressing | Location stability | History retained by default? |
 | --- | --- | --- | --- | --- | --- | --- |
 | Abacus | bead position | mostly human protection / interpretation | nondestructive visual/manual | spatial column selected by user | high during one configuration | no |
-| Delay line | propagating pulse pattern | continuous circulation / regeneration | temporally gated | temporal slot | not meaningfully static | no |
+| Delay line | propagating pulse pattern | continuous circulation / regeneration / retiming | electronically sensed; state continues by recirculation | temporal slot + index | not meaningfully static | no |
 | Magnetic core | magnetization | little while idle; restore after destructive read | destructive in classic core | matrix selection | high at core location | no |
 | DRAM | capacitor charge | periodic refresh | sense + restore | row/column | high at logical cell while powered | no |
 | SSD | Flash cell states behind FTL | ECC, remapping, GC, wear leveling | controller-mediated | logical block/page | deliberately unstable physically | usually no |
 | Replicated object storage | multiple copies / coded fragments + metadata | repair, replication, consistency machinery | protocol-mediated | logical key | no privileged copy required | implementation-dependent |
 
-Do not treat blank or simplified cells as conclusions. The matrix is a question generator, not a benchmark table.
+---
+
+## Cross-case findings already supported
+
+After only two first-pass cases, three distinctions are already useful enough to carry forward:
+
+1. **state retention ≠ history retention** — both the abacus and delay line preserve current working state without automatically preserving the sequence that produced it;
+2. **retention mechanism ≠ apparent persistence** — one state sits still; the other survives by continual circulation and re-creation;
+3. **identity of logical state ≠ identity of physical token** — especially in the delay line, logical sameness survives repeated regeneration of the physical signal.
+
+These are provisional cross-case findings, not final philosophical conclusions.
 
 ---
 
