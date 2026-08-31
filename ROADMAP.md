@@ -55,9 +55,15 @@ Recommended first set:
    - [ ] promote from `first-pass` to `grounded` only after source deepening.
 
 4. **DRAM**
-   - retention as scheduled refresh;
-   - stable addresses over unstable charge;
-   - hierarchy and latency.
+   - [x] first-pass case: [`cases/03-dram-refresh-as-scheduled-restoration.md`](cases/03-dram-refresh-as-scheduled-restoration.md);
+   - [x] use Dennard's 1967-filed patent to establish the one-transistor / one-capacitor retained state, leakage, destructive read, and periodic regeneration;
+   - [x] distinguish **access-triggered restore** from **time-triggered regeneration**;
+   - [x] record exact patent-page anchors for the central claims;
+   - [x] use Intel 1103 manufacturer documentation as a boundary showing dynamic storage + nondestructive read + mandatory refresh;
+   - [x] avoid treating Intel 1103 as an implementation of Dennard's exact 1T1C cell;
+   - [ ] add an early commercial 1T1C datasheet/manual and primary sense-amplifier / restore evidence;
+   - [ ] coordinate a full semiconductor-memory history with `computing-archaeology` rather than expanding this case into a general DRAM survey;
+   - [ ] promote from `first-pass` to `grounded` only after source deepening.
 
 5. **Flash / SSD**
    - erase blocks, endurance, ECC, FTL, wear leveling, garbage collection;
@@ -71,9 +77,9 @@ Recommended first set:
 
 A first synthesis should be attempted only after at least four of these cases have primary technical evidence and reach `grounded` status in [`CASE_INDEX.md`](CASE_INDEX.md).
 
-### Results already exposed by Cases 00–02
+### Results already exposed by Cases 00–03
 
-The first three cases support several distinctions that should be tested across later systems:
+The first four cases support several distinctions that should be tested across later systems:
 
 > **state retention is not history retention.**
 
@@ -81,19 +87,27 @@ A system may keep a current state available for later use while preserving none 
 
 > **retention does not require one kind of physical persistence.**
 
-An abacus state persists by remaining in place; a delay-line state persists by circulation, regeneration, and retiming; a magnetic-core state can remain as remanent magnetization after the selecting excitation is removed.
+An abacus state persists by remaining in place; a delay-line state persists by circulation, regeneration, and retiming; a magnetic-core state can remain as remanent magnetization after the selecting excitation is removed; a DRAM state can survive only for a bounded interval before regeneration.
 
 > **logical identity can survive physical re-creation.**
 
-The delay line shows identity through recurrent signal regeneration. Classic destructive-read core adds a second mechanism: the bit may be sensed by forcing the core into a known state and then recreated by rewrite.
+The delay line shows identity through recurrent signal regeneration. Classic destructive-read core adds sensing followed by re-creation. DRAM adds scheduled regeneration of a decaying electrical state even when useful access has not occurred.
 
 > **idle nonvolatility is not read invariance.**
 
-Magnetic core exposes a useful distinction between a state remaining physically stable while unattended and a state remaining unchanged when accessed. A storage system can be passive in one temporal regime and actively restorative in another.
+Magnetic core exposes a useful distinction between a state remaining physically stable while unattended and a state remaining unchanged when accessed.
 
 > **access can create maintenance work.**
 
-In classic destructive-read core, successful reading itself can create the obligation to restore the prior value. Later cases should test whether DRAM read restoration, Flash read disturb, copy-on-write, and distributed repair are genuinely comparable or only superficially similar.
+Classic destructive-read core and Dennard's bounded 1T1C embodiment can require immediate restore after successful reading.
+
+> **time can create maintenance work.**
+
+DRAM adds a separate obligation: leakage creates a deadline, so the system must revisit retained state even when nobody asks to read it.
+
+> **dynamic retention is not identical to destructive read.**
+
+Dennard's patent disclosed nondestructive alternatives, and Intel 1103 documentation combines nondestructive read with mandatory periodic refresh. Later agents must keep `dynamic`, `destructive`, and `volatile` separate rather than using them as synonyms.
 
 ## Phase 2 — Build the missing technical bridges
 
@@ -124,7 +138,7 @@ Research problems:
 - What is the difference between state, memory, store, archive, log, file, record, and trace?
 - Does `working retention` name a useful cross-period category, or is it too broad?
 - Does `recurrence` deserve a separate controlled term from `refresh`?
-- Should the project distinguish **quiescent retention** from **access-cycle retention** as controlled terms, or can the distinction remain descriptive?
+- Should the project distinguish **quiescent retention**, **continuous maintenance**, **access-triggered restoration**, and **deadline-driven maintenance** as controlled terms, or can the distinctions remain descriptive?
 
 This phase should engage Ernst directly and use concrete mechanisms rather than terminology alone.
 
@@ -168,6 +182,14 @@ Case 02 adds access-mediated loss:
 - sensing or drive failure while the magnetic material itself may remain capable of retention;
 - surrounding-system drift outside a safe operating region.
 
+Case 03 adds deadline-mediated loss:
+
+- leakage beyond the recoverable interval;
+- missed or late regeneration;
+- sense error followed by restoration of the wrong logical value;
+- temperature shortening a safe retention interval;
+- failure of shared refresh/timing infrastructure affecting many cells.
+
 ## Phase 5 — Maintenance and invisible work
 
 Study why persistence appears static even when it depends on activity.
@@ -190,13 +212,14 @@ Cases may include:
 
 Coordinate labor and manufacturing evidence with existing repositories where relevant.
 
-The first three cases now provide three different maintenance baselines:
+The first four cases now provide four maintenance baselines:
 
 - in the abacus, selection, interpretation, protection, reset, and validation remain visible operator labor;
 - in the delay line, preservation, indexing, correction, and timing migrate into automatic circuitry and continuous process;
-- in magnetic core, the element can retain state at rest while surrounding circuitry assumes maintenance obligations during selection, sensing, and restore.
+- in magnetic core, the element can retain state at rest while surrounding circuitry assumes maintenance obligations during selection, sensing, and restore;
+- in DRAM, small per-bit state is made viable by shared sensing and a recurring schedule that revisits state before its physical deadline expires.
 
-This shift among **human maintenance**, **continuous process maintenance**, and **access-triggered restoration** should remain a major comparative axis.
+This shift among **human maintenance**, **continuous process maintenance**, **access-triggered restoration**, and **deadline-driven scheduled maintenance** should remain a major comparative axis.
 
 ## Phase 6 — Philosophical synthesis
 
