@@ -64,7 +64,7 @@ A claim may have more than one label, for example `H/P` or `E/A`.
 | [Magnetic Core Memory: Retention at Rest, Destruction in Reading](cases/02-magnetic-core-destructive-read.md) | **first-pass** | remanence + destructive read / restore | separate idle nonvolatility from read invariance; show access itself can create a retention obligation | exact patent/page anchors; full Papian paper; machine-specific MTC/Whirlwind read–restore source; nondestructive-read boundary |
 | [DRAM Refresh as Scheduled Restoration](cases/03-dram-refresh-as-scheduled-restoration.md) | **first-pass** | decaying charge + periodic regeneration; destructive-read restore in bounded 1T1C embodiment | separate time-triggered maintenance from access-triggered restore; stable logical address over a physical state with a deadline | add an early commercial 1T1C datasheet/manual; deepen sense-amplifier/restore primary evidence; coordinate full history with `computing-archaeology` |
 | [Flash Virtual Mapping: Logical Identity Without Physical Location](cases/04-flash-virtual-mapping-logical-identity.md) | **first-pass** | nonvolatile Flash + virtual/logical/physical mapping + deferred reclamation | identity persistence without location persistence; logical invalidation vs physical erase; mapping metadata as retained state | patent PDF anchors; full Masuoka 1987 paper; early Flash/NAND datasheet; first explicit FTL terminology; wear-leveling source |
-| [RADOS Replicated Objects: Retention by Replica Agreement and Repair](cases/05-rados-replicated-object-repair.md) | **first-pass** | n-way replication + versioned primary authority + failure-triggered repair | currentness beyond copy multiplicity; no permanently privileged physical home; repair-triggered retention; ack vs durable commit | inspect OSDI/CRUSH PDFs; compare 2007 RADOS paper; contemporaneous implementation artifact for PG peering/recovery |
+| [RADOS Replicated Objects: Retention by Replica Agreement and Repair](cases/05-rados-replicated-object-repair.md) | **grounded** | n-way replication + versioned primary authority + failure-triggered repair | currentness beyond copy multiplicity; no permanently privileged physical home; repair-triggered retention; ack vs durable commit | [2006–2007 grounding record](evidence/05-rados-2006-2007-grounding.md); future work should be narrow semantic/version archaeology rather than generic Ceph expansion |
 
 ---
 
@@ -79,13 +79,13 @@ This matrix should become more precise as cases mature.
 | Magnetic core | remanent magnetization | little merely to remain at rest; active restore after classic destructive read | destructive in the bounded classic case, followed by rewrite when logical value must persist | coincident coordinate selection | high at the selected core | no |
 | DRAM | capacitor / storage-node charge | periodic regeneration because of leakage; restore after destructive read in the bounded Dennard 1T1C embodiment | destructive in the bounded 1T1C case; dynamic memory can also have nondestructive reads | word/bit-line selection | logical cell stable while physical charge is repeatedly renewed | no |
 | Mapped Flash | nonvolatile cell state + allocation/mapping metadata | out-of-place update, map maintenance, transfer/reclamation; later NAND adds ECC/wear/GC layers | map-mediated read of current physical embodiment | virtual/logical address translated to physical location | deliberately unstable under rewrite/reclaim | usually no; stale physical embodiments may cease to count before erase |
-| RADOS | multiple object replicas + cluster map + PG/version/recovery state | replication, failure detection, peering, re-replication, migration/recovery | primary-mediated in bounded 2006 design; stale copies are not automatically authoritative | object → PG → CRUSH + current cluster map → ordered OSD set | no permanently privileged physical home | no by default; recent PG logs retain bounded recovery history |
+| RADOS | multiple object replicas + cluster map + PG/version/recovery state | replication, failure detection, peering, re-replication, migration/recovery | protocol-authorized current replica; exact read role depends on replication scheme | object → PG → CRUSH + current cluster map → ordered OSD set | no permanently privileged physical home | no by default; PG logs retain bounded recovery history and can be guarded separately from every replica |
 
 ---
 
 ## Cross-case findings already supported
 
-After six first-pass cases, several distinctions are useful enough to carry forward:
+After six bounded cases, several distinctions are useful enough to carry forward. RADOS is the first case to reach `grounded`; the other five remain `first-pass`, so cross-case synthesis must still remain provisional.
 
 1. **state retention ≠ history retention** — all six cases preserve current working state without automatically preserving the complete sequence that produced it;
 2. **retention mechanism ≠ apparent persistence** — an abacus configuration can sit still, a delay-line pattern survives by continual circulation, a core can remain magnetized at rest, a DRAM cell survives for a bounded interval before scheduled regeneration, mapped Flash can preserve a logical object while relocating its physical embodiment, and RADOS can preserve an object while replica membership changes;
@@ -99,8 +99,10 @@ After six first-pass cases, several distinctions are useful enough to carry forw
 10. **metadata can be constitutive of retention** — in mapped Flash, maps/allocation state identify the current embodiment; in RADOS, cluster-map, placement, version, and recovery state help establish which replicas currently count;
 11. **maintenance can be space/reclaim-triggered** — a nonvolatile medium may still require deferred copying and erasure so repeated logical rewrites can continue;
 12. **replica multiplicity ≠ retained currentness** — several physical copies may exist while only a version-consistent subset represents the current ordered state;
-13. **maintenance can be failure/repair-triggered** — distributed redundancy can degrade after membership failure and be restored by reconstructing current state onto replacement members;
-14. **logical success ≠ durable commit** — the bounded 2006 RADOS design distinguishes replicated in-memory acknowledgement from later persistent-media commit, exposing protocol-defined retention thresholds.
+13. **maintenance can be failure/repair-triggered** — distributed redundancy can degrade after failure or membership change and be restored by reconstructing current state onto replacement members;
+14. **logical success ≠ durable commit** — the bounded 2006 RADOS design distinguishes replicated in-memory acknowledgement from later persistent-media commit, and the contemporaneous 2007 dissertation preserves this distinction across the expanded replication discussion;
+15. **retention of currentness metadata can be guarded separately from every material replica** — the 2007 RADOS paper explicitly protects PG logs describing what a PG should contain even while object replicas may remain missing during background recovery;
+16. **readability ≠ authorized currentness** — the 2007 RADOS design makes map-epoch and heartbeat state part of deciding whether an otherwise reachable replica may safely answer a read.
 
 These are provisional cross-case findings, not final philosophical conclusions.
 
@@ -120,4 +122,4 @@ The current gate remains:
 - at least one case where logical identity survives loss/replacement of a replica member;
 - philosophical comparison must be performed after, not instead of, mechanism reconstruction.
 
-The first-pass case set now satisfies the **variety** side of this gate, including physical relocation and distributed repair. It does **not** satisfy the evidence-maturity side: no case should be promoted to synthesis merely because six first passes now exist.
+Current evidence-maturity count: **1 / 4 required grounded cases**. The RADOS case is the first grounded case. The first-pass set already satisfies the variety side of the gate, including physical relocation and distributed repair, but it does not yet satisfy the evidence-maturity side.
