@@ -41,9 +41,18 @@ Recommended first set:
    - [ ] promote from `first-pass` to `grounded` only after source deepening.
 
 3. **Magnetic core memory**
-   - remanence;
-   - destructive read and rewrite;
-   - nonvolatility without effortless access.
+   - [x] first-pass case: [`cases/02-magnetic-core-destructive-read.md`](cases/02-magnetic-core-destructive-read.md);
+   - [x] remanence as quiescent retention without periodic refresh;
+   - [x] destructive read and rewrite as an access-cycle retention problem;
+   - [x] establish primary vocabulary and mechanism through Forrester's 1951-filed patent;
+   - [x] add contemporary evidence from Papian (1952) for remanent-flux retention under repeated nonselecting disturbances;
+   - [x] add operational evidence from Widrow's 1953 MTC testing memorandum for safe operating margins and memory-cycle reliability;
+   - [x] distinguish idle nonvolatility from read invariance;
+   - [ ] inspect the patent PDF directly and add exact page / figure anchors;
+   - [ ] inspect the full Papian 1952 IRE paper directly;
+   - [ ] add a machine-specific primary MTC / Whirlwind document showing implemented read–restore sequencing;
+   - [ ] add a narrow primary source on nondestructive-read core to bound the case;
+   - [ ] promote from `first-pass` to `grounded` only after source deepening.
 
 4. **DRAM**
    - retention as scheduled refresh;
@@ -62,21 +71,29 @@ Recommended first set:
 
 A first synthesis should be attempted only after at least four of these cases have primary technical evidence and reach `grounded` status in [`CASE_INDEX.md`](CASE_INDEX.md).
 
-### Results already exposed by Cases 00–01
+### Results already exposed by Cases 00–02
 
-The first two cases support several distinctions that should be tested across later systems:
+The first three cases support several distinctions that should be tested across later systems:
 
 > **state retention is not history retention.**
 
 A system may keep a current state available for later use while preserving none of the sequence that produced it. Later cases should explicitly ask when separate logs, journals, snapshots, traces, or versions appear to retain history rather than only current state.
 
-> **retention does not require physical stillness.**
+> **retention does not require one kind of physical persistence.**
 
-An abacus state persists by remaining in place; a delay-line state persists by circulation, regeneration, and retiming.
+An abacus state persists by remaining in place; a delay-line state persists by circulation, regeneration, and retiming; a magnetic-core state can remain as remanent magnetization after the selecting excitation is removed.
 
 > **logical identity can survive physical re-creation.**
 
-The delay line already shows a weak but important form of substrate discontinuity: a stable logical pattern can persist through successive regenerated physical signals.
+The delay line shows identity through recurrent signal regeneration. Classic destructive-read core adds a second mechanism: the bit may be sensed by forcing the core into a known state and then recreated by rewrite.
+
+> **idle nonvolatility is not read invariance.**
+
+Magnetic core exposes a useful distinction between a state remaining physically stable while unattended and a state remaining unchanged when accessed. A storage system can be passive in one temporal regime and actively restorative in another.
+
+> **access can create maintenance work.**
+
+In classic destructive-read core, successful reading itself can create the obligation to restore the prior value. Later cases should test whether DRAM read restoration, Flash read disturb, copy-on-write, and distributed repair are genuinely comparable or only superficially similar.
 
 ## Phase 2 — Build the missing technical bridges
 
@@ -107,6 +124,7 @@ Research problems:
 - What is the difference between state, memory, store, archive, log, file, record, and trace?
 - Does `working retention` name a useful cross-period category, or is it too broad?
 - Does `recurrence` deserve a separate controlled term from `refresh`?
+- Should the project distinguish **quiescent retention** from **access-cycle retention** as controlled terms, or can the distinction remain descriptive?
 
 This phase should engage Ernst directly and use concrete mechanisms rather than terminology alone.
 
@@ -143,6 +161,13 @@ Case 01 adds process-failure modes:
 - failed regeneration;
 - environmental drift that destroys the timing relation even though the apparatus remains physically present.
 
+Case 02 adds access-mediated loss:
+
+- destructive read without successful rewrite;
+- half-select disturbance;
+- sensing or drive failure while the magnetic material itself may remain capable of retention;
+- surrounding-system drift outside a safe operating region.
+
 ## Phase 5 — Maintenance and invisible work
 
 Study why persistence appears static even when it depends on activity.
@@ -165,12 +190,13 @@ Cases may include:
 
 Coordinate labor and manufacturing evidence with existing repositories where relevant.
 
-The first two cases already form a useful baseline:
+The first three cases now provide three different maintenance baselines:
 
 - in the abacus, selection, interpretation, protection, reset, and validation remain visible operator labor;
-- in the delay line, preservation, indexing, correction, and timing migrate into automatic circuitry.
+- in the delay line, preservation, indexing, correction, and timing migrate into automatic circuitry and continuous process;
+- in magnetic core, the element can retain state at rest while surrounding circuitry assumes maintenance obligations during selection, sensing, and restore.
 
-This shift from **visible human maintenance** to **hidden machine maintenance** should remain a major comparative axis.
+This shift among **human maintenance**, **continuous process maintenance**, and **access-triggered restoration** should remain a major comparative axis.
 
 ## Phase 6 — Philosophical synthesis
 
