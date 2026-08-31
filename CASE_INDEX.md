@@ -61,7 +61,7 @@ A claim may have more than one label, for example `H/P` or `E/A`.
 | --- | --- | --- | --- | --- |
 | [Abacus as Retained Position](cases/00-abacus-retained-position.md) | **first-pass** | passive mechanical position + human interpretation | test `register-like` analogy; separate working state from archive; recover period vocabulary | facsimile folio locations; older counting-rod vocabulary; non-Chinese comparison |
 | [Mercury Delay-Line Memory: Retention as Circulation](cases/01-mercury-delay-line-circulation.md) | **first-pass** | recirculation + regeneration | persistence as continuous activity; time as access geometry; identity through re-creation | exact patent/page anchors; direct 1949 IRE inspection; temperature-control primary source |
-| Magnetic core memory | scouted | remanence + destructive read/rewrite | nonvolatility, destructive read, maintenance labor | primary manuals/patents and core-weaving sources |
+| [Magnetic Core Memory: Retention at Rest, Destruction in Reading](cases/02-magnetic-core-destructive-read.md) | **first-pass** | remanence + destructive read / restore | separate idle nonvolatility from read invariance; show access itself can create a retention obligation | exact patent/page anchors; full Papian paper; machine-specific MTC/Whirlwind read–restore source; nondestructive-read boundary |
 | DRAM | scouted | decaying charge + refresh | persistence as scheduled restoration | coordinate technical history with `computing-archaeology` |
 | Flash / SSD | scouted | trapped charge + controller remapping | identity without location; deletion vs erasure; endurance | FTL/controller primary technical sources |
 | Replicated object storage | scouted | redundancy + protocol + repair | logical durability without privileged physical copy | choose bounded implementation / system before writing |
@@ -76,7 +76,7 @@ This matrix should become more precise as cases mature.
 | --- | --- | --- | --- | --- | --- | --- |
 | Abacus | bead position | mostly human protection / interpretation | nondestructive visual/manual | spatial column selected by user | high during one configuration | no |
 | Delay line | propagating pulse pattern | continuous circulation / regeneration / retiming | electronically sensed; state continues by recirculation | temporal slot + index | not meaningfully static | no |
-| Magnetic core | magnetization | little while idle; restore after destructive read | destructive in classic core | matrix selection | high at core location | no |
+| Magnetic core | remanent magnetization | little merely to remain at rest; active restore after classic destructive read | destructive in the bounded classic case, followed by rewrite when logical value must persist | coincident coordinate selection | high at the selected core | no |
 | DRAM | capacitor charge | periodic refresh | sense + restore | row/column | high at logical cell while powered | no |
 | SSD | Flash cell states behind FTL | ECC, remapping, GC, wear leveling | controller-mediated | logical block/page | deliberately unstable physically | usually no |
 | Replicated object storage | multiple copies / coded fragments + metadata | repair, replication, consistency machinery | protocol-mediated | logical key | no privileged copy required | implementation-dependent |
@@ -85,11 +85,13 @@ This matrix should become more precise as cases mature.
 
 ## Cross-case findings already supported
 
-After only two first-pass cases, three distinctions are already useful enough to carry forward:
+After three first-pass cases, several distinctions are useful enough to carry forward:
 
-1. **state retention ≠ history retention** — both the abacus and delay line preserve current working state without automatically preserving the sequence that produced it;
-2. **retention mechanism ≠ apparent persistence** — one state sits still; the other survives by continual circulation and re-creation;
-3. **identity of logical state ≠ identity of physical token** — especially in the delay line, logical sameness survives repeated regeneration of the physical signal.
+1. **state retention ≠ history retention** — the abacus, delay line, and classic core case preserve current working state without automatically preserving the sequence that produced it;
+2. **retention mechanism ≠ apparent persistence** — an abacus configuration can sit still, a delay-line pattern survives by continual circulation, and a core can remain magnetized at rest;
+3. **identity of logical state ≠ identity of physical token** — the delay line preserves logical sameness through regenerated signals, while destructive-read core can preserve a logical bit by sensing and then recreating its physical state;
+4. **idle nonvolatility ≠ read invariance** — a magnetic core can retain its state without refresh while unattended, yet ordinary access can deliberately destroy that state;
+5. **access can itself create a retention obligation** — successful reading of classic destructive-read core memory may require an immediate restore operation if the logical value is to continue existing.
 
 These are provisional cross-case findings, not final philosophical conclusions.
 
