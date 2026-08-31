@@ -9,8 +9,10 @@ The repository should grow from defensible cases outward. Do not begin with a to
 - [x] Create initial prior-art map.
 - [x] Create technical and philosophical spines.
 - [x] Link related repositories.
-- [ ] Add a compact controlled vocabulary / glossary.
-- [ ] Add a case index and evidence-status convention.
+- [x] Add a compact controlled vocabulary / glossary.
+- [x] Add a case index and evidence-status convention.
+
+Phase 0 is complete. Future scaffold changes should be driven by failures discovered in actual cases rather than by adding more abstract categories in advance.
 
 ## Phase 1 — Prove the method with contrasting cases
 
@@ -19,9 +21,13 @@ Choose cases that force the method to distinguish very different kinds of retent
 Recommended first set:
 
 1. **Abacus / counting-board retained position**
-   - test the `register-like` analogy without anachronism;
-   - recover historical vocabulary and actual use;
-   - distinguish operational intermediate state from durable record.
+   - [x] first-pass case: [`cases/00-abacus-retained-position.md`](cases/00-abacus-retained-position.md);
+   - [x] test the `register-like` analogy without anachronism;
+   - [x] recover an initial layer of historical vocabulary and actual use (`筭盤`, `定位`, positional instructions);
+   - [x] distinguish operational intermediate state from durable record;
+   - [ ] inspect the 1592 facsimile directly and record exact folio/page anchors;
+   - [ ] deepen counting-rod vocabulary and add a non-Chinese comparison;
+   - [ ] promote from `first-pass` to `grounded` only after source deepening.
 
 2. **Mercury delay-line memory**
    - retention as circulation;
@@ -48,7 +54,15 @@ Recommended first set:
    - repair, quorum / consistency, versioning, erasure coding where appropriate;
    - probabilistic durability and institutional infrastructure.
 
-A first synthesis should be attempted only after at least four of these cases have primary technical evidence.
+A first synthesis should be attempted only after at least four of these cases have primary technical evidence and reach `grounded` status in [`CASE_INDEX.md`](CASE_INDEX.md).
+
+### Result already exposed by Case 00
+
+The abacus case adds a distinction that should be tested across later systems:
+
+> **state retention is not history retention.**
+
+A system may keep a current state available for later use while preserving none of the sequence that produced it. Later cases should explicitly ask when separate logs, journals, snapshots, traces, or versions appear to retain history rather than only current state.
 
 ## Phase 2 — Build the missing technical bridges
 
@@ -77,6 +91,7 @@ Research problems:
 - When does a retained state become part of computation rather than merely input/output?
 - How do cache and memoization complicate the boundary?
 - What is the difference between state, memory, store, archive, log, file, record, and trace?
+- Does `working retention` name a useful cross-period category, or is it too broad?
 
 This phase should engage Ernst directly and use concrete mechanisms rather than terminology alone.
 
@@ -101,12 +116,18 @@ Build a comparative map of:
 
 Goal: replace the single word `forgetting` with a mechanism-sensitive vocabulary.
 
+Case 00 already adds two non-destructive physical-loss modes that later cases should preserve where applicable:
+
+- loss of interpretation while the physical state survives;
+- loss of procedural context while the represented value remains readable.
+
 ## Phase 5 — Maintenance and invisible work
 
 Study why persistence appears static even when it depends on activity.
 
 Cases may include:
 
+- human preservation and interpretation of working state;
 - refresh logic;
 - storage controllers;
 - ECC;
@@ -121,6 +142,8 @@ Cases may include:
 - data-center facilities.
 
 Coordinate labor and manufacturing evidence with existing repositories where relevant.
+
+The abacus case establishes a useful baseline: many functions later performed by storage hardware and software — selection, interpretation, protection, reset, and validation — can first appear as explicit operator labor.
 
 ## Phase 6 — Philosophical synthesis
 
@@ -138,6 +161,7 @@ Before marking a major case mature:
 
 - [ ] historical vocabulary recovered;
 - [ ] at least one strong primary technical source where available;
+- [ ] exact source location recorded for central primary claims;
 - [ ] mechanism described below the user-interface metaphor;
 - [ ] maintenance requirements stated;
 - [ ] failure / forgetting modes separated;
