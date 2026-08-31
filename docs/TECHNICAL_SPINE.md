@@ -44,6 +44,10 @@ Terms such as `register`, `memory`, and `state` are often modern reconstructions
 
 ## 1. Retention as moving or circulating process
 
+### First case
+
+- [`Mercury Delay-Line Memory: Retention as Circulation`](../cases/01-mercury-delay-line-circulation.md) — **first-pass**.
+
 ### Candidate cases
 
 - acoustic / mercury delay-line memory;
@@ -71,6 +75,11 @@ See the memory track in [`tmzncty/computing-archaeology`](https://github.com/tmz
 
 ## 2. Retention as unstable state plus restoration
 
+### First cases
+
+- [`Magnetic Core Memory: Retention at Rest, Destruction in Reading`](../cases/02-magnetic-core-destructive-read.md) — **first-pass** for access-triggered restoration;
+- [`DRAM Refresh as Scheduled Restoration`](../cases/03-dram-refresh-as-scheduled-restoration.md) — **first-pass** for deadline-driven regeneration.
+
 ### Candidate cases
 
 - Williams-Kilburn tube;
@@ -79,7 +88,12 @@ See the memory track in [`tmzncty/computing-archaeology`](https://github.com/tmz
 
 ### Core problem
 
-The retained state is not simply durable. Persistence is produced by **periodic recovery and rewriting**.
+The retained state is not simply durable. Persistence may be produced by **recovery and rewriting** whose trigger depends on the mechanism.
+
+The first cases already require at least two forms:
+
+- access-triggered restore after destructive read;
+- time-triggered regeneration before an unstable state crosses a physical deadline.
 
 ### Questions
 
@@ -87,10 +101,15 @@ The retained state is not simply durable. Persistence is produced by **periodic 
 - Is the `same bit` still the same retained state after repeated restoration?
 - What temporal assumptions are hidden by a stable address interface?
 - Does restoration preserve identity, or repeatedly recreate an equivalent state?
+- Should access-triggered restoration and periodic refresh remain separate controlled terms?
 
 ---
 
 ## 3. Remanence and nonvolatile physical state
+
+### First case
+
+- [`Magnetic Core Memory: Retention at Rest, Destruction in Reading`](../cases/02-magnetic-core-destructive-read.md) — **first-pass**.
 
 ### Candidate cases
 
@@ -114,6 +133,10 @@ A physical substrate can retain a distinction without continuous power, but acce
 
 ## 4. Semiconductor hierarchy: not one memory but many temporal regimes
 
+### First case
+
+- [`DRAM Refresh as Scheduled Restoration`](../cases/03-dram-refresh-as-scheduled-restoration.md) — **first-pass**.
+
 ### Candidate cases
 
 - latch / flip-flop;
@@ -134,6 +157,7 @@ Modern computers deliberately combine multiple retention mechanisms because no s
 - What does the hierarchy ask software to forget about physical differences?
 - Which retained states exist only for nanoseconds, milliseconds, process lifetimes, boot lifetimes, or years?
 - Which levels retain only current state, and which systems add separate history-retention mechanisms such as logs or snapshots?
+- How does a nonvolatile cell acquire new maintenance obligations once finite write/erase endurance and block erase geometry matter?
 
 ### Existing gap to coordinate
 
@@ -142,6 +166,20 @@ Modern computers deliberately combine multiple retention mechanisms because no s
 ---
 
 ## 5. Geometry hidden behind logical addresses
+
+### First case
+
+- [`Flash Virtual Mapping: Logical Identity Without Physical Location`](../cases/04-flash-virtual-mapping-logical-identity.md) — **first-pass**.
+
+The bounded 1993 M-Systems patent establishes several points directly from period vocabulary:
+
+- Flash rewrite is constrained by erase-before-write geometry;
+- a virtual/logical address can remain current while its physical block changes;
+- an old block can be marked `deleted` before the containing erase unit is physically erased;
+- current blocks may be copied to a transfer unit before the old unit is erased;
+- mapping/allocation metadata is itself retained state needed to recover current identity.
+
+This is the first case where **identity persistence is intentionally separated from location persistence** by an address-translation layer.
 
 ### Candidate cases
 
@@ -152,7 +190,7 @@ Modern computers deliberately combine multiple retention mechanisms because no s
 - SSD Flash Translation Layers;
 - wear leveling;
 - garbage collection;
-- TRIM;
+- TRIM / deallocation;
 - ECC and scrubbing.
 
 ### Core problem
@@ -163,12 +201,24 @@ This is a major transition in the ontology of the retained object:
 
 > persistence of identity no longer requires persistence of location.
 
+The first mapped-Flash case adds a second statement:
+
+> currentness can be changed by metadata before the old physical embodiment is erased.
+
 ### Questions
 
 - What exactly remains invariant across remapping?
 - How much hidden maintenance is needed to sustain the fiction of stable blocks?
 - What does deletion mean when logical invalidation and physical erasure are separated?
 - Can a physical trace survive after the logical state has been declared forgotten?
+- What metadata must survive for the system to know which embodiment currently counts?
+- How much free / reserved capacity is actually retention infrastructure rather than unused space?
+- When did `Flash Translation Layer` become the standard vocabulary for this family of mechanisms?
+- How should wear leveling, reclamation, garbage collection, bad-block remapping, and host deallocation be distinguished historically rather than collapsed into `SSD maintenance`?
+
+### Caution
+
+Do not treat the 1993 Ban patent as identical to all later SSD FTLs. Its `virtual map`, `transfer unit`, block statuses, and two-level address translation are primary historical mechanisms. Later terms such as `FTL`, `garbage collection`, `TRIM`, and `over-provisioning` require their own source histories.
 
 ---
 
@@ -196,6 +246,7 @@ Software introduces additional retention semantics that may be more important to
 - How is past state reconstructed after interruption?
 - How do logical histories coexist with destructive physical rewrites?
 - At what point do logs, journals, snapshots, and version stores become explicit **history-retention** systems rather than merely state-retention systems?
+- When metadata chooses which physical embodiment counts, is that already a software-defined retained object even below a filesystem?
 
 ---
 
@@ -218,6 +269,8 @@ A logical fact can persist even while every particular physical copy is replacea
 
 Persistence becomes a property of **protocol + redundancy + repair + identity rules**, not simply a durable medium.
 
+The mapped-Flash case provides a local precursor to one conceptual question: identity already survives relocation within one managed device. Distributed systems extend this by allowing multiple physical embodiments, disagreement, repair, and no permanently privileged copy.
+
 ### Questions
 
 - Where is the retained object?
@@ -226,6 +279,7 @@ Persistence becomes a property of **protocol + redundancy + repair + identity ru
 - Is repair a background operation or part of the definition of persistence?
 - Can `durability` be probabilistic rather than absolute?
 - Which distributed systems retain current consensus state, and which retain the history needed to reconstruct or audit it?
+- Does the metadata/identity lesson from mapped Flash survive when the map itself is distributed and replicated?
 
 ---
 
@@ -253,6 +307,7 @@ Long-lived storage is often not a long-lived medium. It is a **migration regime*
 - Which metadata, formats, software, keys, interfaces, organizations, and skills must also be retained?
 - When is `preservation` really repeated re-creation?
 - Can a bitstream survive while its interpretation becomes technically forgotten?
+- When does scheduled migration resemble controller-level reclamation, and where does that analogy break because archival meaning and institutional responsibility enter?
 
 ---
 
@@ -263,8 +318,10 @@ Every stage should eventually be mapped against:
 - volatility;
 - retention time;
 - refresh / maintenance;
+- maintenance trigger: continuous, access-triggered, deadline-driven, capacity/reclaim-triggered, repair-triggered;
 - destructive versus nondestructive read;
 - overwrite versus erase-before-write;
+- logical invalidation versus physical erasure;
 - access geometry;
 - latency;
 - density;
@@ -275,6 +332,7 @@ Every stage should eventually be mapped against:
 - address stability;
 - location stability;
 - identity semantics;
+- mapping / metadata dependence;
 - deletion semantics;
 - state retention versus history retention;
 - interpretation / context dependence;
