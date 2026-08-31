@@ -66,9 +66,21 @@ Recommended first set:
    - [ ] promote from `first-pass` to `grounded` only after source deepening.
 
 5. **Flash / SSD**
-   - erase blocks, endurance, ECC, FTL, wear leveling, garbage collection;
-   - logical identity separated from physical location;
-   - deletion versus physical persistence.
+   - [x] first-pass case: [`cases/04-flash-virtual-mapping-logical-identity.md`](cases/04-flash-virtual-mapping-logical-identity.md);
+   - [x] use Ban / M-Systems US 5,404,485 (filed 1993) to establish block erase-before-write as the mapping problem;
+   - [x] establish virtual/logical/physical address separation and out-of-place update from primary patent evidence;
+   - [x] show that logical unit identity can remain stable while physical location changes;
+   - [x] distinguish a block marked `deleted` / not current from the later physical erase of its containing unit;
+   - [x] establish transfer/reclamation as copy-current-state → erase-old-unit → remap;
+   - [x] treat mapping/allocation metadata as retained state necessary to recover current identity;
+   - [x] add later ONFI endurance/ECC evidence without projecting it backward into the 1993 system;
+   - [ ] inspect the official patent PDF and add exact printed page / figure / column anchors;
+   - [ ] inspect the full Masuoka et al. 1987 IEDM paper directly;
+   - [ ] add an early Flash/NAND manufacturer datasheet with concrete program/erase/endurance semantics;
+   - [ ] recover the first defensible primary use / standardization of `Flash Translation Layer` terminology;
+   - [ ] add an early wear-leveling source; do not treat reclamation as automatically equivalent to wear leveling;
+   - [ ] treat TRIM/deallocation/secure erase as a separate later case with standards evidence;
+   - [ ] promote from `first-pass` to `grounded` only after source deepening.
 
 6. **Replicated object storage**
    - logical durability without privileged copy;
@@ -77,9 +89,9 @@ Recommended first set:
 
 A first synthesis should be attempted only after at least four of these cases have primary technical evidence and reach `grounded` status in [`CASE_INDEX.md`](CASE_INDEX.md).
 
-### Results already exposed by Cases 00–03
+### Results already exposed by Cases 00–04
 
-The first four cases support several distinctions that should be tested across later systems:
+The first five cases support several distinctions that should be tested across later systems:
 
 > **state retention is not history retention.**
 
@@ -87,11 +99,11 @@ A system may keep a current state available for later use while preserving none 
 
 > **retention does not require one kind of physical persistence.**
 
-An abacus state persists by remaining in place; a delay-line state persists by circulation, regeneration, and retiming; a magnetic-core state can remain as remanent magnetization after the selecting excitation is removed; a DRAM state can survive only for a bounded interval before regeneration.
+An abacus state persists by remaining in place; a delay-line state persists by circulation, regeneration, and retiming; a magnetic-core state can remain as remanent magnetization after the selecting excitation is removed; a DRAM state can survive only for a bounded interval before regeneration; mapped Flash can retain a current logical identity while moving its physical embodiment.
 
-> **logical identity can survive physical re-creation.**
+> **logical identity can survive physical re-creation — and eventually physical relocation.**
 
-The delay line shows identity through recurrent signal regeneration. Classic destructive-read core adds sensing followed by re-creation. DRAM adds scheduled regeneration of a decaying electrical state even when useful access has not occurred.
+The delay line shows identity through recurrent signal regeneration. Classic destructive-read core adds sensing followed by re-creation. DRAM adds scheduled regeneration of a decaying electrical state even when useful access has not occurred. Mapped Flash goes further: the logical address remains current while the data are written into a different physical region and the map changes.
 
 > **idle nonvolatility is not read invariance.**
 
@@ -105,9 +117,21 @@ Classic destructive-read core and Dennard's bounded 1T1C embodiment can require 
 
 DRAM adds a separate obligation: leakage creates a deadline, so the system must revisit retained state even when nobody asks to read it.
 
+> **space and rewrite geometry can create maintenance work.**
+
+Mapped Flash adds another regime. The medium is nonvolatile, but repeated logical updates consume unwritten locations. Current data may need to be copied out so an erase unit can be reclaimed. Maintenance can therefore be deferred until **space/reclamation pressure**, rather than being continuous or periodic.
+
 > **dynamic retention is not identical to destructive read.**
 
 Dennard's patent disclosed nondestructive alternatives, and Intel 1103 documentation combines nondestructive read with mandatory periodic refresh. Later agents must keep `dynamic`, `destructive`, and `volatile` separate rather than using them as synonyms.
+
+> **logical invalidation is not identical to physical erasure.**
+
+Ban's mapping system can mark a block deleted / non-current before a later unit erase. Future deletion cases must therefore distinguish filesystem-level deletion, address deallocation, controller invalidation, reclamation, media erase, and crypto-erase.
+
+> **metadata can be part of what makes state persist as an identity.**
+
+Mapped Flash introduces a state in which the user data may physically survive but the current logical identity depends on maps, headers, and allocation state. Retention can therefore fail at the identity/interpretation layer before the underlying cells are physically destroyed.
 
 ## Phase 2 — Build the missing technical bridges
 
@@ -126,6 +150,8 @@ Priority bridges:
 - RAID / scrubbing / rebuild;
 - distributed replication and erasure coding.
 
+The new mapped-Flash case does **not** close the general SSD/FTL bridge. It only establishes a source-controlled early mapping mechanism and its retention consequences. Full technical lineage remains work for `computing-archaeology` plus later bounded cases here.
+
 ## Phase 3 — Retention / transfer / computation boundary
 
 Research problems:
@@ -138,7 +164,8 @@ Research problems:
 - What is the difference between state, memory, store, archive, log, file, record, and trace?
 - Does `working retention` name a useful cross-period category, or is it too broad?
 - Does `recurrence` deserve a separate controlled term from `refresh`?
-- Should the project distinguish **quiescent retention**, **continuous maintenance**, **access-triggered restoration**, and **deadline-driven maintenance** as controlled terms, or can the distinctions remain descriptive?
+- Should the project distinguish **quiescent retention**, **continuous maintenance**, **access-triggered restoration**, **deadline-driven maintenance**, and **capacity/reclaim-triggered maintenance** as controlled terms, or can the distinctions remain descriptive?
+- When a mapping layer moves state, is the retained object best described as data, address, relation, or all three?
 
 This phase should engage Ernst directly and use concrete mechanisms rather than terminology alone.
 
@@ -154,10 +181,10 @@ Build a comparative map of:
 - logical deletion;
 - garbage collection;
 - loss of index;
+- metadata loss;
 - key destruction;
 - bit rot;
-- controller / metadata loss;
-- media obsolescence;
+- controller failure;
 - format / software obsolescence;
 - institutional abandonment.
 
@@ -190,6 +217,14 @@ Case 03 adds deadline-mediated loss:
 - temperature shortening a safe retention interval;
 - failure of shared refresh/timing infrastructure affecting many cells.
 
+Case 04 adds identity- and reclamation-mediated loss:
+
+- loss or inconsistency of mapping metadata while physical data may still survive;
+- logical invalidation before physical erase;
+- failure to preserve current blocks before erase/reclamation;
+- inability to continue out-of-place updates when free/reclaimable space is exhausted;
+- endurance exhaustion in later NAND despite nonvolatile retention at rest.
+
 ## Phase 5 — Maintenance and invisible work
 
 Study why persistence appears static even when it depends on activity.
@@ -212,14 +247,15 @@ Cases may include:
 
 Coordinate labor and manufacturing evidence with existing repositories where relevant.
 
-The first four cases now provide four maintenance baselines:
+The first five cases now provide five maintenance baselines:
 
 - in the abacus, selection, interpretation, protection, reset, and validation remain visible operator labor;
 - in the delay line, preservation, indexing, correction, and timing migrate into automatic circuitry and continuous process;
 - in magnetic core, the element can retain state at rest while surrounding circuitry assumes maintenance obligations during selection, sensing, and restore;
-- in DRAM, small per-bit state is made viable by shared sensing and a recurring schedule that revisits state before its physical deadline expires.
+- in DRAM, small per-bit state is made viable by shared sensing and a recurring schedule that revisits state before its physical deadline expires;
+- in mapped Flash, cell state can persist without power while controller metadata, free space, relocation, and reclamation make repeated logical rewriting possible.
 
-This shift among **human maintenance**, **continuous process maintenance**, **access-triggered restoration**, and **deadline-driven scheduled maintenance** should remain a major comparative axis.
+This shift among **human maintenance**, **continuous process maintenance**, **access-triggered restoration**, **deadline-driven scheduled maintenance**, and **capacity/reclaim-triggered maintenance** should remain a major comparative axis.
 
 ## Phase 6 — Philosophical synthesis
 
@@ -230,6 +266,8 @@ Only after technical cases are mature:
 - compare Ernst's operational / microtemporal account with long-duration preservation;
 - extend Kirschenbaum's forensic materiality through Flash, remapping, copy-on-write, encryption, and distributed storage;
 - decide whether `technical retention` names one coherent operation or a family of related mechanisms.
+
+The mapped-Flash case is especially relevant to Kirschenbaum later because it separates logical invalidation from physical erasure. Do not perform that synthesis yet; first deepen the source chain through actual Flash/SSD implementations and deletion standards.
 
 ## Research quality gates
 
