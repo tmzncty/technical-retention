@@ -30,9 +30,15 @@ Recommended first set:
    - [ ] promote from `first-pass` to `grounded` only after source deepening.
 
 2. **Mercury delay-line memory**
-   - retention as circulation;
-   - time as access geometry;
-   - continuous operation as apparent persistence.
+   - [x] first-pass case: [`cases/01-mercury-delay-line-circulation.md`](cases/01-mercury-delay-line-circulation.md);
+   - [x] retention as circulation;
+   - [x] time as access geometry;
+   - [x] continuous operation as apparent persistence;
+   - [x] establish primary vocabulary through the 1947 Eckert–Mauchly `Memory system` patent and Wilkes's 1949 EDSAC report;
+   - [x] distinguish logical identity from identity of one physical pulse;
+   - [ ] add exact patent column / figure anchors and direct 1949 IRE page anchors;
+   - [ ] add machine-specific primary evidence for temperature control;
+   - [ ] promote from `first-pass` to `grounded` only after source deepening.
 
 3. **Magnetic core memory**
    - remanence;
@@ -56,13 +62,21 @@ Recommended first set:
 
 A first synthesis should be attempted only after at least four of these cases have primary technical evidence and reach `grounded` status in [`CASE_INDEX.md`](CASE_INDEX.md).
 
-### Result already exposed by Case 00
+### Results already exposed by Cases 00–01
 
-The abacus case adds a distinction that should be tested across later systems:
+The first two cases support several distinctions that should be tested across later systems:
 
 > **state retention is not history retention.**
 
 A system may keep a current state available for later use while preserving none of the sequence that produced it. Later cases should explicitly ask when separate logs, journals, snapshots, traces, or versions appear to retain history rather than only current state.
+
+> **retention does not require physical stillness.**
+
+An abacus state persists by remaining in place; a delay-line state persists by circulation, regeneration, and retiming.
+
+> **logical identity can survive physical re-creation.**
+
+The delay line already shows a weak but important form of substrate discontinuity: a stable logical pattern can persist through successive regenerated physical signals.
 
 ## Phase 2 — Build the missing technical bridges
 
@@ -92,6 +106,7 @@ Research problems:
 - How do cache and memoization complicate the boundary?
 - What is the difference between state, memory, store, archive, log, file, record, and trace?
 - Does `working retention` name a useful cross-period category, or is it too broad?
+- Does `recurrence` deserve a separate controlled term from `refresh`?
 
 This phase should engage Ernst directly and use concrete mechanisms rather than terminology alone.
 
@@ -121,6 +136,13 @@ Case 00 already adds two non-destructive physical-loss modes that later cases sh
 - loss of interpretation while the physical state survives;
 - loss of procedural context while the represented value remains readable.
 
+Case 01 adds process-failure modes:
+
+- loss of circulation;
+- timing drift;
+- failed regeneration;
+- environmental drift that destroys the timing relation even though the apparatus remains physically present.
+
 ## Phase 5 — Maintenance and invisible work
 
 Study why persistence appears static even when it depends on activity.
@@ -143,7 +165,12 @@ Cases may include:
 
 Coordinate labor and manufacturing evidence with existing repositories where relevant.
 
-The abacus case establishes a useful baseline: many functions later performed by storage hardware and software — selection, interpretation, protection, reset, and validation — can first appear as explicit operator labor.
+The first two cases already form a useful baseline:
+
+- in the abacus, selection, interpretation, protection, reset, and validation remain visible operator labor;
+- in the delay line, preservation, indexing, correction, and timing migrate into automatic circuitry.
+
+This shift from **visible human maintenance** to **hidden machine maintenance** should remain a major comparative axis.
 
 ## Phase 6 — Philosophical synthesis
 
