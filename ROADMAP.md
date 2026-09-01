@@ -227,11 +227,11 @@ The mechanism gate is open, so philosophical comparison may now begin — but cl
 
 - [x] audit README thesis 1, “persistence is often an activity disguised as a property,” against passive position, core, DRAM, mapped Flash, and RADOS; identify the passive-position counterexample/qualification — completed in [`docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md`](docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md); the thesis was revised rather than simply confirmed;
 - [x] audit “storage is temporal transport” and decide whether it adds explanatory power or merely redescribes retention — completed in [`docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md`](docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md); retained as a recoverability relation across time, not as literal physical motion or a sufficient mechanism definition;
-- [ ] audit the role of addressability across human-mediated positional selection, coordinate-selected memory, logical mapping, and distributed placement;
+- [x] audit the role of addressability across human-mediated positional selection, coordinate-selected memory, logical mapping, and distributed placement — completed in [`docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md`](docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md); retention was separated from designation, selection/resolution, currentness/admissibility, and recovery;
 - [ ] audit “logical persistence becomes detached from privileged physical location” as a historically staged claim rather than a universal definition;
 - [ ] build a counterexample ledger before promoting any provisional thesis to a conclusion.
 
-Audit 01 rejects a universal `persistence = activity` formulation. Audit 02 rejects literal `storage = physical transport`, while retaining a narrower model in which a state established at `t0` remains or is reconstructed as an agreed recoverable equivalent at `t1`. That model is useful only when the retained target, interval, admissible transformations, recovery operation, and sameness/currentness criterion are named. The next highest-value synthesis unit is the addressability audit.
+Audit 01 rejects a universal `persistence = activity` formulation. Audit 02 rejects literal `storage = physical transport`, while retaining a narrower model in which a state established at `t0` remains or is reconstructed as an agreed recoverable equivalent at `t1`. Audit 03 rejects `retention = addressability`, `address = physical location`, `resolution = currentness`, and `addressability = availability`; it treats addressability as an operational relation whose resolver may be human, circuit-level, map-mediated, or distributed. The next highest-value synthesis unit is the privileged-location audit.
 
 ### Philosophical tests after the audit
 
