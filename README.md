@@ -213,6 +213,7 @@ See [`RELATED_REPOS.md`](RELATED_REPOS.md).
 - [`docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md`](docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md) — audit of the storage/transfer proposition against grounded cases, retaining only a controlled recoverability-relation model across time.
 - [`docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md`](docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md) — audit separating retention from designation, selection/resolution, currentness/admissibility, and recovery across grounded cases.
 - [`docs/SYNTHESIS_AUDIT_04_PRIVILEGED_LOCATION.md`](docs/SYNTHESIS_AUDIT_04_PRIVILEGED_LOCATION.md) — audit distinguishing physical-token replacement, stable physical home, metadata-mediated relocation, replaceable replicas, and temporary protocol authority.
+- [`docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md`](docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md) — cross-audit control ledger recording rejected strong claims, required decompositions, scoped survivors, and unaudited theses before any conclusion is promoted.
 - [`ROADMAP.md`](ROADMAP.md) — staged research program.
 - [`RELATED_REPOS.md`](RELATED_REPOS.md) — cross-repository boundaries and reuse rules.
 - [`AGENTS.md`](AGENTS.md) — research protocol for human and AI contributors.
@@ -230,7 +231,7 @@ The project begins with several hypotheses to test rather than assume:
 5. **Logical persistence can become detached from any one permanent physical home without becoming placeless.** Some systems keep a stable location while repeatedly reconstructing physical state; mapped and distributed systems go further by letting identity survive relocation or replica replacement through retained mapping, placement, version, and authority relations. Treat this as a mechanism comparison, not a one-way historical law. See the bounded [privileged-location audit](docs/SYNTHESIS_AUDIT_04_PRIVILEGED_LOCATION.md).
 6. **The more reliable retention becomes, the more its maintenance disappears from experience.** This makes maintenance labor and hidden machinery historically important.
 
-Each thesis must be vulnerable to counterexamples.
+Each thesis must be vulnerable to counterexamples. The current cross-audit status, including which theses remain unaudited, is tracked in [`docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md`](docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md).
 
 ---
 
