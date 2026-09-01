@@ -4,7 +4,7 @@
 
 - **Case:** [`cases/06-flip-flop-powered-working-retention.md`](../cases/06-flip-flop-powered-working-retention.md)
 - **Purpose:** close one of the three explicit `first-pass` gaps without pretending the whole case is grounded.
-- **Result:** the period `register` boundary now has a primary early-computer anchor. The 1919 Eccles–Jordan paper has been bibliographically and scan-locator resolved but not directly inspected in this pass; the original ENIAC flip-flop drawing has been provenance-located but its schematic has not yet been inspected. **Case 06 therefore remains `first-pass`.**
+- **Result:** the period `register` boundary has a primary early-computer anchor. A second evidence pass has now directly recovered an ENIAC Part-II textual timing sequence at p. IV-43; see [`06-eniac-timing-retention-deepening.md`](06-eniac-timing-retention-deepening.md). The 1919 Eccles–Jordan authorial page/reprint and the original ENIAC PX-1-105 schematic image still have not been directly inspected. **Case 06 therefore remains `first-pass`.**
 - **Related-repository check:** a fresh search of `tmzncty/computing-archaeology` for Eccles–Jordan / ENIAC / flip-flop / register material found no dedicated treatment to reuse.
 
 This note keeps four layers separate:
@@ -127,9 +127,9 @@ Useful locator/corroboration:
 
 ---
 
-## 4. ENIAC circuit provenance: drawing identity resolved, schematic inspection still open
+## 4. ENIAC circuit provenance and Part-II timing evidence
 
-### H/S — original drawing numbers are now recoverable
+### H/S — original drawing numbers are recoverable
 
 Brian Stuart's Drexel ENIAC drawing index states that most images were processed from scans of the ENIAC patent-trial microfilm, with some higher-quality Smithsonian replacements. The index explicitly lists:
 
@@ -142,26 +142,37 @@ Its “Other Drawing References” section also records earlier drawing referenc
 - **PX-1-3 — `Vacuum Trigger-Circuit (Flip-Flop)`**;
 - **PX-1-8 — `Flip-flop Circuit with a Time Constant (Gate Form)`**.
 
-The hosted ENIAC Part-II Appendix-2 index independently exposes these early drawing titles in its searchable text.
-
 - Drexel ENIAC Drawings index: <https://www.cs.drexel.edu/~bls96/eniac/drawings/>.
-- ENIAC report resources / Part II index: <https://www.cs.drexel.edu/~bls96/eniac/reports/prog2.pdf>.
+- ENIAC Part-II scan: <https://www.cs.drexel.edu/~bls96/eniac/reports/prog2.pdf>.
 
-This is real progress in source control: the first-pass case no longer has to say merely “find the circuit drawing.” The relevant drawing identity is known.
+### H/P — Part II p. IV-43 now supplies a directly recovered machine-specific timing sequence
 
-However, the actual PX-1-105 schematic was not successfully rendered/inspected in this pass. Therefore no new circuit-value, topology, timing, or component-level claim is promoted from this locator evidence.
+A second evidence pass directly recovered the primary text at Part II p. **IV-43**. It describes an incoming switch pulse setting an `unsynchronized flip-flop`; that state enables a synchronizing gate so the next central programming pulse can set a `synchronized flip-flop`; the second state enables a transmitter gate; a later central program pulse is transmitted and resets both flip-flops. The report explains the second stage in terms of avoiding unreliable reduced-magnitude pulses when an unsynchronized switch event overlaps a central program pulse.
+
+This materially deepens the ENIAC evidence because the period report itself now supplies the state-transition/timing role. The detailed retention analysis and claim ledger are in [`06-eniac-timing-retention-deepening.md`](06-eniac-timing-retention-deepening.md).
+
+However, **PX-1-105 itself has still not been visually rendered and inspected**. No new drawing-specific resistor values, tube topology, bias conditions, or component-level timing claims are promoted from the textual sequence.
+
+The updated evidence boundary is therefore:
+
+```text
+Part-II textual operation directly inspected
+    !=
+PX-1-105 schematic visually inspected
+```
 
 ---
 
 ## 5. Revised evidence-gap ledger
 
-| Gap from Case 06 first pass | This pass | Status after this note |
+| Gap from Case 06 first pass | Current evidence | Status after this note |
 | --- | --- | --- |
 | Directly inspect Eccles–Jordan 1919 paper or page-preserving reprint | exact _Electrician_ and _Radio Review_ scan locators recovered; secondary quotation cross-check found | **open — direct page inspection still required** |
-| Inspect ENIAC Part II / original flip-flop drawing | drawing numbers and provenance located, especially PX-1-105 | **open — schematic itself still needs direct inspection** |
+| Recover machine-specific ENIAC Part-II textual operation | Part II p. IV-43 directly supplies a two-flip-flop synchronizing sequence and reliability rationale | **closed for this bounded textual sequence** |
+| Inspect original ENIAC PX-1-105 flip-flop schematic | drawing identity/provenance known | **open — schematic image itself still needs direct inspection** |
 | Add period primary source for architectural `register` boundary | Whirlwind R-221 (1954), p. 1-1 and §2.231 / p. 2-12 | **closed** |
 
-Because two source-inspection gaps remain open, this note does **not** recommend promotion of Case 06 to `grounded`.
+Because two direct visual/source-inspection gaps remain open, this note does **not** recommend promotion of Case 06 to `grounded`.
 
 ---
 
@@ -177,16 +188,17 @@ Because two source-inspection gaps remain open, this note does **not** recommend
 | Every flip-flop is historically a register | X | not supported by ENIAC/Whirlwind source layers |
 | Register role and physical retention substrate should be separate comparison axes | E | bounded cross-mechanism reconstruction |
 | PX-1-105 is catalogued as an ENIAC `Flip-Flop Circuit` drawing | H/S | Drexel patent-trial-microfilm drawing index |
-| The exact PX-1-105 circuit topology has now been directly verified | X | not established in this pass |
+| Part II p. IV-43 directly documents an unsynchronized flip-flop -> synchronizing gate -> synchronized flip-flop -> transmitter/reset sequence | H/P | directly recovered primary report text |
+| The exact PX-1-105 circuit topology has now been directly verified | X | not established; schematic image remains uninspected |
 | The 1919 paper has now been directly page-inspected | X | locator recovered, direct page inspection still open |
 
 ---
 
 ## Next bounded step
 
-Do **not** open SRAM/cache yet solely because the `register` vocabulary gap closed. The highest-value next move remains to finish the two direct source inspections:
+Do **not** open SRAM/cache yet solely because the `register` vocabulary gap and one ENIAC textual-operation gap are closed. The highest-value next move remains to finish the two direct inspections:
 
 1. inspect _The Electrician_ p. 298 or _Radio Review_ pp. 143–146 directly;
-2. inspect PX-1-105 / relevant ENIAC Part-II circuit material directly and record exact topology/component anchors.
+2. render and inspect PX-1-105 / immediately relevant ENIAC Part-II drawing material and record exact circuit/topology anchors.
 
 If those confirm the current reconstruction, Case 06 can be reconsidered for `grounded`. If they conflict with it, the case should be corrected rather than promoted.
