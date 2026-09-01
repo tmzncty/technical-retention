@@ -124,9 +124,15 @@ After six bounded cases, **abacus/passive position, magnetic core, DRAM, mapped 
 35. **physical topology remains relevant after location abstraction** — RADOS uses failure-domain topology in placement, so absence of one permanent home does not make `where replicas are` irrelevant to durability;
 36. **permanent physical home ≠ temporary protocol authority** — RADOS can move replicas and primary/read roles while still requiring protocol-defined authority over which state may order or answer as current;
 37. **mobility can create maintenance rather than eliminate it** — Flash relocation creates map/reclamation obligations and distributed replica replacement creates peering/repair obligations;
-38. **the location-detachment sequence is functional, not teleological** — fixed cells, stable addresses, remapped blocks, and distributed replicas can coexist in one modern stack; the audit's stages do not establish one inevitable historical ascent toward placeless storage.
+38. **the location-detachment sequence is functional, not teleological** — fixed cells, stable addresses, remapped blocks, and distributed replicas can coexist in one modern stack; the audit's stages do not establish one inevitable historical ascent toward placeless storage;
+39. **technical forgetting is layer-relative** — a forgetting claim must name whether the lost target is a physical distinction, logical value/identity, mapping/currentness relation, serviceability, history, or durability threshold;
+40. **physical loss ≠ higher-level forgetting** — ordinary DRAM reconstruction replaces charge, Flash reclamation can erase an obsolete embodiment, and RADOS can replace a failed replica while preserving the logical state;
+41. **physical survival ≠ retained current state** — an uninterpretable positional configuration, an invalidated Flash block, or a stale/deauthorized RADOS replica can remain materially present after it has ceased to function as the intended current state;
+42. **missed maintenance can be a forgetting mechanism, but maintenance triggers differ** — destructive core read creates an access-triggered restore obligation, DRAM creates a deadline-triggered refresh obligation, and distributed systems create failure/repair-triggered obligations;
+43. **relation loss can matter as much as payload loss** — positional convention/procedure, Flash mapping/allocation, and RADOS version/PG-log/currentness state can be required to recover which surviving state is meaningful or current;
+44. **unavailability, staleness, logical deletion, and physical erasure are not synonyms** — each can occur without some of the others, and temporary loss of service should not be counted as technical forgetting merely because the state cannot be used at one moment.
 
-These are provisional cross-case findings, not final philosophical conclusions. Audits 01–04 now test maintenance, temporal-transfer, addressability, and privileged-location claims explicitly. The next bounded synthesis task is one cross-audit counterexample ledger before any provisional thesis is promoted to a conclusion.
+These are provisional cross-case findings, not final philosophical conclusions. Audits 01–05 now test maintenance, temporal-transfer, addressability, privileged-location, and technical-forgetting claims explicitly; the cross-audit ledger records the negative results. Thesis 6 remains unaudited.
 
 ---
 
@@ -140,6 +146,6 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 - [x] at least one case of nonvolatile physical remanence or trapped state at `grounded` or better — grounded magnetic core and mapped Flash satisfy this from different mechanisms;
 - [x] at least one case where logical identity survives physical relocation — grounded mapped Flash;
 - [x] at least one case where logical identity survives loss/replacement of a replica member — grounded RADOS;
-- [x] bounded philosophical/engineering comparison has begun **after** mechanism reconstruction through synthesis audits 01–04; provisional theses remain revisable and are not final conclusions.
+- [x] bounded philosophical/engineering comparison has begun **after** mechanism reconstruction through synthesis audits 01–05; provisional theses remain revisable and are not final conclusions.
 
-**Next highest-value unit:** build a cross-audit counterexample ledger that records which provisional theses have been rejected, narrowed, split, retained with scope conditions, or left untested. Do this before promoting any thesis to a conclusion or opening a grand synthesis chapter.
+**Next highest-value unit:** audit README thesis 6, separating interface invisibility, automation, reliability, human labor, controller work, and infrastructure rather than assuming a historical law that more reliable retention automatically hides more maintenance.
