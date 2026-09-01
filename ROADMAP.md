@@ -160,7 +160,7 @@ Research problems:
 - [ ] When replicas disagree, is `currentness` itself retained metadata/protocol state?
 - [ ] How should `acknowledged`, `visible`, `replicated`, and `durably committed` be separated across systems?
 
-This phase should engage Ernst directly only after the mechanism comparison is explicit.
+The first direct Ernst test is now complete; later work in this phase should reuse its timescale decomposition rather than treating `microtemporality` as a catch-all answer.
 
 ---
 
@@ -239,17 +239,17 @@ The mechanism gate is open, so philosophical comparison may now begin — but cl
 
 Audits 01–06 and the cross-audit ledger establish a negative discipline for synthesis: a universal `persistence = activity` formulation fails; literal `storage = physical transport` fails; `retention = addressability`, `address = physical location`, `resolution = currentness`, and `addressability = availability` fail; `logical = placeless` and a monotonic historical ascent toward placelessness fail; `physical destruction = logical forgetting`, `logical invalidation = physical erasure`, and `unavailable now = forgotten` fail; `more reliable -> more hidden maintenance`, `automated -> invisible to everyone`, and `self-healing -> maintenance-free` also fail. The surviving formulations remain provisional and layer-sensitive.
 
-**Next highest-value synthesis unit:** a bounded Wolfgang Ernst operational/microtemporal test. Compare quiescent positional/core retention, deadline-driven DRAM refresh, deferred Flash reclamation, failure-triggered RADOS repair, and the first-pass delay-line case only with an explicit maturity caveat. Ask where Ernst's operational emphasis clarifies mechanism and where it may over-privilege continuously active or short-timescale retention.
+### Named philosophical/prior-art tests
 
-### Philosophical tests after the audit
-
-- [ ] test Stiegler's tertiary retention against operational working state without assuming every retained bit/token is tertiary retention in the same sense;
-- [ ] test whether Heideggerian availability/ordering is actually clarified by addressability and storage infrastructure; keep `Bestand ≠ storage` explicit;
-- [ ] compare Ernst's operational/microtemporal account with passive positional state, scheduled refresh, deferred reclamation, failure-triggered repair, and long-duration preservation;
-- [ ] extend Kirschenbaum's forensic materiality through Flash remapping, logical invalidation, copy-on-write-like relocation, encryption, and distributed storage;
+- [x] **Wolfgang Ernst operationality / microtemporality** — completed in [`docs/PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md`](docs/PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md). The test retains Ernst's operational analysis as a major methodological prior art while rejecting `retained state = continuous operation` and `technically decisive time = microtime only`; it requires plural timescales and separates retention-time, access-time, maintenance-time, and interpretive operations.
+- [ ] **Bernard Stiegler / tertiary retention boundary** — test operational working state and technical exteriorization without assuming every retained bit/token is tertiary retention in the same sense.
+- [ ] **Heidegger / availability and ordering** — test whether addressability and storage infrastructure actually clarify availability/ordering; keep `Bestand ≠ storage` explicit.
+- [ ] **Kirschenbaum / forensic materiality beyond disk** — test Flash remapping, logical invalidation, relocation, encryption, and distributed storage against forensic persistence claims.
 - [ ] decide whether `technical retention` names one coherent operation or a family of mechanisms linked only by carefully stated invariants.
 
-The first generic thesis-audit sequence is complete, but do not write a grand `What Is Technical Retention?` chapter yet. The next synthesis should test named philosophical prior art against the mechanism distinctions and preserve the counterexamples already recorded.
+**Next highest-value synthesis unit:** the bounded Stiegler tertiary-retention boundary test. Compare passive positional working state, volatile DRAM state, mapped Flash logical identity, and replicated object state. Ask what counts as technical exteriorization, what must be humanly meaningful or transmissible, and where calling every machine-retained state `tertiary retention` would collapse distinctions Stiegler's concept is supposed to make.
+
+The first generic thesis-audit sequence is complete, but do not write a grand `What Is Technical Retention?` chapter yet. Named philosophical prior art should continue to be tested against mechanism distinctions one claim at a time, preserving the counterexamples already recorded.
 
 ---
 
