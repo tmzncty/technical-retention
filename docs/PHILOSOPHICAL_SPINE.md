@@ -72,13 +72,13 @@ This must be argued case by case.
 
 ---
 
-## 4. Ernst: technical memory has its own operations and time
+## 4. Ernst: technical memory has its own operations and times
 
-Wolfgang Ernst is crucial because he refuses to let cultural memory discourse substitute for analysis of technical storage mechanisms.
+Wolfgang Ernst is crucial because he refuses to let cultural memory discourse substitute for analysis of technical mechanisms and their timing.
 
-For this repository, the strongest Ernstian challenge is:
+For this repository, the strongest Ernstian challenge remains:
 
-> Stop saying `memory` until you can say what the machine is doing.
+> Stop saying `memory` until you can say what the machine or technical procedure is doing.
 
 That means examining:
 
@@ -92,11 +92,30 @@ That means examining:
 - latency;
 - circulation;
 - signal timing;
+- mapping and reclamation;
+- protocol ordering and repair;
 - operational feedback.
 
-A particularly productive proposition associated with this line of work is that storage and transfer are not absolute opposites: storage can be analyzed as transfer across temporal distance.
+Ernst's 2013 `Zeitkritik` work emphasizes machine-specific temporality / `Eigenzeit`, and his statements on time-critical media make operation and timing central to the being of technical media. That emphasis is a major methodological prior art for this repository.
 
-This repository should test where that description is illuminating and where it becomes too general to distinguish mechanisms.
+However, the bounded test in [`PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md`](PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md) shows that it should not be universalized into `retained state = continuous operation` or `technically decisive time = microtime only`.
+
+The grounded cases force a decomposition among:
+
+- quiescent retention;
+- continuous circulation/regeneration;
+- access-triggered restoration;
+- deadline-driven refresh;
+- workload/capacity-triggered reclamation;
+- wear/lifetime-triggered placement;
+- failure/membership-triggered repair;
+- interpretive/procedural continuity.
+
+A particularly productive proposition associated with Ernst's storage work is that storage and transfer are not absolute opposites: storage can be analyzed as transfer across temporal distance. The bounded [`temporal-transport audit`](SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md) retains this only as a recoverability relation, not as literal motion or a sufficient mechanism theory.
+
+The current working lesson is therefore:
+
+> **Use operational analysis to discover the relevant timescale; do not assume in advance that every retention mechanism is continuously active or microtemporal.**
 
 ---
 
@@ -117,28 +136,28 @@ Modern Flash, SSD controllers, copy-on-write systems, cloud versioning, and encr
 
 ---
 
-## 6. Persistence as maintained process
+## 6. Persistence as an achieved relation
 
-A major hypothesis of the repository is:
+The first bounded synthesis audit rejected the universal equation `persistence = continuous activity`.
 
-> **Persistence is often an activity disguised as a property.**
+The surviving project hypothesis is narrower:
 
-Cases include:
+> **Persistence is often an achieved relation, but the work required to sustain it depends on the retained layer and the trigger that creates a maintenance obligation.**
 
-- delay-line recirculation;
-- Williams-tube regeneration;
-- DRAM refresh;
-- disk servo control and error correction;
-- SSD remapping, garbage collection, ECC, and wear management;
-- RAID rebuild and scrubbing;
-- distributed replication and repair;
-- archival migration between media generations.
+Cases already distinguish:
 
-Philosophical question:
+- passive positional stability;
+- quiescent magnetic remanence;
+- destructive-read restore;
+- deadline-driven DRAM refresh;
+- Flash remapping and reclamation;
+- distributed peering and repair.
 
-> Why do users experience a maintained process as a thing that simply remains `there`?
+The philosophical question is no longer simply why users experience an active process as a static thing. It is:
 
-This is one of the strongest candidate bridges between engineering detail and a philosophy of technical temporality.
+> **Which work, if any, is required merely for a state to remain; which work is required only on access, workload, wear, failure, or interpretation; and which of those obligations are visible at which interface?**
+
+See [`SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md`](SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md) and [`SYNTHESIS_AUDIT_06_MAINTENANCE_VISIBILITY.md`](SYNTHESIS_AUDIT_06_MAINTENANCE_VISIBILITY.md).
 
 ---
 
