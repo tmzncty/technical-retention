@@ -138,9 +138,15 @@ After six bounded cases, **abacus/passive position, magnetic core, DRAM, mapped 
 49. **reliability is not one cross-period scalar** — positional disturbance, half-select/sense error, missed refresh, Flash wear/block failure, and replica/currentness failure are different failure models and cannot be ranked by one unsupported `more reliable` scale;
 50. **self-healing ≠ maintenance-free** — automated distributed repair still depends on surviving current state, functioning control machinery, spare capacity, replacement members, and physical failure-domain assumptions;
 51. **stable interfaces can relocate retention work** — classic core hides read–rewrite in the memory cycle, DRAM hides scheduled reconstruction below ordinary software, mapped Flash hides physical relocation behind logical designation, and RADOS hides replica replacement behind the object service;
-52. **work displacement is functional, not teleological** — visible human procedure, device/controller work, protocol repair, manufacturing, and operations coexist in modern stacks; the evidence does not establish a historical law that later systems necessarily hide more maintenance or use less human labor.
+52. **work displacement is functional, not teleological** — visible human procedure, device/controller work, protocol repair, manufacturing, and operations coexist in modern stacks; the evidence does not establish a historical law that later systems necessarily hide more maintenance or use less human labor;
+53. **operational analysis ≠ continuous-retention ontology** — Ernst's demand to inspect what a technical medium does is methodologically strong, but quiescent positional, core, and Flash states reject the inference that a retained state must be continuously acted upon merely to remain;
+54. **retention-time operation ≠ access-time operation** — a core can retain remanence without power yet require a timed sense/rewrite sequence on access; a passive positional state can remain while selection and interpretation occur only when a human returns to it;
+55. **microtemporality is mechanism-dependent rather than universal** — pulse phase, sense timing, and DRAM refresh deadlines make short timescales causally decisive in some mechanisms, while Flash reclamation and RADOS repair may be deferred or event-triggered on longer operational horizons;
+56. **quiescence is itself a temporal regime** — `nothing must happen yet` is an engineering fact when a mechanism lacks a recurring reconstruction deadline under specified conditions; quiescent retention is not absence of temporality;
+57. **technical retention has plural operational timescales** — continuous circulation, access-triggered restore, deadline-driven refresh, workload/capacity/wear triggers, failure/membership repair, and human procedural continuity should not be collapsed into one generic `time-critical` rhythm;
+58. **philosophical fit cannot promote evidence maturity** — the first-pass delay-line case is especially congruent with Ernstian microtemporality, but that conceptual fit does not substitute for its still-open source-grounding tasks.
 
-These are provisional cross-case findings, not final philosophical conclusions. Audits 01–06 now test all six project-level theses explicitly; the cross-audit ledger records both the revised survivors and the negative results. The next synthesis step is a named prior-art/philosophical test rather than another generic thesis.
+These are provisional cross-case findings, not final philosophical conclusions. Audits 01–06 now test all six project-level theses explicitly; the cross-audit ledger records both the revised survivors and the negative results. [`docs/PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md`](docs/PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md) is the first named prior-art test and narrows Ernstian operationality without rejecting its methodological force.
 
 ---
 
@@ -154,6 +160,7 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 - [x] at least one case of nonvolatile physical remanence or trapped state at `grounded` or better — grounded magnetic core and mapped Flash satisfy this from different mechanisms;
 - [x] at least one case where logical identity survives physical relocation — grounded mapped Flash;
 - [x] at least one case where logical identity survives loss/replacement of a replica member — grounded RADOS;
-- [x] all six README project-level theses have received bounded synthesis audits; none is promoted to a final conclusion.
+- [x] all six README project-level theses have received bounded synthesis audits; none is promoted to a final conclusion;
+- [x] first named philosophical/prior-art test completed — Ernst operationality / microtemporality.
 
-**Next highest-value unit:** a bounded Wolfgang Ernst operational/microtemporal test that compares quiescent positional/core retention, deadline-driven DRAM refresh, deferred Flash reclamation, failure-triggered RADOS repair, and the first-pass delay-line case only with a maturity caveat.
+**Next highest-value unit:** a bounded Stiegler tertiary-retention boundary test against operational working state. Ask whether passive positional working state, volatile DRAM state, mapped logical identity, and replicated object state illuminate technical exteriorization without assuming that every retained bit/token is `tertiary retention` in the same sense.
