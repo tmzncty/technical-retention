@@ -101,7 +101,7 @@ A later scholarly discussion of Stiegler's general organology emphasizes that te
 
 Secondary source:
 
-- Pietro Montani et al. / discussion in **"Multistability and Derrida's Différance: Investigating the Relations Between Postphenomenology and Stiegler's General Organology,"** *Philosophy & Technology* (2022): <https://link.springer.com/article/10.1007/s13347-022-00501-x>.
+- Marco Pavanini, **"Multistability and Derrida's Différance: Investigating the Relations Between Postphenomenology and Stiegler's General Organology,"** *Philosophy & Technology* 35, article 1 (2022), published 24 January 2022: <https://link.springer.com/article/10.1007/s13347-022-00501-x>.
 
 This source is used as **scholarly interpretation**, not as a substitute for Stiegler's own wording.
 
