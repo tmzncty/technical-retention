@@ -49,11 +49,13 @@ Choose cases that force the method to distinguish very different kinds of retent
 - [x] add contemporary evidence from Papian (1952) for remanent-flux retention under repeated nonselecting disturbances;
 - [x] add operational evidence from Widrow's 1953 MTC testing memorandum for safe operating margins and memory-cycle reliability;
 - [x] distinguish idle nonvolatility from read invariance;
-- [ ] inspect the patent PDF directly and add exact page / figure anchors;
-- [ ] inspect the full Papian 1952 IRE paper directly;
-- [ ] add a machine-specific primary MTC / Whirlwind document showing implemented read–restore sequencing;
-- [ ] add a narrow primary source on nondestructive-read core to bound the case;
-- [ ] promote from `first-pass` to `grounded` only after source deepening.
+- [x] inspect the Forrester patent scan directly and record printed-page anchors for stable states, selection, destructive read, and rewrite;
+- [x] add machine-specific primary evidence for implemented read–rewrite sequencing: Papian 1953 plus Project Whirlwind M-2121;
+- [x] add contemporary primary nondestructive-read boundaries: Widrow 1954 RF readout and Brown's 1953-filed patent;
+- [x] ground the element-level `without external maintenance energy` claim without turning it into a whole-machine crash-restart claim;
+- [x] grounding record: [`evidence/02-magnetic-core-1951-1954-grounding.md`](evidence/02-magnetic-core-1951-1954-grounding.md);
+- [x] promote from `first-pass` to `grounded` after source deepening;
+- [ ] obtain a directly renderable full scan of Papian's 1952 IRE paper for archival-quality cleanup; the central claims no longer depend on that source uniquely.
 
 ### 4. DRAM
 
@@ -104,7 +106,7 @@ Choose cases that force the method to distinguish very different kinds of retent
 - [x] grounding record: [`evidence/05-rados-2006-2007-grounding.md`](evidence/05-rados-2006-2007-grounding.md);
 - [x] promote from `first-pass` to `grounded` after source deepening.
 
-A first synthesis should be attempted only after at least four of these cases have primary technical evidence and reach `grounded` status in [`CASE_INDEX.md`](CASE_INDEX.md). Current maturity is **2 / 4 grounded**: DRAM and RADOS.
+A first synthesis should be attempted only after at least four of these cases have primary technical evidence and reach `grounded` status in [`CASE_INDEX.md`](CASE_INDEX.md). Current maturity is **3 / 4 grounded**: magnetic core, DRAM, and RADOS.
 
 ### Results already exposed by Cases 00–05
 
@@ -124,7 +126,11 @@ The delay line shows identity through recurrent signal regeneration. Classic des
 
 > **idle nonvolatility is not read invariance.**
 
-Magnetic core exposes a useful distinction between a state remaining physically stable while unattended and a state remaining unchanged when accessed.
+Grounded magnetic-core evidence now establishes this distinction directly: the element can retain remanent state without external maintenance energy while the bounded classic read cycle can destroy the selected state and require rewrite.
+
+> **destructive read is a retention regime, not an essence of magnetic core.**
+
+Contemporary nondestructive-read work by Widrow and Brown provides a period counterexample boundary. The historically defensible claim is about classic coincident-current destructive-read systems, not every ferrite-core memory.
 
 > **access can create maintenance work.**
 
@@ -183,7 +189,7 @@ Priority bridges:
 - RAID / scrubbing / rebuild;
 - distributed replication and erasure coding.
 
-The mapped-Flash case does **not** close the general SSD/FTL bridge. The RADOS case does **not** close the general distributed-storage bridge. The grounded DRAM case likewise does **not** close the general semiconductor-memory bridge. These cases establish bounded mechanisms whose broader technical history should be coordinated with `computing-archaeology`.
+The grounded magnetic-core case does **not** close the general core-memory history. The mapped-Flash case does **not** close the general SSD/FTL bridge. The RADOS case does **not** close the general distributed-storage bridge. The grounded DRAM case likewise does **not** close the general semiconductor-memory bridge. These cases establish bounded mechanisms whose broader technical history should be coordinated with `computing-archaeology`.
 
 ## Phase 3 — Retention / transfer / computation boundary
 
@@ -258,7 +264,7 @@ The first six cases now provide six maintenance baselines:
 
 - abacus: selection, interpretation, protection, reset, and validation remain visible operator labor;
 - delay line: preservation, correction, circulation, and timing become continuous process;
-- magnetic core: the element retains state at rest while access can trigger restore work;
+- magnetic core: grounded evidence separates element-level quiescent remanence from access-triggered restore work in the bounded destructive-read scheme;
 - DRAM: a recurring schedule revisits state before its physical deadline expires, using shared row selection and sense/restore circuitry in the grounded commercial evidence;
 - mapped Flash: controller metadata, free space, relocation, and reclamation sustain repeated logical rewriting;
 - RADOS: failure detection, peering, version comparison, primary transfer, and re-replication sustain logical objects despite member-device loss.
@@ -276,7 +282,7 @@ Only after technical cases are mature:
 - test whether distributed `currentness` and repair require a more explicitly relational account of retained identity;
 - decide whether `technical retention` names one coherent operation or a family of related mechanisms.
 
-The mapped-Flash and RADOS cases are especially relevant to later synthesis because both separate logical identity from one stable physical location, but they do so at very different failure/authority scales. Grounded DRAM adds a complementary case in which logical continuity is maintained through repeated local electrical reconstruction under a deadline. Do not perform the synthesis yet.
+Grounded magnetic core, DRAM, and RADOS now give three very different maintenance regimes: quiescent remanence plus access-triggered reconstruction, deadline-driven local reconstruction, and failure-triggered distributed reconstruction. Mapped Flash remains especially relevant because it separates logical identity from one stable physical location. Do not perform the synthesis yet: one more contrasting case still needs source deepening and the variety conditions still apply.
 
 ## Research quality gates
 
