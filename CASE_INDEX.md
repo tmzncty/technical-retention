@@ -59,7 +59,7 @@ A claim may have more than one label, for example `H/P` or `E/A`.
 
 | Case | Status | Retention regime | Main methodological use | Next work |
 | --- | --- | --- | --- | --- |
-| [Abacus as Retained Position](cases/00-abacus-retained-position.md) | **first-pass** | passive mechanical position + human interpretation | test `register-like` analogy; separate working state from archive; recover period vocabulary | facsimile folio locations; older counting-rod vocabulary; non-Chinese comparison |
+| [Abacus as Retained Position](cases/00-abacus-retained-position.md) | **grounded** | passive mechanical position + human interpretation | establish passive positional working retention without importing `register`; distinguish state constraint, interpretation, and genealogy | [1592 / counting-rod / 1525 line-reckoning grounding record](evidence/00-abacus-rod-line-reckoning-grounding.md); future work is edition/comparative cleanup |
 | [Mercury Delay-Line Memory: Retention as Circulation](cases/01-mercury-delay-line-circulation.md) | **first-pass** | recirculation + regeneration | persistence as continuous activity; time as access geometry; identity through re-creation | exact patent/page anchors; direct 1949 IRE inspection; temperature-control primary source |
 | [Magnetic Core Memory: Retention at Rest, Destruction in Reading](cases/02-magnetic-core-destructive-read.md) | **grounded** | remanence + destructive read / restore in the bounded classic scheme | separate idle nonvolatility from read invariance; show access itself can create a retention obligation; bound destructive read with contemporary nondestructive alternatives | [1951–1954 grounding record](evidence/02-magnetic-core-1951-1954-grounding.md); future work should be narrow archival/semantic archaeology rather than generic core-memory expansion |
 | [DRAM Refresh as Scheduled Restoration](cases/03-dram-refresh-as-scheduled-restoration.md) | **grounded** | decaying charge + periodic regeneration; destructive-read restore in bounded 1T1C embodiment | separate time-triggered maintenance from access-triggered restore; stable logical address over repeatedly restored physical charge | [1967–1982 grounding record](evidence/03-dram-1967-1982-grounding.md); future work should be narrow failure/semantic archaeology rather than generic DRAM expansion |
@@ -74,7 +74,7 @@ This matrix should become more precise as cases mature.
 
 | Case | State substrate | Active retention work | Read | Addressing | Location stability | History retained by default? |
 | --- | --- | --- | --- | --- | --- | --- |
-| Abacus | bead position | mostly human protection / interpretation | nondestructive visual/manual | spatial column selected by user | high during one configuration | no |
+| Abacus / reckoning surface | bead/counter position + positional convention + procedural context | mostly human protection / interpretation / selection; no machine refresh merely to remain | nondestructive visual/manual | spatial position selected/interpreted by user | high during one configuration | no |
 | Delay line | propagating pulse pattern | continuous circulation / regeneration / retiming | electronically sensed; state continues by recirculation | temporal slot + index | not meaningfully static | no |
 | Magnetic core | remanent magnetization | little merely to remain at rest; active restore after classic destructive read | destructive in the bounded classic case, followed by rewrite when logical value must persist; contemporary nondestructive schemes also existed | coincident coordinate selection | high at the selected core | no |
 | DRAM | capacitor / storage-node charge | periodic regeneration because of leakage; shared row-level sense/restore infrastructure; restore after destructive read in the bounded Dennard 1T1C embodiment | destructive in the bounded Dennard embodiment; commercial dynamic memories can have nondestructive reads | word/bit-line or row/column selection | logical cell stable while physical charge is repeatedly renewed | no |
@@ -85,28 +85,33 @@ This matrix should become more precise as cases mature.
 
 ## Cross-case findings already supported
 
-After six bounded cases, several distinctions are useful enough to carry forward. **Magnetic core, DRAM, mapped Flash, and RADOS are now `grounded`; abacus and delay line remain `first-pass`.** The numeric synthesis threshold is therefore met, but the variety gate remains binding: do not perform a grand synthesis until a passive-position case is grounded and the other mechanism-coverage conditions are checked explicitly.
+After six bounded cases, **abacus/passive position, magnetic core, DRAM, mapped Flash, and RADOS are `grounded`; delay line remains `first-pass`.** The repository now satisfies both the numeric and mechanism-variety gates for beginning a bounded synthesis pass. This does **not** make the provisional theses conclusions: philosophical comparison must still be performed against the grounded mechanisms rather than substituted for them.
 
 1. **state retention ≠ history retention** — all six cases preserve current working state without automatically preserving the complete sequence that produced it;
 2. **retention mechanism ≠ apparent persistence** — an abacus configuration can sit still, a delay-line pattern survives by continual circulation, a core can remain magnetized at rest, a DRAM cell survives for a bounded interval before scheduled regeneration, mapped Flash can preserve a logical object while relocating its physical embodiment, and RADOS can preserve an object while replica membership changes;
-3. **identity of logical state ≠ identity of physical token** — delay-line regeneration, destructive-read core restore, DRAM regeneration, mapped Flash, and RADOS recovery all preserve logical sameness through changed physical state;
-4. **idle nonvolatility ≠ read invariance** — the grounded magnetic-core evidence shows that an element can retain remanent state without maintenance energy yet the bounded classic read operation can destroy that state and require rewrite;
-5. **access can itself create a retention obligation** — classic destructive-read core and Dennard's bounded 1T1C embodiment may require immediate rewrite after read;
-6. **destructive read is a regime, not an essence of magnetic core** — contemporary 1953–1954 nondestructive sensing/readout work bounds the classic destructive-read case and rejects `all core reads are destructive`;
-7. **time can itself create a retention obligation** — DRAM adds a distinct deadline: charge leakage requires scheduled regeneration even without useful access;
-8. **dynamic retention ≠ destructive read** — Dennard disclosed nondestructive alternatives; Intel 1103 manufacturer documentation combines dynamic storage and periodic refresh with nondestructive read; AMD's 1976 Am9050 directly combines a one-transistor/capacitor cell, nondestructive read, and mandatory refresh;
-9. **identity persistence ≠ location persistence** — Ban's Flash mapping explicitly keeps logical unit identity stable while the physical location changes; Intel's 1995 FTL description independently presents logical-to-physical remapping as the mechanism by which a virtual block service survives Flash erase geometry; RADOS extends this across independently failing devices;
-10. **logical invalidation ≠ physical erasure** — a block can cease to count as current (`deleted`, `dirty`, or invalidated) before the containing Flash erase unit is physically erased;
-11. **metadata can be constitutive of retention** — in mapped Flash, maps/allocation state identify the current embodiment; in RADOS, cluster-map, placement, version, and recovery state help establish which replicas currently count;
-12. **maintenance can be space/reclaim-triggered** — a nonvolatile medium may still require deferred copying and erasure so repeated logical rewrites can continue;
-13. **reclamation ≠ wear leveling** — reclamation recovers writable capacity while preserving current data; Wells's 1992-lineage wear-leveling patent adds the distinct objective of distributing switching/erase burden to extend usable medium life;
-14. **historical terminology must follow the source** — Ban's 1993-filed system uses `virtual map` / logical-unit vocabulary; Intel AP-619 documents `Flash Translation Layer (FTL)` as a PCMCIA-approved format by August 1995. Earlier mechanisms should not be retroactively renamed without evidence;
-15. **replica multiplicity ≠ retained currentness** — several physical copies may exist while only a version-consistent subset represents the current ordered state;
-16. **maintenance can be failure/repair-triggered** — distributed redundancy can degrade after failure or membership change and be restored by reconstructing current state onto replacement members; bounded 1998 NAND evidence also shows block replacement as a local device-management response to program/erase failure;
-17. **logical success ≠ durable commit** — the bounded 2006 RADOS design distinguishes replicated in-memory acknowledgement from later persistent-media commit, and the contemporaneous 2007 dissertation preserves this distinction across the expanded replication discussion;
-18. **retention of currentness metadata can be guarded separately from every material replica** — the 2007 RADOS paper explicitly protects PG logs describing what a PG should contain even while object replicas may remain missing during background recovery;
-19. **readability ≠ authorized currentness** — the 2007 RADOS design makes map-epoch and heartbeat state part of deciding whether an otherwise reachable replica may safely answer a read;
-20. **refresh can be shared reconstruction, not merely a timer event** — commercial DRAM documentation makes row selection, sense amplification, restoration, and return-to-cell part of maintaining a large array of minimal storage cells.
+3. **passive positional retention can be operational without autonomous machine readout** — Cheng's 1592 procedure directly couples designated abacus positions with an instruction to leave the completed numerical configuration unmoved, while Ries's 1525 line reckoning independently shows a positional counter field used as part of arithmetic;
+4. **the retained state may be a relation rather than an isolated token** — in positional calculation, counter + position + convention + procedure constitute the actionable state; later mapped/distributed systems automate increasingly large parts of comparable identity relations;
+5. **the degree to which a medium constrains legal states matters** — a bead frame constrains movement/position more strongly than an open line-reckoning surface even though both can support passive positional working retention;
+6. **historical material operation and modern reconstruction must remain layered** — early Chinese procedural texts establish placement/position language, while exact counting-rod manipulation sometimes remains a specialist reconstruction rather than a directly described artifact operation;
+7. **cross-cultural functional similarity ≠ genealogy** — Cheng 1592 and Ries 1525 can support a shared mechanism comparison without proving transmission, common origin, or modern-register ancestry;
+8. **identity of logical state ≠ identity of physical token** — delay-line regeneration, destructive-read core restore, DRAM regeneration, mapped Flash, and RADOS recovery all preserve logical sameness through changed physical state;
+9. **idle nonvolatility ≠ read invariance** — the grounded magnetic-core evidence shows that an element can retain remanent state without maintenance energy yet the bounded classic read operation can destroy that state and require rewrite;
+10. **access can itself create a retention obligation** — classic destructive-read core and Dennard's bounded 1T1C embodiment may require immediate rewrite after read;
+11. **destructive read is a regime, not an essence of magnetic core** — contemporary 1953–1954 nondestructive sensing/readout work bounds the classic destructive-read case and rejects `all core reads are destructive`;
+12. **time can itself create a retention obligation** — DRAM adds a distinct deadline: charge leakage requires scheduled regeneration even without useful access;
+13. **dynamic retention ≠ destructive read** — Dennard disclosed nondestructive alternatives; Intel 1103 manufacturer documentation combines dynamic storage and periodic refresh with nondestructive read; AMD's 1976 Am9050 directly combines a one-transistor/capacitor cell, nondestructive read, and mandatory refresh;
+14. **identity persistence ≠ location persistence** — Ban's Flash mapping explicitly keeps logical unit identity stable while the physical location changes; Intel's 1995 FTL description independently presents logical-to-physical remapping as the mechanism by which a virtual block service survives Flash erase geometry; RADOS extends this across independently failing devices;
+15. **logical invalidation ≠ physical erasure** — a block can cease to count as current (`deleted`, `dirty`, or invalidated) before the containing Flash erase unit is physically erased;
+16. **metadata can be constitutive of retention** — in mapped Flash, maps/allocation state identify the current embodiment; in RADOS, cluster-map, placement, version, and recovery state help establish which replicas currently count;
+17. **maintenance can be space/reclaim-triggered** — a nonvolatile medium may still require deferred copying and erasure so repeated logical rewrites can continue;
+18. **reclamation ≠ wear leveling** — reclamation recovers writable capacity while preserving current data; Wells's 1992-lineage wear-leveling patent adds the distinct objective of distributing switching/erase burden to extend usable medium life;
+19. **historical terminology must follow the source** — Ban's 1993-filed system uses `virtual map` / logical-unit vocabulary; Intel AP-619 documents `Flash Translation Layer (FTL)` as a PCMCIA-approved format by August 1995. Earlier mechanisms should not be retroactively renamed without evidence;
+20. **replica multiplicity ≠ retained currentness** — several physical copies may exist while only a version-consistent subset represents the current ordered state;
+21. **maintenance can be failure/repair-triggered** — distributed redundancy can degrade after failure or membership change and be restored by reconstructing current state onto replacement members; bounded 1998 NAND evidence also shows block replacement as a local device-management response to program/erase failure;
+22. **logical success ≠ durable commit** — the bounded 2006 RADOS design distinguishes replicated in-memory acknowledgement from later persistent-media commit, and the contemporaneous 2007 dissertation preserves this distinction across the expanded replication discussion;
+23. **retention of currentness metadata can be guarded separately from every material replica** — the 2007 RADOS paper explicitly protects PG logs describing what a PG should contain even while object replicas may remain missing during background recovery;
+24. **readability ≠ authorized currentness** — the 2007 RADOS design makes map-epoch and heartbeat state part of deciding whether an otherwise reachable replica may safely answer a read;
+25. **refresh can be shared reconstruction, not merely a timer event** — commercial DRAM documentation makes row selection, sense amplification, restoration, and return-to-cell part of maintaining a large array of minimal storage cells.
 
 These are provisional cross-case findings, not final philosophical conclusions.
 
@@ -114,18 +119,14 @@ These are provisional cross-case findings, not final philosophical conclusions.
 
 ## Current synthesis gate
 
-Do **not** write a grand `What Is Technical Retention?` synthesis yet.
+The **mechanism gate is now closed**. A synthesis pass may begin, but it must be bounded and evidence-led rather than a declaration of one universal ontology of storage.
 
-The numeric threshold is now satisfied: **4 / 4 required grounded cases** — magnetic core, DRAM, mapped Flash, and RADOS.
-
-The mechanism-variety gate still remains:
-
-- [x] at least four contrasting cases at `grounded` or better;
-- [ ] at least one **passive-position** case at `grounded` or better — the abacus case remains `first-pass`;
+- [x] at least four contrasting cases at `grounded` or better — currently five;
+- [x] at least one **passive-position** case at `grounded` or better — grounded Case 00;
 - [x] at least one case of active refresh / circulation at `grounded` or better — grounded DRAM satisfies the refresh side of this condition;
 - [x] at least one case of nonvolatile physical remanence or trapped state at `grounded` or better — grounded magnetic core and mapped Flash satisfy this from different mechanisms;
 - [x] at least one case where logical identity survives physical relocation — grounded mapped Flash;
 - [x] at least one case where logical identity survives loss/replacement of a replica member — grounded RADOS;
-- [ ] philosophical comparison must be performed after, not instead of, mechanism reconstruction; it remains intentionally deferred until the passive-position gap is closed.
+- [ ] perform philosophical comparison **after** mechanism reconstruction, beginning with explicit claim-by-claim tests against the grounded cases.
 
-**Next highest-value grounding target: Case 00 (abacus / counting-board retained position).** Grounding it would test whether the repository's vocabulary can cross the machine/non-machine boundary without importing modern `register` concepts backward, while also closing the explicit variety gate rather than merely increasing case count.
+**Next highest-value unit:** a bounded pre-synthesis comparison that asks which current project theses survive all five grounded regimes, which require subdivision, and which have counterexamples. Do not yet write a grand `What Is Technical Retention?` essay merely because the gate is open.
