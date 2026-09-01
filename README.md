@@ -216,7 +216,8 @@ See [`RELATED_REPOS.md`](RELATED_REPOS.md).
 - [`docs/PRIOR_ART.md`](docs/PRIOR_ART.md) — what has already been done and where this project can still contribute.
 - [`docs/TECHNICAL_SPINE.md`](docs/TECHNICAL_SPINE.md) — provisional mechanism lineage from retained position to distributed logical state.
 - [`docs/PHILOSOPHICAL_SPINE.md`](docs/PHILOSOPHICAL_SPINE.md) — Stiegler, Heidegger, Ernst, Kirschenbaum, and conceptual questions.
-- [`cases/06-flip-flop-powered-working-retention.md`](cases/06-flip-flop-powered-working-retention.md) — first post-synthesis technical stress test: powered bistable working state from Eccles–Jordan to ENIAC, now with a bounded Whirlwind period witness separating flip-flop implementation from register-level organization.
+- [`cases/06-flip-flop-powered-working-retention.md`](cases/06-flip-flop-powered-working-retention.md) — grounded post-synthesis technical stress test: powered bistable working state from Eccles–Jordan to ENIAC, with a bounded Whirlwind period witness separating flip-flop implementation from register-level organization.
+- [`evidence/06-burks-1947-eniac-flip-flop-grounding.md`](evidence/06-burks-1947-eniac-flip-flop-grounding.md) — Case-06 promotion record: Burks 1947 pp. 757–759 directly supply period remembering-circuit vocabulary, a published simplified ENIAC schematic, two-stable-state/DC-cross-coupling mechanism, trigger/recovery separation, and microsecond timing margins; exact PX-1-105 remains archival cleanup for drawing-specific claims.
 - [`evidence/06-flip-flop-register-boundary-addendum.md`](evidence/06-flip-flop-register-boundary-addendum.md) — Case-06 source-deepening ledger: Whirlwind R-221 closes the period `register` vocabulary gap; exact 1919 Eccles–Jordan and ENIAC drawing locators are recorded without pretending locator evidence is direct page/schematic inspection.
 - [`docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md`](docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md) — first evidence-led audit of a provisional thesis, including counterexamples to a universal active-maintenance model.
 - [`docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md`](docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md) — audit of the storage/transfer proposition against grounded cases, retaining only a controlled recoverability-relation model across time.
@@ -233,7 +234,7 @@ See [`RELATED_REPOS.md`](RELATED_REPOS.md).
 - [`RELATED_REPOS.md`](RELATED_REPOS.md) — cross-repository boundaries and reuse rules.
 - [`AGENTS.md`](AGENTS.md) — research protocol for human and AI contributors.
 
-The current Phase-2 bridge remains deliberately `first-pass`. The period architectural `register` source gap is now closed by Whirlwind R-221, but the 1919 Eccles–Jordan trigger-relay page/reprint and the original ENIAC PX-1-105 / relevant Part-II flip-flop schematic still require direct inspection before promotion. Exact locators are recorded in the Case-06 source-deepening addendum; locator recovery is not treated as equivalent to page/schematic inspection. See [`CASE_INDEX.md`](CASE_INDEX.md) for authoritative maturity status.
+The current Phase-2 flip-flop bridge is now `grounded`. Burks's directly inspected 1947 primary paper closes the general circuit-mechanism blocker without collapsing a published simplified schematic into the still-uninspected PX-1-105 original drawing. PX-1-105 and the exact 1919 periodical facsimiles remain archival cleanup for artifact-specific claims. The next bounded Phase-2 unit is **SRAM / static semiconductor cell retention**, before cache policy/interface semantics are added. See [`CASE_INDEX.md`](CASE_INDEX.md) for authoritative maturity status and [`ROADMAP.md`](ROADMAP.md) for the next slice.
 
 ---
 
