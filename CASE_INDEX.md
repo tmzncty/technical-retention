@@ -116,9 +116,17 @@ After six bounded cases, **abacus/passive position, magnetic core, DRAM, mapped 
 27. **address stability ≠ location stability** — DRAM preserves a stable cell-selection relation across repeated reconstruction, while mapped Flash and RADOS preserve higher-level designations across deliberate physical relocation or replica replacement;
 28. **address resolution ≠ currentness authorization** — mapped Flash can leave an old embodiment physically present after logical invalidation, and RADOS can resolve a reachable replica that is stale or not currently authorized to answer;
 29. **selection machinery can be retention machinery** — magnetic-core half-select margins/destructive read and DRAM sense/restore show that the way a state is selected can create disturbance or reconstruction obligations rather than merely revealing an independent stored value;
-30. **addressability is not one historical scalar** — human spatial selection, coordinate decoding, logical translation, and distributed placement are different operational relations with different costs; the repository should not narrate them as a simple monotonic ascent from `less` to `more` addressable.
+30. **addressability is not one historical scalar** — human spatial selection, coordinate decoding, logical translation, and distributed placement are different operational relations with different costs; the repository should not narrate them as a simple monotonic ascent from `less` to `more` addressable;
+31. **physical-token continuity ≠ physical-home continuity** — classic core restore and bounded DRAM regeneration can replace the immediate magnetic/electrical state while continuing to use the same selected physical location;
+32. **location can be constitutive of a retained identity** — positional calculation is a counterexample to any universal `logical state is location-independent` thesis because position participates directly in the operative numerical meaning;
+33. **relocation ≠ immateriality** — mapped Flash and RADOS let a logical identity survive replacement of physical embodiments, but every current embodiment remains material and subject to device/topology constraints;
+34. **removing one permanent home can increase dependence on retained relations** — Flash mapping/allocation state and RADOS placement/version/currentness state become constitutive precisely because physical embodiments are replaceable;
+35. **physical topology remains relevant after location abstraction** — RADOS uses failure-domain topology in placement, so absence of one permanent home does not make `where replicas are` irrelevant to durability;
+36. **permanent physical home ≠ temporary protocol authority** — RADOS can move replicas and primary/read roles while still requiring protocol-defined authority over which state may order or answer as current;
+37. **mobility can create maintenance rather than eliminate it** — Flash relocation creates map/reclamation obligations and distributed replica replacement creates peering/repair obligations;
+38. **the location-detachment sequence is functional, not teleological** — fixed cells, stable addresses, remapped blocks, and distributed replicas can coexist in one modern stack; the audit's stages do not establish one inevitable historical ascent toward placeless storage.
 
-These are provisional cross-case findings, not final philosophical conclusions. Audits 01–03 now test maintenance, temporal-transfer, and addressability claims explicitly; the next bounded test concerns privileged physical location.
+These are provisional cross-case findings, not final philosophical conclusions. Audits 01–04 now test maintenance, temporal-transfer, addressability, and privileged-location claims explicitly. The next bounded synthesis task is one cross-audit counterexample ledger before any provisional thesis is promoted to a conclusion.
 
 ---
 
@@ -132,6 +140,6 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 - [x] at least one case of nonvolatile physical remanence or trapped state at `grounded` or better — grounded magnetic core and mapped Flash satisfy this from different mechanisms;
 - [x] at least one case where logical identity survives physical relocation — grounded mapped Flash;
 - [x] at least one case where logical identity survives loss/replacement of a replica member — grounded RADOS;
-- [x] bounded philosophical/engineering comparison has begun **after** mechanism reconstruction through synthesis audits 01–03; provisional theses remain revisable and are not final conclusions.
+- [x] bounded philosophical/engineering comparison has begun **after** mechanism reconstruction through synthesis audits 01–04; provisional theses remain revisable and are not final conclusions.
 
-**Next highest-value unit:** audit README thesis 5, `logical persistence can become increasingly detached from a privileged physical location`, as a staged claim rather than a universal definition. Test location-bound counterexamples, DRAM's stable architectural cell despite physical reconstruction, mapped Flash's metadata-mediated relocation, and RADOS's removal of a permanent home while retaining temporary protocol authority.
+**Next highest-value unit:** build a cross-audit counterexample ledger that records which provisional theses have been rejected, narrowed, split, retained with scope conditions, or left untested. Do this before promoting any thesis to a conclusion or opening a grand synthesis chapter.
