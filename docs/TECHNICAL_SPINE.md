@@ -8,7 +8,7 @@ The sequence below is organized by changes in what `retention` technically requi
 
 ### First case
 
-- [`Abacus as Retained Position`](../cases/00-abacus-retained-position.md) — **first-pass**.
+- [`Abacus as Retained Position`](../cases/00-abacus-retained-position.md) — **grounded**.
 
 The first case already sharpens several distinctions that should remain visible throughout the repository:
 
@@ -77,8 +77,8 @@ See the memory track in [`tmzncty/computing-archaeology`](https://github.com/tmz
 
 ### First cases
 
-- [`Magnetic Core Memory: Retention at Rest, Destruction in Reading`](../cases/02-magnetic-core-destructive-read.md) — **first-pass** for access-triggered restoration;
-- [`DRAM Refresh as Scheduled Restoration`](../cases/03-dram-refresh-as-scheduled-restoration.md) — **first-pass** for deadline-driven regeneration.
+- [`Magnetic Core Memory: Retention at Rest, Destruction in Reading`](../cases/02-magnetic-core-destructive-read.md) — **grounded** for access-triggered restoration;
+- [`DRAM Refresh as Scheduled Restoration`](../cases/03-dram-refresh-as-scheduled-restoration.md) — **grounded** for deadline-driven regeneration.
 
 ### Candidate cases
 
@@ -109,7 +109,7 @@ The first cases already require at least two forms:
 
 ### First case
 
-- [`Magnetic Core Memory: Retention at Rest, Destruction in Reading`](../cases/02-magnetic-core-destructive-read.md) — **first-pass**.
+- [`Magnetic Core Memory: Retention at Rest, Destruction in Reading`](../cases/02-magnetic-core-destructive-read.md) — **grounded**.
 
 ### Candidate cases
 
@@ -135,7 +135,7 @@ A physical substrate can retain a distinction without continuous power, but acce
 
 ### First case
 
-- [`DRAM Refresh as Scheduled Restoration`](../cases/03-dram-refresh-as-scheduled-restoration.md) — **first-pass**.
+- [`DRAM Refresh as Scheduled Restoration`](../cases/03-dram-refresh-as-scheduled-restoration.md) — **grounded**.
 
 ### Candidate cases
 
@@ -169,7 +169,7 @@ Modern computers deliberately combine multiple retention mechanisms because no s
 
 ### First case
 
-- [`Flash Virtual Mapping: Logical Identity Without Physical Location`](../cases/04-flash-virtual-mapping-logical-identity.md) — **first-pass**.
+- [`Flash Virtual Mapping: Logical Identity Without Physical Location`](../cases/04-flash-virtual-mapping-logical-identity.md) — **grounded**.
 
 The bounded 1993 M-Systems patent establishes several points directly from period vocabulary:
 
@@ -323,6 +323,8 @@ Every stage should eventually be mapped against:
 - overwrite versus erase-before-write;
 - logical invalidation versus physical erasure;
 - access geometry;
+- designation / selection / resolution;
+- currentness / admissibility where multiple embodiments can answer;
 - latency;
 - density;
 - energy;
