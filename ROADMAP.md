@@ -81,13 +81,14 @@ Choose cases that force the method to distinguish very different kinds of retent
 - [x] establish transfer/reclamation as copy-current-state → erase-old-unit → remap;
 - [x] treat mapping/allocation metadata as retained state necessary to recover current identity;
 - [x] add later ONFI endurance/ECC evidence without projecting it backward into the 1993 system;
-- [ ] inspect the official patent PDF and add exact printed page / figure / column anchors;
-- [ ] inspect the full Masuoka et al. 1987 IEDM paper directly;
-- [ ] add an early Flash/NAND manufacturer datasheet with concrete program/erase/endurance semantics;
-- [ ] recover the first defensible primary use / standardization of `Flash Translation Layer` terminology;
-- [ ] add an early wear-leveling source; do not treat reclamation as automatically equivalent to wear leveling;
-- [ ] treat TRIM/deallocation/secure erase as a separate later case with standards evidence;
-- [ ] promote from `first-pass` to `grounded` only after source deepening.
+- [x] inspect the Ban patent-image PDF directly and add printed-page / figure anchors for erase-before-write, two-stage mapping, rewrite, transfer/reclamation, and retained map state;
+- [ ] inspect the full Masuoka et al. 1987 IEDM paper directly; bibliography/abstract recovered, but the full paper is not a central dependency of the bounded mapping claim;
+- [x] add 1990s NAND manufacturer evidence: Toshiba TC5816BFT (1998) for page/block program/erase geometry, bad blocks, program/erase failure handling, ECC, and block replacement; finite switching-life evidence is grounded separately rather than falsely attributed to this datasheet;
+- [x] establish a defensible `Flash Translation Layer` terminology/standardization anchor: Intel AP-619 (August 1995) reports that PCMCIA had recently approved the `Flash Translation Layer (FTL)` format. Treat this as `documented no later than 1995`, not proven first coinage;
+- [x] add an early wear-leveling source: Wells / Intel US 5,341,339, with application lineage to 30 October 1992; explicitly separate free-space reclamation from switching-count equalization / lifetime management;
+- [x] grounding record: [`evidence/04-flash-1992-1998-grounding.md`](evidence/04-flash-1992-1998-grounding.md);
+- [x] promote from `first-pass` to `grounded` after source deepening;
+- [ ] treat TRIM/deallocation/secure erase as a separate later case with standards evidence.
 
 ### 6. Replicated object storage
 
@@ -106,7 +107,7 @@ Choose cases that force the method to distinguish very different kinds of retent
 - [x] grounding record: [`evidence/05-rados-2006-2007-grounding.md`](evidence/05-rados-2006-2007-grounding.md);
 - [x] promote from `first-pass` to `grounded` after source deepening.
 
-A first synthesis should be attempted only after at least four of these cases have primary technical evidence and reach `grounded` status in [`CASE_INDEX.md`](CASE_INDEX.md). Current maturity is **3 / 4 grounded**: magnetic core, DRAM, and RADOS.
+The numeric threshold for a first synthesis is now met: **4 / 4 grounded** — magnetic core, DRAM, mapped Flash, and RADOS. This does **not** authorize synthesis yet. [`CASE_INDEX.md`](CASE_INDEX.md) retains a mechanism-variety gate, and the explicit passive-position condition is still open because Case 00 remains `first-pass`.
 
 ### Results already exposed by Cases 00–05
 
@@ -122,7 +123,7 @@ An abacus state persists by remaining in place; a delay-line state persists by c
 
 > **logical identity can survive physical re-creation, relocation, and member replacement.**
 
-The delay line shows identity through recurrent signal regeneration. Classic destructive-read core adds sensing followed by re-creation. DRAM adds scheduled regeneration. Mapped Flash keeps one logical address current across physical relocation. RADOS extends this to distributed repair: a failed replica can be replaced by a newly reconstructed copy on another independently failing device.
+The delay line shows identity through recurrent signal regeneration. Classic destructive-read core adds sensing followed by re-creation. DRAM adds scheduled regeneration. Grounded mapped Flash keeps one logical address current across physical relocation. RADOS extends this to distributed repair: a failed replica can be replaced by a newly reconstructed copy on another independently failing device.
 
 > **idle nonvolatility is not read invariance.**
 
@@ -148,9 +149,17 @@ Commercial DRAM evidence now makes the maintenance path concrete: row selection 
 
 Mapped Flash adds another regime: current data may need to be copied out so an erase unit can be reclaimed under free-space pressure.
 
+> **reclamation is not wear leveling.**
+
+Grounded 1992-lineage Intel evidence makes the distinction explicit. Reclamation frees space by preserving current data elsewhere before erase; wear leveling adds a different objective, distributing switching/erase burden so frequently rewritten regions do not consume usable life disproportionately.
+
+> **historical names for translation layers have dates.**
+
+Ban's 1993-filed patent uses `virtual map` / logical-unit vocabulary. Intel AP-619 documents a PCMCIA-approved `Flash Translation Layer (FTL)` format by August 1995. The project should therefore resist silently renaming earlier mechanisms with later umbrella terminology.
+
 > **failure and membership change can create maintenance work.**
 
-RADOS adds repair-triggered retention: after an OSD remains unavailable, replica membership can change and current state is reconstructed onto another OSD to restore the intended redundancy/currentness relation.
+RADOS adds repair-triggered retention: after an OSD remains unavailable, replica membership can change and current state is reconstructed onto another OSD to restore the intended redundancy/currentness relation. Toshiba's 1998 NAND datasheet supplies a smaller-scale boundary: program/erase failure can trigger block replacement and bad-block metadata.
 
 > **dynamic retention is not identical to destructive read.**
 
@@ -158,11 +167,11 @@ Dennard's patent disclosed nondestructive alternatives; Intel 1103 documentation
 
 > **logical invalidation is not identical to physical erasure.**
 
-Ban's mapping system can mark a block deleted / non-current before a later unit erase.
+Ban's mapping system can mark a block deleted / non-current before a later unit erase; Wells independently describes a replaced physical sector becoming dirty before later block clean-up.
 
 > **metadata can be part of what makes state persist as an identity.**
 
-Mapped Flash requires mapping/allocation state; RADOS additionally requires current cluster-map/placement and version/recovery state to determine which replicas should exist and which state is current.
+Mapped Flash requires mapping/allocation state; Intel's 1995 FTL account likewise makes logical-to-physical maps and allocation records operational; RADOS additionally requires current cluster-map/placement and version/recovery state to determine which replicas should exist and which state is current.
 
 > **replica multiplicity is not identical to retained currentness.**
 
@@ -189,7 +198,7 @@ Priority bridges:
 - RAID / scrubbing / rebuild;
 - distributed replication and erasure coding.
 
-The grounded magnetic-core case does **not** close the general core-memory history. The mapped-Flash case does **not** close the general SSD/FTL bridge. The RADOS case does **not** close the general distributed-storage bridge. The grounded DRAM case likewise does **not** close the general semiconductor-memory bridge. These cases establish bounded mechanisms whose broader technical history should be coordinated with `computing-archaeology`.
+The grounded magnetic-core case does **not** close the general core-memory history. The grounded mapped-Flash case does **not** close the general SSD/FTL bridge. The RADOS case does **not** close the general distributed-storage bridge. The grounded DRAM case likewise does **not** close the general semiconductor-memory bridge. These cases establish bounded mechanisms whose broader technical history should be coordinated with `computing-archaeology`.
 
 ## Phase 3 — Retention / transfer / computation boundary
 
@@ -207,6 +216,7 @@ Research problems:
 - When a mapping layer moves state, is the retained object best described as data, address, relation, or all three?
 - When replicas disagree, is `currentness` itself retained metadata/protocol state?
 - How should `acknowledged`, `visible`, `replicated`, and `durably committed` be separated across systems?
+- Should **wear/lifetime-triggered placement** remain a separate maintenance category from **capacity/reclaim-triggered maintenance**, given Wells's explicit distinction?
 
 This phase should engage Ernst directly and use concrete mechanisms rather than terminology alone.
 
@@ -231,12 +241,14 @@ Build a comparative map of:
 - loss of enough current replicas/recovery history to establish state;
 - placement / membership-state loss;
 - correlated failure;
+- wear exhaustion;
+- bad-block growth / replacement failure;
 - format / software obsolescence;
 - institutional abandonment.
 
 Goal: replace the single word `forgetting` with a mechanism-sensitive vocabulary.
 
-Cases 00–05 already expose distinct failure families: interpretive/context loss; loss of circulation/timing; destructive-access loss; missed refresh deadlines; mapping/reclamation loss; and distributed replica/currentness/recovery failure.
+Cases 00–05 already expose distinct failure families: interpretive/context loss; loss of circulation/timing; destructive-access loss; missed refresh deadlines; mapping/reclamation/wear/failing-block loss; and distributed replica/currentness/recovery failure.
 
 ## Phase 5 — Maintenance and invisible work
 
@@ -266,10 +278,10 @@ The first six cases now provide six maintenance baselines:
 - delay line: preservation, correction, circulation, and timing become continuous process;
 - magnetic core: grounded evidence separates element-level quiescent remanence from access-triggered restore work in the bounded destructive-read scheme;
 - DRAM: a recurring schedule revisits state before its physical deadline expires, using shared row selection and sense/restore circuitry in the grounded commercial evidence;
-- mapped Flash: controller metadata, free space, relocation, and reclamation sustain repeated logical rewriting;
+- mapped Flash: grounded evidence separates map/currentness maintenance, free-space reclamation, switching-life equalization, and later bounded bad-block/ECC replacement rather than treating them as one generic `garbage collection` activity;
 - RADOS: failure detection, peering, version comparison, primary transfer, and re-replication sustain logical objects despite member-device loss.
 
-This shift among **human maintenance**, **continuous process maintenance**, **access-triggered restoration**, **deadline-driven scheduled maintenance**, **capacity/reclaim-triggered maintenance**, and **failure/repair-triggered maintenance** should remain a major comparative axis.
+This shift among **human maintenance**, **continuous process maintenance**, **access-triggered restoration**, **deadline-driven scheduled maintenance**, **capacity/reclaim-triggered maintenance**, **wear/lifetime management**, and **failure/repair-triggered maintenance** should remain a major comparative axis.
 
 ## Phase 6 — Philosophical synthesis
 
@@ -282,7 +294,7 @@ Only after technical cases are mature:
 - test whether distributed `currentness` and repair require a more explicitly relational account of retained identity;
 - decide whether `technical retention` names one coherent operation or a family of related mechanisms.
 
-Grounded magnetic core, DRAM, and RADOS now give three very different maintenance regimes: quiescent remanence plus access-triggered reconstruction, deadline-driven local reconstruction, and failure-triggered distributed reconstruction. Mapped Flash remains especially relevant because it separates logical identity from one stable physical location. Do not perform the synthesis yet: one more contrasting case still needs source deepening and the variety conditions still apply.
+Magnetic core, DRAM, mapped Flash, and RADOS now give **four grounded cases** with sharply different regimes: quiescent remanence plus access-triggered reconstruction, deadline-driven local reconstruction, nonvolatile state plus relocation/reclamation/wear management, and failure-triggered distributed reconstruction. The numeric threshold is therefore closed. Do not perform the synthesis yet: the explicit passive-position variety condition remains open because the abacus case is still `first-pass`. Grounding Case 00 is now higher value than adding a fifth already-machine-centered grounded case.
 
 ## Research quality gates
 
