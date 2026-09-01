@@ -135,22 +135,43 @@ The current working lesson is therefore:
 
 ---
 
-## 5. Kirschenbaum: inscription survives below the interface
+## 5. Kirschenbaum: forensic materiality beyond the interface and beyond disk
 
-Matthew Kirschenbaum's forensic approach is important because the apparently immaterial digital object leaves material and recoverable traces through actual storage devices.
+Matthew Kirschenbaum's forensic approach is important because the apparently immaterial digital object must be read through actual inscriptions, storage substrates, and material histories rather than only through its screen-level manifestation.
 
-Key questions to carry forward:
+The bounded [`PHILOSOPHICAL_TEST_04_KIRSCHENBAUM_FORENSIC_MATERIALITY.md`](PHILOSOPHICAL_TEST_04_KIRSCHENBAUM_FORENSIC_MATERIALITY.md) now tests that approach against grounded mapped Flash and RADOS, with Wei et al. FAST 2011 used as a deliberately later SSD sanitization boundary rather than projected backward into the 1993 Flash case.
 
-- erasure;
-- variability;
-- repeatability;
-- survivability;
-- forensic residue;
-- what the user interface claims versus what the substrate does.
+The test retains Kirschenbaum's distinction between **forensic materiality** — physical particularity and individualized material history — and **formal materiality** — relational computational states. It also preserves his warning that these categories cannot simply be mapped onto `hardware` and `software`.
 
-Modern Flash, SSD controllers, copy-on-write systems, cloud versioning, and encrypted storage create new cases where `deleted`, `overwritten`, `gone`, and `unreachable` are technically different states.
+But the hard-drive-centered mechanism cannot be universalized into a law that every obsolete digital state leaves indefinitely recoverable residue. Managed Flash and distributed storage require stronger distinctions:
 
-The Heidegger orderability test sharpens the handoff into this section: a state can cease to be **current/orderable under an interface** while its physical embodiment survives. Kirschenbaum should therefore be tested against mapped-Flash invalidation/remapping and distributed copies without assuming that interface disappearance and physical disappearance are the same event.
+```text
+interface disappearance
+        !=
+logical invalidation
+        !=
+physical destruction
+        !=
+forensic recoverability
+        !=
+authoritative currentness
+```
+
+Mapped Flash can leave an obsolete embodiment physically present after the map has moved current identity elsewhere; later SSD experiments show that controller indirection can leave raw-Flash remnants invisible through the normal host interface, while reclamation, sanitization, or key destruction can later change recoverability. RADOS adds a distributed version of the problem: several physical replicas may survive as material witnesses while version, epoch, peering, and authority determine which one counts as current.
+
+The project therefore adds two controlled comparison rules:
+
+> **forensic witness ≠ authoritative current state**
+
+and
+
+> **logical-object survivability ≠ current-embodiment survivability ≠ forensic-trace survivability**
+
+These are project terms, not Kirschenbaum's historical vocabulary.
+
+The guardrail is now:
+
+> **Forensic materiality travels beyond magnetic disk as a methodological demand to investigate embodiment and trace history. Hard-drive-specific assumptions about overwrite, remanence, and recovery must be re-grounded for Flash, SSD controllers, encryption, and distributed systems rather than carried over by analogy.**
 
 ---
 
