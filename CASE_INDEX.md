@@ -130,9 +130,17 @@ After six bounded cases, **abacus/passive position, magnetic core, DRAM, mapped 
 41. **physical survival ≠ retained current state** — an uninterpretable positional configuration, an invalidated Flash block, or a stale/deauthorized RADOS replica can remain materially present after it has ceased to function as the intended current state;
 42. **missed maintenance can be a forgetting mechanism, but maintenance triggers differ** — destructive core read creates an access-triggered restore obligation, DRAM creates a deadline-triggered refresh obligation, and distributed systems create failure/repair-triggered obligations;
 43. **relation loss can matter as much as payload loss** — positional convention/procedure, Flash mapping/allocation, and RADOS version/PG-log/currentness state can be required to recover which surviving state is meaningful or current;
-44. **unavailability, staleness, logical deletion, and physical erasure are not synonyms** — each can occur without some of the others, and temporary loss of service should not be counted as technical forgetting merely because the state cannot be used at one moment.
+44. **unavailability, staleness, logical deletion, and physical erasure are not synonyms** — each can occur without some of the others, and temporary loss of service should not be counted as technical forgetting merely because the state cannot be used at one moment;
+45. **maintenance visibility is observer-relative** — a DRAM refresh can be absent from an application's semantic model while remaining a first-class timing/design obligation; RADOS repair can be transparent to an object client while highly visible to operators;
+46. **automation ≠ invisibility** — a system can automate restore, refresh, remapping, or repair while exposing timing, degraded state, capacity consumption, diagnostics, or implementation constraints to another layer;
+47. **interface invisibility ≠ labor disappearance** — core manufacturing/support work and distributed replacement/infrastructure remain material and institutional even when a logical memory/object interface hides lower-layer operations;
+48. **nonvolatility can reduce one maintenance obligation while leaving others intact** — core remanence and Flash quiescence remove periodic refresh merely to keep an idle physical state present, but access, mapping, reclaim, wear, failure, and system-support obligations remain;
+49. **reliability is not one cross-period scalar** — positional disturbance, half-select/sense error, missed refresh, Flash wear/block failure, and replica/currentness failure are different failure models and cannot be ranked by one unsupported `more reliable` scale;
+50. **self-healing ≠ maintenance-free** — automated distributed repair still depends on surviving current state, functioning control machinery, spare capacity, replacement members, and physical failure-domain assumptions;
+51. **stable interfaces can relocate retention work** — classic core hides read–rewrite in the memory cycle, DRAM hides scheduled reconstruction below ordinary software, mapped Flash hides physical relocation behind logical designation, and RADOS hides replica replacement behind the object service;
+52. **work displacement is functional, not teleological** — visible human procedure, device/controller work, protocol repair, manufacturing, and operations coexist in modern stacks; the evidence does not establish a historical law that later systems necessarily hide more maintenance or use less human labor.
 
-These are provisional cross-case findings, not final philosophical conclusions. Audits 01–05 now test maintenance, temporal-transfer, addressability, privileged-location, and technical-forgetting claims explicitly; the cross-audit ledger records the negative results. Thesis 6 remains unaudited.
+These are provisional cross-case findings, not final philosophical conclusions. Audits 01–06 now test all six project-level theses explicitly; the cross-audit ledger records both the revised survivors and the negative results. The next synthesis step is a named prior-art/philosophical test rather than another generic thesis.
 
 ---
 
@@ -146,6 +154,6 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 - [x] at least one case of nonvolatile physical remanence or trapped state at `grounded` or better — grounded magnetic core and mapped Flash satisfy this from different mechanisms;
 - [x] at least one case where logical identity survives physical relocation — grounded mapped Flash;
 - [x] at least one case where logical identity survives loss/replacement of a replica member — grounded RADOS;
-- [x] bounded philosophical/engineering comparison has begun **after** mechanism reconstruction through synthesis audits 01–05; provisional theses remain revisable and are not final conclusions.
+- [x] all six README project-level theses have received bounded synthesis audits; none is promoted to a final conclusion.
 
-**Next highest-value unit:** audit README thesis 6, separating interface invisibility, automation, reliability, human labor, controller work, and infrastructure rather than assuming a historical law that more reliable retention automatically hides more maintenance.
+**Next highest-value unit:** a bounded Wolfgang Ernst operational/microtemporal test that compares quiescent positional/core retention, deadline-driven DRAM refresh, deferred Flash reclamation, failure-triggered RADOS repair, and the first-pass delay-line case only with a maturity caveat.
