@@ -216,6 +216,7 @@ See [`RELATED_REPOS.md`](RELATED_REPOS.md).
 - [`docs/PRIOR_ART.md`](docs/PRIOR_ART.md) — what has already been done and where this project can still contribute.
 - [`docs/TECHNICAL_SPINE.md`](docs/TECHNICAL_SPINE.md) — provisional mechanism lineage from retained position to distributed logical state.
 - [`docs/PHILOSOPHICAL_SPINE.md`](docs/PHILOSOPHICAL_SPINE.md) — Stiegler, Heidegger, Ernst, Kirschenbaum, and conceptual questions.
+- [`cases/06-flip-flop-powered-working-retention.md`](cases/06-flip-flop-powered-working-retention.md) — first post-synthesis technical stress test: powered bistable working state from Eccles–Jordan to ENIAC, separating continuous power from periodic refresh and discrete retrieval from later state-sensitive use.
 - [`docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md`](docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md) — first evidence-led audit of a provisional thesis, including counterexamples to a universal active-maintenance model.
 - [`docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md`](docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md) — audit of the storage/transfer proposition against grounded cases, retaining only a controlled recoverability-relation model across time.
 - [`docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md`](docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md) — audit separating retention from designation, selection/resolution, currentness/admissibility, and recovery across grounded cases.
@@ -230,6 +231,8 @@ See [`RELATED_REPOS.md`](RELATED_REPOS.md).
 - [`ROADMAP.md`](ROADMAP.md) — staged research program.
 - [`RELATED_REPOS.md`](RELATED_REPOS.md) — cross-repository boundaries and reuse rules.
 - [`AGENTS.md`](AGENTS.md) — research protocol for human and AI contributors.
+
+The current Phase-2 bridge is deliberately still `first-pass`: the 1918 patent and 1946 ENIAC report are strong primary anchors, but the 1919 trigger-relay paper, original ENIAC circuit drawings/Part II, and a period architectural `register` source should be inspected before promotion. See [`CASE_INDEX.md`](CASE_INDEX.md) for authoritative maturity status.
 
 ---
 
