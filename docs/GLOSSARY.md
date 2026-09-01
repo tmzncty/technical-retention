@@ -300,29 +300,34 @@ These categories remain provisional until more cases test them.
 
 ## technical forgetting
 
-Loss, invalidation, or inaccessibility of retained state through a specific mechanism.
+A **layer-specific loss of recoverability, currentness, identity, interpretation, or serviceability through an identifiable mechanism**.
 
-Do not use `forgetting` without identifying the mechanism where possible.
+After [`SYNTHESIS_AUDIT_05_TECHNICAL_FORGETTING.md`](SYNTHESIS_AUDIT_05_TECHNICAL_FORGETTING.md), do not use `forgotten` as a synonym for any one of `physically destroyed`, `deleted`, `stale`, `unavailable`, or `unreachable`.
 
-Candidate mechanisms include:
+A technical-forgetting claim should identify at least:
 
-- decay;
-- power loss;
-- refresh failure;
-- overwrite;
-- erase;
-- logical invalidation / deletion;
-- reclamation;
-- wear exhaustion;
-- bad-block growth / failed replacement;
-- index loss;
-- mapping or metadata loss;
-- key destruction;
-- corruption;
-- bit rot;
-- controller failure;
-- format obsolescence;
-- institutional abandonment.
+1. **target layer** — physical distinction, logical value/identity, relation/currentness, serviceability, history, or durable threshold;
+2. **mechanism** — disturbance/destruction, missed maintenance, logical invalidation/deauthorization, relation/metadata loss, or failed reconstruction;
+3. **masking condition** — whether another current embodiment or reconstruction path preserves the higher-level state;
+4. **recoverability boundary** — temporary unavailability, stale/obsolete residue, logical deletion, or actual loss of recoverable current state.
+
+Grounded examples include:
+
+- moved/reset positional state;
+- destructive core read without required rewrite;
+- DRAM charge decay after a missed refresh obligation;
+- Flash logical invalidation before later physical erasure;
+- loss of Flash mapping/allocation relations needed to identify the current embodiment;
+- RADOS stale/deauthorized replicas versus actual loss of recoverable current state;
+- failed reconstruction after redundancy has degraded.
+
+Important counterexamples:
+
+- **physical loss does not always imply logical forgetting** — DRAM reconstruction, Flash relocation/reclamation, and RADOS replica replacement can preserve a higher-layer state;
+- **physical survival does not always imply retained current state** — a positional configuration can lose interpretive context, and Flash/RADOS can retain stale or invalid embodiments;
+- **unavailability is not automatically forgetting** — a state can be temporarily unreachable or not yet admissible and later return to service.
+
+Candidate mechanisms not yet covered by the five-case bounded audit include key destruction, bit rot, media/format obsolescence, controller-wide failure, and institutional abandonment. Keep them as open research categories rather than treating the current taxonomy as complete.
 
 ## availability
 
