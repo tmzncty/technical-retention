@@ -214,7 +214,8 @@ See [`RELATED_REPOS.md`](RELATED_REPOS.md).
 - [`docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md`](docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md) — audit separating retention from designation, selection/resolution, currentness/admissibility, and recovery across grounded cases.
 - [`docs/SYNTHESIS_AUDIT_04_PRIVILEGED_LOCATION.md`](docs/SYNTHESIS_AUDIT_04_PRIVILEGED_LOCATION.md) — audit distinguishing physical-token replacement, stable physical home, metadata-mediated relocation, replaceable replicas, and temporary protocol authority.
 - [`docs/SYNTHESIS_AUDIT_05_TECHNICAL_FORGETTING.md`](docs/SYNTHESIS_AUDIT_05_TECHNICAL_FORGETTING.md) — audit separating physical destruction, missed maintenance, logical invalidation, relation/currentness loss, recoverability loss, and masking by redundancy.
-- [`docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md`](docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md) — cross-audit control ledger recording rejected strong claims, required decompositions, scoped survivors, and unaudited theses before any conclusion is promoted.
+- [`docs/SYNTHESIS_AUDIT_06_MAINTENANCE_VISIBILITY.md`](docs/SYNTHESIS_AUDIT_06_MAINTENANCE_VISIBILITY.md) — audit rejecting a monotonic `more reliable -> more hidden maintenance` law while separating reliability, automation, interface invisibility, labor, and infrastructure.
+- [`docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md`](docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md) — cross-audit control ledger recording rejected strong claims, required decompositions, scoped survivors, and thesis status before any conclusion is promoted.
 - [`ROADMAP.md`](ROADMAP.md) — staged research program.
 - [`RELATED_REPOS.md`](RELATED_REPOS.md) — cross-repository boundaries and reuse rules.
 - [`AGENTS.md`](AGENTS.md) — research protocol for human and AI contributors.
@@ -230,9 +231,9 @@ The project begins with several hypotheses to test rather than assume:
 3. **Addressability is a separate operational relation layered onto retention.** A state may persist without being autonomously or cheaply selectable, while a stable logical designation can survive changes in physical embodiment. Analyze designation and selection/resolution separately from currentness/admissibility and read/recovery; do not equate address with physical location or addressability with availability. See the bounded [addressability audit](docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md).
 4. **Technical forgetting is layer- and mechanism-specific.** A retained state can cease to remain usable through physical destruction, missed restoration/refresh, logical invalidation, loss of mapping/interpretive/currentness relations, or failed reconstruction. These events are not equivalent to one another or to temporary unavailability, and lower-layer loss can be masked by relocation, reconstruction, or redundancy. See the bounded [technical-forgetting audit](docs/SYNTHESIS_AUDIT_05_TECHNICAL_FORGETTING.md).
 5. **Logical persistence can become detached from any one permanent physical home without becoming placeless.** Some systems keep a stable location while repeatedly reconstructing physical state; mapped and distributed systems go further by letting identity survive relocation or replica replacement through retained mapping, placement, version, and authority relations. Treat this as a mechanism comparison, not a one-way historical law. See the bounded [privileged-location audit](docs/SYNTHESIS_AUDIT_04_PRIVILEGED_LOCATION.md).
-6. **The more reliable retention becomes, the more its maintenance disappears from experience.** This makes maintenance labor and hidden machinery historically important.
+6. **Reliable retention can depend on maintenance displaced below or beyond the user's interface, but reliability, automation, invisibility, labor, and infrastructure are separate variables.** Ask what failure is being survived, who no longer has to perform or observe the maintenance, which layer now performs it, and which human/material dependencies remain. Do not turn this into a historical law that `more reliable` means `more hidden work`. See the bounded [maintenance-visibility audit](docs/SYNTHESIS_AUDIT_06_MAINTENANCE_VISIBILITY.md).
 
-Each thesis must be vulnerable to counterexamples. The current cross-audit status, including which theses remain unaudited, is tracked in [`docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md`](docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md).
+Each thesis must remain vulnerable to counterexamples. The current cross-audit status and negative results are tracked in [`docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md`](docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md).
 
 ---
 
@@ -254,4 +255,4 @@ Those layers must never silently collapse into one another.
 
 ## Status
 
-Early research-program scaffold. The first phase is to establish prior art, vocabulary, a defensible technical spine, and several narrowly sourced case studies before attempting a grand synthesis.
+The mechanism-variety gate is open and the first bounded six-thesis audit sequence is complete. No thesis has been promoted to a final conclusion; each surviving formulation remains scope-limited and counterexample-sensitive. The next synthesis work should test named philosophical/media-theoretical prior art against the grounded mechanisms one claim at a time rather than begin a grand philosophy of storage.
