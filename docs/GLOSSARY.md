@@ -165,13 +165,23 @@ Examples include bad-sector replacement and Flash address-translation systems.
 
 Remapping is central to the distinction between **identity persistence** and **location persistence**.
 
-Case 04 adds an important refinement: remapping metadata may itself be part of the retained state needed to decide which physical embodiment currently counts.
+Grounded Case 04 adds an important refinement: remapping metadata may itself be part of the retained state needed to decide which physical embodiment currently counts.
+
+## Flash Translation Layer (FTL)
+
+A historical and technical term that must be dated rather than projected backward automatically.
+
+For this repository, Intel Application Note AP-619 (August 1995) is a directly inspected primary terminology anchor: Intel reported that a sector-oriented Flash-media format had been approved by PCMCIA as the **Flash Translation Layer (FTL)** format. The same document describes FTL as remapping host-style block writes to free Flash areas, invalidating old areas, recording physical placement, and presenting logical-to-physical virtual block semantics.
+
+Use `FTL` freely for sources and systems that use or clearly inherit the term. For earlier systems such as Ban's 1993-filed `Flash file system` patent, preserve the source's own vocabulary (`virtual map`, `logical unit`, `physical address`, `transfer unit`) unless making an explicitly labeled later functional comparison.
+
+The current evidence establishes `FTL` **no later than 1995** in this PCMCIA/Intel context. It does not establish first coinage.
 
 ## logical invalidation
 
 A change in metadata or allocation state by which a physical embodiment ceases to count as the current logical object, even though the underlying physical region has not necessarily been erased or destroyed.
 
-In the bounded 1993 M-Systems Flash case, a block can be marked `deleted and not writable` while the containing erase unit remains physically unerased until later reclamation.
+In the bounded 1993 M-Systems Flash case, a block can be marked `deleted and not writable` while the containing erase unit remains physically unerased until later reclamation. Wells's 1992-lineage Intel work similarly describes replaced physical sectors becoming `dirty` before later block clean-up.
 
 Do not assume that logical invalidation implies forensic recoverability. It establishes a semantic/architectural distinction from physical erasure, not a universal recovery result.
 
@@ -207,7 +217,26 @@ A reclamation cycle may include:
 3. erasing / freeing the old region;
 4. updating identity or allocation metadata.
 
-The term is broader than any one implementation's `garbage collection` algorithm. Do not use the two as automatic historical synonyms.
+The term is broader than any one implementation's `garbage collection` or `clean-up` algorithm. Do not use these as automatic historical synonyms.
+
+Grounded Flash evidence makes an additional rule necessary:
+
+> **reclamation is not automatically wear leveling.**
+
+A reclaim operation can be selected simply because a region contains enough obsolete state to make erasure worthwhile. A wear-leveling policy introduces an additional lifetime objective based on how much erase/program/switching burden regions have already received.
+
+## wear leveling
+
+A placement or reclamation policy whose objective is to distribute finite program/erase/switching burden across a Flash medium so that a frequently updated workload does not consume some regions' usable life much earlier than others.
+
+The repository's early primary anchor is Steven E. Wells / Intel, `Method for wear leveling in a flash EEPROM memory`, with application lineage to 30 October 1992. That source explicitly distinguishes ordinary `cleaning up a block` from choosing clean-up work using both invalid-sector count and accumulated switching operations.
+
+Therefore:
+
+- **reclamation** answers a capacity question: which obsolete physical state should be erased so writable space returns?
+- **wear leveling** answers a lifetime-distribution question: where should writes/erases be placed so physical wear is not pathologically concentrated?
+
+One operation may serve both purposes, but the concepts are not identical.
 
 ## migration
 
@@ -245,7 +274,9 @@ Maintenance triggers can differ. Current cases expose at least:
 - continuous maintenance (delay-line circulation);
 - access-triggered restoration (classic destructive-read core);
 - deadline-driven scheduled maintenance (DRAM refresh);
-- capacity/reclaim-triggered maintenance (mapped Flash).
+- capacity/reclaim-triggered maintenance (mapped Flash);
+- wear/lifetime-driven placement or reclamation (mapped Flash / early wear-leveling evidence);
+- failure/repair-triggered maintenance (RADOS; bounded later NAND block replacement).
 
 These categories remain provisional until more cases test them.
 
@@ -264,6 +295,8 @@ Candidate mechanisms include:
 - erase;
 - logical invalidation / deletion;
 - reclamation;
+- wear exhaustion;
+- bad-block growth / failed replacement;
 - index loss;
 - mapping or metadata loss;
 - key destruction;
