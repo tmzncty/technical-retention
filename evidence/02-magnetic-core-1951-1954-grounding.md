@@ -1,0 +1,303 @@
+# Magnetic Core 1951–1954 grounding record
+
+This companion evidence record deepens [`cases/02-magnetic-core-destructive-read.md`](../cases/02-magnetic-core-destructive-read.md). It is deliberately narrow: it grounds the case's central retention claims in primary invention, machine, and boundary evidence without duplicating the broader engineering, labor, and manufacturing history already present in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md).
+
+**Canonical maturity status is tracked in [`CASE_INDEX.md`](../CASE_INDEX.md).**
+
+## Grounding question
+
+The case argues that classic coincident-current magnetic-core memory exposes a retention regime with an unusual split:
+
+- the magnetic element can retain a binary state quiescently through remanence, without periodic refresh merely to keep the bit present;
+- the ordinary read operation in the bounded classic scheme can destroy that retained physical state and therefore create an immediate rewrite obligation;
+- this destructive-read semantic was an actual implemented system concern, not only a patent proposal;
+- destructive read is not intrinsic to every magnetic-core memory scheme, because contemporary engineers also developed nondestructive readout.
+
+To promote the case beyond `first-pass`, those claims need independent primary support and exact source locations.
+
+---
+
+## Source A — Forrester US 2,736,880: stable remanence, coordinate selection, destructive read
+
+Jay W. Forrester, **“Multicoordinate Digital Information Storage Device,”** U.S. Patent 2,736,880, filed 11 May 1951, issued 28 February 1956.
+
+Transcription and scanned patent:
+https://patents.google.com/patent/US2736880A/en
+
+### A1. The core has two stable zero-excitation states
+
+**Printed patent pp. 1–2; hysteresis discussion associated with FIG. 1.**
+
+Forrester describes two zero-applied-force magnetic conditions that remain after sufficiently strong excitation is removed. Those remanent conditions are assigned to binary `0` and `1`.
+
+The patent also explains that repeated applications of a lower magnetizing force should not materially alter the state, while a sufficiently large selecting force can reverse it.
+
+This grounds **quiescent retention** at the magnetic-element level without requiring a periodic refresh cycle.
+
+### A2. Coordinate selection depends on tolerating repeated nonselecting disturbance
+
+**Printed patent pp. 2–3; coordinate-array description.**
+
+The selected element receives the required combined coordinate excitation while other cores can experience lesser currents without changing state. The patent states that already magnetized cores can remain in their previous stable conditions through repeated lower-magnitude excitations while a desired core is selected and read.
+
+Retention is therefore not only survival in an untouched drawer: the element must remain stable while neighboring memory traffic repeatedly produces nonselecting disturbance.
+
+### A3. Reading can erase what was stored, and the prior information can be rewritten
+
+**Printed patent p. 2, readout discussion.**
+
+The patent explicitly states that, in the described read scheme, reading is effectively the same operation as writing toward the read reference state. It therefore erases the previous stored state; if the information must remain available, the previous state can be rewritten.
+
+This is the strongest invention-level evidence for the case's central distinction:
+
+> **idle nonvolatility does not imply read invariance.**
+
+The relevant sequence is not metaphorical:
+
+```text
+remanent state
+    -> selected read excitation
+    -> sense whether flux reverses
+    -> old logical value becomes known
+    -> selected core is left in the forced reference state
+    -> rewrite when the old logical value must persist
+```
+
+---
+
+## Source B — Papian 1952: retention under nonselecting disturbance is a cell criterion
+
+William N. Papian, **“A Coincident-Current Magnetic Memory Cell for the Storage of Digital Information,”** *Proceedings of the I.R.E.*, vol. 40, no. 4, April 1952, pp. 475–478. DOI: 10.1109/JRPROC.1952.274045.
+
+MIT DOME record:
+https://dome.mit.edu/handle/1721.3/40248
+
+### B1. `Remanent flux` and repeated `nonselecting` disturbances are period vocabulary
+
+**Printed p. 475, summary / opening discussion.**
+
+Papian describes a ring-shaped ferromagnetic memory cell and states that a usable core must retain a large percentage of its remanent flux in the proper direction despite repeated `nonselecting` disturbances. He introduces retention and signal ratios as quantitative ways of evaluating candidate cores.
+
+This is important because it prevents the project from translating the whole problem into later textbook vocabulary. The contemporary engineering problem was already explicitly one of **retaining remanent state under the disturbances generated by selection architecture**.
+
+### B2. The paper evaluates memory suitability as a systems property, not magnetism alone
+
+**Printed pp. 475–478; experimental results include printed p. 477.**
+
+The paper compares cores by B-H behavior, signal ratios, response, and repeated high-speed operation. The relevant historical point is not a universal numerical threshold. It is that magnetic state retention, selection margin, and readable signal were evaluated together as requirements for a practical memory cell.
+
+### Archive-access note
+
+The MIT archival record and page-level indexed scan expose the article's exact bibliographic identity and printed-page text. In this research environment the archive did not permit a stable direct rendering of the complete scanned PDF. The central mechanism claims in this grounding record therefore do **not** depend on Papian 1952 alone: they are independently supported by Forrester's patent, Papian's 1953 machine paper, the 1953 MTC register memorandum, and 1954 nondestructive-read work below.
+
+A future archival cleanup can attach a directly rendered local scan if one becomes available, but the case is no longer single-source-fragile on this point.
+
+---
+
+## Source C — Papian 1953: destructive read–rewrite is an implemented M.I.T. memory cycle
+
+William N. Papian, **“The M.I.T. Magnetic-Core Memory,”** *Proceedings of the Third Eastern Joint Computer Conference*, December 1953, pp. 37–42.
+
+Proceedings scan (Bitsavers / AFIPS collections):
+https://bitsavers.org/pdf/afips/1953-12_%2304.pdf
+
+### C1. The machine paper says the read is destructive and the word must be rewritten
+
+**Printed p. 38.**
+
+Papian's description of the M.I.T. core memory states that the read operation brings out a signal representing the stored digit but is **destructive**, and that the word must be rewritten. The paper also describes the information being held in a memory-buffer register during the operation.
+
+This matters because it closes a gap left by the patent alone:
+
+> destructive read followed by rewrite was not merely one proposed circuit semantics; it was part of the documented operating cycle of the M.I.T. magnetic-core memory.
+
+### C2. Read and rewrite together form a timed memory cycle
+
+**Printed p. 38; timing and block-schematic discussion.**
+
+The paper reports a read–rewrite, or memory, cycle of approximately **9 microseconds** for the bounded system and shows the address-selection and read/write organization in its figures.
+
+The number is machine-specific and must not be generalized to `core memory` as a technology. Its value here is semantic: the system's ordinary access cycle already includes the time required to reconstruct retained state after destructive read.
+
+---
+
+## Source D — Mayer & Papian M-2121, April 1953: the implemented control path has a `write part of the cycle`
+
+R. Mayer and W. N. Papian, **“Block Diagrams: Memory Address Register and Memory Buffer Register,”** Project Whirlwind Memorandum M-2121, 27 April 1953.
+
+Accessible Project Whirlwind scan:
+https://bitsavers.org/pdf/mit/whirlwind/M-series/M-2121_Block_Diagrams_Memory_Address_Register_and_Memory_Buffer_Register_19530427.pdf
+
+### D1. Memory registers remain active through the write portion of every memory cycle
+
+**One-page memorandum, opening description and block diagram.**
+
+The memorandum describes the memory-address and memory-buffer registers used with the Whirlwind II magnetic-core memory. It states that on any memory cycle both registers must supply signals to the rest of the memory system **until the end of the write part of the cycle**.
+
+This is useful machine-control evidence because it makes the read/write cycle visible below the phrase `destructive read`: the computer's register/control structure is organized around a memory cycle that includes a write phase.
+
+The memorandum does not, by itself, prove that every write phase is always a restore of a prior `1`; it is used together with Papian 1953 and Forrester's read semantics.
+
+---
+
+## Source E — Widrow 1954: destructive read is the common scheme, but nondestructive readout is historically real
+
+Bernard Widrow, **“A Radio-Frequency Nondestructive Readout For Magnetic-Core Memories,”** *Transactions of the I.R.E. Professional Group on Electronic Computers*, EC-3, no. 4, December 1954.
+
+Stanford-hosted scan:
+https://isl.stanford.edu/~widrow/papers/c1954aradiofrequency.pdf
+
+### E1. Widrow explicitly describes the then-common coincident-current read as destructive
+
+**Opening page and following page, introduction and conventional readout description.**
+
+Widrow states that the multicoordinate magnetic-core memories in general use involved destructive reading: the stored information is destroyed when read, so additional time must be allowed to rewrite it when retention is required.
+
+The conventional coincident-current description then explains that forcing a selected core toward the read state produces a sense pulse when a reversal occurs and again notes that provision must be made for rewriting if the information is to be retained.
+
+This independently corroborates the read–restore semantic after the M.I.T. machine had become operational.
+
+### E2. The same paper is a contemporary counterexample boundary
+
+The rest of the paper develops a **radio-frequency nondestructive readout** method.
+
+Therefore the historically defensible claim is narrow:
+
+> classic coincident-current core memory often used destructive read followed by rewrite.
+
+The following overreach is rejected:
+
+> every magnetic-core memory must destroy the stored state when read.
+
+The counterexample is not a later textbook caveat; it is contemporary research from the same development period.
+
+---
+
+## Source F — Brown US 2,902,676: quiescent state without maintenance energy and a second nondestructive boundary
+
+Edgar Alan Brown, **“Non-destructive sensing of magnetic cores,”** U.S. Patent 2,902,676, filed 1 October 1953, issued 1 September 1959.
+
+Transcription and scan:
+https://patents.google.com/patent/US2902676A/en
+
+### F1. The patent explicitly separates remanent retention from maintenance energy
+
+**Printed patent p. 1, introductory magnetic-state discussion.**
+
+Brown describes the two stable remanent states and states that a core placed in either stable remanent condition can retain that state **without external maintenance energy**.
+
+This is stronger wording than merely inferring nonvolatility from a hysteresis diagram. It grounds the element-level claim while leaving a necessary limit intact:
+
+> the magnetic element can retain its bit without maintenance energy; this does **not** imply that the whole computer can transparently resume after arbitrary power loss.
+
+### F2. Conventional sensing destroys the old state; the invention aims to avoid that reset
+
+**Printed pp. 1–2.**
+
+Brown describes the conventional sensing method as driving the core toward a standard state and thereby destroying its prior information unless restoration follows. The patent's purpose is to sense the stored condition while leaving the remanent state intact.
+
+Together with Widrow 1954, this provides a robust primary boundary against universalizing destructive read to every ferrite-core scheme.
+
+---
+
+## Evidence ledger: what is now grounded
+
+| Claim | Type | Primary evidence | Status |
+| --- | --- | --- | --- |
+| two stable remanent magnetic states can represent binary information | `H/P` | Forrester US 2,736,880, printed pp. 1–2 | strong |
+| the retained element must tolerate repeated nonselecting / half-select disturbance | `H/P` | Forrester printed pp. 2–3; Papian 1952 pp. 475–478 | strong |
+| classic read can destroy the prior magnetic state and require rewrite | `H/P` | Forrester printed p. 2; Papian 1953 p. 38; Widrow 1954 opening discussion | strong, independently corroborated |
+| destructive read–rewrite was part of an implemented M.I.T. memory cycle | `H/P` | Papian 1953 p. 38; M-2121 memory-cycle control description | strong |
+| the bounded M.I.T. system treated read+rewrite as one timed memory cycle | `H/P` | Papian 1953 p. 38 | strong, machine-specific |
+| a remanent core can retain state without external maintenance energy | `H/P` | Brown US 2,902,676, printed p. 1 | strong at element level |
+| nondestructive core readout was a contemporary engineering alternative | `H/P` | Widrow 1954; Brown US 2,902,676 | strong |
+| idle nonvolatility and read invariance are distinct properties | `E` | cross-reading of the sources above | strong bounded reconstruction |
+| access itself can create a retention obligation | `E` | destructive-read + rewrite evidence above | strong bounded reconstruction |
+| all magnetic-core memories used destructive read | `X` | contradicted by 1953–1954 nondestructive-read primary evidence | rejected |
+| core-memory contents surviving power loss implies complete machine restartability | `X` | not established by element-retention evidence | rejected |
+
+---
+
+## What the evidence changes conceptually
+
+### 1. `Nonvolatile` is too coarse by itself
+
+The primary sources now let the case distinguish at least three questions:
+
+```text
+Will the element remain in a magnetic state while unattended?
+Will neighboring selection activity disturb it?
+Will reading the selected element leave the physical state unchanged?
+```
+
+Classic core can answer those questions differently.
+
+### 2. Retention can be passive between accesses and active during access
+
+This case is a clean counterexample to a simple binary opposition between `passive storage` and `actively maintained storage`.
+
+The same memory can be:
+
+- **quiescently retained** through remanence between operations;
+- **actively reconstructed** when a destructive read occurs.
+
+Maintenance regime therefore depends on **when** in the object's operational life we look.
+
+### 3. Access latency can contain a hidden persistence operation
+
+Papian's machine paper makes read–rewrite one timed memory cycle. The user-visible abstraction `read a word` therefore hides an internal operation whose purpose is to re-establish the state that reading disturbed.
+
+This is an important bridge to DRAM without claiming physical or historical identity. In both bounded cases, part of the access machinery exists to restore a logical value after sensing has modified or weakened its physical embodiment.
+
+### 4. A historical counterexample can sharpen rather than weaken the case
+
+Widrow and Brown's nondestructive-read work does not invalidate the destructive-read case. It prevents an illegitimate category claim. The resulting statement is stronger because it is bounded:
+
+> destructive read is one historically important retention regime within magnetic-core memory, not an essence of magnetic material or of all core-memory architectures.
+
+---
+
+## Historical cautions
+
+### Do not turn element nonvolatility into a whole-machine power-failure claim
+
+Brown's `without external maintenance energy` wording concerns the retained magnetic state. Registers, control state, peripherals, power sequencing, and restart procedure can have different persistence semantics.
+
+### Do not universalize the M.I.T. 9 μs cycle
+
+Papian's reported cycle belongs to the bounded M.I.T. system. Other core memories used different organizations, pulse schemes, drivers, timings, and word structures.
+
+### Do not use later nondestructive schemes to rewrite the earlier implemented case
+
+The existence of nondestructive readout means `all core read is destructive` is false. It does not make the documented destructive read–rewrite cycle of the M.I.T. system disappear.
+
+### Do not reopen the general core-memory history here
+
+Priority disputes, ferrite chemistry, commercial adoption, plane manufacturing, weaving labor, packaging, and the transition to semiconductor memory belong primarily in `computing-archaeology` or dedicated historical work.
+
+---
+
+## Related-repository boundary
+
+The companion [`computing-archaeology` core-memory article](https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md) already explains why core memory made engineering sense, how coincident-current selection works, and how manufacturing labor entered the architecture.
+
+`technical-retention` now has enough primary evidence for the narrower claim:
+
+> **classic coincident-current core can retain a magnetic state quiescently, yet ordinary access can destroy that state and make rewrite part of continued logical retention.**
+
+---
+
+## Readiness assessment
+
+Case 02 now satisfies the repository's `grounded` criteria for its bounded thesis:
+
+- primary invention evidence with printed patent anchors;
+- contemporary cell-level vocabulary and disturbance criterion;
+- machine-specific primary evidence for implemented read–rewrite semantics;
+- a primary machine-control memorandum exposing the write portion of the memory cycle;
+- explicit element-level evidence for retention without maintenance energy;
+- contemporary nondestructive-read counterexamples that bound the claim;
+- mechanism, maintenance, failure, and identity semantics separated;
+- related-repository duplication checked.
+
+One archival-quality cleanup remains desirable: obtain a directly renderable full scan of Papian's 1952 IRE paper rather than relying on the MIT record plus indexed page text. That source-quality improvement does not control any central claim uniquely and therefore does not prevent the bounded case from being `grounded`.
