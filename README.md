@@ -135,6 +135,8 @@ Stiegler's work is a central starting point because it treats technical supports
 
 This project will use `tertiary retention` carefully: not as a synonym for every computer memory cell, but as a way to ask how exteriorized traces and technical supports condition what can be remembered, repeated, inherited, and anticipated.
 
+The bounded [`Stiegler tertiary-retention test`](docs/PHILOSOPHICAL_TEST_02_STIEGLER_TERTIARY_RETENTION.md) now sharpens that guardrail: `technical retention` is intentionally broader than `tertiary retention`. A silicon support, Flash mapping layer, or replicated object service may sustain a tertiary-retentional trace, but the fact that an internal machine state persists does not by itself establish the thicker relation of exteriorization, repetition, learning, or transmission that Stiegler's concept addresses.
+
 ### Martin Heidegger — technics and availability
 
 Heidegger's analysis of modern technology and `Bestand` / standing-reserve is relevant to the transformation of things into what can be ordered, called upon, and made available for further ordering.
@@ -218,6 +220,7 @@ See [`RELATED_REPOS.md`](RELATED_REPOS.md).
 - [`docs/SYNTHESIS_AUDIT_06_MAINTENANCE_VISIBILITY.md`](docs/SYNTHESIS_AUDIT_06_MAINTENANCE_VISIBILITY.md) — audit rejecting a monotonic `more reliable -> more hidden maintenance` law while separating reliability, automation, interface invisibility, labor, and infrastructure.
 - [`docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md`](docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md) — cross-audit control ledger recording rejected strong claims, required decompositions, scoped survivors, and thesis status before any conclusion is promoted.
 - [`docs/PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md`](docs/PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md) — first named prior-art test; preserves operational analysis while rejecting a universal continuous-operation or microtime ontology of retention.
+- [`docs/PHILOSOPHICAL_TEST_02_STIEGLER_TERTIARY_RETENTION.md`](docs/PHILOSOPHICAL_TEST_02_STIEGLER_TERTIARY_RETENTION.md) — source-controlled boundary test separating broad mechanism-level technical retention from Stiegler's thicker relation of technical exteriorization and retentional efficacy.
 - [`ROADMAP.md`](ROADMAP.md) — staged research program.
 - [`RELATED_REPOS.md`](RELATED_REPOS.md) — cross-repository boundaries and reuse rules.
 - [`AGENTS.md`](AGENTS.md) — research protocol for human and AI contributors.
@@ -257,4 +260,4 @@ Those layers must never silently collapse into one another.
 
 ## Status
 
-The mechanism-variety gate is open, the first bounded six-thesis audit sequence is complete, and the first named philosophical/prior-art test has now been completed against Wolfgang Ernst's operational/microtemporal emphasis. No thesis has been promoted to a final conclusion; each surviving formulation remains scope-limited and counterexample-sensitive. The next synthesis unit is a bounded Stiegler tertiary-retention boundary test against operational working state, not a grand philosophy of storage.
+The mechanism-variety gate is open, the first bounded six-thesis audit sequence is complete, and two named philosophical/prior-art tests have now been completed: Wolfgang Ernst on operationality/microtemporality and Bernard Stiegler on the tertiary-retention boundary. No thesis has been promoted to a final conclusion; each surviving formulation remains scope-limited and counterexample-sensitive. The next named synthesis unit is a bounded Heidegger availability/ordering test that keeps `Bestand ≠ storage` explicit.
