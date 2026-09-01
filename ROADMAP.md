@@ -225,11 +225,13 @@ The mechanism gate is open, so philosophical comparison may now begin — but cl
 
 ### First bounded synthesis pass
 
-- [ ] audit README thesis 1, “persistence is often an activity disguised as a property,” against passive position, core, DRAM, mapped Flash, and RADOS; identify the passive-position counterexample/qualification;
+- [x] audit README thesis 1, “persistence is often an activity disguised as a property,” against passive position, core, DRAM, mapped Flash, and RADOS; identify the passive-position counterexample/qualification — completed in [`docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md`](docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md); the thesis was revised rather than simply confirmed;
 - [ ] audit “storage is temporal transport” and decide whether it adds explanatory power or merely redescribes retention;
 - [ ] audit the role of addressability across human-mediated positional selection, coordinate-selected memory, logical mapping, and distributed placement;
 - [ ] audit “logical persistence becomes detached from privileged physical location” as a historically staged claim rather than a universal definition;
 - [ ] build a counterexample ledger before promoting any provisional thesis to a conclusion.
+
+The first audit rejects a universal `persistence = activity` formulation. It distinguishes quiescent substrate retention from deadline-driven, access-triggered, workload/capacity-triggered, wear/lifetime-triggered, failure/repair-triggered, and interpretive/procedural maintenance obligations. The next highest-value synthesis unit is the `storage is temporal transport` audit.
 
 ### Philosophical tests after the audit
 
@@ -239,7 +241,7 @@ The mechanism gate is open, so philosophical comparison may now begin — but cl
 - [ ] extend Kirschenbaum's forensic materiality through Flash remapping, logical invalidation, copy-on-write-like relocation, encryption, and distributed storage;
 - [ ] decide whether `technical retention` names one coherent operation or a family of mechanisms linked only by carefully stated invariants.
 
-Do not write a grand `What Is Technical Retention?` chapter until this bounded thesis audit exists.
+Do not write a grand `What Is Technical Retention?` chapter until this bounded thesis-audit sequence exists.
 
 ---
 
