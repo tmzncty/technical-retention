@@ -211,6 +211,7 @@ See [`RELATED_REPOS.md`](RELATED_REPOS.md).
 - [`docs/PHILOSOPHICAL_SPINE.md`](docs/PHILOSOPHICAL_SPINE.md) — Stiegler, Heidegger, Ernst, Kirschenbaum, and conceptual questions.
 - [`docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md`](docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md) — first evidence-led audit of a provisional thesis, including counterexamples to a universal active-maintenance model.
 - [`docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md`](docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md) — audit of the storage/transfer proposition against grounded cases, retaining only a controlled recoverability-relation model across time.
+- [`docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md`](docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md) — audit separating retention from designation, selection/resolution, currentness/admissibility, and recovery across grounded cases.
 - [`ROADMAP.md`](ROADMAP.md) — staged research program.
 - [`RELATED_REPOS.md`](RELATED_REPOS.md) — cross-repository boundaries and reuse rules.
 - [`AGENTS.md`](AGENTS.md) — research protocol for human and AI contributors.
@@ -223,7 +224,7 @@ The project begins with several hypotheses to test rather than assume:
 
 1. **Persistence is often an achieved relation, not a maintenance-free property.** Some retained states remain quiescently; others require scheduled reconstruction, access-triggered restore, remapping, or repair. The first question is which layer is being kept persistent and what event creates its maintenance obligation. See the bounded [maintenance audit](docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md).
 2. **Storage can be analyzed as transfer across temporal distance, but only as a recoverability model.** A state established at `t0` may remain or be reconstructed as an agreed recoverable equivalent at `t1`; this does not imply literal physical motion, one unchanging carrier, or active maintenance, and it does not replace mechanism-level distinctions. See the bounded [temporal-transport audit](docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md).
-3. **Addressability changes what retention can do.** Keeping a trace is not the same as being able to retrieve a chosen trace cheaply, quickly, and repeatedly.
+3. **Addressability is a separate operational relation layered onto retention.** A state may persist without being autonomously or cheaply selectable, while a stable logical designation can survive changes in physical embodiment. Analyze designation and selection/resolution separately from currentness/admissibility and read/recovery; do not equate address with physical location or addressability with availability. See the bounded [addressability audit](docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md).
 4. **Forgetting has mechanisms.** Decay, overwrite, erase, deletion, unlinking, key destruction, failed indexing, incompatible formats, and institutional loss are different technical forms of forgetting.
 5. **Logical persistence can become increasingly detached from a privileged physical location.** Mapping layers, virtualization, coding, replication, and distributed protocols allow a retained object's identity to survive movement and replacement of its substrate.
 6. **The more reliable retention becomes, the more its maintenance disappears from experience.** This makes maintenance labor and hidden machinery historically important.
