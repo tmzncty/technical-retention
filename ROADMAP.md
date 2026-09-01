@@ -229,9 +229,12 @@ The mechanism gate is open, so philosophical comparison may now begin — but cl
 - [x] audit “storage is temporal transport” and decide whether it adds explanatory power or merely redescribes retention — completed in [`docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md`](docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md); retained as a recoverability relation across time, not as literal physical motion or a sufficient mechanism definition;
 - [x] audit the role of addressability across human-mediated positional selection, coordinate-selected memory, logical mapping, and distributed placement — completed in [`docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md`](docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md); retention was separated from designation, selection/resolution, currentness/admissibility, and recovery;
 - [x] audit “logical persistence becomes detached from privileged physical location” as a historically staged claim rather than a universal definition — completed in [`docs/SYNTHESIS_AUDIT_04_PRIVILEGED_LOCATION.md`](docs/SYNTHESIS_AUDIT_04_PRIVILEGED_LOCATION.md); the audit separates microscopic state reconstruction, stable physical home, metadata-mediated relocation, replaceable replicas, and temporary protocol authority;
-- [ ] build a counterexample ledger before promoting any provisional thesis to a conclusion.
+- [x] build a counterexample ledger before promoting any provisional thesis to a conclusion — completed in [`docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md`](docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md); it records rejected strong claims, required decompositions, scoped survivors, and the two README theses still unaudited;
+- [ ] audit README thesis 4, `Forgetting has mechanisms`, against the five grounded regimes and separate physical loss, interpretive loss, missed maintenance, logical invalidation, mapping/currentness loss, and failed repair before attempting a broader philosophy of forgetting.
 
-Audit 01 rejects a universal `persistence = activity` formulation. Audit 02 rejects literal `storage = physical transport`, while retaining a narrower model in which a state established at `t0` remains or is reconstructed as an agreed recoverable equivalent at `t1`. Audit 03 rejects `retention = addressability`, `address = physical location`, `resolution = currentness`, and `addressability = availability`; it treats addressability as an operational relation whose resolver may be human, circuit-level, map-mediated, or distributed. Audit 04 rejects `logical = placeless`, distinguishes physical-token replacement from replacement of a permanent physical home, and shows that mapped/distributed mobility increases dependence on retained mapping, placement, version, topology, and authority relations. The next highest-value synthesis unit is one cross-audit counterexample ledger.
+Audits 01–04 and the cross-audit ledger now establish a negative discipline for synthesis: a universal `persistence = activity` formulation fails; literal `storage = physical transport` fails; `retention = addressability`, `address = physical location`, `resolution = currentness`, and `addressability = availability` fail; `logical = placeless` and a monotonic historical ascent toward placelessness fail. The surviving formulations remain provisional and layer-sensitive. README theses 4 and 6 are still unaudited.
+
+**Next highest-value synthesis unit:** the bounded technical-forgetting audit named above. It should use the existing grounded cases and their primary-source records rather than opening a generic history or philosophy of forgetting.
 
 ### Philosophical tests after the audit
 
@@ -241,7 +244,7 @@ Audit 01 rejects a universal `persistence = activity` formulation. Audit 02 reje
 - [ ] extend Kirschenbaum's forensic materiality through Flash remapping, logical invalidation, copy-on-write-like relocation, encryption, and distributed storage;
 - [ ] decide whether `technical retention` names one coherent operation or a family of mechanisms linked only by carefully stated invariants.
 
-Do not write a grand `What Is Technical Retention?` chapter until this bounded thesis-audit sequence exists.
+Do not write a grand `What Is Technical Retention?` chapter until the bounded thesis-audit sequence has also tested technical forgetting and preserved the counterexamples already recorded.
 
 ---
 
