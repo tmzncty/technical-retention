@@ -42,6 +42,8 @@ The project should distinguish at least:
 - archival preservation;
 - executable / algorithmically active records.
 
+The bounded [`PHILOSOPHICAL_TEST_02_STIEGLER_TERTIARY_RETENTION.md`](PHILOSOPHICAL_TEST_02_STIEGLER_TERTIARY_RETENTION.md) now makes the boundary explicit: `technical retention` is intentionally broader than `tertiary retention`. Substrate class, volatility, machine readability, and replication do not by themselves decide whether a retained state participates in Stiegler's thicker relation of technical exteriorization, repetition, learning, or transmission.
+
 ---
 
 ## 3. Heidegger: ordering and availability
@@ -67,6 +69,20 @@ But these engineering operations do not prove that `Bestand = storage`.
 The research question is instead:
 
 > Does a particular technical regime of retention participate in a broader mode of making things continuously available, substitutable, callable, and orderable? If so, through which exact operations?
+
+The bounded [`PHILOSOPHICAL_TEST_03_HEIDEGGER_ORDERABILITY.md`](PHILOSOPHICAL_TEST_03_HEIDEGGER_ORDERABILITY.md) now tightens this boundary with primary-text anchors and grounded mechanism comparisons. Heidegger's 1977 Lovitt translation places `storing` inside a larger chain of transformation, distribution, switching, regulation, and securing, while `Bestand` names a mode of standing ready for further ordering and is explicitly more than mere stock.
+
+The useful technical bridge is therefore narrower than a noun-to-noun analogy. The addressability audit's path
+
+```text
+designation → selection/resolution → currentness/admissibility → recovery
+```
+
+can make the engineering conditions of `being on call` precise. Mapped Flash and RADOS further show that logical callability can survive replacement of physical embodiments only because mapping, placement, version, authority, and repair relations remain effective.
+
+The guardrail remains:
+
+> **Technical availability can discipline a Heideggerian interpretation of orderability; it does not define `Bestand`, and a stored datum is not classified as standing-reserve merely because it can be retrieved.**
 
 This must be argued case by case.
 
@@ -133,6 +149,8 @@ Key questions to carry forward:
 - what the user interface claims versus what the substrate does.
 
 Modern Flash, SSD controllers, copy-on-write systems, cloud versioning, and encrypted storage create new cases where `deleted`, `overwritten`, `gone`, and `unreachable` are technically different states.
+
+The Heidegger orderability test sharpens the handoff into this section: a state can cease to be **current/orderable under an interface** while its physical embodiment survives. Kirschenbaum should therefore be tested against mapped-Flash invalidation/remapping and distributed copies without assuming that interface disappearance and physical disappearance are the same event.
 
 ---
 
