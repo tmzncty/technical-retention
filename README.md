@@ -209,6 +209,7 @@ See [`RELATED_REPOS.md`](RELATED_REPOS.md).
 - [`docs/PRIOR_ART.md`](docs/PRIOR_ART.md) — what has already been done and where this project can still contribute.
 - [`docs/TECHNICAL_SPINE.md`](docs/TECHNICAL_SPINE.md) — provisional mechanism lineage from retained position to distributed logical state.
 - [`docs/PHILOSOPHICAL_SPINE.md`](docs/PHILOSOPHICAL_SPINE.md) — Stiegler, Heidegger, Ernst, Kirschenbaum, and conceptual questions.
+- [`docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md`](docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md) — first evidence-led audit of a provisional thesis, including counterexamples to a universal active-maintenance model.
 - [`ROADMAP.md`](ROADMAP.md) — staged research program.
 - [`RELATED_REPOS.md`](RELATED_REPOS.md) — cross-repository boundaries and reuse rules.
 - [`AGENTS.md`](AGENTS.md) — research protocol for human and AI contributors.
@@ -219,7 +220,7 @@ See [`RELATED_REPOS.md`](RELATED_REPOS.md).
 
 The project begins with several hypotheses to test rather than assume:
 
-1. **Persistence is often an activity disguised as a property.** A state appears to simply "remain" because refresh, circulation, error correction, remapping, repair, replication, environmental control, or institutional maintenance continues below the visible interface.
+1. **Persistence is often an achieved relation, not a maintenance-free property.** Some retained states remain quiescently; others require scheduled reconstruction, access-triggered restore, remapping, or repair. The first question is which layer is being kept persistent and what event creates its maintenance obligation. See the bounded [maintenance audit](docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md).
 2. **Storage is temporal transport.** A retained state can be understood as information transferred across a temporal distance, but different media implement that distance in radically different ways.
 3. **Addressability changes what retention can do.** Keeping a trace is not the same as being able to retrieve a chosen trace cheaply, quickly, and repeatedly.
 4. **Forgetting has mechanisms.** Decay, overwrite, erase, deletion, unlinking, key destruction, failed indexing, incompatible formats, and institutional loss are different technical forms of forgetting.
