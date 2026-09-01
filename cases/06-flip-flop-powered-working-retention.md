@@ -2,8 +2,8 @@
 
 ## Scope
 
-- **Object / system:** the Eccles–Jordan thermionic trigger/relay principle as a mechanism precursor, then the ENIAC flip-flop as a bounded computer working-state case.
-- **Date range:** 1918–1946.
+- **Object / system:** the Eccles–Jordan thermionic trigger/relay principle as a mechanism precursor, then the ENIAC flip-flop as a bounded computer working-state case; a 1954 Whirlwind report is used only as a later period witness for the architectural `register` boundary.
+- **Date range:** 1918–1946 for the core case, with a bounded 1954 terminology/architecture comparison.
 - **Primary question:** when does a very short-lived bistable machine state count as technical retention rather than merely an instantaneous electrical condition?
 - **Why this case matters:** the repository's first category-coherence audit found no justified minimum duration for technical retention. A powered flip-flop is an adversarial test because its state may last only long enough to condition a later pulse or gate, yet the machine explicitly depends on that state continuing to count.
 
@@ -13,9 +13,9 @@ This is **not** a general history of bistable circuits, latches, registers, SRAM
 
 ## Related-repository check
 
-Before opening this slice, code search in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated Eccles–Jordan / latch / flip-flop / register treatment to reuse. That repository still remains the preferred home for a broad engineering history of electronic state elements and semiconductor memory.
+Before opening this slice, code search in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated Eccles–Jordan / latch / flip-flop / register treatment to reuse. A fresh check during the first source-deepening pass likewise found no dedicated treatment to reuse. That repository still remains the preferred home for a broad engineering history of electronic state elements and semiconductor memory.
 
-The contribution here is therefore deliberately narrow: use two primary anchors to stress-test the retention boundary, then stop.
+The contribution here is therefore deliberately narrow: use primary anchors to stress-test the retention boundary, then stop.
 
 ---
 
@@ -41,6 +41,14 @@ The U.S. Army / Moore School report uses machine-specific vocabulary directly re
 - `set`, `reset`, and `clear`.
 
 This is unusually useful because the historical source itself says that a decade flip-flop **remembers** a pending carry and that an accumulator **stores** a number. The retention interpretation therefore does not have to depend only on modern metaphor.
+
+### 1954 Whirlwind report — bounded `register` boundary witness
+
+M. F. Mann, R. R. Rathbone, and J. B. Bennett's MIT Project Whirlwind Report R-221, *Whirlwind I Operation Logic* (1 May 1954), supplies the period primary vocabulary that the first pass lacked. It calls the A-register (`AR`) a **`simple flip-flop register`** while defining AR through machine-level functions: receiving from storage, transmitting to the accumulator, holding operands, and participating in sign-related operations.
+
+The same report also uses `storage register` language for magnetic-core storage. This matters because period `register` vocabulary is neither identical to one elementary flip-flop nor safely reducible to today's narrow CPU-register category.
+
+Full source-control notes and remaining gaps are recorded in [`evidence/06-flip-flop-register-boundary-addendum.md`](../evidence/06-flip-flop-register-boundary-addendum.md).
 
 ---
 
@@ -104,6 +112,16 @@ Chapter II §2.2.1 says the reader start flip-flop is set when a reader program 
 The retained target here is not a decimal digit. It is a **pending control condition** whose later consequences depend on the flip-flop state.
 
 That broadens the repository's working-state evidence without requiring a new philosophical category: a retained machine state may encode a value, a pending action, or an enabling condition for later logic.
+
+### H/P — Whirlwind makes the flip-flop / register distinction explicit in period vocabulary
+
+R-221 says the basic Whirlwind register length is sixteen binary digits and describes the A-register as a `simple flip-flop register`. Its listed functions are architectural and operational rather than merely physical: AR receives a number from storage, transmits it to the accumulator, holds the multiplicand/divisor, participates in sign sensing, and supports later transfer/use.
+
+The same report calls core-memory locations `storage registers`, so its own historical usage is broader than a modern CPU-register shortcut. The safe conclusion is therefore two-sided:
+
+> an individual bistable mechanism is not automatically a register; but a period computer could explicitly organize flip-flops as a register, and the word `register` itself could span more than one physical retention substrate.
+
+**Primary anchor:** M. F. Mann, R. R. Rathbone, J. B. Bennett, *Whirlwind I Operation Logic*, Project Whirlwind Report R-221, MIT Digital Computer Laboratory, 1 May 1954, introduction p. 1-1 and §2.231 / p. 2-12: <https://www.bitsavers.org/pdf/mit/whirlwind/R-series/R-221_Whirlwind_I_Operational_Logic_May54.pdf>.
 
 ---
 
@@ -194,6 +212,8 @@ It also adds a new boundary:
 > later use of retained state need not require a discrete `retrieve` operation at all.
 
 A downstream circuit may simply remain connected to an output that reflects the retained condition and act on that condition later.
+
+Whirlwind adds a different architectural layer: R-221's A-register is defined through bus/gate connectivity and machine functions. The comparison therefore must keep **element retention**, **grouping**, **selection/connectivity**, and **architectural role** as distinct axes.
 
 ---
 
@@ -331,6 +351,20 @@ This is a local machine-scale version of a broader repository result:
 
 > physical presence ≠ authorized/current/admissible state.
 
+### E — element substrate and register role must be separated
+
+The Whirlwind witness strengthens the earlier `flip-flop ≠ register` caution. A bounded register-level description needs at least the retained element plus grouping/connectivity and a machine-defined use relation. But the same period report also uses `register` for magnetic-core storage, so neither `register = flip-flop array` nor `register = modern CPU register` is historically safe as a universal rule.
+
+For later SRAM/cache work, the comparison should therefore keep separate:
+
+```text
+state element / substrate
+organization / grouping
+selection and connectivity
+architectural role
+interface / use semantics
+```
+
 ---
 
 ## Philosophical / media-theoretical interpretation
@@ -363,17 +397,21 @@ But the mechanisms and historical concepts are radically different. An abacus be
 
 ### Limit — flip-flop ≠ register
 
-A bistable element is a mechanism for retaining a state. A `register` is an architectural role/aggregation with selection, grouping, and use semantics. ENIAC's own vocabulary distinguishes individual flip-flops, ring counters, and accumulators.
+A bistable element is a mechanism for retaining a state. A `register` adds an architectural organization/use relation. ENIAC's own vocabulary distinguishes individual flip-flops, ring counters, and accumulators; Whirlwind R-221 later makes the implementation/architecture relation explicit by calling AR a `simple flip-flop register` and assigning it machine-level functions.
 
 This case therefore does not license the claim that every flip-flop is itself a register.
+
+The reverse shortcut also fails. Because R-221 also uses `storage register` for core storage, period `register` vocabulary is not one physical substrate class and should not be silently normalized to the modern CPU-register category.
 
 ### Limit — not a transistor/SRAM history
 
 Later transistor latches, static RAM cells, clocked flip-flops, and register files change implementation details, power behavior, fan-out, timing, and access organization. They need separate evidence rather than being treated as straightforward copies of the bounded thermionic case.
 
-### Limit — Eccles–Jordan mechanism history remains incomplete
+### Limit — Eccles–Jordan / ENIAC circuit grounding remains incomplete
 
-The patent is a strong primary anchor for the regenerative relay principle, but this first pass has not directly inspected the September 1919 *Electrician* paper / December 1919 *Radio Review* reprint or reconstructed the exact ENIAC flip-flop schematic from the original circuit drawings. Those are the next source-deepening steps before promotion to `grounded`.
+The patent is a strong primary anchor for the regenerative relay principle. The first source-deepening pass has now recovered exact scan locators for the September 1919 *Electrician* paper / December 1919 *Radio Review* reprint, and has identified original ENIAC drawing numbers including PX-1-105 `Flip-Flop Circuit`. But those page/schematic images were not successfully inspected directly in that pass.
+
+Accordingly, the period architectural `register` gap is closed, while two direct-inspection gaps remain before promotion to `grounded`. See [`evidence/06-flip-flop-register-boundary-addendum.md`](../evidence/06-flip-flop-register-boundary-addendum.md).
 
 ---
 
@@ -388,6 +426,10 @@ abacus
 powered thermionic flip-flop / ENIAC
     powered regenerative working state
     no periodic state refresh established
+
+Whirlwind A-register boundary witness
+    grouped / connected architectural working state
+    explicitly described as a flip-flop register
 
 magnetic core
     unpowered remanent state
@@ -408,7 +450,7 @@ RADOS
 
 The main new result is not another place on a storage hierarchy. It is a category correction:
 
-> **technical retention can be nontrivial at very short timescales, and later continuity can be demonstrated by state-sensitive use rather than by a separate retrieval operation.**
+> **technical retention can be nontrivial at very short timescales; later continuity can be demonstrated by state-sensitive use rather than by a separate retrieval operation; and the physical state element must be compared separately from the architectural organization that makes a retained value a register-level machine state.**
 
 ---
 
@@ -424,11 +466,15 @@ The main new result is not another place on a storage hierarchy. It is a categor
 | ENIAC supports static use of accumulator counter-state outputs by other units | H/P | Part I, Ch. IV §4.3.3 |
 | ENIAC power-up could leave flip-flops in accidental states, requiring initial clear before correct computation | H/P | Part I, Ch. II §2.1.2 |
 | A reader-start flip-flop could remember a pending future read request | H/P | Part I, Ch. II §2.2.1 |
+| R-221 calls the Whirlwind A-register a `simple flip-flop register` and assigns it machine-level functions | H/P | 1 May 1954 R-221, §2.231 / p. 2-12 |
+| R-221 also uses `storage register` for magnetic-core storage | H/P | R-221 introduction / p. 1-1 |
 | Continuous power is an enabling condition but is not equivalent to periodic state refresh in this bounded implementation | E | mechanism comparison against DRAM/delay line |
 | Very short-lived working state can still satisfy a nontrivial retention relation | E/I | bounded inference from delayed carry/control sequencing |
 | Later retention must always involve a discrete retrieval operation | X | contradicted by bounded static/state-output use |
 | `volatile = dynamic refresh = destructive read` | X | contradicted by this case plus grounded DRAM/core comparisons |
-| Every flip-flop is historically or architecturally a register | X | unsupported; ENIAC vocabulary distinguishes elements and architectural units |
+| Every flip-flop is historically or architecturally a register | X | unsupported; ENIAC and Whirlwind separate element/use levels |
+| Every period `register` is the modern CPU-register category | X | contradicted by R-221's broader `storage register` vocabulary |
+| Register role and physical retention substrate should be separate comparison axes | E | bounded Whirlwind/ENIAC reconstruction |
 
 ---
 
@@ -440,9 +486,15 @@ The main new result is not another place on a storage hierarchy. It is a categor
 2. **A Report on the ENIAC (Electronic Numerical Integrator and Computer)**, Report of Work Under Contract No. W-670-ORD-4926, Ordnance Department, U.S. Army / University of Pennsylvania, Moore School of Electrical Engineering, 1 June 1946. U.S. Army Research Laboratory transcription/index: <https://ftp.arl.army.mil/~mike/comphist/46eniac-report/>.
    - Part I, Chapter IV, §§4.0, 4.3.2, 4.3.3: accumulator, decade flip-flop, delayed carry, static communication: <https://ftp.arl.army.mil/~mike/comphist/46eniac-report/chap4.html>.
    - Part I, Chapter II, §§2.1.2 and 2.2.1: initial clearing, accidental power-up state, reader program flip-flops: <https://ftp.arl.army.mil/~mike/comphist/46eniac-report/chap2.html>.
+3. M. F. Mann, R. R. Rathbone, J. B. Bennett, **_Whirlwind I Operation Logic_**, Project Whirlwind Report R-221, MIT Digital Computer Laboratory, 1 May 1954, especially introduction p. 1-1 and §2.231 / p. 2-12: <https://www.bitsavers.org/pdf/mit/whirlwind/R-series/R-221_Whirlwind_I_Operational_Logic_May54.pdf>.
 
-### Next source-deepening targets
+### Source-control addendum
 
-- W. H. Eccles and F. W. Jordan, **“A trigger relay utilizing three-electrode thermionic vacuum tubes,”** *The Electrician* 83 (19 September 1919), p. 298; reprinted in *The Radio Review* 1(3), December 1919, pp. 143–146 — inspect a page-preserving scan directly before using it as a central anchor.
-- Original ENIAC circuit drawings / Part II circuit description for the specific flip-flop implementation — use to separate the report's functional description from a detailed circuit reconstruction.
-- A period primary source that makes the architectural boundary between individual bistable elements and a `register` explicit, before expanding this case to the full `latch / flip-flop / register` bridge.
+- [`evidence/06-flip-flop-register-boundary-addendum.md`](../evidence/06-flip-flop-register-boundary-addendum.md) records the Whirlwind register-boundary evidence, the exact 1919 scan locators, ENIAC drawing provenance, and the explicit reason Case 06 remains `first-pass`.
+
+### Remaining source-deepening targets
+
+- W. H. Eccles and F. W. Jordan, **“A trigger relay utilizing three-electrode thermionic vacuum tubes,”** *The Electrician* 83 (19 September 1919), p. 298; reprinted in *The Radio Review* 1(3), December 1919, pp. 143–146 — exact scan locators are now known, but directly inspect a page-preserving image before using it as a central anchor.
+- Original ENIAC PX-1-105 `Flip-Flop Circuit` / relevant Part II material — drawing identity/provenance is now known, but inspect the schematic itself before adding component/topology claims.
+
+The former `period register vocabulary` target is now closed by Whirlwind R-221. Promotion to `grounded` remains blocked only by the two direct-inspection targets above.
