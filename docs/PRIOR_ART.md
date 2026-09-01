@@ -19,6 +19,8 @@ In his technical-media notes, Ernst explicitly distinguishes archive, memory, an
 - direct, sequential, indexed, stack-like, word-organized, and associative storage;
 - access time and latency.
 
+His 2013 article **"From Media History to Zeitkritik"** places machine-specific temporality / `Eigenzeit` and time-criticality at the center of technical-media analysis. In a 2013 response to Jussi Parikka on microtemporality, Ernst gives an even stronger operational formulation: technological media are in their `medium-being` only in operation / "under current". These are important primary-author anchors for the repository's operationality test.
+
 A later formulation names **critical storage analysis** as a combination of media archaeology and digital forensics applied to computer memory as hardware and software.
 
 ### What is already done
@@ -26,18 +28,38 @@ A later formulation names **critical storage analysis** as a combination of medi
 - critique of loose cultural-memory metaphors;
 - technical attention to machine memory;
 - archive versus operational memory;
-- microtemporality;
+- microtemporality and time-criticality;
+- machine-specific temporalities / `Eigenzeit`;
 - storage / transfer relations;
 - registers and buffers as media-theoretical objects.
+
+### What the bounded test changes
+
+[`PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md`](PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md) confirms Ernst as a strong methodological prior art but rejects two possible universalizations:
+
+- `retained state = continuous operation`;
+- `technically decisive time = microtime only`.
+
+The grounded cases include quiescent positional, magnetic, and Flash states alongside deadline-driven DRAM refresh, access-triggered core restore, deferred Flash reclamation, and failure-triggered RADOS repair. The project therefore treats operationality as a demand to reconstruct **which operation and which timescale matter**, not as one universal retention mechanism.
 
 ### What remains open for this repository
 
 A long, source-controlled comparative program following **retention mechanisms** across mechanical, electromechanical, electronic, magnetic, semiconductor, controller-mediated, and distributed systems, while testing philosophical concepts against exact engineering constraints.
 
+The current narrower novelty boundary is:
+
+> Ernst already supplies a powerful operational/time-critical analysis of technical media; this repository can still contribute by comparing retention obligations that are quiescent, continuous, access-triggered, deadline-driven, workload/capacity-triggered, wear-triggered, failure-triggered, or interpretive, without forcing them onto one privileged temporal scale.
+
 ### Starting sources
 
-- Wolfgang Ernst, *Digital Memory and the Archive*, University of Minnesota Press, 2012/2013: <https://www.upress.umn.edu/9780816677665/digital-memory-and-the-archive/>
+- Wolfgang Ernst, *Digital Memory and the Archive*, University of Minnesota Press, 2012: <https://www.upress.umn.edu/9780816677665/digital-memory-and-the-archive/>
+- Wolfgang Ernst, **"From Media History to Zeitkritik"**, *Theory, Culture & Society* 30(6), 2013, pp. 132–146, DOI 10.1177/0263276413496286: <https://journals.sagepub.com/doi/10.1177/0263276413496286>
+- Wolfgang Ernst, response in Jussi Parikka, **"Ernst on Time-Critical Media: A mini-interview"**, 18 March 2013: <https://jussiparikka.net/2013/03/18/ernst-on-microtemporality-a-mini-interview/>
+- Wolfgang Ernst, *Chronopoetics: The Temporal Being and Operativity of Technological Media*, 2016: <https://www.bloomsbury.com/us/chronopoetics-9781783485703/>
 - Wolfgang Ernst, technical storage notes, Humboldt-Universität: <https://www.musikundmedien.hu-berlin.de/de/medienwissenschaft/medientheorien/ernst-in-english/NOTES/PDF/storage-notes.pdf/@@download/file/STORAGE-NOTES.pdf>
+- Wolfgang Ernst, **TIME-CRITICALITY**, Humboldt-Universität technical-media script: <https://www.musikundmedien.hu-berlin.de/de/medienwissenschaft/medientheorien/ernst-in-english/pdfs/time-critical-2.pdf/@@download/file/time-critical-2.pdf>
+
+The published article/book records should be preferred where exact bibliographic anchoring matters; the HU scripts are useful authorial working/teaching sources and should not silently substitute for a checked published edition when wording is decisive.
 
 ---
 
