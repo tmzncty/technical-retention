@@ -3,9 +3,9 @@
 ## Status
 
 - **Case:** [`cases/06-flip-flop-powered-working-retention.md`](../cases/06-flip-flop-powered-working-retention.md)
-- **Purpose:** close one of the three explicit `first-pass` gaps without pretending the whole case is grounded.
-- **Result:** the period `register` boundary has a primary early-computer anchor. A second evidence pass has now directly recovered an ENIAC Part-II textual timing sequence at p. IV-43; see [`06-eniac-timing-retention-deepening.md`](06-eniac-timing-retention-deepening.md). The 1919 Eccles–Jordan authorial page/reprint and the original ENIAC PX-1-105 schematic image still have not been directly inspected. **Case 06 therefore remains `first-pass`.**
-- **Related-repository check:** a fresh search of `tmzncty/computing-archaeology` for Eccles–Jordan / ENIAC / flip-flop / register material found no dedicated treatment to reuse.
+- **Purpose:** close explicit `first-pass` gaps without pretending the whole case is grounded.
+- **Result:** the period `register` boundary has a primary early-computer anchor. ENIAC Part II p. IV-43 directly supplies a machine-specific timing sequence; see [`06-eniac-timing-retention-deepening.md`](06-eniac-timing-retention-deepening.md). A further pass has now directly recovered the British Association's contemporary proceedings record of Eccles and Jordan's 1919 trigger-relay paper, which independently anchors the regenerative mechanism beyond the patent; see [`06-eccles-jordan-1919-proceedings-deepening.md`](06-eccles-jordan-1919-proceedings-deepening.md). The exact _Electrician_ / _Radio Review_ facsimile remains archival cleanup, while the original ENIAC PX-1-105 schematic image still has not been directly inspected. **Case 06 therefore remains `first-pass`.**
+- **Related-repository check:** a fresh search of `tmzncty/computing-archaeology` for Eccles–Jordan / ENIAC / flip-flop / register material again found no dedicated treatment to reuse.
 
 This note keeps four layers separate:
 
@@ -20,7 +20,7 @@ This note keeps four layers separate:
 
 ### H/P — Whirlwind I uses `register` as a machine-level organization/role, not as a synonym for one bistable element
 
-M. F. Mann, R. R. Rathbone, and J. B. Bennett's MIT Digital Computer Laboratory Report R-221, **_Whirlwind I Operation Logic_**, dated **1 May 1954**, provides a useful period boundary witness.
+M. F. Mann, R. R. Rathbone, and J. B. Bennett's MIT Project Whirlwind Report R-221, **_Whirlwind I Operation Logic_**, dated **1 May 1954**, provides a useful period boundary witness.
 
 The report's introduction says that Whirlwind I has a **basic register length of sixteen binary digits**, and describes parallel-digit transmission over a bus with one channel for each digit of the sixteen-digit register. That is already architecture-level language: `register` identifies an organized machine quantity and interface, not merely the existence of a bistable electrical degree of freedom.
 
@@ -107,23 +107,41 @@ This is an engineering comparison, not a claim that all historical uses of `regi
 
 ---
 
-## 3. Eccles–Jordan 1919: exact locator recovered, direct inspection still open
+## 3. Eccles–Jordan 1919: contemporary authorial mechanism text recovered; exact periodical facsimile remains cleanup
 
-### H/S — publication and scan locations are now precise
+### H/P — British Association proceedings directly record the trigger-relay mechanism
 
-The 1919 paper can now be located much more exactly than in the first pass:
+The published _Report of the Eighty-Seventh Meeting of the British Association for the Advancement of Science: Bournemouth: 1919, September 9–13_ records Eccles and Jordan's paper **“A Trigger Relay utilising Three Electrode Thermionic Vacuum Tubes”** in the Transactions of Section G, printed pp. 271–272.
 
-- W. H. Eccles and F. W. Jordan, **“A trigger relay utilizing three-electrode thermionic vacuum tubes,”** _The Electrician_ 83, **19 September 1919**, p. 298.
-- Reprinted in _The Radio Review_ 1(3), **December 1919**, pp. 143–146.
-- A digitized _Electrician_ volume is catalogued at Internet Archive with the relevant page at p. 298: <https://archive.org/details/electricaljourna83lond/page/298>.
-- The _Radio Review_ reprint is catalogued in HathiTrust at the corresponding sequence: <https://babel.hathitrust.org/cgi/pt?id=mdp.39015021318277&seq=165>.
+The report directly describes:
 
-Later scholarly/technical discussions reproduce the characteristic formulation that the one-stroke relay remains in its new condition until reset, which is consistent with the 1918 patent and with the first-pass engineering reading. But this pass did **not** obtain a directly inspectable page image through the available retrieval path, so the repository should not mark the 1919-paper gap complete on the strength of secondary quotation alone.
+- a cascade amplifier with resistance coupling;
+- an even number of valves;
+- back coupling from the last valve to the first producing the trigger action;
+- an external electrical stimulus making the first grid more positive;
+- mutually reinforcing current/potential changes across the two valves;
+- `no restoring influence` while the first-valve current proceeds toward its limiting condition.
 
-Useful locator/corroboration:
+The printed footnote itself points to _The Electrician_, 19 September 1919, p. 298 and _Radio Review_, vol. I, p. 143.
 
-- IEEE Spectrum, “Re-creating the First Flip-Flop,” 2018: <https://spectrum.ieee.org/recreating-the-first-flipflop>.
-- Michaela Gabrillo and Benjamin Zetter, _Articulating Media_, Open Humanities Press, 2023, discussion citing Eccles & Jordan 1919 p. 298.
+This closes the substantive **contemporary authorial mechanism-text** gap beyond GB148582A. It also strengthens the anti-anachronism boundary because the directly recovered period vocabulary is `trigger relay`, resistance/back coupling, electric stimulus, and restoring influence — not `bit`, `memory cell`, `register`, or `flip-flop`.
+
+Full source-control and mechanism notes: [`06-eccles-jordan-1919-proceedings-deepening.md`](06-eccles-jordan-1919-proceedings-deepening.md).
+
+Primary scan/text host: <https://archive.org/details/reportofbritisha20adva>.
+
+### H/S + limit — exact _Electrician_ / _Radio Review_ page-image inspection is still open
+
+The exact periodical locators remain:
+
+- W. H. Eccles and F. W. Jordan, **“A trigger relay utilizing three-electrode thermionic vacuum tubes,”** _The Electrician_ 83, **19 September 1919**, p. 298;
+- reprinted in _The Radio Review_ 1(3), **December 1919**, pp. 143–146;
+- Internet Archive locator: <https://archive.org/details/electricaljourna83lond/page/298>;
+- HathiTrust locator: <https://babel.hathitrust.org/cgi/pt?id=mdp.39015021318277&seq=165>.
+
+This pass still did **not** produce a reliable visual rendering of those exact pages. Therefore the repository does not claim page-image verification of their figures, typography, or exact wording. The important maturity change is narrower: the central 1919 mechanism now has an independent contemporary authorial primary anchor, so those facsimiles are archival cleanup rather than the only missing historical support.
+
+A January 1920 _Radio Amateur News_ reproduction is also consistent with the patent and proceedings, including the stronger persistence/reset wording, but its retrieval path exposed machine-extracted text while the scan itself did not render reliably. It is kept as a contemporary cross-check rather than a facsimile substitute.
 
 ---
 
@@ -145,15 +163,15 @@ Its “Other Drawing References” section also records earlier drawing referenc
 - Drexel ENIAC Drawings index: <https://www.cs.drexel.edu/~bls96/eniac/drawings/>.
 - ENIAC Part-II scan: <https://www.cs.drexel.edu/~bls96/eniac/reports/prog2.pdf>.
 
-### H/P — Part II p. IV-43 now supplies a directly recovered machine-specific timing sequence
+### H/P — Part II p. IV-43 supplies a directly recovered machine-specific timing sequence
 
-A second evidence pass directly recovered the primary text at Part II p. **IV-43**. It describes an incoming switch pulse setting an `unsynchronized flip-flop`; that state enables a synchronizing gate so the next central programming pulse can set a `synchronized flip-flop`; the second state enables a transmitter gate; a later central program pulse is transmitted and resets both flip-flops. The report explains the second stage in terms of avoiding unreliable reduced-magnitude pulses when an unsynchronized switch event overlaps a central program pulse.
+Part II p. **IV-43** describes an incoming switch pulse setting an `unsynchronized flip-flop`; that state enables a synchronizing gate so the next central programming pulse can set a `synchronized flip-flop`; the second state enables a transmitter gate; a later central program pulse is transmitted and resets both flip-flops. The report explains the second stage in terms of avoiding unreliable reduced-magnitude pulses when an unsynchronized switch event overlaps a central program pulse.
 
-This materially deepens the ENIAC evidence because the period report itself now supplies the state-transition/timing role. The detailed retention analysis and claim ledger are in [`06-eniac-timing-retention-deepening.md`](06-eniac-timing-retention-deepening.md).
+This materially deepens the ENIAC evidence because the period report itself supplies the state-transition/timing role. The detailed retention analysis and claim ledger are in [`06-eniac-timing-retention-deepening.md`](06-eniac-timing-retention-deepening.md).
 
 However, **PX-1-105 itself has still not been visually rendered and inspected**. No new drawing-specific resistor values, tube topology, bias conditions, or component-level timing claims are promoted from the textual sequence.
 
-The updated evidence boundary is therefore:
+The evidence boundary therefore remains:
 
 ```text
 Part-II textual operation directly inspected
@@ -167,12 +185,13 @@ PX-1-105 schematic visually inspected
 
 | Gap from Case 06 first pass | Current evidence | Status after this note |
 | --- | --- | --- |
-| Directly inspect Eccles–Jordan 1919 paper or page-preserving reprint | exact _Electrician_ and _Radio Review_ scan locators recovered; secondary quotation cross-check found | **open — direct page inspection still required** |
+| Contemporary Eccles–Jordan authorial mechanism text beyond the patent | British Association 1919 meeting proceedings, pp. 271–272, directly recovered; exact periodical locators embedded in the proceedings | **closed for mechanism evidence** |
+| Exact _Electrician_ / _Radio Review_ facsimile inspection | exact locators recovered; proceedings and a near-contemporary reproduction corroborate the mechanism | **open — archival cleanup, not sole mechanism support** |
 | Recover machine-specific ENIAC Part-II textual operation | Part II p. IV-43 directly supplies a two-flip-flop synchronizing sequence and reliability rationale | **closed for this bounded textual sequence** |
-| Inspect original ENIAC PX-1-105 flip-flop schematic | drawing identity/provenance known | **open — schematic image itself still needs direct inspection** |
+| Inspect original ENIAC PX-1-105 flip-flop schematic | drawing identity/provenance known | **open — principal promotion blocker** |
 | Add period primary source for architectural `register` boundary | Whirlwind R-221 (1954), p. 1-1 and §2.231 / p. 2-12 | **closed** |
 
-Because two direct visual/source-inspection gaps remain open, this note does **not** recommend promotion of Case 06 to `grounded`.
+Because the original ENIAC schematic remains uninspected, this note does **not** recommend promotion of Case 06 to `grounded`.
 
 ---
 
@@ -187,18 +206,21 @@ Because two direct visual/source-inspection gaps remain open, this note does **n
 | `register` in Whirlwind is restricted to the modern CPU-register sense | X | contradicted by R-221's `storage register` vocabulary for core storage |
 | Every flip-flop is historically a register | X | not supported by ENIAC/Whirlwind source layers |
 | Register role and physical retention substrate should be separate comparison axes | E | bounded cross-mechanism reconstruction |
+| British Association proceedings directly record Eccles and Jordan's 1919 trigger-relay mechanism and period vocabulary | H/P | Transactions of Section G, pp. 271–272 |
+| The proceedings describe resistance coupling, back coupling, an electrical stimulus, reinforcing valve changes, and `no restoring influence` | H/P | directly recovered contemporary primary text |
+| The exact _Electrician_ / _Radio Review_ facsimile has now been visually inspected | X | not established; retained as archival cleanup |
 | PX-1-105 is catalogued as an ENIAC `Flip-Flop Circuit` drawing | H/S | Drexel patent-trial-microfilm drawing index |
 | Part II p. IV-43 directly documents an unsynchronized flip-flop -> synchronizing gate -> synchronized flip-flop -> transmitter/reset sequence | H/P | directly recovered primary report text |
 | The exact PX-1-105 circuit topology has now been directly verified | X | not established; schematic image remains uninspected |
-| The 1919 paper has now been directly page-inspected | X | locator recovered, direct page inspection still open |
 
 ---
 
 ## Next bounded step
 
-Do **not** open SRAM/cache yet solely because the `register` vocabulary gap and one ENIAC textual-operation gap are closed. The highest-value next move remains to finish the two direct inspections:
+Do **not** open SRAM/cache yet solely because the 1919 mechanism evidence is now stronger. The highest-value next move is singular:
 
-1. inspect _The Electrician_ p. 298 or _Radio Review_ pp. 143–146 directly;
-2. render and inspect PX-1-105 / immediately relevant ENIAC Part-II drawing material and record exact circuit/topology anchors.
+1. render and inspect PX-1-105 / immediately relevant ENIAC original drawing material and record exact circuit/topology anchors;
+2. compare only what is actually visible in the schematic against the already recovered Part-II textual sequence;
+3. treat exact _Electrician_ / _Radio Review_ facsimile recovery as archival cleanup unless it changes the mechanism.
 
-If those confirm the current reconstruction, Case 06 can be reconsidered for `grounded`. If they conflict with it, the case should be corrected rather than promoted.
+If the ENIAC drawing confirms the current reconstruction, Case 06 can be reconsidered for `grounded`. If it conflicts with it, the case should be corrected rather than promoted.
