@@ -147,6 +147,8 @@ But an explicit methodological rule applies:
 
 A disk block, database row, object-store object, or cached page may help us test questions of technical availability and ordering, but the philosophical concept must not be collapsed into an engineering noun merely because the English words look similar.
 
+The bounded [`Heidegger orderability test`](docs/PHILOSOPHICAL_TEST_03_HEIDEGGER_ORDERABILITY.md) keeps that boundary while using designation, resolution, currentness/admissibility, replacement, and recovery to make the engineering conditions of `being on call` precise. Technical availability can discipline a Heideggerian interpretation; it does not define `Bestand`.
+
 ### Wolfgang Ernst — media archaeology and technical memory
 
 Ernst is the closest prior art to this project's technical-philosophical interface. His media archaeology insists that "memory" in technical systems must be read at the level of actual mechanisms, timing, registers, buffers, access modes, latency, and operational processes rather than treated only as a metaphor for human or cultural memory.
@@ -158,6 +160,8 @@ His work is therefore both a major source and a warning: this repository must co
 ### Matthew Kirschenbaum — inscription, storage, and forensic materiality
 
 Kirschenbaum's *Mechanisms* is important for treating digital writing through actual storage mechanisms and for foregrounding erasure, variability, repeatability, and survivability.
+
+The bounded [`Kirschenbaum forensic-materiality test`](docs/PHILOSOPHICAL_TEST_04_KIRSCHENBAUM_FORENSIC_MATERIALITY.md) retains the forensic/formal materiality distinction but refuses to generalize hard-drive remanence into a universal law. Mapped Flash, later SSD sanitization evidence, and RADOS require at least two further distinctions: `forensic witness ≠ authoritative current state`, and `logical-object survivability ≠ current-embodiment survivability ≠ forensic-trace survivability`.
 
 ---
 
@@ -221,6 +225,8 @@ See [`RELATED_REPOS.md`](RELATED_REPOS.md).
 - [`docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md`](docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md) — cross-audit control ledger recording rejected strong claims, required decompositions, scoped survivors, and thesis status before any conclusion is promoted.
 - [`docs/PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md`](docs/PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md) — first named prior-art test; preserves operational analysis while rejecting a universal continuous-operation or microtime ontology of retention.
 - [`docs/PHILOSOPHICAL_TEST_02_STIEGLER_TERTIARY_RETENTION.md`](docs/PHILOSOPHICAL_TEST_02_STIEGLER_TERTIARY_RETENTION.md) — source-controlled boundary test separating broad mechanism-level technical retention from Stiegler's thicker relation of technical exteriorization and retentional efficacy.
+- [`docs/PHILOSOPHICAL_TEST_03_HEIDEGGER_ORDERABILITY.md`](docs/PHILOSOPHICAL_TEST_03_HEIDEGGER_ORDERABILITY.md) — boundary test separating storage/retrieval from Heideggerian `Bestand` while making the engineering conditions of callability explicit.
+- [`docs/PHILOSOPHICAL_TEST_04_KIRSCHENBAUM_FORENSIC_MATERIALITY.md`](docs/PHILOSOPHICAL_TEST_04_KIRSCHENBAUM_FORENSIC_MATERIALITY.md) — test of forensic/formal materiality across mapped Flash, later SSD sanitization evidence, and distributed replicas/currentness.
 - [`ROADMAP.md`](ROADMAP.md) — staged research program.
 - [`RELATED_REPOS.md`](RELATED_REPOS.md) — cross-repository boundaries and reuse rules.
 - [`AGENTS.md`](AGENTS.md) — research protocol for human and AI contributors.
@@ -257,7 +263,3 @@ The repository may compare an abacus bead with a register, a delay line with tem
 Those layers must never silently collapse into one another.
 
 ---
-
-## Status
-
-The mechanism-variety gate is open, the first bounded six-thesis audit sequence is complete, and two named philosophical/prior-art tests have now been completed: Wolfgang Ernst on operationality/microtemporality and Bernard Stiegler on the tertiary-retention boundary. No thesis has been promoted to a final conclusion; each surviving formulation remains scope-limited and counterexample-sensitive. The next named synthesis unit is a bounded Heidegger availability/ordering test that keeps `Bestand ≠ storage` explicit.
