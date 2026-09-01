@@ -63,9 +63,11 @@ Choose cases that force the method to distinguish very different kinds of retent
 - [x] record exact patent-page anchors for the central claims;
 - [x] use Intel 1103 manufacturer documentation as a boundary showing dynamic storage + nondestructive read + mandatory refresh;
 - [x] avoid treating Intel 1103 as an implementation of Dennard's exact 1T1C cell;
-- [ ] add an early commercial 1T1C datasheet/manual and primary sense-amplifier / restore evidence;
-- [ ] coordinate a full semiconductor-memory history with `computing-archaeology` rather than expanding this case into a general DRAM survey;
-- [ ] promote from `first-pass` to `grounded` only after source deepening.
+- [x] add a commercial one-transistor/capacitor manufacturer source: AMD Am9050 (1976), including nondestructive read, leakage-driven refresh, and row-level 2 ms maintenance;
+- [x] add primary commercial sense/restore evidence: AMD Am9016 (1979) sense-restore amplifiers and Intel AP-133 (1982) sense → amplify → return-to-cell row refresh;
+- [x] grounding record: [`evidence/03-dram-1967-1982-grounding.md`](evidence/03-dram-1967-1982-grounding.md);
+- [x] promote from `first-pass` to `grounded` after source deepening;
+- [ ] coordinate a full semiconductor-memory history with `computing-archaeology` rather than expanding this case into a general DRAM survey.
 
 ### 5. Flash / SSD
 
@@ -95,13 +97,14 @@ Choose cases that force the method to distinguish very different kinds of retent
 - [x] establish `down` / `out`, temporary primary transfer, re-replication, peering, and stale/missing-object recovery as a repair-triggered retention regime;
 - [x] distinguish replicated volatile-cache acknowledgement from later persistent-media `commit` in the bounded design;
 - [x] qualify `no privileged copy`: no permanently privileged physical home, while temporary primary authority still exists;
-- [ ] inspect the OSDI '06 PDF and record printed page / figure anchors;
-- [ ] inspect the full SC '06 CRUSH paper directly;
-- [ ] compare the 2007 RADOS paper to the OSDI prototype and record semantic changes rather than merging them silently;
-- [ ] add a contemporaneous implementation artifact or code/documentation for PG peering/recovery;
-- [ ] promote from `first-pass` to `grounded` only after source deepening.
+- [x] inspect the OSDI '06 PDF and record printed page / figure anchors;
+- [x] inspect the full SC '06 CRUSH paper directly;
+- [x] compare the 2007 RADOS paper to the OSDI prototype and record semantic changes rather than merging them silently;
+- [x] add a contemporaneous implementation artifact for PG-log persistence/recovery;
+- [x] grounding record: [`evidence/05-rados-2006-2007-grounding.md`](evidence/05-rados-2006-2007-grounding.md);
+- [x] promote from `first-pass` to `grounded` after source deepening.
 
-A first synthesis should be attempted only after at least four of these cases have primary technical evidence and reach `grounded` status in [`CASE_INDEX.md`](CASE_INDEX.md).
+A first synthesis should be attempted only after at least four of these cases have primary technical evidence and reach `grounded` status in [`CASE_INDEX.md`](CASE_INDEX.md). Current maturity is **2 / 4 grounded**: DRAM and RADOS.
 
 ### Results already exposed by Cases 00–05
 
@@ -131,6 +134,10 @@ Classic destructive-read core and Dennard's bounded 1T1C embodiment can require 
 
 DRAM adds a separate obligation: leakage creates a deadline, so the system must revisit retained state even when nobody asks to read it.
 
+> **refresh can be shared reconstruction rather than a per-cell timer event.**
+
+Commercial DRAM evidence now makes the maintenance path concrete: row selection exposes weak stored charge to bit-line sensing, shared sense/restore circuitry amplifies the state, and the restored value is returned to the cells. The stable logical address is therefore maintained by shared temporal infrastructure around very small storage elements.
+
 > **space and rewrite geometry can create maintenance work.**
 
 Mapped Flash adds another regime: current data may need to be copied out so an erase unit can be reclaimed under free-space pressure.
@@ -141,7 +148,7 @@ RADOS adds repair-triggered retention: after an OSD remains unavailable, replica
 
 > **dynamic retention is not identical to destructive read.**
 
-Dennard's patent disclosed nondestructive alternatives, and Intel 1103 documentation combines nondestructive read with mandatory periodic refresh.
+Dennard's patent disclosed nondestructive alternatives; Intel 1103 documentation combines nondestructive read with mandatory periodic refresh; AMD's 1976 Am9050 directly combines a one-transistor/capacitor storage cell, nondestructive read, and mandatory refresh.
 
 > **logical invalidation is not identical to physical erasure.**
 
@@ -176,7 +183,7 @@ Priority bridges:
 - RAID / scrubbing / rebuild;
 - distributed replication and erasure coding.
 
-The mapped-Flash case does **not** close the general SSD/FTL bridge. The RADOS case does **not** close the general distributed-storage bridge. Both establish bounded mechanisms whose broader technical history should be coordinated with `computing-archaeology`.
+The mapped-Flash case does **not** close the general SSD/FTL bridge. The RADOS case does **not** close the general distributed-storage bridge. The grounded DRAM case likewise does **not** close the general semiconductor-memory bridge. These cases establish bounded mechanisms whose broader technical history should be coordinated with `computing-archaeology`.
 
 ## Phase 3 — Retention / transfer / computation boundary
 
@@ -252,7 +259,7 @@ The first six cases now provide six maintenance baselines:
 - abacus: selection, interpretation, protection, reset, and validation remain visible operator labor;
 - delay line: preservation, correction, circulation, and timing become continuous process;
 - magnetic core: the element retains state at rest while access can trigger restore work;
-- DRAM: a recurring schedule revisits state before its physical deadline expires;
+- DRAM: a recurring schedule revisits state before its physical deadline expires, using shared row selection and sense/restore circuitry in the grounded commercial evidence;
 - mapped Flash: controller metadata, free space, relocation, and reclamation sustain repeated logical rewriting;
 - RADOS: failure detection, peering, version comparison, primary transfer, and re-replication sustain logical objects despite member-device loss.
 
@@ -269,7 +276,7 @@ Only after technical cases are mature:
 - test whether distributed `currentness` and repair require a more explicitly relational account of retained identity;
 - decide whether `technical retention` names one coherent operation or a family of related mechanisms.
 
-The mapped-Flash and RADOS cases are especially relevant to later synthesis because both separate logical identity from one stable physical location, but they do so at very different failure/authority scales. Do not perform the synthesis yet.
+The mapped-Flash and RADOS cases are especially relevant to later synthesis because both separate logical identity from one stable physical location, but they do so at very different failure/authority scales. Grounded DRAM adds a complementary case in which logical continuity is maintained through repeated local electrical reconstruction under a deadline. Do not perform the synthesis yet.
 
 ## Research quality gates
 
