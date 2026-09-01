@@ -89,17 +89,35 @@ Dependence of retained state on continuing conditions such as power, refresh, ci
 
 ## addressability
 
-The ability to select a particular retained state or region from a larger set.
+The operational ability to **designate and select / resolve toward a particular retained state or region from a larger set**.
 
-Addressability may be:
+Addressability is an umbrella term, not a claim that every system has a numeric machine address. Selection may be:
 
-- spatial;
-- sequential;
-- temporal;
+- human-mediated spatial selection;
+- sequential or temporal selection;
+- coordinate-decoded;
 - indexed;
 - associative;
 - content-addressed;
-- logical rather than physical.
+- logical-to-physical translated;
+- algorithmically or distributively resolved.
+
+The grounded addressability audit requires several distinctions:
+
+1. **designation** — what identity, place, key, row, block, object, or procedural position is requested;
+2. **selection / resolution** — how that designation is turned into one or more candidate physical embodiments;
+3. **currentness / admissibility** — where required, which candidate is allowed to count as the current state;
+4. **read / recovery / interpretation** — how the selected state becomes usable.
+
+Do not collapse these steps. In particular:
+
+- retention does not require an autonomous machine-readable address;
+- an address is not necessarily a physical location;
+- stable logical designation does not imply stable physical location;
+- resolving a candidate copy does not prove that it is current;
+- addressability is not identical to availability.
+
+See [`SYNTHESIS_AUDIT_03_ADDRESSABILITY.md`](SYNTHESIS_AUDIT_03_ADDRESSABILITY.md).
 
 ## access geometry
 
@@ -308,9 +326,17 @@ Candidate mechanisms include:
 
 ## availability
 
-The condition in which retained state can actually be called upon for use.
+The condition in which retained state can actually be called upon for use **now**.
 
-A state may physically survive while becoming unavailable because its index, map, key, interface, software, interpretation, or institutional context has been lost.
+Availability is broader than addressability. A state can be correctly designated and resolved yet still be unavailable because:
+
+- the selected embodiment is stale or not authorized to answer;
+- readout fails;
+- reconstruction fails;
+- a required key, interface, software layer, or interpretation is missing;
+- the physical carrier or service is unreachable.
+
+Conversely, a physical trace may survive while no designation or resolver remains to select it as the intended state.
 
 Do not equate this working technical term with Heidegger's `Bestand`.
 
