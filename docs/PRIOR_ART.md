@@ -75,6 +75,12 @@ Do not use `tertiary retention` as a loose synonym for every bit-holding mechani
 
 A DRAM cell, magnetic core, archive, notebook, phonograph, and database do not become conceptually identical merely because they can all be described using the word `retention`.
 
+### What the bounded test changes
+
+[`PHILOSOPHICAL_TEST_02_STIEGLER_TERTIARY_RETENTION.md`](PHILOSOPHICAL_TEST_02_STIEGLER_TERTIARY_RETENTION.md) rejects both a durable-human-readable-media-only restriction and the opposite equation `every technically retained state = tertiary retention`.
+
+The useful boundary is relational: technical supports may participate in exteriorization, repetition, learning, and transmission, while controller-internal mappings, refresh states, replica placement, and other infrastructure can be constitutive of a tertiary-retentional system without being philosophically identical to the retained cultural/epistemic trace.
+
 ### Contribution opportunity
 
 Use exact technical cases to distinguish:
@@ -90,9 +96,11 @@ Use exact technical cases to distinguish:
 
 Then ask which kinds of technical retention actually bear on Stiegler's argument and how.
 
-### Starting source
+### Starting sources
 
-- Bernard Stiegler, *Technics and Time* (especially the development of technical exteriorization and tertiary retention across the series).
+- Bernard Stiegler, *For a New Critique of Political Economy*, trans. Daniel Ross, Polity, 2010, Introduction pp. 8–10.
+- Bernard Stiegler, **"Die Aufklärung in the Age of Philosophical Engineering,"** *Computational Culture* 2, 28 September 2012: <https://computationalculture.net/die-aufklarung-in-the-age-of-philosophical-engineering/>.
+- Bernard Stiegler, *Technics and Time* series, for the broader development of technical exteriorization and tertiary retention.
 
 ---
 
@@ -102,17 +110,38 @@ Then ask which kinds of technical retention actually bear on Stiegler's argument
 
 `The Question Concerning Technology` analyzes modern technological revealing in terms of ordering and `Bestand` / standing-reserve: what stands ready to be called upon for further ordering.
 
-This can sharpen questions about addressability, availability, inventory, databases, and storage systems.
+This can sharpen questions about addressability, availability, inventory, databases, and storage systems — but only if the engineering and philosophical levels remain distinct.
 
 ### Strict boundary
 
-> `Bestand` is **not** an old philosophical word for RAM, disk, or cloud storage.
+> `Bestand` is **not** an old philosophical word for RAM, disk, cloud storage, or stored data.
 
-The project must not derive a technical thesis from an English-language pun on `storage`, `stock`, `reserve`, or `standing`.
+The primary text itself blocks that shortcut. In William Lovitt's 1977 translation, printed p. 16, `storing` appears as one operation inside a larger chain of unlocking, transformation, distribution, switching, regulation, and securing. On p. 17 Heidegger names `Bestand` and immediately marks it as something more essential than mere `stock`. On pp. 19–21 `Ge-stell` / Enframing is treated as a mode of revealing/order rather than a technological component or object class.
 
-### Starting source
+### What the bounded test changes
 
-- Martin Heidegger, "The Question Concerning Technology," in *The Question Concerning Technology and Other Essays*.
+[`PHILOSOPHICAL_TEST_03_HEIDEGGER_ORDERABILITY.md`](PHILOSOPHICAL_TEST_03_HEIDEGGER_ORDERABILITY.md) tests the concept against the already grounded addressability decomposition and against mapped Flash/RADOS in particular.
+
+It rejects:
+
+- `stored datum = item of standing-reserve`;
+- `addressable = Heideggerianly orderable`;
+- `physical presence = technical availability`;
+- `replaceable embodiment = immateriality`;
+- `any retained state usable later = Bestand`.
+
+The narrower surviving bridge is:
+
+> **designation, resolution, currentness/admissibility, replacement, and recovery can make the engineering conditions of `being on call` precise. Those mechanisms can discipline a Heideggerian interpretation of orderability, but they neither define `Bestand` nor prove that an isolated storage object is standing-reserve.**
+
+Mapped Flash and RADOS are useful not because they are `more Heideggerian storage`, but because they show that callability can persist while physical embodiments are replaced, and that current orderability depends on retained mapping, placement, version, authority, and repair relations.
+
+### Starting sources
+
+- Martin Heidegger, *The Question Concerning Technology and Other Essays*, trans. William Lovitt, Harper & Row, 1977, especially printed pp. 16–23. Page-preserving digital transcription: <https://opensutd.org/qct-sub/>.
+- Martin Heidegger, *Die Frage Nach der Technik*, 1954; Bard College Hannah Arendt Personal Library digitization/catalog record: <https://digitalcommons.bard.edu/hapl_marginalia_all/221/>.
+- Theodore Kisiel, **"Standing Reserve (Bestand),"** in Mark A. Wrathall (ed.), *The Cambridge Heidegger Lexicon*, Cambridge University Press, 2021, pp. 699–700, DOI 10.1017/9780511843778.192: <https://www.cambridge.org/core/books/abs/cambridge-heidegger-lexicon/standing-reserve-bestand/B1D7C663181755835284E5D6FB591BAD>.
+- Stanford Encyclopedia of Philosophy, **"Martin Heidegger,"** §5.2 Technology: <https://plato.stanford.edu/entries/heidegger/>.
 
 ---
 
@@ -127,6 +156,8 @@ MIT Press describes it as the first book in its field to devote significant atte
 ### Contribution opportunity
 
 Extend mechanism-specific analysis across a much broader technical lineage and connect forensic persistence to refresh, remapping, wear, redundancy, distributed identity, and maintenance.
+
+The Heidegger orderability test now gives this comparison a precise technical handoff: mapped Flash and RADOS show that a state can cease to count as **current/orderable** while one or more physical embodiments survive. A Kirschenbaum test should therefore separate interface disappearance, logical invalidation, remapping, encryption/key loss, forensic residue, and actual physical destruction rather than treating `deleted` as one event.
 
 ### Source
 
