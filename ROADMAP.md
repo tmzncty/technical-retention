@@ -127,7 +127,7 @@ Coordinate with `computing-archaeology` rather than duplicating it.
 
 Priority bridges:
 
-- [ ] latch / flip-flop / register;
+- [ ] latch / flip-flop / register — a bounded `first-pass` bridge now exists in [`cases/06-flip-flop-powered-working-retention.md`](cases/06-flip-flop-powered-working-retention.md). Eccles–Jordan GB148582A and the 1946 ENIAC report establish regenerative powered state, explicit set/reset/clear, short-lived working-state use, and ENIAC's own `stores` / `remembers` vocabulary. Before marking the bridge complete, directly inspect the 1919 Eccles–Jordan trigger-relay paper or a page-preserving reprint, inspect ENIAC circuit drawings/Part II for the actual flip-flop circuit, and add a period primary source that makes the architectural `register` boundary explicit;
 - [ ] SRAM and cache;
 - [ ] DRAM evolution and refresh machinery beyond the bounded case;
 - [ ] ROM → PROM → EPROM → EEPROM → Flash;
@@ -161,6 +161,8 @@ Research problems:
 - [ ] How should `acknowledged`, `visible`, `replicated`, and `durably committed` be separated across systems?
 
 The first direct Ernst test is now complete; later work in this phase should reuse its timescale decomposition rather than treating `microtemporality` as a catch-all answer.
+
+The first flip-flop stress test adds one concrete correction for this phase: a later retained-state relation need not appear as a discrete `retrieve` operation. In the ENIAC static-output and carry cases, a state can remain continuously available at a circuit output and become significant only when a later gate/pulse acts on it. Future boundary work should therefore test **later state-sensitive use** alongside explicit recovery/read operations.
 
 ---
 
@@ -247,9 +249,11 @@ Audits 01–06 and the cross-audit ledger establish a negative discipline for sy
 - [x] **Kirschenbaum / forensic materiality beyond disk** — completed in [`docs/PHILOSOPHICAL_TEST_04_KIRSCHENBAUM_FORENSIC_MATERIALITY.md`](docs/PHILOSOPHICAL_TEST_04_KIRSCHENBAUM_FORENSIC_MATERIALITY.md). The test keeps Kirschenbaum's forensic/formal distinction but rejects a universal hard-drive-remanence model; grounded mapped Flash and RADOS plus the bounded FAST 2011 SSD comparison require `forensic witness ≠ authoritative current state` and distinguish logical-object, current-embodiment, and forensic-trace survivability.
 - [x] decide whether `technical retention` names one coherent operation or a family of mechanisms linked only by carefully stated invariants — completed in [`docs/SYNTHESIS_AUDIT_07_TECHNICAL_RETENTION_COHERENCE.md`](docs/SYNTHESIS_AUDIT_07_TECHNICAL_RETENTION_COHERENCE.md). The audit rejects both a single common physical mechanism and an unconstrained `anything that lasts` umbrella. The current bounded result is one minimal analytical relation — an operationally typed retention target remains or is reconstructed across temporal separation and later counts as an admissible continuation under an explicit sameness/currentness/interpretation rule — implemented through many cross-cutting mechanisms rather than exclusive subfamilies.
 
-**Next highest-value technical stress test:** return from synthesis to the first missing Phase-2 bridge, **latch / flip-flop / register**, specifically to stress-test the new category boundary at very short timescales. The bounded question should not be a generic logic-history survey. It should ask when a bistable machine state becomes `working retention`, what has to remain invariant across the interval, whether continuous power is retention maintenance or merely an enabling condition in the selected implementation, how read/write access affects the state, and whether the new `target + continuity + later admissibility` relation becomes trivial when the temporal gap is extremely short. Search `computing-archaeology` first and reuse any existing engineering history rather than rewriting it.
+**Current technical stress test:** [`cases/06-flip-flop-powered-working-retention.md`](cases/06-flip-flop-powered-working-retention.md) now provides a `first-pass` adversarial case at very short timescales. Its primary evidence supports three corrections: short duration does not make retention trivial when later machine behavior depends on the earlier state; continuous power is not the same operation as periodic refresh/rewrite; and later continuity need not be demonstrated by a discrete retrieval transaction because retained state may remain continuously exposed to downstream logic.
 
-The first generic thesis-audit sequence, four named philosophical/prior-art tests, and the first category-coherence audit are now complete. Do not promote the bounded relational criterion into a grand `What Is Technical Retention?` chapter yet. The next slice should try to break it with a new grounded technical bridge.
+**Next highest-value unit:** source-deepen the new flip-flop bridge rather than opening another broad case. Directly inspect the 1919 Eccles–Jordan trigger-relay paper or page-preserving reprint, inspect the relevant ENIAC circuit drawings / Part II circuit description, and add a period primary source that distinguishes an architectural `register` from an individual bistable state element. Promote Case 06 only if those sources confirm the current mechanism reconstruction without importing later latch/register vocabulary.
+
+The first generic thesis-audit sequence, four named philosophical/prior-art tests, and the first category-coherence audit are complete. Do not promote the bounded relational criterion into a grand `What Is Technical Retention?` chapter yet. The new flip-flop case has already forced one wording correction — `later state-sensitive use` must be allowed alongside explicit recovery — and should be grounded before using it to generalize further.
 
 ---
 
