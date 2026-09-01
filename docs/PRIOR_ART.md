@@ -145,23 +145,54 @@ Mapped Flash and RADOS are useful not because they are `more Heideggerian storag
 
 ---
 
-## 4. Matthew G. Kirschenbaum — forensic materiality of digital storage
+## 4. Matthew G. Kirschenbaum — forensic and formal materiality beyond disk
 
 ### Why he matters
 
-*Mechanisms* pushes new-media and textual studies below the visible interface into actual storage mechanisms, especially the hard drive. Its key analytical vocabulary includes erasure, variability, repeatability, and survivability.
+*Mechanisms* pushes new-media and textual studies below the visible interface into actual storage mechanisms and physical records. Kirschenbaum's Introduction defines **forensic materiality** through material particularity / individualization and **formal materiality** through relational computational states, while warning that the pair cannot simply be mapped to `hardware` and `software`.
 
-MIT Press describes it as the first book in its field to devote significant attention to storage, particularly the hard drive.
+The book's central storage mechanism is nevertheless the magnetic hard drive. MIT Press describes *Mechanisms* as the first book in its field to devote significant attention to storage, particularly the hard drive, and the Introduction describes the hard drive as the central example of storage as a writing machine.
 
-### Contribution opportunity
+### What the bounded test changes
 
-Extend mechanism-specific analysis across a much broader technical lineage and connect forensic persistence to refresh, remapping, wear, redundancy, distributed identity, and maintenance.
+[`PHILOSOPHICAL_TEST_04_KIRSCHENBAUM_FORENSIC_MATERIALITY.md`](PHILOSOPHICAL_TEST_04_KIRSCHENBAUM_FORENSIC_MATERIALITY.md) tests the portable part of Kirschenbaum's method against grounded mapped Flash and RADOS, with Wei et al. FAST 2011 as a deliberately later SSD-forensics boundary.
 
-The Heidegger orderability test now gives this comparison a precise technical handoff: mapped Flash and RADOS show that a state can cease to count as **current/orderable** while one or more physical embodiments survive. A Kirschenbaum test should therefore separate interface disappearance, logical invalidation, remapping, encryption/key loss, forensic residue, and actual physical destruction rather than treating `deleted` as one event.
+The test retains the methodological demand to investigate material embodiments and trace histories below the interface, but rejects the stronger shortcuts:
 
-### Source
+- `forensic materiality = hard-drive remanence`;
+- `every deleted/obsolete digital state remains forensically recoverable`;
+- `host-interface invisibility = raw-media absence`;
+- `physical survival = current logical state`;
+- `physical survival = forensic accessibility`;
+- `one logical object = one material witness`.
 
-- Matthew G. Kirschenbaum, *Mechanisms: New Media and the Forensic Imagination*, MIT Press: <https://mitpress.mit.edu/9780262517409/mechanisms/>
+Mapped Flash and the FAST 2011 SSD experiments show why the distinction matters: controller indirection can make a logical value disappear through the normal interface while stale raw-Flash embodiments remain, yet reclamation, sanitization, and key-mediated unreadability can later change recoverability. RADOS adds a distributed boundary in which several individualized physical replicas may survive while version, epoch, peering, and authority determine which state currently counts.
+
+The bounded test therefore adds two project comparison rules:
+
+> **forensic witness ≠ authoritative current state**
+
+and
+
+> **logical-object survivability ≠ current-embodiment survivability ≠ forensic-trace survivability**.
+
+These are project terms, not Kirschenbaum's vocabulary.
+
+### Revised contribution opportunity
+
+The novelty claim here is no longer the generic statement that digital media are material or that deletion may leave traces. Kirschenbaum and digital forensics already establish that territory.
+
+The narrower contribution opportunity is:
+
+> **re-ground forensic persistence mechanism by mechanism when logical identity is remapped, obsolete embodiments are reclaimed, recoverability depends on keys or controller state, replicas multiply or disappear, and protocol currentness diverges from physical survival.**
+
+This also gives the broader project another invariant to test before any grand synthesis: `trace survivability` should not be silently folded into `logical persistence`.
+
+### Starting sources
+
+- Matthew G. Kirschenbaum, *Mechanisms: New Media and the Forensic Imagination*, MIT Press, 2008: <https://mitpress.mit.edu/9780262113113/mechanisms/>.
+- Kirschenbaum, *Mechanisms*, Introduction, page-preserving excerpt used for the forensic/formal definitions and hard-drive scope boundary: <https://raley.english.ucsb.edu/wp-content/Engl800/Kirschenbaum-intro.pdf>.
+- Michael Wei, Laura M. Grupp, Frederick E. Spada, Steven Swanson, **"Reliably Erasing Data From Flash-Based Solid State Drives,"** FAST '11, USENIX Association, February 2011: <https://www.usenix.org/conference/fast11/reliably-erasing-data-flash-based-solid-state-drives>.
 
 ---
 
