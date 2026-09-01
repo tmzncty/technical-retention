@@ -2,19 +2,22 @@
 
 > **Research question:** when does a spatial configuration inside a calculation count as technical retention rather than merely as a visible aid?
 
-**Status:** first-pass case study; historically grounded, conceptually provisional.
+**Status:** grounded case study; central late-Ming claim checked against a 1592 scan, older counting-rod evidence is explicitly layered, and a non-Chinese positional-counter comparison has been added.
+
+Grounding record: [`../evidence/00-abacus-rod-line-reckoning-grounding.md`](../evidence/00-abacus-rod-line-reckoning-grounding.md)
 
 ## Scope
 
-- **Object / system:** counting boards and especially the Chinese bead abacus (`算盤`, suanpan).
-- **Date range:** long prehistory of counting devices, with the historical core of this case centered on late-imperial Chinese bead-abacus practice and Cheng Dawei's *Suanfa Tongzong* (1592).
-- **Why this case matters:** it is a deliberately difficult boundary case. The abacus is not a stored-program computer, but its bead configuration can preserve a numerical state across successive operations. This lets the project test whether `retention` can be defined before electronic memory without quietly projecting modern computer architecture backward.
+- **Primary bounded object:** the Chinese bead abacus (`算盤`, suanpan), especially Cheng Dawei's *Suanfa Tongzong* (1592).
+- **Older comparison inside China:** counting-rod procedural vocabulary in early mathematical texts, treated cautiously because the surviving texts do not specify every material operation.
+- **Non-Chinese comparison:** Adam Ries's *Rechnung auff der Linihen* (1525), a European line-reckoning manual using counters on a positional line schema.
+- **Why this case matters:** it tests whether `technical retention` can include manually maintained, operationally meaningful physical state without quietly turning every stable object into storage or projecting modern computer architecture backward.
 
-This case does **not** claim that the abacus is the historical ancestor of the CPU register. It asks a narrower functional question:
+This case does **not** claim that an abacus or reckoning board is historically a CPU register. It asks a narrower functional question:
 
-> Can a manually maintained spatial configuration serve as an operationally retained intermediate state?
+> Can a manually maintained spatial configuration preserve an actionable numerical state across successive operations?
 
-The answer appears to be yes, provided that the claim is kept at the level of functional reconstruction rather than historical vocabulary.
+The evidence supports **yes**.
 
 ---
 
@@ -22,122 +25,153 @@ The answer appears to be yes, provided that the claim is kept at the level of fu
 
 | ID | Claim | Type | Status |
 | --- | --- | --- | --- |
-| A1 | Abaci perform arithmetic by moving counters or beads into spatial configurations. | historical record | strong |
-| A2 | Chinese suanpan practice used place-value positions and explicit rules for positioning results. | historical record | strong |
-| A3 | Cheng Dawei's 1592 text contains instructions in which a completed result is left unmoved on the abacus. | historical record | strong, OCR should be checked against facsimile for quotation-level use |
-| A4 | A bead configuration can therefore preserve an intermediate numerical state between operations. | engineering / operational reconstruction | strong |
-| A5 | This makes the configuration `register-like` in one limited respect: a value remains available for a later operation. | functional analogy | useful but deliberately narrow |
-| A6 | The abacus is a register, memory hierarchy, or direct ancestor of modern computer registers. | historical claim | **rejected** |
+| A1 | Premodern arithmetic could be carried out by transforming counters or beads arranged in positional configurations. | historical record | **strong**; primary evidence in Cheng 1592 and Ries 1525 |
+| A2 | Cheng Dawei's 1592 text directly uses `算盤`, gives explicit `定位` rules, and instructs that after multiplication the obtained number be left unmoved (`待數莫動`). | historical record | **strong**; 1592 scan p. 70 / 82 inspected directly |
+| A3 | Older Chinese mathematical texts use procedural placement/positional language, while exact counting-rod material operations sometimes require specialist reconstruction. | historical record + scholarly reconstruction | **strong with explicit boundary** |
+| A4 | A configured bead/counter field can preserve an intermediate or completed numerical state for subsequent inspection or transformation. | engineering / operational reconstruction | **strong** |
+| A5 | Chinese suanpan and European line reckoning can be compared as different realizations of passive positional working retention. | functional analogy | **strong but non-genealogical** |
+| A6 | Such configurations are `register-like` in the limited respect that an operational value remains available between operations. | functional analogy | useful and bounded |
+| A7 | The abacus is a register, memory hierarchy, or direct ancestor of modern CPU registers. | historical claim | **rejected** |
+| A8 | The evidence establishes a continuous counting-rods → suanpan → modern-register genealogy. | historical claim | **rejected** |
 
 ---
 
 ## Historical vocabulary
 
-The most important rule is to begin with period vocabulary rather than with `register`.
+### Cheng Dawei: `算盤`, `定位`, and `待數莫動`
 
-Cheng Dawei's *新編直指筭法統宗* (*Suanfa Tongzong*, 1592) uses terms including:
+The most important rule is to begin with period vocabulary rather than with `register`, `memory`, or `state`.
 
-- `筭盤` / `算盤` — abacus;
-- `定位` — positioning / fixing place value;
+Cheng Dawei's *新編直指筭法統宗* / *算法統宗* (1592) uses:
+
+- `算盤` / `筭盤` — abacus;
+- `定位` — determination/fixing of position or place value;
 - `實` and `法` in procedural arithmetic contexts;
-- named units and decimal positions placed on the calculating surface.
+- decimal and metrological positions designated on the calculating surface.
 
-The text's first volume includes a section titled `定位秘訣` and gives procedural directions for assigning positional value on the abacus. A particularly important instruction says, in substance, that after a multiplication is completed the obtained number should be left unmoved. The Chinese Text Project transcription is OCR-derived and explicitly warns that it may contain errors, so exact philological quotation should be checked against the facsimile before publication-grade use.
+The central primary anchor is now directly checked rather than accepted from OCR alone. In the 1592 scan, digital p. **70 / 82**, the section `直指定位訣` includes:
 
-The point is not the modern word `state`. The historically safer observation is that a **configured board was intentionally left in place as part of an ongoing computational procedure**.
+> `預先以算盤上寫定萬千百十...因乘完畢待數莫動`
 
-### Source anchors
+The historically important content is narrow and concrete:
 
-- Cheng Dawei, *新編直指筭法統宗*, 1592, CText transcription, vol. 1: <https://ctext.org/wiki.pl?chapter=946408&if=en>
-- Public-domain facsimile of the 1592 edition, volume 1: <https://commons.wikimedia.org/wiki/File:NLC892-411999021914-37275_%E6%96%B0%E7%B7%A8%E7%9B%B4%E6%8C%87%E7%AE%97%E6%B3%95%E7%B5%B1%E5%AE%97_%E7%AC%AC1%E5%86%8A.pdf>
+1. positions on the abacus are designated in advance;
+2. multiplication is carried out under that positional convention;
+3. when the multiplication is complete, the resulting number is instructed to remain unmoved.
+
+Source:
+
+- Cheng Dawei, *Systematic Treatise on Arithmetic*, vol. 1 (1592), Source Library scan p. 70 / 82: <https://sourcelibrary.org/book/suanfa-tongzong-systematic-treatise-on-arithmetic-vol-1-dawei/page-number/70>
+
+This page is the exact digital anchor used by the case. A separately catalogued NLC 1592 facsimile exists, but this case does not pretend that Source Library's digital page number is automatically an NLC folio number.
+
+### Older counting-rod vocabulary: evidence and reconstruction must remain separate
+
+Earlier Chinese mathematical writing supplies genuine positional and procedural vocabulary, but the material instrument cannot always be read straight off the words.
+
+In the `方程` procedure of *The Nine Chapters on Mathematical Procedures*, the text says in part:
+
+> `置...於右方。中、左禾列如右方。`
+
+The verbs `置` (place/set down) and `列` (arrange) and the explicit right/middle/left locations are primary evidence for a spatially organized procedure.
+
+Searchable text:
+
+- *九章算術*, `方程`: <https://www.shidianguji.com/zh/book/SBCK080/chapter/SBCK080_15>
+
+Yiwen Zhu's specialist study is useful because it refuses to turn this evidence into false material certainty. Zhu notes that historians generally understand many such procedures as operations using counting rods (`筭籌`, *suan chou*) but also stresses that direct evidence for exactly how rods were manipulated is limited. The article discusses terms including:
+
+- `筭籌` — counting rods;
+- `借筭` — a borrowed counting rod in a root-extraction procedure;
+- `等` — a positional/rank term whose interpretation is debated;
+- `位` — place/position in *Master Sun*;
+- `筭圖` — later counting diagrams.
+
+Source:
+
+- Yiwen Zhu, “The interplay between textual procedures and material operations from the viewpoint of Chinese mathematical texts,” *Science in Context* 36(3), published online 9 October 2025, DOI 10.1017/S0269889725100860: <https://www.cambridge.org/core/journals/science-in-context/article/interplay-between-textual-procedures-and-material-operations-from-the-viewpoint-of-chinese-mathematical-texts/7E654BC8863452F26F2E0C43892699F4>
+
+The resulting method is deliberately layered:
+
+- **historical record:** surviving texts explicitly tell operators to place, arrange, move, stop, or position quantities;
+- **historical reconstruction:** specialist historians connect many of those procedures to counting-rod material practices;
+- **rejected overreach:** the repository does not invent a fully specified marked board or an uninterrupted rod-to-abacus mechanism when the sources do not provide one.
 
 ---
 
-## Historical record
+## Non-Chinese comparison: Adam Ries's line reckoning
 
-### What an abacus physically does
+Adam Ries's *Rechnung auff der Linihen* (Erfurt, 1525) supplies an independent European comparison.
 
-The Smithsonian describes the abacus as a calculating device on which arithmetic is performed by sliding counters — beads, pebbles, or discs — along rods, wires, or lines. In the Chinese suanpan, counters move along rods or wires in a rectangular frame; beads above and below the crossbar carry different numerical values.
+The directly inspected public-domain scan shows a positional line schema in which lines and intervening spaces carry different values, followed by the section `Addirn / odder summiren`. Counters/numerical tokens are laid out and transformed as the arithmetic proceeds.
 
-This supports a minimal historical statement:
+Primary scan:
 
-> calculation is performed by intentionally changing a persistent spatial arrangement of counters.
+- Adam Ries, *Rechnung auff der Linihen* (1525), Columbia University / Plimpton Library copy via Wikimedia Commons / Internet Archive: <https://commons.wikimedia.org/wiki/File:Rechnung_auff_der_Linihen_(IA_ldpd_13272232_000).pdf>
 
-Source:
+Because the historical leaves are unnumbered, the grounding record uses the digital PDF image indices around **12–13** rather than inventing printed page numbers.
 
-- Smithsonian / National Museum of American History, "The Abacus and the Numeral Frame": <https://www.si.edu/spotlight/the-abacus-the-numeral-frame-and-counters/introduction>
-- Smithsonian, "The Chinese Abacus": <https://americanhistory.si.edu/collections/object-groups/the-abacus-the-numeral-frame-and-counters/the-chinese-abacus>
+The Adam-Ries-Bund independently describes the method as `Rechnen auf den Linien`, with `Rechenpfennige` or stones placed on a line schema / reckoning board and transformed during calculation:
 
-### Origin is not settled enough for a simple invention story
+- <https://www.adam-ries-bund.de/forschung/erstes/>
 
-The project should avoid the common internet narrative in which a single civilization simply "invented the abacus" at a precise date. The Smithsonian explicitly notes disagreement about how long Asian abaci have been made and whether they were influenced by Greek counting devices. The British Museum likewise treats the exact date of Chinese adoption as uncertain while describing substantial use by the Ming period.
+This comparison establishes neither transmission nor common origin. Its value is mechanistic:
 
-For this repository, the disputed origin does not block the case. The retention question does not require an invention-priority claim.
+| Dimension | Cheng / suanpan | Ries / line reckoning |
+| --- | --- | --- |
+| physical counter | bead | loose counter / reckoning token |
+| positional constraint | rods and frame strongly constrain motion | line-and-space schema constrains meaning more than movement |
+| write | move beads | place/remove/convert counters |
+| read | human visual/manual interpretation | human visual/manual interpretation |
+| retention work | preserve bead configuration | preserve counter layout |
+| autonomous machine readout | no | no |
 
-Sources:
-
-- Smithsonian, "The Chinese Abacus": <https://americanhistory.si.edu/collections/object-groups/the-abacus-the-numeral-frame-and-counters/the-chinese-abacus>
-- British Museum collection essay / object record: <https://www.britishmuseum.org/collection/object/A_1909-0611-1>
-
-### Counting rods and bead abaci should not be collapsed
-
-Frank Swetz's historical discussion for the Mathematical Association of America treats the bead abacus as emerging from earlier Chinese counting-rod and counting-board practice and emphasizes the transition from rod numerals to a more mechanically constrained bead device. Even if particular details of chronology remain debatable, the distinction is analytically valuable:
-
-- a **counting board** permits counters or rods to be arranged on an open surface;
-- a **bead frame** constrains the counters to rods/wires and therefore constrains legal positions and motions.
-
-That mechanical constraint matters for retention because it reduces ambiguity about where a counter belongs and what configurations are stable.
-
-Source:
-
-- Frank J. Swetz, "Reflections on Chinese Numeration Systems: Transition to the Abacus," Mathematical Association of America: <https://old.maa.org/press/periodicals/convergence/reflections-on-chinese-numeration-systems-transition-to-the-abacus>
+The difference is useful. A bead frame mechanically constrains valid positions more strongly than an open reckoning board. Thus **the degree to which a medium constrains legal states** becomes a comparison axis rather than an unnoticed assumption.
 
 ---
 
 ## Retained state
 
-The retained state is **not the bead itself**. It is the interpreted configuration of beads relative to:
+The retained state is **not the bead or counter itself**. It is an interpreted relation among:
 
-1. the frame;
-2. the crossbar;
-3. the rod/column position;
-4. the chosen place-value convention;
-5. the procedural context of the calculation.
+1. the physical counters;
+2. their positions relative to a frame, rods, lines, spaces, or neighboring columns;
+3. a place-value or metrological convention;
+4. the current procedural role of the represented number.
 
-A physical configuration alone is therefore insufficient. The same arrangement can mean different numbers if the unit or radix interpretation changes.
+A physical arrangement without its convention may remain perfectly intact while losing its mathematical meaning.
 
-This gives the first important result of the repository:
+This case therefore grounds a stronger formulation than the first pass:
 
-> **retention is substrate + configuration + interpretation.**
+> **passive positional retention = substrate + constrained configuration + interpretation + procedural availability.**
 
-A future operation can use a past result only if the convention that makes the configuration meaningful also persists.
+The word `passive` refers only to the fact that the physical position need not be continually regenerated by a machine. It does **not** mean that interpretation, protection, selection, and procedural context require no work.
 
 ---
 
 ## Physical / logical substrate
 
-### Physical distinction
+### Suanpan
 
-A bead is either in a position that contributes to the represented value or in one that does not, relative to the crossbar and the conventions of the particular abacus.
+A bead's significance depends on its position relative to the frame, crossbar, rod/column, and the current place-value convention. Ordinary mechanical stability lets a configuration remain after the hand that produced it has stopped moving.
 
-The substrate is macroscopic and mechanically stable:
+### Line reckoning
 
-- wood, metal, bamboo, or similar material;
-- frame and rods/wires;
-- bead position under ordinary friction and gravity;
-- humanly visible and manually writable state.
+A loose counter's significance depends on the line or intervening space on which it lies and on the rule system used by the operator. The physical substrate constrains valid states less strongly than the suanpan: a counter can be displaced continuously across the surface even though only some placements have arithmetic meaning.
 
-Unlike DRAM, there is no refresh circuit. Unlike a delay line, the state need not circulate. Unlike magnetic core, the distinction is not encoded in microscopic remanence. The persistence is simply the persistence of a mechanical arrangement until an external force changes it.
+### Consequence
 
-### Logical distinction
+The same broad retention regime can therefore contain different degrees of **state constraint**:
 
-The machine does not independently interpret the value. The numerical meaning is enacted by a user who knows the place-value system and operation rules.
+```text
+open surface + convention
+        ↕
+line schema + convention
+        ↕
+rod/frame + convention
+```
 
-This is why the abacus belongs near the boundary between:
-
-- retained **representation**;
-- retained **machine state**;
-- and externalized **human working state**.
+This is an engineering comparison, not a historical evolutionary sequence.
 
 ---
 
@@ -145,264 +179,272 @@ This is why the abacus belongs near the boundary between:
 
 The state persists primarily through **passive positional stability**.
 
-No energy must be continuously supplied by the calculating system to keep the beads in their current configuration. However, this should not be romanticized as maintenance-free persistence. Retention still assumes:
+No refresh cycle, circulating signal, remanent magnetic state, charge-restoration schedule, mapping controller, or replica-repair protocol is required merely to keep the current configuration physically present.
 
-- that the frame is not bumped or tilted enough to change the configuration;
-- that the operator does not accidentally disturb the beads;
-- that the mapping between columns and place values remains known;
-- that the calculation is not intentionally cleared.
+But retention still has conditions:
 
-In other words, the system has low active maintenance but nonzero environmental and procedural requirements.
+- the counters must not be accidentally disturbed;
+- the positional convention must remain known;
+- the operator must remember what role the displayed number has in the larger procedure;
+- the device or surface must remain available;
+- the configuration must not be intentionally cleared.
+
+This creates a baseline for later cases. A state can require **little or no active substrate maintenance** while still depending heavily on human and procedural maintenance.
 
 ---
 
 ## Addressing and access geometry
 
-The abacus is spatially addressable by the operator.
+Both bounded examples are spatially selectable by the operator.
 
-A particular decimal position is selected by reaching a particular rod/column. This resembles indexed spatial access more than sequential media such as tape, but the analogy has limits:
+On the suanpan, a place is selected by reaching/looking at a rod or column. In Ries's line reckoning, value is selected/interpreted through the line-and-space geometry.
 
-- there is no electronic address decoder;
-- the user performs selection;
-- position has meaning through convention rather than a machine-readable address bus;
-- several rods can be inspected visually in parallel.
+Calling this `addressability` is an engineering reconstruction, not period vocabulary. It is useful only if the human role remains visible:
 
-The device therefore makes a useful point for later storage history:
+- there is no address bus;
+- there is no decoder;
+- the operator performs selection;
+- multiple positions may be inspected visually without serial electronic access.
 
-> **addressability can exist as a human-machine convention before it exists as an automatic electronic mechanism.**
+The defensible cross-period statement is:
+
+> **spatial selection of retained state can be a human–technical convention before it becomes an autonomous machine addressing mechanism.**
 
 ---
 
 ## Read semantics
 
-Reading is normally **nondestructive at the physical level**: looking at the bead configuration does not require changing it.
+Reading is normally **physically nondestructive**: observing a bead/counter arrangement does not require changing it.
 
-However, reading is not autonomous. Interpretation requires a trained user. There is no clean separation between storage device and reader comparable to a later memory bus or storage controller.
+However, readout is not autonomous. The operator supplies the interpretation. This separates two properties often collapsed in modern memory systems:
 
-This makes the abacus a valuable counterexample to definitions of memory that require machine-autonomous readout.
+1. a physical configuration remains readable;
+2. a machine can autonomously decode that configuration.
+
+The first is sufficient for this bounded form of technical working retention; the second becomes a major difference in later machine memory.
 
 ---
 
 ## Write and erasure semantics
 
-### Write
+### Write / transformation
 
-Writing is manual repositioning of counters/beads.
+Writing is manual transformation of the retained configuration.
 
-The operator transforms one valid configuration into another according to arithmetic rules. Calculation is therefore not something performed elsewhere and merely copied into the abacus afterward; the transformation of the retained configuration is itself a central part of the computational process.
+Calculation is not simply performed elsewhere and copied onto the surface. In both bounded traditions, transforming the counter field is part of the arithmetic procedure itself.
 
-### Erasure / reset
+### Reset / forgetting
 
-Erasure is mechanical clearing or repositioning. Nothing analogous to secure erasure exists at the substrate level: once the beads have been moved, the previous arrangement normally leaves no durable trace in the frame itself.
+Clearing or moving the counters destroys the previous configuration without normally leaving a durable trace of it in the calculating surface.
 
-That gives a useful distinction:
+Therefore:
 
-- **state persistence:** strong enough to bridge operations;
-- **history persistence:** essentially absent unless separately recorded.
+> **state retention is not history retention.**
 
-The abacus can retain the **current state** without retaining a log of previous states.
+The device can hold the current operational state while preserving none of the sequence that produced it.
 
 ---
 
 ## Time
 
-There is no intrinsic electronic retention interval. The practical interval is determined by mechanical stability and human use.
+There is no fixed refresh deadline analogous to DRAM and no circulation period analogous to a delay line.
 
-This makes the abacus radically different from later memories whose retention is characterized by leakage, refresh periods, coercivity, charge loss, or media decay.
-
-Nevertheless, time is still structurally present:
+The practical retention interval is bounded by disturbance, procedure, and human use:
 
 ```text
 operation at t0
     ↓
-beads remain configured
+configuration remains physically in place
     ↓
-operator pauses / checks / performs another step
+pause / inspection / next procedural step
     ↓
-configuration is reused at t1
+configuration remains available at t1
 ```
 
-The configuration transports an operational value across the interval between `t0` and `t1`.
-
-That is the minimal sense in which this case qualifies as technical retention.
+This is the minimal temporal claim: an actionable state produced at one moment remains available to an operation at a later moment.
 
 ---
 
 ## Maintenance and labor
 
-The abacus exposes labor that later storage systems progressively hide.
+This case makes human work unusually visible. The operator may perform functions that later memory/storage systems distribute among hardware, software, controllers, firmware, metadata, and protocols:
 
-The user performs functions that later become divided among hardware and software:
+- write or transform state;
+- select a position;
+- interpret a position;
+- protect the current configuration from disturbance;
+- validate a result;
+- decide whether a displayed number is intermediate or final;
+- maintain the positional convention;
+- reset the representation.
 
-- writes state;
-- selects positions;
-- reads state;
-- verifies plausibility;
-- decides when a result is final;
-- preserves a configuration when it must be reused;
-- resets the device;
-- maintains the mapping between physical columns and numerical meaning.
-
-Later memory systems automate much of this work, but the functions do not disappear. They migrate into decoders, refresh logic, controllers, firmware, error correction, metadata, and protocols.
-
-This suggests a cross-period research question:
-
-> When storage becomes "automatic," which former operator actions become hidden machine labor?
+The later automation of these functions should not be narrated as their disappearance. It is often a **migration of retention work** from explicit operator action into less visible technical infrastructure.
 
 ---
 
 ## Failure / forgetting modes
 
-The single word `forgetting` hides several distinct failures even in this simple case:
+Even this simple regime distinguishes several failures:
 
-1. **physical disturbance** — beads are moved accidentally;
-2. **intentional reset** — the configuration is cleared;
-3. **procedural error** — the operator performs an incorrect transformation;
-4. **interpretive loss** — the configuration remains physically intact but its place-value convention is no longer known;
-5. **context loss** — the number remains readable but its role in the larger calculation is forgotten;
-6. **device destruction** — the physical arrangement can no longer be preserved.
+1. **physical disturbance** — counters/beads move accidentally;
+2. **intentional reset** — the current configuration is cleared;
+3. **procedural transformation error** — the wrong counter movement creates the wrong state;
+4. **interpretive loss** — the arrangement survives but its positional convention is no longer known;
+5. **context loss** — the number remains readable but its role in the larger computation is forgotten;
+6. **surface/device loss** — the physical configuration can no longer be preserved.
 
-The fourth and fifth cases are especially important. A state can survive physically while becoming useless because the interpretive system that makes it actionable has vanished.
+The fourth and fifth are especially important. A physical state can persist while ceasing to be operationally recoverable as **that** numerical state.
 
 ---
 
 ## Engineering / operational reconstruction
 
-### Why `register-like` is defensible in a narrow sense
+### Why `register-like` remains defensible — and narrow
 
-A modern register normally has several properties:
+A modern register normally:
 
-- it holds a value in an operational system;
-- the value persists long enough to be used by subsequent operations;
-- it can be read and rewritten;
-- its position or identity determines how it participates in computation.
+- holds an operational value;
+- keeps it available across a short interval;
+- permits read and rewrite;
+- has an identity/position within a computational system.
 
-An abacus configuration shares only some of these properties:
+The bounded positional cases share some of those functions:
 
-- **yes:** it holds an operational numerical value;
-- **yes:** it can preserve an intermediate or final value between manual operations;
-- **yes:** it is readable and rewritable;
-- **partly:** spatial position determines numerical significance;
-- **no:** it is not electronically addressed;
-- **no:** it is not automatically read by a processor;
-- **no:** historical users did not describe it with the modern architecture concept `register`.
+- **yes:** an operational numerical value is materially externalized;
+- **yes:** it can survive between successive operations;
+- **yes:** it can be inspected and rewritten;
+- **partly:** spatial position gives numerical significance;
+- **no:** there is no electronic decoder or processor-autonomous access;
+- **no:** the historical sources do not use the modern architecture concept `register`;
+- **no:** no direct genealogy to CPU registers has been established.
 
-Therefore the safe formulation is:
+Therefore:
 
-> **An abacus can provide register-like retained working state, but it is not historically a CPU register and should not be placed in a direct evolutionary lineage without separate evidence.**
+> **These configurations are register-like retained working state only as a functional comparison. They are not historical CPU registers.**
 
-### Why this matters
+### The machine/non-machine boundary
 
-The analogy is valuable because it isolates a minimal function that later memories elaborate:
+Grounding this case makes one repository boundary explicit:
 
-> keep an actionable result available after the operation that produced it has ended.
+> **technical retention does not have to begin where autonomous machine memory begins.**
 
-This function does not require electronics, microscopic media, or autonomous machine control.
+That does not mean every external mark is memory. The narrower inclusion criteria are:
+
+- the configuration represents a state under an explicit convention;
+- that configuration is part of an operational transformation procedure;
+- it can remain available across a temporal gap;
+- a later operation can act on or from it.
+
+This excludes the trivial claim that every stable physical object is a storage device while retaining a meaningful pre-electronic comparison class.
 
 ---
 
 ## Philosophical / media-theoretical interpretation
 
-### Retention before autonomous machine memory
-
-This case complicates any philosophy that treats technical retention as if it begins with writing, recording media, or digital storage.
-
-The abacus is neither a durable archival inscription nor a purely transient mental state. It externalizes a working configuration into a manipulable technical support.
-
-The strongest philosophical question is therefore not "is the abacus memory?" but:
-
-> **What changes when a calculational state can be placed outside the body, remain materially available, and be resumed later?**
-
-This question can later be compared with Stiegler's tertiary retention, but the case should not be forced into that vocabulary prematurely.
-
 ### Availability without archive
 
-The abacus also separates **availability** from **archival durability**.
+The abacus and reckoning board are strong cases of **availability without archival durability**.
 
-A number can be immediately available for the next operation while leaving no durable record once the beads are moved. Retention therefore has timescales and purposes:
+A number can remain immediately available for the next step but leave no durable record after the counters are moved. This requires distinctions among:
 
 - working retention;
 - session retention;
 - durable record;
 - archival preservation.
 
-They should not be collapsed into one concept.
+They are not synonyms.
 
-### The current state is not its history
+### Exteriorization without autonomous readout
 
-The abacus preserves one configuration but normally not the sequence of transformations that produced it.
+The retained numerical state is materially outside the operator's body, yet its readout and interpretation still depend on a trained person. This gives a more precise question for later philosophical work than simply asking whether an abacus “is memory”:
 
-This anticipates a distinction that will recur throughout the repository:
+> What changes when a calculational state is exteriorized into a technical support that can survive interruption, even though the technical support cannot autonomously interpret itself?
 
-> **state retention is not history retention.**
+This can later be tested against Stiegler, Ernst, and other theories of technical memory. The historical case itself does not prove that those philosophical categories were present in sixteenth-century arithmetic.
 
-A CPU register, a DRAM cell, a disk block, a database row, and a consensus state can each preserve a current value while requiring separate mechanisms — logs, journals, snapshots, traces, versioning — to preserve how that value came to be.
+### Relation rather than isolated token
+
+The retained thing is not identical to one physical bead/counter. Its identity depends on relations among token, position, convention, and procedure.
+
+That prepares a comparison with later cases in which identity similarly depends on relations that become increasingly automated:
+
+- coordinate selection in core memory;
+- row/column and restore infrastructure in DRAM;
+- logical-to-physical maps in Flash;
+- placement/version/recovery metadata in RADOS.
+
+The analogy is conceptual and functional, not genealogical.
 
 ---
 
 ## Counterexamples and limits
 
-### Limit 1 — a stable object is not automatically storage
+### Limit 1 — stable position is not enough
 
-A chair also retains a position, but that does not make every chair a storage device. The relevant difference is that the bead position belongs to an explicit representational and operational convention.
+A chair retains its position too. This case belongs in the repository because the configuration participates in an explicit representational and operational convention.
 
-### Limit 2 — external representation is broader than computer memory
+### Limit 2 — the category can still become too broad
 
-If every externalized working mark counts as `memory`, the category may become too broad to be useful. Pencil arithmetic, chess pieces, slide rules, marked gauges, and mechanical indicators then become neighboring cases.
+Pencil arithmetic, chess positions, slide rules, marked gauges, and mechanical indicators are neighboring cases. Their inclusion should depend on bounded research questions, not on the mere fact that they have state.
 
-Rather than excluding them by definition, the project should use comparison axes:
+Useful comparison questions are:
 
-- Is the retained configuration part of the transformation procedure?
-- Can it be resumed after interruption?
+- Is the configuration part of the transformation procedure?
+- Can calculation resume from it after interruption?
 - Is it directly actionable?
-- Is it machine-readable or only human-readable?
-- Does the medium constrain legal states?
+- Is it human-readable, machine-readable, or both?
+- How strongly does the medium constrain legal states?
 
-### Limit 3 — no direct genealogy has been established
+### Limit 3 — counting-rod practice is not fully visible in surviving texts
 
-The functional resemblance between bead positions and modern registers does not establish technological descent.
+The repository must preserve Zhu's evidence warning: procedural language and later diagrams support reconstruction, but not every ancient material movement or surface marking is directly documented.
 
-### Limit 4 — the Chinese case is not the whole history of the abacus
+### Limit 4 — Chinese and European examples are comparison, not genealogy
 
-Greek, Roman, medieval European, Russian, Japanese, and other counting devices have different geometries and histories. This first pass uses the Chinese suanpan because period procedural sources are readily available, not because it uniquely defines the category.
+Ries 1525 shows that passive positional arithmetic is not unique to the Chinese bead frame. It does **not** prove transmission, shared origin, or conceptual identity.
+
+### Limit 5 — no modern register ancestry has been established
+
+The functional resemblance between retained numerical position and a modern register remains a heuristic comparison only.
 
 ---
 
-## What this case establishes for the project
+## What this grounded case establishes for the project
 
-This first case supports five provisional conclusions:
+1. **Passive positional retention is historically real, not merely a modern metaphor.** Cheng's 1592 scan explicitly tells the operator to designate abacus positions and leave a completed number unmoved.
+2. **Retention can be operational rather than archival.** A state need only remain long enough to be used again.
+3. **Technical retention can precede autonomous machine readout.** Human interpretation does not make the material support irrelevant; it changes where the retention work is located.
+4. **Retention is relational.** Counter + position + convention + procedural context together constitute the actionable state.
+5. **Medium constraint matters.** A rod/frame constrains legal positions differently from an open line-reckoning surface.
+6. **State retention is not history retention.** Clearing the configuration normally destroys its computational past.
+7. **Cross-cultural similarity does not establish genealogy.** Cheng and Ries support a functional class while remaining historically distinct.
+8. **`register-like` remains disciplined only when explicitly labeled as analogy.**
 
-1. **Retention can be operational rather than archival.** A state need only survive long enough to become input to a later operation.
-2. **Retention is relational.** Bead position has meaning only within a frame, positional convention, and procedure.
-3. **State and history differ.** The current configuration may persist while the sequence that produced it disappears.
-4. **Maintenance can be human.** Before refresh controllers and firmware, the operator can supply selection, interpretation, protection, and reset.
-5. **`register-like` can be a disciplined functional analogy** if historical vocabulary and genealogy are kept separate.
+The methodological result is now grounded strongly enough to close the repository's passive-position mechanism gate:
 
-The most important result is methodological:
-
-> We can compare ancient and modern retained states without pretending that ancient actors were secretly doing computer architecture.
+> **Ancient or pre-electronic retained states can be compared with modern machine state without pretending that their users were secretly doing computer architecture.**
 
 ---
 
 ## Related repositories
 
+A repository search found no existing bounded treatment of `abacus`, `suanpan`, or `counting rod` in the current related repositories.
+
 ### `computing-archaeology`
 
-Use for the larger engineering history of mechanical computation and later memory mechanisms:
+Use for broader engineering histories and later machine-autonomous memory mechanisms:
 
 - <https://github.com/tmzncty/computing-archaeology>
-- mechanical track: <https://github.com/tmzncty/computing-archaeology/tree/main/docs/mechanical>
-- memory track: <https://github.com/tmzncty/computing-archaeology/tree/main/docs/memory>
 
 ### `problem-history`
 
-Use its anti-anachronism discipline when distinguishing historical actors' concepts from later reconstruction:
+Use its anti-anachronism discipline when reconstructing what historical actors themselves understood the problem to be:
 
 - <https://github.com/tmzncty/problem-history>
 
 ### `mechanical-computing-playground`
 
-A future physical or software abacus experiment may belong there rather than here:
+Future physical/software demonstrations of passive positional retention belong there if experiment becomes the main contribution:
 
 - <https://github.com/tmzncty/mechanical-computing-playground>
 
@@ -410,33 +452,29 @@ A future physical or software abacus experiment may belong there rather than her
 
 ## Sources
 
-### Primary / near-primary
+### Primary / digitized primary
 
-1. Cheng Dawei (程大位), *新編直指筭法統宗* (*Suanfa Tongzong*), 1592. CText OCR transcription, vol. 1: <https://ctext.org/wiki.pl?chapter=946408&if=en>
-2. Cheng Dawei, *新編直指筭法統宗*, 1592 edition, public-domain facsimile, vol. 1: <https://commons.wikimedia.org/wiki/File:NLC892-411999021914-37275_%E6%96%B0%E7%B7%A8%E7%9B%B4%E6%8C%87%E7%AE%97%E6%B3%95%E7%B5%B1%E5%AE%97_%E7%AC%AC1%E5%86%8A.pdf>
+1. Cheng Dawei (程大位), *算法統宗* / *新編直指筭法統宗*, vol. 1 (1592), Source Library digital scan, especially p. 70 / 82, `直指定位訣`: <https://sourcelibrary.org/book/suanfa-tongzong-systematic-treatise-on-arithmetic-vol-1-dawei/page-number/70>
+2. Cheng Dawei, *新編直指筭法統宗*, NLC 1592 volume catalogued through Wikimedia Commons: <https://commons.wikimedia.org/wiki/File:NLC892-411999021914-37275_%E6%96%B0%E7%B7%A8%E7%9B%B4%E6%8C%87%E7%AE%97%E6%B3%95%E7%B5%B1%E5%AE%97_%E7%AC%AC1%E5%86%8A.pdf>
+3. *九章算術*, `方程`, searchable historical-text transcription: <https://www.shidianguji.com/zh/book/SBCK080/chapter/SBCK080_15>
+4. Adam Ries, *Rechnung auff der Linihen* (Erfurt, 1525), Columbia University / Plimpton Library copy: <https://commons.wikimedia.org/wiki/File:Rechnung_auff_der_Linihen_(IA_ldpd_13272232_000).pdf>
 
-### Museum / institutional
+### Scholarly / institutional
 
-3. Smithsonian Institution / National Museum of American History, "The Abacus and the Numeral Frame": <https://www.si.edu/spotlight/the-abacus-the-numeral-frame-and-counters/introduction>
-4. National Museum of American History, "The Chinese Abacus": <https://americanhistory.si.edu/collections/object-groups/the-abacus-the-numeral-frame-and-counters/the-chinese-abacus>
-5. British Museum, Chinese abacus object record and contextual note: <https://www.britishmuseum.org/collection/object/A_1909-0611-1>
-6. Whipple Museum of the History of Science, "A Brief History of Calculating Devices": <https://www.whipplemuseum.cam.ac.uk/explore-whipple-collections/calculating-devices/brief-history-calculating-devices>
-
-### Secondary
-
-7. Frank J. Swetz, "Reflections on Chinese Numeration Systems: Transition to the Abacus," Mathematical Association of America, *Convergence*: <https://old.maa.org/press/periodicals/convergence/reflections-on-chinese-numeration-systems-transition-to-the-abacus>
-8. Keith F. Sugden, "A History of the Abacus," *Accounting Historians Journal* 8.2 (1981): 1–22. DOI landing page: <https://publications.aaahq.org/ahj/article/8/2/1/5408/A-HISTORY-OF-THE-ABACUS>
-9. Smithsonian bibliography for further deepening, including J. M. Pullan and Joseph Needham: <https://americanhistory.si.edu/collections/object-groups/the-abacus-the-numeral-frame-and-counters/resources>
+5. Yiwen Zhu, “The interplay between textual procedures and material operations from the viewpoint of Chinese mathematical texts,” *Science in Context* 36(3), published online 9 October 2025, DOI 10.1017/S0269889725100860: <https://www.cambridge.org/core/journals/science-in-context/article/interplay-between-textual-procedures-and-material-operations-from-the-viewpoint-of-chinese-mathematical-texts/7E654BC8863452F26F2E0C43892699F4>
+6. Adam-Ries-Bund, “1. Rechenbuch — Rechnung auff der Linihen”: <https://www.adam-ries-bund.de/forschung/erstes/>
+7. Smithsonian Institution / National Museum of American History, “The Abacus and the Numeral Frame”: <https://www.si.edu/spotlight/the-abacus-the-numeral-frame-and-counters/introduction>
+8. National Museum of American History, “The Chinese Abacus”: <https://americanhistory.si.edu/collections/object-groups/the-abacus-the-numeral-frame-and-counters/the-chinese-abacus>
+9. British Museum, Chinese abacus object record: <https://www.britishmuseum.org/collection/object/A_1909-0611-1>
+10. Frank J. Swetz, “Reflections on Chinese Numeration Systems: Transition to the Abacus,” Mathematical Association of America, *Convergence*: <https://old.maa.org/press/periodicals/convergence/reflections-on-chinese-numeration-systems-transition-to-the-abacus>
 
 ---
 
-## Next evidence work
+## Further maturation work
 
-Before upgrading this case from `first-pass` to `mature`:
+The case is now `grounded`; further work should be archival/comparative cleanup rather than a condition of its central claim:
 
-- inspect the 1592 facsimile directly and record exact folio/page locations for `定位`, `筭盤`, and the instruction to leave a computed result unmoved;
-- compare multiple editions of *Suanfa Tongzong* where possible;
-- recover the older counting-rod vocabulary instead of assuming a seamless board → bead transition;
-- check Needham, Pullan, Martzloff, and specialist Chinese mathematics scholarship against newer work;
-- add at least one non-Chinese comparison case, probably a European counting board or Roman abacus;
-- decide whether `working retention` should become a controlled vocabulary term.
+- compare multiple editions of *Suanfa Tongzong* and record traditional folio anchors where possible;
+- inspect specialist work by Needham, Pullan, Martzloff, Chemla, and Chinese/Japanese historians against newer scholarship;
+- broaden the comparative set only if a new case changes the mechanism boundary rather than adding another example;
+- decide at the synthesis stage whether `working retention`, `passive positional retention`, and `human-mediated addressability` deserve controlled-vocabulary status.
