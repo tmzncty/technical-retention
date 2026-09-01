@@ -10,7 +10,8 @@ This ledger does not add a new historical case. It consolidates the results of:
 - [`SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md`](SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md);
 - [`SYNTHESIS_AUDIT_03_ADDRESSABILITY.md`](SYNTHESIS_AUDIT_03_ADDRESSABILITY.md);
 - [`SYNTHESIS_AUDIT_04_PRIVILEGED_LOCATION.md`](SYNTHESIS_AUDIT_04_PRIVILEGED_LOCATION.md);
-- [`SYNTHESIS_AUDIT_05_TECHNICAL_FORGETTING.md`](SYNTHESIS_AUDIT_05_TECHNICAL_FORGETTING.md).
+- [`SYNTHESIS_AUDIT_05_TECHNICAL_FORGETTING.md`](SYNTHESIS_AUDIT_05_TECHNICAL_FORGETTING.md);
+- [`SYNTHESIS_AUDIT_06_MAINTENANCE_VISIBILITY.md`](SYNTHESIS_AUDIT_06_MAINTENANCE_VISIBILITY.md).
 
 The formal evidence base remains the five `grounded` cases in [`CASE_INDEX.md`](../CASE_INDEX.md): passive positional reckoning, magnetic core, DRAM, mapped Flash, and 2006–2007 RADOS. The mercury delay-line case remains `first-pass` and is not silently promoted here.
 
@@ -43,11 +44,11 @@ The ledger uses the following result labels.
 | **3. Addressability is a separate operational relation layered onto retention.** | audited in 03 | **retained with scope + decomposed** | designation, selection/resolution, currentness/admissibility, and read/recovery can be distinct stages; stable designation can survive physical relocation | retention requires a machine-readable address; address equals location; resolution proves currentness; addressability equals availability; addressability is one historical scalar |
 | **4. Technical forgetting is layer- and mechanism-specific.** | audited in 05 | **retained with scope + decomposed** | forgetting claims must name a target layer and distinguish physical destruction, missed maintenance, logical invalidation/deauthorization, relation/currentness loss, and service/recoverability loss; redundancy or reconstruction can mask lower-layer destruction | physical destruction always means logical forgetting; logical invalidation means physical erasure; physical survival proves current logical retention; temporary unavailability means forgotten; one replica loss means object loss |
 | **5. Logical persistence can become detached from any one permanent physical home without becoming placeless.** | audited in 04 | **narrowed + decomposed** | some layers allow identity to survive replacement of microscopic state, then replacement of a physical home, then replacement of replica membership; retained mapping/placement/currentness relations become constitutive | logical persistence is always location-independent; reconstruction at one cell is relocation; mapping makes state immaterial; replication eliminates authority; history is a monotonic ascent toward placelessness |
-| **6. More reliable retention can hide more of its maintenance from experience.** | not yet audited | **untested** | audits 01, 04, and 05 supply candidate mechanisms for hidden work, but no dedicated evidence-led test has yet separated reliability, interface invisibility, automation, labor, and infrastructure | do not treat `more reliable -> more hidden labor` as an established historical law |
+| **6. Reliable retention can depend on maintenance displaced below or beyond the user's interface.** | audited in 06 | **rejected as monotonic law + retained with scope + decomposed** | stable interfaces can hide or relocate maintenance from one observer's ordinary path; analysis must separate reliability, automation, interface invisibility, labor, and infrastructure and must name the failure model and observer boundary | `more reliable -> more hidden maintenance`; hidden means automated; automated means invisible to everyone; invisible means labor-free; self-healing means maintenance-free; later storage is historically more reliable because more work is hidden |
 
-The immediate discipline is simple:
+The immediate discipline is now:
 
-> **No README thesis is a final conclusion yet. Five have survived only in revised form; thesis 6 remains unaudited.**
+> **All six README theses have been audited, but none is a final conclusion. Every surviving formulation is scope-limited and constrained by explicit counterexamples.**
 
 ---
 
@@ -80,6 +81,12 @@ The same overgeneralizations recur under different language. Keeping them in one
 | temporary unavailability is forgetting | a surviving state can be unreachable, unselectable, or not yet admissible and later return to service | Audit 05 |
 | one replica loss means object loss | RADOS can turn member loss into peering/re-replication while the object remains retained | Audit 05 |
 | all maintenance failures have one temporal form | classic core restore is access-triggered, DRAM refresh deadline-triggered, RADOS repair failure-triggered, and positional interpretation/protection procedural | Audit 05 |
+| more reliable retention necessarily requires more hidden maintenance | no common reliability scalar exists across the grounded cases; passive/quiescent mechanisms can provide useful retention without periodic hidden work | Audit 06 |
+| hiding maintenance proves reliability | interface invisibility says where a mechanism is observed, not how often it fails or what guarantee it provides | Audit 06 |
+| automated maintenance is invisible to everyone | DRAM refresh can be hidden from applications yet explicit to hardware designers; RADOS repair can be hidden from clients yet visible to operators | Audit 06 |
+| maintenance hidden from the user means human labor disappeared | core production/support and RADOS hardware/infrastructure remain material and institutional dependencies | Audit 06 |
+| self-healing means maintenance-free | automated repair still requires surviving current state, functioning control infrastructure, spare capacity, replacement members, and physical failure-domain assumptions | Audit 06 |
+| later storage is historically more reliable because it hides more work | the bounded cases are mechanism contrasts, not a controlled reliability time series, and modern stacks retain multiple visible and hidden layers simultaneously | Audit 06 |
 
 These are not minor wording preferences. They are **negative results** that later writing must preserve.
 
@@ -162,6 +169,30 @@ A forgetting statement should identify:
 
 This is intentionally narrower than a complete taxonomy of archival or institutional forgetting.
 
+### 4.7 `Maintenance visibility`
+
+A statement that work is `hidden`, `automatic`, or `transparent` should identify:
+
+1. **observer / interface** — user, application, programmer, OS, hardware/firmware designer, operator, manufacturer;
+2. **maintenance function** — restore, refresh, remap, reclaim, repair, replacement, interpretation/protection;
+3. **automation boundary** — which layer performs the work without an explicit request from the client;
+4. **operational visibility** — whether the work remains visible through timing, degraded state, bandwidth/capacity use, diagnostics, or failure handling;
+5. **labor/infrastructure remainder** — which human, manufacturing, facilities, capacity, and replacement dependencies remain.
+
+`Hidden from one interface` must never be shortened to `hidden from the system`.
+
+### 4.8 `Reliability`
+
+A comparative reliability claim should state:
+
+- retention target;
+- failure model;
+- time horizon;
+- interface whose success matters;
+- maintenance and infrastructure assumptions.
+
+Without those conditions, `more reliable` is not a controlled cross-case engineering comparison.
+
 ---
 
 ## 5. Cross-audit patterns that are useful but are **not conclusions yet**
@@ -230,6 +261,21 @@ A lower-level embodiment can be destroyed while the logical state is preserved b
 
 This is the strongest cross-audit reason not to define technical forgetting at only one physical or semantic layer.
 
+### Pattern G — maintenance visibility is observer-relative
+
+The same maintenance event can be:
+
+- absent from an application's semantic model;
+- explicit in a hardware or protocol design;
+- operationally visible through timing, bandwidth, capacity, degraded state, or diagnostics;
+- dependent on human/manufacturing/facilities work elsewhere.
+
+The recurring cross-case movement is therefore not `maintenance disappears` but **maintenance responsibility can move across interface boundaries**.
+
+### Pattern H — abstraction can trade visible procedure for hidden dependencies
+
+A stable logical address or object can simplify the client's task while increasing dependence on retained mapping, controller state, placement/currentness metadata, repair capacity, or infrastructure. This is a functional pattern, not a claim that every later technology has more hidden machinery than every earlier one.
+
 ---
 
 ## 6. What remains deliberately unresolved
@@ -241,7 +287,7 @@ This ledger does not answer:
 - whether Heideggerian availability is materially clarified by the addressability/currentness decomposition;
 - how Ernst's microtemporality should be balanced against long quiescent intervals and preservation regimes;
 - how Kirschenbaum's forensic materiality changes when old physical embodiments remain after logical invalidation or when replicas and mappings move;
-- whether reliable retention systematically makes maintenance less visible;
+- whether a dedicated labor history would show long-run reduction, displacement, deskilling, reskilling, or institutional invisibility of retention work;
 - how key destruction, media/format obsolescence, institutional abandonment, bit rot, and several controller-level failure modes should extend the bounded forgetting taxonomy.
 
 Those remain later tests, not omissions to fill with assertion.
@@ -250,19 +296,20 @@ Those remain later tests, not omissions to fill with assertion.
 
 ## 7. Next bounded synthesis unit
 
-With technical forgetting audited, README thesis 6 is the only project-level thesis without a dedicated bounded test:
+The first project-level thesis-audit sequence is now complete: all six README theses have been tested against the grounded mechanism set and all surviving formulations remain provisional.
 
-> **More reliable retention can hide more of its maintenance from experience.**
+The next synthesis unit should therefore move to named philosophical/media-theoretical prior art rather than add a seventh generic thesis.
 
-The five grounded cases already supply a useful contrast, but the audit must separate several relations that are easy to collapse:
+Highest-value next test:
 
-- visible human protection, interpretation, and reset in positional calculation;
-- read–rewrite hidden inside a core memory cycle;
-- row-level DRAM sense/restore and refresh infrastructure;
-- Flash controller remapping, reclamation, wear management, and bad-block replacement;
-- RADOS peering, currentness, repair, and commit machinery;
-- `hidden from the user` versus `automated` versus `reliable` versus `labor-saving` versus `infrastructural`.
+> **Wolfgang Ernst operational / microtemporal account versus heterogeneous retention timescales.**
 
-The goal should be to test whether there is a bounded relation between interface-level apparent stability and displaced maintenance work, **not** to announce a historical law that later storage is automatically more reliable because its labor is more hidden.
+The comparison should ask whether an emphasis on machine operations and microtemporality adequately handles:
 
-Only after that test should the project decide whether the first bounded thesis-audit sequence is complete enough to begin the named Stiegler / Heidegger / Ernst / Kirschenbaum tests.
+- passive positional and quiescent core retention;
+- deadline-driven DRAM refresh;
+- deferred Flash reclamation;
+- failure-triggered RADOS repair;
+- and, with an explicit maturity caveat, continuous delay-line recurrence.
+
+The goal is not to prove or refute Ernst globally. It is to identify exactly where his operational account clarifies mechanism and where it risks over-privileging continuously active or short-timescale retention. The repository should still not write a grand `What Is Technical Retention?` chapter.
