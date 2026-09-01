@@ -217,7 +217,9 @@ Cases and functions may include:
 
 The cross-period question is not whether human work disappears, but **where retention work migrates when it becomes automated or infrastructural**.
 
-Coordinate labor/manufacturing evidence with related repositories where relevant.
+The first bounded maintenance-visibility audit is complete in [`docs/SYNTHESIS_AUDIT_06_MAINTENANCE_VISIBILITY.md`](docs/SYNTHESIS_AUDIT_06_MAINTENANCE_VISIBILITY.md). It rejects a monotonic `more reliable -> more hidden maintenance` law and requires future claims to separate reliability, automation, observer/interface visibility, labor, and infrastructure. It supports work displacement across interfaces, not a universal claim that automation reduces total human labor.
+
+Coordinate labor/manufacturing evidence with related repositories where relevant. Broader labor-history claims remain open and require dedicated sources rather than inference from controller diagrams.
 
 ---
 
@@ -225,29 +227,29 @@ Coordinate labor/manufacturing evidence with related repositories where relevant
 
 The mechanism gate is open, so philosophical comparison may now begin — but claim by claim.
 
-### First bounded synthesis pass
+### First bounded synthesis pass — complete
 
 - [x] audit README thesis 1, “persistence is often an activity disguised as a property,” against passive position, core, DRAM, mapped Flash, and RADOS; identify the passive-position counterexample/qualification — completed in [`docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md`](docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md); the thesis was revised rather than simply confirmed;
 - [x] audit “storage is temporal transport” and decide whether it adds explanatory power or merely redescribes retention — completed in [`docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md`](docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md); retained as a recoverability relation across time, not as literal physical motion or a sufficient mechanism definition;
 - [x] audit the role of addressability across human-mediated positional selection, coordinate-selected memory, logical mapping, and distributed placement — completed in [`docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md`](docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md); retention was separated from designation, selection/resolution, currentness/admissibility, and recovery;
 - [x] audit “logical persistence becomes detached from privileged physical location” as a historically staged claim rather than a universal definition — completed in [`docs/SYNTHESIS_AUDIT_04_PRIVILEGED_LOCATION.md`](docs/SYNTHESIS_AUDIT_04_PRIVILEGED_LOCATION.md); the audit separates microscopic state reconstruction, stable physical home, metadata-mediated relocation, replaceable replicas, and temporary protocol authority;
-- [x] build a counterexample ledger before promoting any provisional thesis to a conclusion — completed in [`docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md`](docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md); it records rejected strong claims, required decompositions, scoped survivors, and the README theses still unaudited;
+- [x] build a counterexample ledger before promoting any provisional thesis to a conclusion — completed in [`docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md`](docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md); it records rejected strong claims, required decompositions, scoped survivors, and current thesis status;
 - [x] audit README thesis 4, `Forgetting has mechanisms`, against the five grounded regimes — completed in [`docs/SYNTHESIS_AUDIT_05_TECHNICAL_FORGETTING.md`](docs/SYNTHESIS_AUDIT_05_TECHNICAL_FORGETTING.md); the thesis now separates physical loss, missed maintenance, logical invalidation, relation/currentness loss, and service/recoverability loss, with explicit counterexamples to equating loss at one layer with forgetting at another;
-- [ ] audit README thesis 6, “more reliable retention can hide more of its maintenance from experience,” against the same grounded cases before treating automation, infrastructure, reliability, and hidden labor as one historical relation.
+- [x] audit README thesis 6, “more reliable retention can hide more of its maintenance from experience,” against the same grounded cases — completed in [`docs/SYNTHESIS_AUDIT_06_MAINTENANCE_VISIBILITY.md`](docs/SYNTHESIS_AUDIT_06_MAINTENANCE_VISIBILITY.md); the monotonic law was rejected and the surviving claim now separates reliability, automation, interface invisibility, labor, and infrastructure.
 
-Audits 01–05 and the cross-audit ledger now establish a negative discipline for synthesis: a universal `persistence = activity` formulation fails; literal `storage = physical transport` fails; `retention = addressability`, `address = physical location`, `resolution = currentness`, and `addressability = availability` fail; `logical = placeless` and a monotonic historical ascent toward placelessness fail; `physical destruction = logical forgetting`, `logical invalidation = physical erasure`, and `unavailable now = forgotten` also fail. The surviving formulations remain provisional and layer-sensitive. README thesis 6 is now the only project-level thesis not yet given a dedicated bounded audit.
+Audits 01–06 and the cross-audit ledger establish a negative discipline for synthesis: a universal `persistence = activity` formulation fails; literal `storage = physical transport` fails; `retention = addressability`, `address = physical location`, `resolution = currentness`, and `addressability = availability` fail; `logical = placeless` and a monotonic historical ascent toward placelessness fail; `physical destruction = logical forgetting`, `logical invalidation = physical erasure`, and `unavailable now = forgotten` fail; `more reliable -> more hidden maintenance`, `automated -> invisible to everyone`, and `self-healing -> maintenance-free` also fail. The surviving formulations remain provisional and layer-sensitive.
 
-**Next highest-value synthesis unit:** audit thesis 6 using the five grounded cases. In particular, separate interface invisibility from automation, reliability, human labor, controller work, and infrastructure. Do not assume a simple historical law `more reliable -> more hidden work`.
+**Next highest-value synthesis unit:** a bounded Wolfgang Ernst operational/microtemporal test. Compare quiescent positional/core retention, deadline-driven DRAM refresh, deferred Flash reclamation, failure-triggered RADOS repair, and the first-pass delay-line case only with an explicit maturity caveat. Ask where Ernst's operational emphasis clarifies mechanism and where it may over-privilege continuously active or short-timescale retention.
 
 ### Philosophical tests after the audit
 
 - [ ] test Stiegler's tertiary retention against operational working state without assuming every retained bit/token is tertiary retention in the same sense;
 - [ ] test whether Heideggerian availability/ordering is actually clarified by addressability and storage infrastructure; keep `Bestand ≠ storage` explicit;
-- [ ] compare Ernst's operational/microtemporal account with passive positional state, scheduled refresh, and long-duration preservation;
+- [ ] compare Ernst's operational/microtemporal account with passive positional state, scheduled refresh, deferred reclamation, failure-triggered repair, and long-duration preservation;
 - [ ] extend Kirschenbaum's forensic materiality through Flash remapping, logical invalidation, copy-on-write-like relocation, encryption, and distributed storage;
 - [ ] decide whether `technical retention` names one coherent operation or a family of mechanisms linked only by carefully stated invariants.
 
-Do not write a grand `What Is Technical Retention?` chapter until the bounded thesis-audit sequence has tested thesis 6 and preserved the counterexamples already recorded.
+The first generic thesis-audit sequence is complete, but do not write a grand `What Is Technical Retention?` chapter yet. The next synthesis should test named philosophical prior art against the mechanism distinctions and preserve the counterexamples already recorded.
 
 ---
 
