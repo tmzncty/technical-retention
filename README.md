@@ -127,7 +127,6 @@ Every substantial case should try to answer as many of these dimensions as the e
 These dimensions make it possible to compare technologies without pretending they are the same technology.
 
 ---
-
 ## Philosophical and media-theoretical spine
 
 ### Bernard Stiegler — technics and tertiary retention
@@ -149,6 +148,8 @@ A disk block, database row, object-store object, or cached page may help us test
 ### Wolfgang Ernst — media archaeology and technical memory
 
 Ernst is the closest prior art to this project's technical-philosophical interface. His media archaeology insists that "memory" in technical systems must be read at the level of actual mechanisms, timing, registers, buffers, access modes, latency, and operational processes rather than treated only as a metaphor for human or cultural memory.
+
+The first named prior-art test, [`docs/PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md`](docs/PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md), retains that operational demand but rejects two universalizations: `retained state = continuous operation` and `technically decisive time = microtime only`. The grounded cases require quiescent, access-triggered, deadline-driven, workload/capacity-triggered, wear-triggered, failure-triggered, and interpretive timescales to remain distinct.
 
 His work is therefore both a major source and a warning: this repository must contribute more than a generic claim that digital media are forms of memory.
 
@@ -216,6 +217,7 @@ See [`RELATED_REPOS.md`](RELATED_REPOS.md).
 - [`docs/SYNTHESIS_AUDIT_05_TECHNICAL_FORGETTING.md`](docs/SYNTHESIS_AUDIT_05_TECHNICAL_FORGETTING.md) — audit separating physical destruction, missed maintenance, logical invalidation, relation/currentness loss, recoverability loss, and masking by redundancy.
 - [`docs/SYNTHESIS_AUDIT_06_MAINTENANCE_VISIBILITY.md`](docs/SYNTHESIS_AUDIT_06_MAINTENANCE_VISIBILITY.md) — audit rejecting a monotonic `more reliable -> more hidden maintenance` law while separating reliability, automation, interface invisibility, labor, and infrastructure.
 - [`docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md`](docs/SYNTHESIS_COUNTEREXAMPLE_LEDGER.md) — cross-audit control ledger recording rejected strong claims, required decompositions, scoped survivors, and thesis status before any conclusion is promoted.
+- [`docs/PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md`](docs/PHILOSOPHICAL_TEST_01_ERNST_OPERATIONALITY.md) — first named prior-art test; preserves operational analysis while rejecting a universal continuous-operation or microtime ontology of retention.
 - [`ROADMAP.md`](ROADMAP.md) — staged research program.
 - [`RELATED_REPOS.md`](RELATED_REPOS.md) — cross-repository boundaries and reuse rules.
 - [`AGENTS.md`](AGENTS.md) — research protocol for human and AI contributors.
@@ -255,4 +257,4 @@ Those layers must never silently collapse into one another.
 
 ## Status
 
-The mechanism-variety gate is open and the first bounded six-thesis audit sequence is complete. No thesis has been promoted to a final conclusion; each surviving formulation remains scope-limited and counterexample-sensitive. The next synthesis work should test named philosophical/media-theoretical prior art against the grounded mechanisms one claim at a time rather than begin a grand philosophy of storage.
+The mechanism-variety gate is open, the first bounded six-thesis audit sequence is complete, and the first named philosophical/prior-art test has now been completed against Wolfgang Ernst's operational/microtemporal emphasis. No thesis has been promoted to a final conclusion; each surviving formulation remains scope-limited and counterexample-sensitive. The next synthesis unit is a bounded Stiegler tertiary-retention boundary test against operational working state, not a grand philosophy of storage.
