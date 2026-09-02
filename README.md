@@ -223,6 +223,7 @@ See [`RELATED_REPOS.md`](RELATED_REPOS.md).
 - [`cases/10-toshiba-leakage-tracked-self-refresh.md`](cases/10-toshiba-leakage-tracked-self-refresh.md) — grounded autonomous-refresh bridge: an on-chip leak monitor, threshold trigger, oscillator, and refresh counter internalize maintenance scheduling in the bounded Toshiba design.
 - [`cases/11-intel-frohman-floating-gate-eprom-erasure.md`](cases/11-intel-frohman-floating-gate-eprom-erasure.md) — grounded floating-gate EPROM bridge: trapped-charge nonvolatility, avalanche programming, nondestructive lower-stress read, and a radiation erase path that separates ordinary addressability from erase geometry.
 - [`cases/12-intel-2816-eeprom-electrical-erasure.md`](cases/12-intel-2816-eeprom-electrical-erasure.md) — grounded EEPROM bridge: the Intel 2816 moves deliberate erase into electrical/in-system control, exposes both byte and whole-chip erase, keeps erase/write in a distinct high-voltage/timed regime, and makes finite cycling part of the retention/forgetting comparison.
+- [`cases/13-early-flash-coarse-erase-asymmetric-rewrite.md`](cases/13-early-flash-coarse-erase-asymmetric-rewrite.md) — grounded early-Flash bridge: one-transistor density pressure and shared/whole-array electrical erase coexist with finer addressed program/read, exposing erase geometry as a distinct retention relation before later mapping/FTL semantics.
 - [`evidence/06-burks-1947-eniac-flip-flop-grounding.md`](evidence/06-burks-1947-eniac-flip-flop-grounding.md) — Case-06 promotion record: Burks 1947 pp. 757–759 directly supply period remembering-circuit vocabulary, a published simplified ENIAC schematic, two-stable-state/DC-cross-coupling mechanism, trigger/recovery separation, and microsecond timing margins; exact PX-1-105 remains archival cleanup for drawing-specific claims.
 - [`evidence/06-flip-flop-register-boundary-addendum.md`](evidence/06-flip-flop-register-boundary-addendum.md) — Case-06 source-deepening ledger: Whirlwind R-221 closes the period `register` vocabulary gap; exact 1919 Eccles–Jordan and ENIAC drawing locators are recorded without pretending locator evidence is direct page/schematic inspection.
 - [`evidence/07-intel-pashley-1975-static-ram-grounding.md`](evidence/07-intel-pashley-1975-static-ram-grounding.md) — Case-07 promotion record: Intel/Pashley US3946369A directly grounds a manufacturer-primary `1024 × 1`, `32 × 32`, +5 V static-RAM design with an explicitly bistable feedback-coupled cell and distinct decoder, sensing, read/write, and address-transition layers; it is not silently identified as a specific commercial product.
@@ -231,6 +232,7 @@ See [`RELATED_REPOS.md`](RELATED_REPOS.md).
 - [`evidence/10-toshiba-1984-self-refresh-scheduling-grounding.md`](evidence/10-toshiba-1984-self-refresh-scheduling-grounding.md) — Case-10 grounding record: documents a manufacturer-primary on-chip leak-current monitor, threshold-derived trigger, oscillator, and refresh-address counter without assigning the patent to an unsupported named product.
 - [`evidence/11-intel-1970-1971-floating-gate-eprom-grounding.md`](evidence/11-intel-1970-1971-floating-gate-eprom-grounding.md) — Case-11 grounding record: Intel/Frohman primary patents plus Kahng prior art separate long-term trapped-charge retention, programming, nondestructive reading, radiation discharge, and invention-priority boundaries.
 - [`evidence/12-intel-1978-1981-eeprom-electrical-erasure-grounding.md`](evidence/12-intel-1978-1981-eeprom-electrical-erasure-grounding.md) — Case-12 grounding record: directly inspected Intel 2816 product pages plus an Intel tunneling patent separate quiescent floating-gate retention from electrical byte/chip erasure, erase-before-write sequencing, exceptional high-voltage/timed service, and finite cycling.
+- [`evidence/13-early-flash-coarse-erase-1980-1988-grounding.md`](evidence/13-early-flash-coarse-erase-1980-1988-grounding.md) — Case-13 grounding record: Toshiba and Intel manufacturer-primary patents plus period-paper abstract evidence separate one-transistor density goals, shared/whole-array erase, fine program/read selection, command control, and verification while preserving facsimile/product-identity boundaries.
 - [`docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md`](docs/SYNTHESIS_AUDIT_01_MAINTAINED_PERSISTENCE.md) — first evidence-led audit of a provisional thesis, including counterexamples to a universal active-maintenance model.
 - [`docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md`](docs/SYNTHESIS_AUDIT_02_TEMPORAL_TRANSPORT.md) — audit of the storage/transfer proposition against grounded cases, retaining only a controlled recoverability-relation model across time.
 - [`docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md`](docs/SYNTHESIS_AUDIT_03_ADDRESSABILITY.md) — audit separating retention from designation, selection/resolution, currentness/admissibility, and recovery across grounded cases.
@@ -246,7 +248,7 @@ See [`RELATED_REPOS.md`](RELATED_REPOS.md).
 - [`RELATED_REPOS.md`](RELATED_REPOS.md) — cross-repository boundaries and reuse rules.
 - [`AGENTS.md`](AGENTS.md) — research protocol for human and AI contributors.
 
-The current post-audit technical bridge set now extends through Case 12. Cases 09–10 show that a DRAM retention deadline can remain while row enumeration, trigger cadence, and scheduling responsibility move across the package boundary. Case 11 adds a floating-gate asymmetry: **nonvolatility ≠ immutability**, **electrical programmability ≠ electrical erasability**, and **read/program addressability ≠ erase geometry**. Case 12 then moves deliberate forgetting into electrical/in-system control while preserving a special high-voltage/timed erase regime, plural byte/chip erase geometry, erase-before-write sequencing, and finite cycling. The ROM/PROM/EPROM/EEPROM/Flash roadmap item therefore remains open only for the next bounded device-level Flash erase-granularity transition before it is linked upward to the already-grounded mapped-Flash case. See [`CASE_INDEX.md`](CASE_INDEX.md) for authoritative maturity status and [`ROADMAP.md`](ROADMAP.md) for the next slice.
+The current post-audit technical bridge set now extends through Case 13. Cases 09–10 show that a DRAM retention deadline can remain while row enumeration, trigger cadence, and scheduling responsibility move across the package boundary. Case 11 adds a floating-gate asymmetry: **nonvolatility ≠ immutability**, **electrical programmability ≠ electrical erasability**, and **read/program addressability ≠ erase geometry**. Case 12 moves deliberate forgetting into electrical/in-system control while preserving a special high-voltage/timed erase regime, plural byte/chip erase geometry, erase-before-write sequencing, and finite cycling. Case 13 then grounds the early-Flash move to shared/whole-array electrical erase with finer read/program selection, showing that **program addressability ≠ erase addressability**, **fast bulk erase ≠ fast arbitrary rewrite**, and **erase asymmetry ≠ FTL**. Together with the already-grounded mapped-Flash Case 04, this closes the roadmap's bounded retention-specific EPROM→EEPROM→Flash bridge without claiming an exhaustive device genealogy. See [`CASE_INDEX.md`](CASE_INDEX.md) for authoritative maturity status and [`ROADMAP.md`](ROADMAP.md) for the next slice.
 
 ---
 
@@ -268,15 +270,3 @@ Each thesis must remain vulnerable to counterexamples. The current cross-audit s
 ## One rule above all
 
 > **Do not confuse an analogy that helps us think with a historical fact that must be proven.**
-
-The repository may compare an abacus bead with a register, a delay line with temporal circulation, DRAM refresh with active maintenance, or distributed replication with substrate-independent persistence. But every comparison must state whether it is:
-
-- historical evidence;
-- engineering reconstruction;
-- philosophical interpretation;
-- functional analogy;
-- or experiment.
-
-Those layers must never silently collapse into one another.
-
----
