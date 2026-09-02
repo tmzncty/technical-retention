@@ -361,7 +361,7 @@ These are provisional cross-case findings, not final philosophical conclusions. 
 
 The **mechanism gate is now closed**. A synthesis pass may begin, but it must be bounded and evidence-led rather than a declaration of one universal ontology of storage.
 
-- [x] at least four contrasting cases at `grounded` or better — currently twenty-two;
+- [x] at least four contrasting cases at `grounded` or better — currently twenty-five;
 - [x] at least one **passive-position** case at `grounded` or better — grounded Case 00;
 - [x] at least one case of active refresh / circulation at `grounded` or better — grounded mercury delay line supplies continuous circulation and grounded DRAM supplies deadline-driven refresh;
 - [x] at least one case of nonvolatile physical remanence or trapped state at `grounded` or better — grounded magnetic core, mapped Flash, floating-gate EPROM, byte-erasable EEPROM, coarse-erase early Flash, and disk media satisfy this through different mechanisms;
