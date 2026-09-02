@@ -134,7 +134,7 @@ Priority bridges:
 - [ ] HDD geometry, bad-sector remapping, CHS → LBA — **partially advanced by grounded bounded Case 14**: [`cases/14-scsi-disk-defect-reassignment-logical-identity.md`](cases/14-scsi-disk-defect-reassignment-logical-identity.md) uses 1990–1997 period-primary evidence to separate host LBA from physical target, manufacturer-defect slipping from grown-defect replacement, defect metadata from payload, and successful physical reassignment from payload preservation. Seagate's `REASSIGN BLOCKS` semantics make one LBA capable of traversing multiple physical addresses until spare locations are exhausted. The broad item stays unchecked because the general CHS→LBA interface chronology, earlier standards lineage, ATA/IDE transition, zone translation, and vendor-specific controller histories remain distinct work;
 - [ ] virtual memory and paging;
 - [ ] file-system crash consistency;
-- [ ] SSD FTL/controller-mediated persistence beyond the bounded Ban/1990s case;
+- [ ] SSD FTL/controller-mediated persistence beyond the bounded Ban/1990s case — **partially advanced by grounded Case 15**: [`cases/15-intel-ssd320-power-loss-durability.md`](cases/15-intel-ssd320-power-loss-durability.md) uses 2007 ATA8-ACS standards-development text plus Intel's 2011 SSD 320 product/design material to separate volatile write-cache/temporary-buffer state, nonvolatile NAND, explicit `FLUSH CACHE` completion, orderly `STANDBY IMMEDIATE` handoff, and a power-failure-triggered capacitor-backed emergency transfer. The broad item stays unchecked because filesystem `fsync`, NVMe FUA / volatile-write-cache / persistence-domain semantics, controller-metadata recovery, enterprise PLP qualification, and later SSD interfaces remain distinct regimes; the independent FAST '13 fault-injection evidence is retained as a contract-versus-compliance boundary rather than silently assigned to the SSD 320;
 - [ ] RAID / scrubbing / rebuild;
 - [ ] distributed replication and erasure coding beyond RADOS.
 
@@ -172,6 +172,8 @@ The grounded EPROM bridge adds a different access/control boundary. An insulated
 
 The grounded HDD defect-reassignment bridge adds a second, non-Flash form of logical/physical indirection. A host can continue naming the same LBA after the controller changes its physical sector, but Seagate's command semantics explicitly allow the remap to succeed without preserving the affected payload. Future address/identity work must therefore separate **designation continuity**, **physical-embodiment continuity**, **payload continuity**, **repair metadata**, and **finite replacement capacity**. The comparison to mapped Flash is useful only at that relational level: failure-triggered spare substitution is not erase-driven FTL relocation.
 
+The grounded SSD power-loss bridge adds a durability boundary that neither Flash-cell nonvolatility nor FTL mapping alone supplies. A host-visible write can pass through volatile cache/temporary buffers before becoming recoverable nonvolatile state; `FLUSH CACHE`, orderly shutdown, and unexpected-power-loss protection are distinct transition authorities; and a capacitor can retain only energy while still being constitutive infrastructure for preserving payload and system state. Future boundary work should therefore separate **write acknowledgement**, **visibility**, **volatile staging**, **flush completion**, **nonvolatile-media residency**, **post-restart logical currentness**, and **fault-path compliance** rather than treating `SSD is nonvolatile` as an end-to-end persistence claim.
+
 ---
 
 ## Phase 4 — Technical forgetting
@@ -190,6 +192,8 @@ Build a mechanism-sensitive map of:
 - [ ] loss of index or mapping metadata;
 - [ ] loss of currentness/version metadata;
 - [ ] defect growth, failed reassignment, or spare exhaustion;
+- [ ] loss of volatile controller/buffer state before a durability handoff;
+- [ ] failed flush, shutdown transfer, or power-loss emergency transfer;
 - [ ] key destruction;
 - [ ] bit rot;
 - [ ] controller failure;
@@ -219,6 +223,9 @@ Cases and functions may include:
 - disk servo systems;
 - disk defect-list maintenance, spare allocation, and reallocation;
 - SSD firmware, reclamation, wear management, bad-block replacement;
+- volatile write-cache / temporary-buffer handoff;
+- host-issued flush or orderly-shutdown commands;
+- power-fail detection, supply isolation, hold-up energy, and emergency NAND transfer;
 - data scrubbing;
 - RAID rebuild;
 - distributed peering/repair/anti-entropy;
@@ -275,9 +282,11 @@ Audits 01–06 and the cross-audit ledger establish a negative discipline for sy
 
 **Grounded HDD defect-reassignment stress test:** [`cases/14-scsi-disk-defect-reassignment-logical-identity.md`](cases/14-scsi-disk-defect-reassignment-logical-identity.md) is `grounded`; see [`evidence/14-disk-lba-defect-reassignment-1990-1997-grounding.md`](evidence/14-disk-lba-defect-reassignment-1990-1997-grounding.md). Period NeXT/Seagate evidence shows that a stable LBA can traverse physical sectors after defects while `REASSIGN BLOCKS` itself does not preserve the affected payload. It also makes defect-list state and finite spare capacity part of the continuation mechanism. The case therefore forces **logical-block identity ≠ physical-sector identity**, **reassignment continuity ≠ payload continuity**, and **LBA abstraction ≠ disappearance of geometry**, while keeping the comparison to Flash FTL explicitly functional rather than genealogical.
 
-**Next highest-value unit:** move to one still-open Phase-2 bridge that changes the retention comparison rather than extending the now-grounded HDD defect-reassignment slice. Prefer **SSD controller-mediated durability beyond Case 04** if period-primary evidence can cleanly separate host-visible write acknowledgement, volatile controller/cache state, flush/commit, power-loss protection, and mapping-metadata durability; otherwise choose **file-system crash consistency** or **RAID/scrubbing/rebuild** as a bounded mechanism case. Do not expand Case 14 into a generic CHS/LBA chronology inside this repository merely to close a checkbox.
+**Grounded SSD power-loss-durability stress test:** [`cases/15-intel-ssd320-power-loss-durability.md`](cases/15-intel-ssd320-power-loss-durability.md) is `grounded`; see [`evidence/15-intel-ssd320-power-loss-durability-grounding.md`](evidence/15-intel-ssd320-power-loss-durability-grounding.md). Period ATA text and Intel product/design evidence put a volatile staging layer in front of nonvolatile NAND and distinguish host-requested flush, clean-shutdown transfer, and device-triggered emergency work under stored capacitor energy. FAST '13 is used only as an independent boundary against equating interface/design claims with measured compliance. This case adds **nonvolatile medium ≠ end-to-end durable state**, **stored energy ≠ stored payload**, and **durability handoff ≠ ordinary media retention**.
 
-The first generic thesis-audit sequence, four named philosophical/prior-art tests, the first category-coherence audit, and the post-audit technical stress tests are now grounded at bounded maturity. Do not promote the bounded relational criterion into a grand `What Is Technical Retention?` chapter yet. Cases 06–14 continue to add counterexample pressure: short working-state retention, static-array power boundaries, cache currentness, refresh-responsibility migration, condition-derived maintenance, external-versus-electrical erase authority, erase granularity, verification granularity, endurance, logical/physical disk indirection, payload-recovery separation, and finite repair slack must all remain distinct.
+**Next highest-value unit:** move to one still-open Phase-2 bridge that changes the retention comparison rather than extending the now-grounded SSD 320 slice. Prefer **file-system crash consistency** if period-primary design evidence can cleanly separate volatile cache state, write ordering, commit/recovery rules, and post-crash admissible state; otherwise choose **RAID / scrubbing / rebuild** or a bounded **NVMe persistence-domain** case. Do not expand Case 15 into a generic SSD chapter or use it to infer filesystem `fsync` semantics.
+
+The first generic thesis-audit sequence, four named philosophical/prior-art tests, the first category-coherence audit, and the post-audit technical stress tests are now grounded at bounded maturity. Do not promote the bounded relational criterion into a grand `What Is Technical Retention?` chapter yet. Cases 06–15 continue to add counterexample pressure: short working-state retention, static-array power boundaries, cache currentness, refresh-responsibility migration, condition-derived maintenance, external-versus-electrical erase authority, erase granularity, verification granularity, endurance, logical/physical disk indirection, payload-recovery separation, finite repair slack, volatile durability windows, explicit flush boundaries, and failure-triggered emergency handoff must all remain distinct.
 
 ---
 
