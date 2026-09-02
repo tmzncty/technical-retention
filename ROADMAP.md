@@ -35,7 +35,7 @@ Future scaffold changes should be driven by failures discovered in actual cases 
 
 Future maturation work is narrow: edition/folio cleanup and specialist historiography, not another generic abacus history.
 
-### 2. Mercury delay-line memory — `first-pass`
+### 2. Mercury delay-line memory — `grounded`
 
 - [x] bounded case: [`cases/01-mercury-delay-line-circulation.md`](cases/01-mercury-delay-line-circulation.md);
 - [x] retention as circulation;
@@ -43,11 +43,12 @@ Future maturation work is narrow: edition/folio cleanup and specialist historiog
 - [x] continuous regeneration as apparent persistence;
 - [x] establish primary vocabulary through the 1947 Eckert–Mauchly `Memory system` patent and Wilkes's 1949 EDSAC report;
 - [x] distinguish logical identity from identity of one physical pulse;
-- [ ] add exact patent column / figure anchors and direct 1949 IRE page anchors;
-- [ ] add machine-specific primary evidence for temperature control;
-- [ ] promote to `grounded` only after source deepening.
+- [x] add exact patent column / figure anchors and direct 1949 IRE p. 855 facsimile evidence;
+- [x] add machine-specific primary evidence for temperature control through the 1958 UNIVAC I maintenance manual;
+- [x] grounding record: [`evidence/01-mercury-delay-line-1947-1958-grounding.md`](evidence/01-mercury-delay-line-1947-1958-grounding.md);
+- [x] promote from `first-pass` to `grounded` after source deepening.
 
-This case is now the only Phase-1 case below `grounded`; grounding it is useful but no longer blocks the mechanism-variety gate because grounded DRAM already supplies active regeneration.
+Remaining work is archival or scope-specific cleanup rather than a promotion blocker: obtain a conveniently renderable full facsimile of the 1949 IRE pp. 856–861 if a later argument needs additional page/figure anchors, and require EDSAC-specific primary thermal-control evidence before making an EDSAC-specific thermal-control claim. The broader engineering history remains in `computing-archaeology`.
 
 ### 3. Magnetic core memory — `grounded`
 
@@ -106,16 +107,17 @@ Future work should be narrow semantic/version archaeology, not generic Ceph expa
 
 ### Phase-1 gate status
 
-The mechanism-variety gate is now satisfied:
+The mechanism-variety gate is now satisfied and all six Phase-1 cases are `grounded`:
 
-- [x] at least four contrasting cases at `grounded` or better — currently five within Phase 1;
+- [x] at least four contrasting cases at `grounded` or better — currently six within Phase 1;
 - [x] passive-position case — grounded abacus / reckoning comparison;
-- [x] active refresh/regeneration case — grounded DRAM;
+- [x] active circulation/regeneration case — grounded mercury delay line;
+- [x] active deadline refresh/regeneration case — grounded DRAM;
 - [x] nonvolatile physical state — grounded magnetic core and mapped Flash;
 - [x] logical identity survives physical relocation — grounded mapped Flash;
 - [x] logical identity survives replica loss/replacement — grounded RADOS.
 
-This authorizes **bounded synthesis work**, not a grand conclusion. The first synthesis task should audit provisional theses against the five grounded Phase-1 regimes and record counterexamples before writing a philosophical overview.
+This authorizes **bounded synthesis work**, not a grand conclusion. The synthesis audits and later adversarial bridges must continue to treat the six Phase-1 regimes as evidence-bearing counterexamples rather than force them under one mechanism.
 
 Detailed cross-case findings live in [`CASE_INDEX.md`](CASE_INDEX.md).
 
@@ -324,7 +326,7 @@ Audits 01–06 and the cross-audit ledger establish a negative discipline for sy
 
 **Grounded distributed-erasure-coding stress test:** [`cases/19-facebook-f4-erasure-coded-failure-domains.md`](cases/19-facebook-f4-erasure-coded-failure-domains.md) is `grounded`; see [`evidence/19-facebook-f4-2014-erasure-coding-grounding.md`](evidence/19-facebook-f4-2014-erasure-coding-grounding.md). Facebook's 2014 f4 paper directly grounds Reed–Solomon `(10,4)` data stripes, separately triple-replicated index files, rack-aware block placement, sub-BLOB online reconstruction, offline full-block rebuilding, placement balancing after reconstruction/replacement, and a geo-XOR layer whose inputs can themselves require local reconstruction. The case therefore forces **erasure-code algebra ≠ failure-domain independence**, **read availability ≠ completed repair**, **content reconstruction ≠ restored placement geometry**, and **one system can use different redundancy mechanisms for different constitutive state classes**. Its related-work section explicitly prevents a false coding-invention claim.
 
-**Next highest-value unit:** Case 20 closes the immediate 2011 NVMe FUA/VWC/Flush interface gap without closing later NVMe history. Prefer either (a) returning to the only first-pass Phase-1 case and closing the **mercury delay-line** source gaps if machine-specific temperature-control evidence and exact patent/paper anchors can be obtained, or (b) a later **NVMe persistence-domain revision** slice only if it demonstrably adds a new failure/persistence relation beyond Case 20 rather than renaming the same semantics. Other high-value alternatives remain mutable coded-object currentness, local-reconstruction-code repair geometry, or distributed scrub/anti-entropy.
+**Next highest-value unit:** the Phase-1 evidence set is now fully grounded. Prefer a new bounded bridge that adds a genuinely different retention relation: a later **NVMe persistence-domain revision** only if it materially changes the failure/persistence contract beyond Case 20, a **mutable coded-object currentness** case, a **local-reconstruction-code repair-geometry** case, or **distributed scrub/anti-entropy**. Do not reopen the mercury-delay-line case merely to accumulate generic early-memory history; its remaining work is archival cleanup or machine-specific deepening.
 
 The first generic thesis-audit sequence, four named philosophical/prior-art tests, the first category-coherence audit, and the post-audit technical stress tests are now grounded at bounded maturity. Do not promote the bounded relational criterion into a grand `What Is Technical Retention?` chapter yet. Cases 06–20 continue to add counterexample pressure: short working-state retention, static-array power boundaries, cache currentness, refresh-responsibility migration, condition-derived maintenance, external-versus-electrical erase authority, erase granularity, verification granularity, endurance, logical/physical disk indirection, payload-recovery separation, finite repair slack, volatile durability windows, explicit flush boundaries, failure-triggered emergency handoff, per-command FUA media commitment, host-enforced ordering, power-fail atomicity, crash-admissible stable state, relational `fsync` closure, encoded reconstruction, redundancy-currentness metadata, degraded-versus-repaired fault margin, proactive integrity verification before demand, failure-domain placement, sub-object online reconstruction, background full-fragment repair, and placement-geometry convergence must all remain distinct.
 
