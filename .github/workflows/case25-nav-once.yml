@@ -1,0 +1,143 @@
+name: Apply Case 25 navigation once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/case25-nav-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Update navigation and ledgers
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def read(path):
+              return Path(path).read_text(encoding='utf-8')
+
+          def write(path, text):
+              Path(path).write_text(text, encoding='utf-8')
+
+          def insert_after_line(text, prefix, new_line):
+              lines = text.splitlines()
+              matches = [i for i, line in enumerate(lines) if line.startswith(prefix)]
+              if len(matches) != 1:
+                  raise SystemExit(f'expected one line starting {prefix!r}, got {len(matches)}')
+              if new_line in lines:
+                  return text
+              lines.insert(matches[0] + 1, new_line)
+              return '\n'.join(lines) + ('\n' if text.endswith('\n') else '')
+
+          # README navigation and bridge summary
+          p = 'README.md'
+          t = read(p)
+          t = insert_after_line(
+              t,
+              '- [`cases/24-windows-azure-lrc-repair-locality-handoff.md`]',
+              '- [`cases/25-openstack-swift-ec-overwrite-durable-currentness.md`](cases/25-openstack-swift-ec-overwrite-durable-currentness.md) — grounded mutable erasure-coded currentness bridge: Swift separates fragment presence from committed object retention, requires same-timestamp distinct-index fragment cohorts plus durability evidence for GET, and gates old-version retirement on the newer coded version crossing its commit boundary.'
+          )
+          t = insert_after_line(
+              t,
+              '- [`evidence/24-windows-azure-2012-lrc-grounding.md`]',
+              '- [`evidence/25-openstack-swift-2015-2016-ec-currentness-grounding.md`](evidence/25-openstack-swift-2015-2016-ec-currentness-grounding.md) — Case-25 grounding record: exact Swift 2.3.0/2.10.1 source states separate fragment landing, timestamp/index cohort selection, `.durable` commit evidence, safe old-timestamp retirement, later reconstruction/marker propagation, fragment validity, and release-specific quorum semantics.'
+          )
+          old = 'The current post-audit technical bridge set now extends through Case 24.'
+          if old not in t:
+              raise SystemExit('README bridge-set status anchor missing')
+          t = t.replace(old, 'The current post-audit technical bridge set now extends through Case 25.', 1)
+          anchor = 'WAS keeps full replicas through asynchronous coding and validation, persists coding progress for resumption, and schedules source-replica deletion only after completion metadata marks the new coded representation.'
+          addition = (' Case 25 then supplies the mutable coded-version counterexample left open by Cases 19 and 24: '
+                      '**fragment presence ≠ committed object retention**, **coded recoverability ≠ version admissibility**, '
+                      '**newer timestamp ≠ safe-forgetting authority**, and **client success ≠ completed repair convergence**. '
+                      'Swift selects a same-timestamp, distinct-index fragment cohort with a durability witness and keeps the older timestamp until the replacement crosses its documented commit boundary.')
+          if addition.strip() not in t:
+              if anchor not in t:
+                  raise SystemExit('README Case24 summary anchor missing')
+              t = t.replace(anchor, anchor + addition, 1)
+          write(p, t)
+
+          # ROADMAP
+          p = 'ROADMAP.md'
+          t = read(p)
+          lines = t.splitlines()
+          starts = [i for i, line in enumerate(lines) if line.startswith('- [ ] distributed replication and erasure coding beyond RADOS')]
+          if len(starts) != 1:
+              raise SystemExit(f'ROADMAP distributed bridge anchor count {len(starts)}')
+          lines[starts[0]] = ('- [ ] distributed replication and erasure coding beyond RADOS — **partially advanced by grounded Cases 19, 23, 24, and 25**. '
+              '[`cases/19-facebook-f4-erasure-coded-failure-domains.md`](cases/19-facebook-f4-erasure-coded-failure-domains.md), grounded by [`evidence/19-facebook-f4-2014-erasure-coding-grounding.md`](evidence/19-facebook-f4-2014-erasure-coding-grounding.md), separates Reed–Solomon fragment algebra from failure-domain placement, direct reads from online reconstruction, content repair from placement convergence, and local recovery from geo-level composition. '
+              '[`cases/23-amazon-dynamo-divergent-version-anti-entropy.md`](cases/23-amazon-dynamo-divergent-version-anti-entropy.md), grounded by [`evidence/23-amazon-dynamo-2007-version-handoff-antientropy-grounding.md`](evidence/23-amazon-dynamo-2007-version-handoff-antientropy-grounding.md), adds mutable replicated currentness: causally unrelated versions can remain simultaneously admissible until reconciliation; hinted handoff separates successful availability from intended placement; and read repair plus Merkle-tree anti-entropy separate request completion, divergence detection, synchronization, and convergence. '
+              '[`cases/24-windows-azure-lrc-repair-locality-handoff.md`](cases/24-windows-azure-lrc-repair-locality-handoff.md), grounded by [`evidence/24-windows-azure-2012-lrc-grounding.md`](evidence/24-windows-azure-2012-lrc-grounding.md), adds repair-cost geometry and a validated transition from full replication to coded retention for immutable sealed extents. '
+              '[`cases/25-openstack-swift-ec-overwrite-durable-currentness.md`](cases/25-openstack-swift-ec-overwrite-durable-currentness.md), grounded by [`evidence/25-openstack-swift-2015-2016-ec-currentness-grounding.md`](evidence/25-openstack-swift-2015-2016-ec-currentness-grounding.md), adds a bounded mutable EC regime: same-timestamp distinct-index fragment cohorts and a `.durable` witness separate algebraic reconstructability from current-version admissibility, while the newer version must cross its commit boundary before older timestamped state is retired. '
+              'The broad item stays unchecked because other mutable-EC consistency protocols, delete/tombstone semantics, distributed integrity scrubbing, cross-region coded maintenance, later Swift durability-marker/on-disk evolution, and additional repair-bandwidth/failure models remain separate regimes. These systems build on earlier coding/replication techniques rather than supporting invention-priority claims for those ingredients.')
+          t = '\n'.join(lines) + ('\n' if t.endswith('\n') else '')
+          q = '- [ ] In mutable erasure-coded object storage, how should `fragment presence`, `version/timestamp coherence`, `coded reconstructability`, `commit/durability evidence`, `old-version retirement`, and `repair convergence` be separated?'
+          t = insert_after_line(t, '- [ ] In locality-aware coded storage, how should `recoverability`', q)
+          paragraph = ('The grounded OpenStack Swift EC bridge adds the mutable coded-currentness relation that the f4 and WAS cases intentionally left open. '
+                       'In the bounded 2015–2016 implementation, fragment archives can exist before a PUT is committed; GET requires enough distinct fragment indexes at one timestamp plus same-timestamp durability evidence; and the previous timestamp is not deleted until the replacement crosses the multi-phase commit boundary. '
+                       'Later reconstruction can still propagate missing fragments and durability markers. Future coded-storage work should therefore distinguish **fragment existence**, **version coherence**, **algebraic reconstructability**, **commit/admissibility state**, **source-version retirement**, and **repair convergence**, while keeping release-specific quorum rules explicit rather than treating `Swift EC durability` as one timeless property.')
+          if paragraph not in t:
+              marker = 'The grounded Windows Azure LRC bridge adds a repair-cost and representation-transition boundary to the distributed-coded cases.'
+              idx = t.find(marker)
+              if idx < 0:
+                  raise SystemExit('ROADMAP WAS paragraph anchor missing')
+              end = t.find('\n\n', idx)
+              if end < 0:
+                  raise SystemExit('ROADMAP WAS paragraph end missing')
+              t = t[:end+2] + paragraph + '\n\n' + t[end+2:]
+          forgetting = '- [ ] cross-timestamp fragment mixing, missing durability witness, stale pre-commit fragments, or premature old-version retirement during mutable EC overwrite;'
+          t = insert_after_line(t, '- [ ] failed/asynchronous redundancy-mode conversion, stale/incomplete completion metadata, or deleting source replicas before coded-state validation;', forgetting)
+          maint = '- timestamp-cohort selection, `.durable`-marker propagation, EC reconstruction, handoff reversion, and stale pre-commit fragment cleanup;'
+          t = insert_after_line(t, '- asynchronous replica-to-erasure-code conversion, coding-progress persistence, validation-gated source-replica deletion, locality-aware reconstruction, and fault/upgrade-domain placement;', maint)
+          write(p, t)
+
+          # CASE_INDEX case row, matrix row, count, and new findings
+          p = 'CASE_INDEX.md'
+          t = read(p)
+          case_row = ('| [OpenStack Swift EC Overwrites: Timestamp Cohorts, `.durable` Markers, and Mutable Coded Currentness](cases/25-openstack-swift-ec-overwrite-durable-currentness.md) | **grounded** | mutable object versions + timestamped indexed EC archives + set-level `.durable` marker + ring/handoff placement + reconstructor repair | separate fragment presence, version coherence, coded reconstructability, commit/admissibility, safe old-version retirement, and later repair convergence | [2015–2016 Swift EC grounding](evidence/25-openstack-swift-2015-2016-ec-currentness-grounding.md); later tombstone/versioning semantics, `#d` durability representation, cross-region EC, and other mutable coded protocols remain separate work |')
+          t = insert_after_line(t, '| [Windows Azure Storage LRC: Repair Locality, Redundancy-Mode Handoff, and Failure-Domain Placement]', case_row)
+          matrix_row = ('| OpenStack Swift EC / 2015–2016 bounded regime | mutable object payload + timestamped EC fragment archives + fragment indexes + `.durable` commit marker + ring/handoff/reconstructor state | proxy encode/stream; quorum tracking; multi-phase commit; durability-marker propagation; EC reconstruction; handoff reversion; integrity validation/quarantine | GET gathers enough distinct indexes at one timestamp and requires same-timestamp durability evidence before decoding; partial pre-commit fragments are not a successful object version | object name → policy/ring → primaries/handoffs → timestamp cohort → distinct fragment indexes + durability witness → decode | old and new timestamped archives can coexist; old state is retired only after replacement commit, while repair can later converge missing fragments/markers | no complete history; current admissible timestamp plus fragment-index/commit/placement relations are retained, while stale partial/older archives may temporarily survive physically |')
+          t = insert_after_line(t, '| Windows Azure Storage LRC / 2012 bounded regime', matrix_row)
+          old_count = 'After twenty-five bounded cases, **all twenty-five cases are now `grounded`.**'
+          if old_count not in t:
+              raise SystemExit('CASE_INDEX case-count anchor missing')
+          t = t.replace(old_count, 'After twenty-six bounded cases, **all twenty-six cases are now `grounded`.**', 1)
+          old_gate = '- [x] at least four contrasting cases at `grounded` or better — currently twenty-five;'
+          if old_gate in t:
+              t = t.replace(old_gate, '- [x] at least four contrasting cases at `grounded` or better — currently twenty-six;', 1)
+          findings = [
+              '228. **fragment presence ≠ committed object version** — Swift 2.3.0 can leave timestamped EC `.data` archives after a proxy dies before commit while the client receives no success and the fragments remain stale cleanup candidates; physically surviving newer coded bytes need not constitute retained service state;',
+              '229. **coded recoverability ≠ version admissibility** — Swift 2.10.1 GET requires enough distinct fragment indexes at the same timestamp plus a same-timestamp durability indication. Erasure-code algebra determines a decodable symbol set, while the object protocol separately determines which version-coherent set may answer;',
+              '230. **newer timestamp ≠ safe-forgetting authority** — both bounded Swift source states delay deletion of older timestamp files until the replacement has crossed the commit phase; temporal/version ordering alone is weaker than demonstrated replacement retention;',
+              '231. **fragment-count sufficiency ≠ version-coherent cohort sufficiency** — the proxy may encounter several timestamps and duplicate fragment indexes, so `enough files` is not the same condition as `enough complementary fragments belonging to one retained object version`;',
+              '232. **durability/currentness metadata can qualify a distributed cohort rather than one payload fragment** — in 2.10.1 one same-timestamp `.durable` indication can qualify fragment archives returned from other nodes that lack a local marker, making the commit fact relational and set-level;',
+              '233. **client success ≠ complete coded-placement convergence** — after the documented PUT success threshold, the reconstructor can still restore missing fragment indexes, revert handoffs, and propagate durability markers; service completion and repaired steady state need not coincide;',
+              '234. **mutable EC currentness ≠ Dynamo divergent currentness or WAS immutable representation handoff** — Dynamo can expose causally unrelated leaves for application reconciliation, WAS Case 24 converts sealed immutable extents from replicas to coded state, while Swift Case 25 selects one same-timestamp committed coded cohort during mutable object replacement. The comparison is functional, not one shared historical mechanism;',
+              '235. **implementation release ≠ timeless durability semantics, and fragment existence ≠ fragment validity** — Swift 2.3.0 and 2.10.1 document different commit thresholds, while the 2.10.1 release also adds fragment-size/metadata validation and quarantine after a concrete ssync defect. Protocol thresholds and implementation validity checks must be cited to the source state rather than universalized.'
+          ]
+          if findings[0] not in t:
+              lines = t.splitlines()
+              hits = [i for i, line in enumerate(lines) if line.startswith('227. **2012 WAS LRC production use ≠ invention of erasure coding or the storage/repair trade-off**')]
+              if len(hits) != 1:
+                  raise SystemExit(f'finding 227 anchor count {len(hits)}')
+              lines[hits[0]+1:hits[0]+1] = findings
+              t = '\n'.join(lines) + ('\n' if t.endswith('\n') else '')
+          write(p, t)
+          PY
+
+          rm .github/workflows/case25-nav-once.yml
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add README.md ROADMAP.md CASE_INDEX.md .github/workflows/case25-nav-once.yml
+          git diff --cached --check
+          git commit -m "docs: integrate grounded Swift EC currentness bridge"
+          git push
