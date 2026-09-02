@@ -1,0 +1,143 @@
+name: Apply Case 24 navigation once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/case24-nav-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Update navigation and ledgers
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def read(path):
+              return Path(path).read_text(encoding='utf-8')
+
+          def write(path, text):
+              Path(path).write_text(text, encoding='utf-8')
+
+          def insert_after_line(text, prefix, new_line):
+              lines = text.splitlines()
+              matches = [i for i, line in enumerate(lines) if line.startswith(prefix)]
+              if len(matches) != 1:
+                  raise SystemExit(f'expected one line starting {prefix!r}, got {len(matches)}')
+              i = matches[0]
+              if new_line in lines:
+                  return text
+              lines.insert(i + 1, new_line)
+              return '\n'.join(lines) + ('\n' if text.endswith('\n') else '')
+
+          # README
+          p = 'README.md'
+          t = read(p)
+          t = insert_after_line(
+              t,
+              '- [`cases/23-amazon-dynamo-divergent-version-anti-entropy.md`]',
+              '- [`cases/24-windows-azure-lrc-repair-locality-handoff.md`](cases/24-windows-azure-lrc-repair-locality-handoff.md) — grounded repair-locality bridge: Windows Azure Storage LRC separates coded recoverability from reconstruction read cost, on-demand reconstruction from durable repair, and code locality from fault/upgrade-domain placement; its asynchronous validated transition from three full replicas to coded fragments makes completion metadata part of the retention handoff.'
+          )
+          t = insert_after_line(
+              t,
+              '- [`evidence/23-amazon-dynamo-2007-version-handoff-antientropy-grounding.md`]',
+              '- [`evidence/24-windows-azure-2012-lrc-grounding.md`](evidence/24-windows-azure-2012-lrc-grounding.md) — Case-24 grounding record: directly inspected Microsoft/USENIX 2012 production evidence separates LRC read-set locality, fault/upgrade-domain placement, asynchronous coding progress/completion metadata, validation-gated replica deletion, foreground reconstruction reads, and durable fragment regeneration while preserving Reed–Solomon/Pyramid-code prior-art boundaries.'
+          )
+          old = 'The current post-audit technical bridge set now extends through Case 23.'
+          if old not in t:
+              raise SystemExit('README bridge-set status anchor missing')
+          t = t.replace(old, 'The current post-audit technical bridge set now extends through Case 24.', 1)
+          anchor = 'Dynamo therefore complements Case 05 rather than replacing it: bounded RADOS peering and Dynamo\'s application-visible divergent-version reconciliation are distinct historical currentness regimes.'
+          addition = (' Case 24 adds a repair-cost and representation-transition counterexample inside distributed coding: '
+                      '**coded recoverability ≠ reconstruction cost**, **local reconstruction ≠ physical co-location**, '
+                      '**on-demand reconstruction ≠ durable fragment repair**, and **coded-fragment presence ≠ completed redundancy-regime handoff**. '
+                      'WAS keeps full replicas through asynchronous coding and validation, persists coding progress for resumption, and schedules source-replica deletion only after completion metadata marks the new coded representation.')
+          if addition.strip() not in t:
+              if anchor not in t:
+                  raise SystemExit('README Case23 summary anchor missing')
+              t = t.replace(anchor, anchor + addition, 1)
+          write(p, t)
+
+          # ROADMAP
+          p = 'ROADMAP.md'
+          t = read(p)
+          lines = t.splitlines()
+          starts = [i for i, line in enumerate(lines) if line.startswith('- [ ] distributed replication and erasure coding beyond RADOS')]
+          if len(starts) != 1:
+              raise SystemExit(f'ROADMAP distributed bridge anchor count {len(starts)}')
+          lines[starts[0]] = ('- [ ] distributed replication and erasure coding beyond RADOS — **partially advanced by grounded Cases 19, 23, and 24**. '
+              '[`cases/19-facebook-f4-erasure-coded-failure-domains.md`](cases/19-facebook-f4-erasure-coded-failure-domains.md), grounded by [`evidence/19-facebook-f4-2014-erasure-coding-grounding.md`](evidence/19-facebook-f4-2014-erasure-coding-grounding.md), separates Reed–Solomon fragment algebra from failure-domain placement, direct reads from online reconstruction, content repair from placement convergence, and local recovery from geo-level composition. '
+              '[`cases/23-amazon-dynamo-divergent-version-anti-entropy.md`](cases/23-amazon-dynamo-divergent-version-anti-entropy.md), grounded by [`evidence/23-amazon-dynamo-2007-version-handoff-antientropy-grounding.md`](evidence/23-amazon-dynamo-2007-version-handoff-antientropy-grounding.md), separately adds mutable replicated currentness: causally unrelated versions can remain simultaneously admissible until reconciliation; hinted handoff separates successful availability from intended placement; and read repair plus Merkle-tree anti-entropy separate request completion, divergence detection, synchronization, and convergence. '
+              '[`cases/24-windows-azure-lrc-repair-locality-handoff.md`](cases/24-windows-azure-lrc-repair-locality-handoff.md), grounded by [`evidence/24-windows-azure-2012-lrc-grounding.md`](evidence/24-windows-azure-2012-lrc-grounding.md), adds repair-cost geometry and a redundancy-representation transition: LRC separates coded recoverability from reconstruction read-set cost, local code dependency from physical fault/upgrade-domain placement, on-demand reconstruction from persistent repair, and partially produced coded fragments from a validated/completion-marked handoff that permits source-replica deletion. '
+              'The broad item stays unchecked because mutable **erasure-coded** object currentness/consistency, repair scheduling under other bandwidth/failure models, distributed integrity scrubbing beyond replica synchronization, and later production semantics remain separate regimes. f4, Dynamo, and WAS/LRC all build on earlier coding/replication techniques rather than supporting invention-priority claims for those ingredients.')
+          t = '\n'.join(lines) + ('\n' if t.endswith('\n') else '')
+          question = '- [ ] In locality-aware coded storage, how should `recoverability`, `reconstruction read-set/cost`, `on-demand read recovery`, `durable fragment repair`, and `redundancy-regime handoff completion` be separated?'
+          t = insert_after_line(t, '- [ ] In distributed coded storage, how should `coded recoverability`', question)
+          paragraph = ('The grounded Windows Azure LRC bridge adds a repair-cost and representation-transition boundary to the distributed-coded cases. '
+                       'The 2012 production design makes `reconstruction cost` an explicit code property, yet separately places fragments across hardware fault domains and planned upgrade domains; a smaller dependency set is therefore not a claim of physical co-location. '
+                       'It also keeps sealed extents under full replication while asynchronous coding proceeds, persists conversion progress for resumption, validates reconstructed data/CRC before completion, records fragment boundaries/completion flags, and only then schedules the old replicas for deletion. '
+                       'Future coded-storage work should therefore distinguish **mathematical recoverability**, **repair read-set/cost**, **foreground reconstruction availability**, **durable fragment repair**, **physical/administrative placement**, and **representation-handoff admissibility**. Mutable coded-object currentness remains open.')
+          if paragraph not in t:
+              marker = 'The grounded f4 distributed-erasure bridge adds a topological repair boundary beyond disk-array coding.'
+              idx = t.find(marker)
+              if idx < 0:
+                  raise SystemExit('ROADMAP f4 paragraph anchor missing')
+              end = t.find('\n\n', idx)
+              if end < 0:
+                  raise SystemExit('ROADMAP f4 paragraph end missing')
+              t = t[:end+2] + paragraph + '\n\n' + t[end+2:]
+          forgetting = '- [ ] failed/asynchronous redundancy-mode conversion, stale/incomplete completion metadata, or deleting source replicas before coded-state validation;'
+          t = insert_after_line(t, '- [ ] coded-fragment loss concentrated in one failure domain', forgetting)
+          maint = '- asynchronous replica-to-erasure-code conversion, coding-progress persistence, validation-gated source-replica deletion, locality-aware reconstruction, and fault/upgrade-domain placement;'
+          t = insert_after_line(t, '- erasure-coded online sub-object reconstruction, full-fragment rebuild, and failure-domain placement balancing;', maint)
+          write(p, t)
+
+          # CASE_INDEX
+          p = 'CASE_INDEX.md'
+          t = read(p)
+          case_row = ('| [Windows Azure Storage LRC: Repair Locality, Redundancy-Mode Handoff, and Failure-Domain Placement](cases/24-windows-azure-lrc-repair-locality-handoff.md) | **grounded** | immutable sealed extents moving from full replication to LRC data/local/global parity fragments + persisted coding progress/completion metadata + CRC validation + fault/upgrade-domain placement | separate coded recoverability from reconstruction read-set cost; distinguish code locality from physical topology, on-demand reconstruction from durable repair, and partial fragment production from a validated representation handoff | [2012 Windows Azure LRC grounding](evidence/24-windows-azure-2012-lrc-grounding.md); mutable coded-object currentness, later LRC families, other repair-bandwidth regimes, distributed scrubbing, and later Azure semantics remain separate work |')
+          t = insert_after_line(t, '| [Amazon Dynamo: Divergent Version Retention, Hinted Handoff, and Anti-Entropy]', case_row)
+          matrix_row = ('| Windows Azure Storage LRC / 2012 bounded regime | immutable extent payload + full-replica/coded-fragment representation + local/global parity + coding-progress/completion metadata + CRCs + fault/upgrade-domain placement | client-write replication before sealing; asynchronous erasure coding; persisted conversion progress; validation-gated completion; on-demand reconstruction; durable fragment regeneration; scheduled/throttled maintenance | direct fragment read normally; reconstruction read can synthesize/cache/return one unavailable fragment without durably replacing it; extended unavailability triggers SM-initiated disk repair | extent/fragment metadata resolves data to ENs; missing data resolves through a code dependency set whose size is an explicit reconstruction-cost property; topology separately constrains fault/upgrade placement | full replicas and coded fragments coexist during conversion; after validated completion the source replicas can be retired while the extent identity persists | no complete history; current extent plus representation/progress/completion/integrity/placement relations are retained |')
+          t = insert_after_line(t, '| Amazon Dynamo / 2007 bounded regime', matrix_row)
+          old_count = 'After twenty-four bounded cases, **all twenty-four cases are now `grounded`.**'
+          if old_count not in t:
+              raise SystemExit('CASE_INDEX case-count anchor missing')
+          t = t.replace(old_count, 'After twenty-five bounded cases, **all twenty-five cases are now `grounded`.**', 1)
+          findings = [
+              '219. **coded recoverability ≠ reconstruction cost** — WAS compares `RS (12,4)` and `LRC (12,2,2)` at the same `1.33x` storage cost while the common single-data-fragment reconstruction reads twelve versus six fragments respectively. Knowing that enough information survives does not specify how much distributed state must be mobilized to recover it;',
+              '220. **local reconstruction ≠ physical co-location** — LRC locality is a smaller code-dependency/read set, while WAS separately distributes fragments across rack fault domains and arranges upgrade domains; corresponding members can share one planned-offline domain while remaining in different hardware failure domains;',
+              '221. **on-demand reconstruction availability ≠ durable fragment repair** — a reconstruction read can decode, cache, and return a requested fragment, whereas extended EN/disk unavailability causes the Stream Manager to reconstruct onto another EN and write the result to disk;',
+              '222. **coded-fragment presence ≠ completed redundancy-regime handoff** — asynchronous conversion can leave new fragments and persisted progress while the full replicas still remain; decode/CRC validation, coded-fragment persistence, extent completion metadata, and only then source-replica deletion define a stronger completion relation;',
+              '223. **transition progress/completion metadata can be constitutive retention state** — progress persisted into new fragments lets another EN resume interrupted coding, while fragment boundaries and completion flags participate in deciding that the coded representation is ready to replace the previous full replicas;',
+              '224. **representation maintenance can be off the foreground write path without being optional work** — active writes are acknowledged through the replica set; sealed extents are coded asynchronously according to policy/load, and system throttling must budget coding/reconstruction against foreground service and critical re-replication;',
+              '225. **repair locality is a cost/fault-tolerance design coordinate, not free durability** — the bounded LRC is explicitly non-MDS and uses local parity to lower common reconstruction cost while failure-pattern recoverability remains code-specific; lower read-set cost cannot be promoted into a universal stronger-durability claim;',
+              '226. **fault domain ≠ upgrade domain** — WAS distinguishes correlated hardware failure from nodes intentionally taken offline together during rolling upgrades. Planned maintenance topology can therefore constrain retention availability even when no storage medium has physically failed;',
+              '227. **2012 WAS LRC production use ≠ invention of erasure coding or the storage/repair trade-off** — the paper itself situates LRC among prior codes and calls it an improvement over the authors’ Pyramid Codes; Microsoft’s 2007 Pyramid record already frames a storage-space/access-efficiency trade-off, while Case 19 separately retains the older Reed–Solomon boundary.'
+          ]
+          if findings[0] not in t:
+              lines = t.splitlines()
+              hits = [i for i, line in enumerate(lines) if line.startswith('218. **background retention maintenance can be explicitly resource-budgeted against foreground service**')]
+              if len(hits) != 1:
+                  raise SystemExit(f'finding 218 anchor count {len(hits)}')
+              i = hits[0]
+              lines[i+1:i+1] = findings
+              t = '\n'.join(lines) + ('\n' if t.endswith('\n') else '')
+          write(p, t)
+          PY
+
+          rm .github/workflows/case24-nav-once.yml
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add README.md ROADMAP.md CASE_INDEX.md .github/workflows/case24-nav-once.yml
+          git diff --cached --check
+          git commit -m "docs: integrate grounded Windows Azure LRC bridge"
+          git push
