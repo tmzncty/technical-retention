@@ -1,707 +1,54 @@
-name: Integrate Case 26 GFS integrity bridge
+name: Integrate Case 26 navigation once
 
 on:
   push:
     branches: [main]
+    paths:
+      - .github/workflows/automation-case26-gfs.yml
 
 permissions:
   contents: write
 
 jobs:
   integrate:
-    if: github.event.head_commit.message == 'automation: stage Case 26 GFS integrity bridge'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Write bounded case and grounding record
-        shell: bash
+      - shell: bash
         run: |
-          cat > cases/26-google-gfs-inactive-chunk-integrity.md <<'CASEEOF'
-          # Google File System Inactive-Chunk Verification: Checksums, Valid Replicas, and Background Repair
-
-          ## Scope
-
-          - **Bounded system:** the Google File System (GFS) as documented by Ghemawat, Gobioff, and Leung at SOSP 2003.
-          - **Bounded mechanism:** chunk-version filtering, per-64 KB block checksums, verification before read return, idle-period scanning of inactive chunks, corruption reporting, fallback reads, and master-coordinated re-replication from a valid replica.
-          - **Primary source base:** the 2003 GFS paper as preserved by Google Research.
-          - **Research question:** when replication already exists, what additional retained relations and maintenance work are required to know that the replicas counted toward future recovery are both current enough and integrity-valid?
-
-          This is **not** a general history of GFS, Google infrastructure, distributed filesystems, checksums, replication, or scrubbing. It does not claim that Google invented checksumming, replicated storage, background verification, or the later term `scrub`.
-
-          The bounded retention claim is:
-
-          > **Replica multiplicity does not by itself establish a trustworthy repair margin. In 2003 GFS, chunk version numbers exclude stale replicas while per-replica checksums independently qualify stored data; demand-time verification and idle-period scanning can discover corruption, after which the system restores a valid replica count by cloning from another valid copy and only then deleting the corrupted embodiment.**
-
-          `integrity-qualified replica`, `repair margin`, `proactive integrity scan`, and `currentness filter` below are **project engineering terms**, not historical GFS vocabulary.
-
-          ---
-
-          ## Historical vocabulary
-
-          The 2003 GFS paper directly uses:
-
-          - `chunk`, `chunkserver`, and `chunk handle`;
-          - `replica`, `valid replica`, and `replication goal`;
-          - `chunk version number` and `stale replica`;
-          - `checksum`, `checksum block`, and `32 bit checksum`;
-          - `corruption` and `data integrity`;
-          - `clone` and `re-replicate`;
-          - `scan and verify` and `inactive chunks`;
-          - `read`, `record append`, and `mutation`.
-
-          The paper does **not** call the idle verification operation `scrubbing`. This case preserves `scan and verify` as the period phrase and uses `proactive integrity scan` only as a modern functional description.
-
-          ---
-
-          ## Historical record
-
-          ### H/P — GFS separates stale-version exclusion from corruption detection
-
-          Section 4.5 describes chunk version numbers as the mechanism used to distinguish up-to-date replicas from stale replicas. Stale replicas are not returned to clients and are treated as nonexistent for normal service pending garbage collection. The same paper later treats post-mutation corruption as a different failure class detected through checksums.
-
-          This is a direct historical reason not to collapse two questions:
-
-          ```text
-          Is this replica from the current chunk version?
-          Is this replica's stored content still integrity-valid?
-          ```
-
-          **Primary anchor:** Ghemawat, Gobioff, and Leung, 2003, §4.5 and §5.2.
-
-          ### H/P — GFS re-replicates when available replicas fall below the goal
-
-          Section 4.3 states that the master re-replicates a chunk when its number of available replicas falls below a user-specified goal. Causes include an unavailable chunkserver, a replica reported as possibly corrupted, a disabled disk, or an increased replication goal. The master chooses a destination and instructs it to copy from an existing **valid replica**.
-
-          Re-replication is resource-controlled: the master limits concurrent clone operations and chunkservers throttle clone-read bandwidth so repair traffic does not overwhelm client traffic.
-
-          **Primary anchor:** 2003 GFS paper, §4.3.
-
-          ### H/P — bytewise replica comparison is not GFS's corruption test
-
-          Section 5.2 explicitly says that comparing replicas across chunkservers would be impractical and, more importantly, that divergent replicas can be legal because GFS mutation semantics—especially atomic record append—do not guarantee identical replicas. Each chunkserver therefore verifies its own copy using checksums.
-
-          This source gives an unusually useful negative rule:
-
-          > **replica divergence is not by itself evidence of corruption.**
-
-          A retention analysis therefore cannot use `all replicas have identical bytes` as the current-integrity criterion for this bounded system.
-
-          **Primary anchor:** 2003 GFS paper, §5.2 `Data Integrity`.
-
-          ### H/P — checksum metadata is separate retained state
-
-          GFS divides a chunk into 64 KB blocks, each with a corresponding 32-bit checksum. Checksums are kept in memory and also stored persistently with logging, separately from user data.
-
-          The checksum is not payload, yet future service and repair decisions depend on the relation between a data block and its recorded checksum.
-
-          **Primary anchor:** 2003 GFS paper, §5.2.
-
-          ### H/P — reads verify before returning data
-
-          Before returning requested data, a chunkserver verifies checksums for blocks overlapping the read range. On mismatch it returns an error and reports the mismatch to the master rather than propagating the corrupt data. The requester can read another replica while the master clones the chunk from another replica.
-
-          Only **after a valid new replica is in place** does the master instruct the server holding the corrupted replica to delete it.
-
-          **Primary anchor:** 2003 GFS paper, §5.2.
-
-          ### H/P — inactive chunks can be verified before ordinary demand
-
-          The same section states that during idle periods chunkservers can `scan and verify` inactive chunks. The stated purpose is to discover corruption in chunks that are rarely read. Once corruption is found, the master can create a new uncorrupted replica and delete the bad one.
-
-          The paper gives the retention reason directly: this prevents an inactive corrupted replica from fooling the master into thinking the chunk has enough valid replicas.
-
-          **Primary anchor:** 2003 GFS paper, §5.2.
-
-          ### H/P — replication placement and repair are distributed work, not a medium property
-
-          GFS normally stores multiple replicas across chunkservers and racks. When a copy disappears or becomes unusable, the master coordinates cloning, chooses placement, and budgets repair traffic. The future recoverability of a chunk therefore depends on system state and maintenance work beyond the magnetic persistence of any one disk sector.
-
-          **Primary anchors:** 2003 GFS paper, §2.5, §4.3, and §5.1.2.
-
-          ---
-
-          ## Retained state
-
-          The bounded regime retains more than user bytes.
-
-          ### 1. Chunk payload
-
-          File data embodied in chunk replicas.
-
-          ### 2. Chunk version number
-
-          A version relation used to exclude stale replicas from current service.
-
-          ### 3. Per-block checksum
-
-          A 32-bit integrity relation for each 64 KB checksum block, stored separately from user data.
-
-          ### 4. Replica-location and replication-goal state
-
-          The master must know enough about current replica locations and intended redundancy to identify under-replicated chunks and choose repair work.
-
-          ### 5. Validity / failure observations
-
-          Reports of unavailable servers, possible corruption, disabled disks, and checksum mismatch change which embodiments can safely count toward service and repair.
-
-          ### 6. Placement and repair-control state
-
-          Clone destinations, rack distribution, prioritization, concurrency limits, and bandwidth throttles are not payload, but they govern how redundancy is restored.
-
-          ---
-
-          ## Physical / logical substrate
-
-          The bounded case spans:
-
-          - disk-resident chunk replicas on chunkservers;
-          - per-64 KB checksum metadata;
-          - chunk version metadata;
-          - master-maintained namespace/chunk/replica relations;
-          - rack-aware physical placement;
-          - network transfers used for cloning and alternate reads.
-
-          The physical survival of one chunk file is therefore only one layer of the retained object. GFS additionally needs version and checksum relations to know whether that surviving copy may answer and whether it is safe as a repair source.
-
-          ---
-
-          ## Retention mechanism
-
-          ### Ordinary service
-
-          A read resolves a chunk to candidate replicas. A chosen chunkserver verifies the relevant checksum blocks before returning data.
-
-          ### Currentness filtering
-
-          Chunk version numbers keep stale replicas out of normal service. This is logically distinct from checksum validation of a replica that has the expected version.
-
-          ### Proactive discovery
-
-          During idle periods a chunkserver can scan inactive chunks, exercising checksum relations before any application asks for those blocks.
-
-          ### Repair
-
-          Detection can cause the master to restore redundancy by cloning from an existing valid replica. The corrupted embodiment is deleted after a valid replacement exists.
-
-          ### Redundancy restoration
-
-          The system compares available/usable copies against a replication goal. A read can remain available through another replica while full intended redundancy is still being repaired.
-
-          ---
-
-          ## Addressing and access geometry
-
-          A simplified bounded recovery path is:
-
-          ```text
-          file + byte offset
-              -> chunk handle
-              -> current chunk version
-              -> candidate replica location
-              -> per-block checksum verification
-              -> return data
-                 OR reject/report corrupt replica
-              -> alternate valid replica
-              -> master-coordinated clone
-              -> restored replica count / placement
-          ```
-
-          This geometry differs from Swift Case 25's same-timestamp coded-fragment cohort. GFS is replicated, not erasure-coded in this bounded case, and its checksum relation qualifies each local copy rather than assembling complementary fragment indexes.
-
-          ---
-
-          ## Read semantics
-
-          A normal read is **integrity-qualified before return**: overlapping checksum blocks are verified first. If the local copy fails, service can continue from another replica while repair is initiated separately.
-
-          This separates three events that can occur at different times:
-
-          1. corrupt replica discovered;
-          2. client gets good data from an alternate replica;
-          3. replacement replica is cloned and intended redundancy is restored.
-
-          ---
-
-          ## Write semantics
-
-          Checksums are maintained alongside mutations. Appends can update the last partial checksum incrementally and compute checksums for new blocks. For an overwrite crossing existing checksum blocks, GFS first reads and verifies the first/last affected blocks so a partial overwrite does not hide pre-existing corruption in untouched bytes, then performs the write and records new checksums.
-
-          This case does not generalize those details into a universal checksum-update algorithm.
-
-          ---
-
-          ## Time
-
-          Relevant timescales include:
-
-          - immediate checksum verification on a demanded read;
-          - potentially long latency before a rarely read chunk would otherwise expose corruption;
-          - opportunistic idle-period verification;
-          - time between corruption discovery and completed cloning;
-          - longer placement/rebalancing intervals;
-          - version staleness after mutations or server outages.
-
-          These are not DRAM-style physical refresh deadlines. The maintenance trigger is demand-, idleness-, failure-, and policy-dependent.
-
-          ---
-
-          ## Maintenance and labor
-
-          Retention depends on background work:
-
-          - checksum creation, persistence, and verification;
-          - idle scanning of inactive chunks;
-          - corruption/error reporting;
-          - master prioritization of under-replicated chunks;
-          - network and disk work to clone a valid replica;
-          - deletion of a known-corrupt embodiment after replacement;
-          - rack-aware placement and periodic rebalancing;
-          - bandwidth/concurrency throttling so repair does not overwhelm foreground traffic.
-
-          `background` therefore does not mean `free` or `optional`.
-
-          ---
-
-          ## Failure / forgetting modes
-
-          Keep these distinct:
-
-          - stale-version replica;
-          - checksum-invalid / corrupted replica;
-          - unavailable chunkserver;
-          - disabled/failed disk;
-          - insufficient usable replica count relative to the goal;
-          - legal byte divergence among replicas under GFS mutation semantics;
-          - rarely read corruption remaining undiscovered until demand or idle scan;
-          - inability to clone because no valid repair source survives;
-          - loss/corruption of checksum or version/control metadata.
-
-          The last item is an engineering boundary: the paper establishes those metadata as operationally required, but this case does not claim one fully specified recovery procedure for every metadata-loss combination.
-
-          ---
-
-          ## Engineering reconstruction
-
-          ### E — replica multiplicity is weaker than a verified repair margin
-
-          Three files on three disks do not automatically mean three safe repair sources. GFS itself warns that an inactive corrupted replica can make the master think it has enough valid replicas until the corruption is discovered.
-
-          ### E — currentness and integrity are orthogonal filters
-
-          A version number answers whether a replica belongs to the expected logical generation. A checksum answers whether the local stored data matches its integrity metadata. One cannot substitute for the other.
-
-          ### E — discovery timing is part of retention risk
-
-          Redundant information may already be sufficient to repair a latent fault, yet the opportunity can remain unexercised until verification occurs. Idle scanning changes the interval during which hidden corruption can silently consume redundancy margin.
-
-          ### E — repair completion is later than fallback availability
-
-          A requester can use another copy after a checksum error while a master-directed clone is still pending. Thus `good read available` is not the same retained relation as `replication goal restored`.
-
-          ### E — validity is relational, not a simple byte-equality vote
-
-          Because legal GFS mutations can leave divergent replicas, current integrity is not established by comparing replicas for equality. The system relies on local checksum relations plus version/protocol state.
-
-          ---
-
-          ## Functional analogies and cross-case comparison
-
-          ### A — Case 18 ZFS scrub
-
-          Both systems demonstrate **proactive verification before ordinary demand**, but the historical mechanisms and names are not identical. ZFS documentation explicitly uses `scrub`; GFS 2003 says chunkservers can `scan and verify` inactive chunks. GFS additionally exposes distributed replica-version state and master-coordinated cloning.
-
-          ### A — Case 23 Dynamo anti-entropy
-
-          Both contain background distributed maintenance, but the target differs. Dynamo's Merkle-tree anti-entropy detects replica divergence/currentness differences. GFS explicitly says legal replicas can diverge and therefore uses per-copy checksums to detect local corruption. `anti-entropy ≠ integrity scanning`.
-
-          ### A — Case 17 RAID reconstruction
-
-          Both distinguish degraded service from restored redundancy margin, but RAID parity can synthesize a missing contribution algebraically whereas bounded GFS repair copies from another valid full replica.
-
-          ### A — Case 25 Swift mutable EC
-
-          Swift must assemble one admissible same-timestamp coded cohort before decoding. GFS instead filters full replicas through version and checksum relations. `coded-version admissibility ≠ replicated-copy integrity`.
-
-          These are functional comparisons only. They are not claims of one historical lineage.
-
-          ---
-
-          ## Prior-art and terminology boundary
-
-          Case 18 already records Schwarz et al., MASCOTS 2004, as a direct source for the term/mechanism `disk scrubbing`. The 2003 GFS paper is earlier and documents an idle-time `scan and verify` operation that is functionally scrubbing-like, but it does **not** use the word `scrub`.
-
-          Therefore this case supports only the narrower correction:
-
-          > proactive background integrity verification existed in this production distributed-file-system account by 2003, before the repository's current 2004 `disk scrubbing` terminology anchor.
-
-          It does **not** establish that GFS invented scrubbing, nor that `scan and verify` and later named scrub protocols are one identical historical mechanism.
-
-          ---
-
-          ## Philosophical interpretation
-
-          The technical fact that matters is that redundancy can physically exist while its future usefulness remains uncertain until validity is exercised. `Having several copies` is therefore weaker than `having several copies presently qualified to sustain future recovery`.
-
-          This can discipline a broader philosophy of retention: persistence is not exhausted by material multiplicity. Verification, currentness criteria, repair-source qualification, and background maintenance participate in what makes an earlier state available later.
-
-          The interpretation stops there. The paper's authors do not formulate this as a philosophical theory of memory, and no term such as `tertiary retention` or `Bestand` is attributed to them.
-
-          ---
-
-          ## Counterexamples / limits
-
-          This case does **not** establish:
-
-          - that all GFS replicas are byte-identical;
-          - that checksums prove semantic correctness or authenticity;
-          - that a 32-bit checksum detects every possible corruption;
-          - that every inactive chunk is scanned on one fixed documented schedule;
-          - that idle scanning is historically named `scrub` in GFS;
-          - that a successful alternate read means the replication goal is restored;
-          - that GFS uses erasure coding in this 2003 bounded regime;
-          - that later Google Colossus has identical integrity/repair semantics;
-          - that GFS invented replication, checksumming, proactive verification, or background repair.
-
-          ---
-
-          ## Claim ledger
-
-          | Claim | Label | Evidence / status |
-          | --- | --- | --- |
-          | GFS uses chunk version numbers to distinguish stale replicas | H/P | 2003 paper §4.5 |
-          | GFS stores per-64 KB 32-bit checksums separately from user data | H/P | 2003 paper §5.2 |
-          | read data is checksum-verified before return | H/P | 2003 paper §5.2 |
-          | checksum mismatch is reported and requester may use another replica | H/P | 2003 paper §5.2 |
-          | master clones from another replica and deletes corrupt copy after a valid replacement exists | H/P | 2003 paper §5.2 |
-          | idle chunkservers can scan and verify inactive chunks | H/P | 2003 paper §5.2 |
-          | master re-replicates when usable replicas fall below the goal and throttles clone work | H/P | 2003 paper §4.3 |
-          | legal replica divergence makes byte equality an invalid universal corruption test in GFS | H/P/E | 2003 paper §5.2 |
-          | version-currentness is distinct from integrity-validity | E | reconstruction from §§4.5, 5.2 |
-          | replica multiplicity is distinct from verified repair margin | E | reconstruction from §§4.3, 5.2 |
-          | GFS idle verification is functionally comparable to ZFS scrub but not historically the same named mechanism | A | Cases 18 and 26 |
-          | GFS integrity scanning is distinct from Dynamo anti-entropy | A | Cases 23 and 26 |
-
-          ---
-
-          ## Sources
-
-          ### Primary
-
-          Sanjay Ghemawat, Howard Gobioff, Shun-Tak Leung, **“The Google File System,”** *Proceedings of the 19th ACM Symposium on Operating Systems Principles (SOSP)*, 2003, pp. 20–43.
-
-          - Google Research publication record: <https://research.google/pubs/the-google-file-system/>
-          - Google-hosted paper: <https://storage.googleapis.com/gweb-research2023-media/pubtools/pdf/035fc972c796d33122033a0614bc94cff1527999.pdf>
-          - bounded anchors: §2.5, §4.3, §4.5, §5.1.2, especially §5.2 `Data Integrity`.
-
-          ### Repository prior-art control
-
-          - [`evidence/18-zfs-scrub-2004-2010-grounding.md`](../evidence/18-zfs-scrub-2004-2010-grounding.md) — preserves the 2004 Schwarz et al. `disk scrubbing` terminology anchor and prevents projecting that vocabulary backward into GFS.
-          - [`cases/23-amazon-dynamo-divergent-version-anti-entropy.md`](23-amazon-dynamo-divergent-version-anti-entropy.md) — background synchronization/currentness comparison.
-          - [`cases/25-openstack-swift-ec-overwrite-durable-currentness.md`](25-openstack-swift-ec-overwrite-durable-currentness.md) — mutable coded-currentness comparison.
-
-          ### Related-repository duplication check
-
-          `tmzncty/computing-archaeology` was searched for `GFS`, `Google File System`, checksum/inactive-chunk integrity, and no dedicated existing case was found during this slice. This file therefore keeps only the retention-specific argument; a broader GFS/Google-storage history should still live there if developed later.
-
-          ---
-
-          ## Status
-
-          **`grounded`**
-
-          Promotion basis:
-
-          - system-primary, period technical paper;
-          - exact section-level anchors for versioning, re-replication, checksums, read verification, and idle inactive-chunk verification;
-          - direct inspection of the Google-hosted PDF text and §5.2 facsimile page;
-          - explicit vocabulary/prior-art boundary against later `scrub` terminology;
-          - cross-repository duplication check;
-          - explicit separation of historical record, engineering reconstruction, functional analogy, and philosophical interpretation.
-          CASEEOF
-
-          cat > evidence/26-gfs-2003-integrity-scan-grounding.md <<'EVEOF'
-          # Case 26 Grounding Record — GFS Checksums, Inactive-Chunk Verification, and Repair (2003)
-
-          ## Promotion target
-
-          This record grounds [`cases/26-google-gfs-inactive-chunk-integrity.md`](../cases/26-google-gfs-inactive-chunk-integrity.md).
-
-          The bounded claim is:
-
-          > In the 2003 Google File System, replication count, version currentness, and replica integrity are separate relations. Chunkservers verify per-block checksums on reads and can scan inactive chunks during idle periods; discovered corruption can then be removed from the usable replica set and repaired by cloning from a valid replica toward the configured replication goal.
-
-          Status target: **`grounded`**.
-
-          ---
-
-          ## Evidence classes
-
-          ### P1 — system-primary publication record
-
-          Google Research's official publication page identifies:
-
-          - Sanjay Ghemawat;
-          - Howard Gobioff;
-          - Shun-Tak Leung;
-          - `The Google File System`;
-          - Proceedings of the 19th ACM Symposium on Operating Systems Principles;
-          - 2003, pp. 20–43.
-
-          URL: <https://research.google/pubs/the-google-file-system/>
-
-          ### P2 — system-primary paper / implementation account
-
-          Google-hosted SOSP 2003 PDF:
-
-          <https://storage.googleapis.com/gweb-research2023-media/pubtools/pdf/035fc972c796d33122033a0614bc94cff1527999.pdf>
-
-          The bounded claims are taken directly from §§4.3, 4.5, 5.1.2, and 5.2 rather than from later GFS retrospectives.
-
-          ### P3 — repository-controlled prior-art boundary
-
-          [`evidence/18-zfs-scrub-2004-2010-grounding.md`](18-zfs-scrub-2004-2010-grounding.md) already records Schwarz et al., MASCOTS 2004, as a direct source for `disk scrubbing` terminology/mechanism. This Case-26 record uses that existing ledger only to prevent a terminology mistake: GFS 2003 documents `scan and verify` of inactive chunks but does not call it `scrub`.
-
-          ---
-
-          ## Direct source ledger
-
-          ### 1. Official Google Research publication record
-
-          URL: <https://research.google/pubs/the-google-file-system/>
-
-          Directly established:
-
-          - authorship;
-          - SOSP venue;
-          - 2003 publication year;
-          - pp. 20–43;
-          - Google hosts the paper as part of its research publication record.
-
-          Evidence use:
-
-          - bibliographic identity and period/system-primary provenance.
-
-          ### 2. GFS §4.3 — replica creation / re-replication
-
-          Directly established:
-
-          - the master re-replicates when available replicas fall below a user-specified goal;
-          - reported possible corruption is one trigger alongside server/disk unavailability or a changed goal;
-          - re-replication priority considers distance from the goal and foreground client impact;
-          - a destination is instructed to copy from an existing `valid replica`;
-          - clone concurrency and bandwidth are limited/throttled to avoid overwhelming client traffic;
-          - placement attempts to spread replicas across racks.
-
-          Evidence use:
-
-          - `copy count ≠ restored replication goal`;
-          - repair work has a resource budget;
-          - a repair source must be considered valid, not merely physically present.
-
-          ### 3. GFS §4.5 — stale replicas and chunk version numbers
-
-          Directly established:
-
-          - chunk version numbers distinguish up-to-date replicas from stale replicas;
-          - stale replicas are not returned to clients;
-          - stale replicas are removed in regular garbage collection;
-          - client/chunkserver version checks can protect operations from stale state.
-
-          Evidence use:
-
-          - version/currentness is one retained control relation;
-          - it is not silently treated as an integrity checksum.
-
-          ### 4. GFS §5.1.2 — replication as availability/reliability policy
-
-          Directly established:
-
-          - chunk replicas are distributed across chunkservers/racks;
-          - the master clones replicas to preserve intended replication when servers go offline or checksum detection identifies corruption.
-
-          Evidence use:
-
-          - redundancy is a managed distributed relation rather than a property of one disk embodiment.
-
-          ### 5. GFS §5.2 — checksum integrity mechanism
-
-          Directly established:
-
-          - each chunkserver uses checksumming to detect stored-data corruption;
-          - replica comparison is unsuitable as the corruption detector;
-          - divergent replicas can be legal under GFS mutation semantics, particularly record append;
-          - therefore each chunkserver independently verifies its copy;
-          - a chunk is divided into 64 KB blocks with a 32-bit checksum each;
-          - checksums are kept in memory and stored persistently with logging, separate from user data.
-
-          Evidence use:
-
-          - `legal replica divergence ≠ corruption`;
-          - checksum metadata is constitutive non-payload retention state;
-          - per-copy integrity and replica-version currentness remain separate dimensions.
-
-          ### 6. GFS §5.2 — demand-time verification and repair sequence
-
-          Directly established:
-
-          - before a read returns data, the chunkserver verifies checksums overlapping the requested range;
-          - on mismatch it returns an error and reports the mismatch to the master;
-          - the requester can read from other replicas;
-          - the master clones from another replica;
-          - after a valid new replica is in place, the corrupted replica is ordered deleted.
-
-          Evidence use:
-
-          - `detection ≠ fallback availability ≠ completed durable repair`;
-          - old bad embodiment retirement is gated by replacement availability in the documented sequence.
-
-          ### 7. GFS §5.2 — idle-period verification of inactive chunks
-
-          Directly established:
-
-          - during idle periods chunkservers can `scan and verify` inactive chunks;
-          - this is intended to detect corruption in rarely read chunks;
-          - after detection the master can create a new uncorrupted replica and delete the corrupted one;
-          - this prevents an inactive corrupt replica from making the master believe it has enough valid replicas.
-
-          Evidence use:
-
-          - `redundancy present ≠ redundancy already verified`;
-          - discovery timing can determine how long hidden corruption consumes repair margin;
-          - proactive verification exists here without the historical word `scrub`.
-
-          ### 8. GFS §5.2 — checksum maintenance on writes
-
-          Directly established:
-
-          - append-heavy workloads permit incremental checksum maintenance;
-          - overwrite of an existing range requires verifying boundary checksum blocks before the write and then computing/recording new checksums;
-          - otherwise new checksums could mask old corruption in bytes not actually overwritten.
-
-          Evidence use:
-
-          - integrity metadata is maintained through mutation and cannot safely be regenerated without regard to pre-existing state.
-
-          ---
-
-          ## Facsimile / text inspection boundary
-
-          The Google-hosted 15-page PDF was opened directly. The §5.2 `Data Integrity` page was visually inspected in facsimile as well as through the text layer. The inspected page visibly contains:
-
-          - the statement that divergent replicas may be legal;
-          - 64 KB checksum blocks and 32-bit checksums;
-          - verification before read return;
-          - fallback to other replicas and cloning after mismatch;
-          - idle-period `scan and verify` of inactive chunks;
-          - the warning that an inactive corrupted replica can falsely inflate the master's apparent valid-replica count.
-
-          One attempted screenshot of the earlier re-replication page returned a transient cache miss. No layout-, typography-, or figure-specific claim depends on that failed render; §4.3 is used only through the directly inspected PDF text.
-
-          ---
-
-          ## Terminology and prior-art boundary
-
-          Historical GFS vocabulary in the source is preserved as `scan and verify`, `inactive chunks`, `checksum`, `valid replica`, `chunk version number`, `stale replica`, `clone`, and `replication goal`.
-
-          The project may call the operation **proactive integrity verification** as an engineering description, but it must not rewrite the 2003 source as though it used the later term `scrub`.
-
-          Case 18's 2004 Schwarz et al. source remains the current direct terminology anchor for `disk scrubbing`. GFS 2003 changes the novelty boundary only at the functional level:
-
-          > a production distributed filesystem account documented proactive idle-time integrity verification before that 2004 terminology anchor.
-
-          This is not an invention-priority claim.
-
-          ---
-
-          ## Cross-case controls
-
-          ### Case 18 — ZFS scrub
-
-          Shared function: proactive verification can discover latent corruption before ordinary demand.
-
-          Required distinction: ZFS names an explicit pool `scrub` and integrates filesystem checksum/self-healing semantics; GFS uses local per-copy checksums, idle chunkserver scanning, replicated fallback, and master-directed cloning. Functional similarity does not establish historical identity.
-
-          ### Case 23 — Dynamo anti-entropy
-
-          Dynamo's Merkle-tree mechanism compares replica state to discover synchronization/currentness divergence. GFS explicitly says legal replica divergence prevents equality comparison from serving as its corruption test. Therefore `anti-entropy ≠ integrity scan`.
-
-          ### Case 17 — RAID
-
-          RAID reconstructs a missing contribution from encoded surviving members/parity. GFS bounded repair clones from another valid full replica. Both can separate service continuity from restored redundancy margin, but the repair algebra is different.
-
-          ### Case 25 — Swift EC
-
-          Swift requires version-coherent coded fragment cohorts plus commit evidence. GFS requires a current-enough full replica whose local stored bytes pass checksum verification. `coded-version admissibility ≠ replicated-copy integrity`.
-
-          ---
-
-          ## Related-repository check
-
-          GitHub search of `tmzncty/computing-archaeology` for GFS / Google File System / checksum inactive-chunk integrity returned no dedicated matching case during this slice. No pre-existing technical history was copied.
-
-          If a broad history of GFS architecture, Google cluster design, or the GFS→Colossus lineage is later written, it should primarily live in `computing-archaeology`; this repository should retain the narrower currentness/integrity/repair comparison.
-
-          ---
-
-          ## Evidence maturity
-
-          **`grounded`** is justified because:
-
-          1. the central mechanism is supported by a system-primary, period technical paper;
-          2. version currentness, replication repair, checksum integrity, read-time validation, and idle verification each have section-level anchors;
-          3. the key §5.2 page was also visually inspected;
-          4. terminology is kept period-correct and bounded against the later `scrub` label;
-          5. cross-case analogies are explicit rather than treated as genealogy;
-          6. related-repository duplication was checked.
-
-          Remaining work is deliberately outside this slice: later GFS/Colossus integrity evolution, cryptographic checksums, encoded-fragment scrub protocols, large-scale audit sampling, and empirical checksum-collision/failure-rate analysis.
-          EVEOF
-
-      - name: Update navigation, roadmap, and case ledger
-        shell: bash
-        run: |
-          python - <<'PY'
+          python3 - <<'PY'
           from pathlib import Path
 
-          def insert_after_line(path, contains, new_line):
+          def insert_after(path, marker, line):
               p = Path(path)
-              lines = p.read_text().splitlines()
-              if any(new_line.split(' — ')[0] in x for x in lines):
+              lines = p.read_text(encoding='utf-8').splitlines()
+              if line in lines:
                   return
-              for i, line in enumerate(lines):
-                  if contains in line:
-                      lines.insert(i + 1, new_line)
-                      p.write_text('\n'.join(lines) + '\n')
+              for i, old in enumerate(lines):
+                  if marker in old:
+                      lines.insert(i + 1, line)
+                      p.write_text('\n'.join(lines) + '\n', encoding='utf-8')
                       return
-              raise SystemExit(f'marker not found in {path}: {contains}')
+              raise SystemExit(f'missing marker in {path}: {marker}')
 
-          insert_after_line(
-              'README.md',
-              'cases/25-openstack-swift-ec-overwrite-durable-currentness.md',
-              '- [`cases/26-google-gfs-inactive-chunk-integrity.md`](cases/26-google-gfs-inactive-chunk-integrity.md) — grounded distributed-integrity bridge: GFS separates chunk-version currentness from per-replica checksum validity, verifies before read return, scans inactive chunks during idle periods, and restores a trustworthy replica count by cloning from another valid copy.'
-          )
-          insert_after_line(
-              'README.md',
-              'evidence/25-openstack-swift-2015-2016-ec-currentness-grounding.md',
-              '- [`evidence/26-gfs-2003-integrity-scan-grounding.md`](evidence/26-gfs-2003-integrity-scan-grounding.md) — Case-26 grounding record: the 2003 GFS primary paper separates version staleness, local checksum integrity, demand-time verification, idle inactive-chunk verification, alternate-replica service, cloning repair, and restored replication margin without projecting later `scrub` vocabulary backward.'
-          )
+          insert_after('README.md', 'cases/25-openstack-swift-ec-overwrite-durable-currentness.md', '- [`cases/26-google-gfs-inactive-chunk-integrity.md`](cases/26-google-gfs-inactive-chunk-integrity.md) — grounded distributed-integrity bridge: GFS separates chunk-version currentness from per-replica checksum validity, verifies before read return, scans inactive chunks during idle periods, and restores a trustworthy replica count by cloning from another valid copy.')
+          insert_after('README.md', 'evidence/25-openstack-swift-2015-2016-ec-currentness-grounding.md', '- [`evidence/26-gfs-2003-integrity-scan-grounding.md`](evidence/26-gfs-2003-integrity-scan-grounding.md) — Case-26 grounding record: the 2003 GFS primary paper separates version staleness, local checksum integrity, demand-time verification, idle inactive-chunk verification, alternate-replica service, cloning repair, and restored replication margin without projecting later `scrub` vocabulary backward.')
 
           p = Path('ROADMAP.md')
-          road = p.read_text()
-          old_count = '**partially advanced by grounded Cases 19, 23, 24, and 25**.'
-          new_count = '**partially advanced by grounded Cases 19, 23, 24, 25, and 26**.'
-          if old_count not in road and new_count not in road:
-              raise SystemExit('distributed case-count marker not found')
-          road = road.replace(old_count, new_count, 1)
+          road = p.read_text(encoding='utf-8')
+          old = '**partially advanced by grounded Cases 19, 23, 24, and 25**.'
+          new = '**partially advanced by grounded Cases 19, 23, 24, 25, and 26**.'
+          if old in road:
+              road = road.replace(old, new, 1)
+          elif new not in road:
+              raise SystemExit('distributed case count anchor missing')
           if 'cases/26-google-gfs-inactive-chunk-integrity.md' not in road:
               marker = 'The broad item stays unchecked because other mutable-EC consistency protocols, delete/tombstone semantics, distributed integrity scrubbing, cross-region coded maintenance, later Swift durability-marker/on-disk evolution, and additional repair-bandwidth/failure models remain separate regimes.'
               if marker not in road:
-                  raise SystemExit('distributed roadmap open-gap marker not found')
+                  raise SystemExit('distributed open-gap anchor missing')
               addition = '[`cases/26-google-gfs-inactive-chunk-integrity.md`](cases/26-google-gfs-inactive-chunk-integrity.md), grounded by [`evidence/26-gfs-2003-integrity-scan-grounding.md`](evidence/26-gfs-2003-integrity-scan-grounding.md), adds distributed integrity qualification under replication: chunk-version currentness and per-copy checksum validity are separate, read-time validation can fall back before durable repair completes, and idle `scan and verify` work prevents an undiscovered corrupt replica from falsely satisfying the valid-replica goal. '
-              replacement = addition + 'The broad item stays unchecked because other mutable-EC consistency protocols, delete/tombstone semantics, coded-fragment distributed integrity scrubbing, cross-region coded maintenance, later Swift durability-marker/on-disk evolution, later GFS/Colossus integrity semantics, and additional repair-bandwidth/failure models remain separate regimes.'
-              road = road.replace(marker, replacement, 1)
+              tail = 'The broad item stays unchecked because other mutable-EC consistency protocols, delete/tombstone semantics, coded-fragment distributed integrity scrubbing, cross-region coded maintenance, later Swift durability-marker/on-disk evolution, later GFS/Colossus integrity semantics, and additional repair-bandwidth/failure models remain separate regimes.'
+              road = road.replace(marker, addition + tail, 1)
           question = '- [ ] In distributed integrity maintenance, how should `version currentness`, `checksum validity`, `demand-time versus idle-time discovery`, `fallback read availability`, `valid-replica count`, `clone repair`, and `restored replication goal` be separated?'
           if question not in road:
               lines = road.splitlines()
@@ -711,44 +58,42 @@ jobs:
                       road = '\n'.join(lines) + '\n'
                       break
               else:
-                  raise SystemExit('phase-3 proactive-integrity question marker not found')
-          p.write_text(road)
+                  raise SystemExit('phase-3 integrity question anchor missing')
+          p.write_text(road, encoding='utf-8')
 
           p = Path('CASE_INDEX.md')
-          ci = p.read_text()
-          case_row = '| [Google File System Inactive-Chunk Verification: Checksums, Valid Replicas, and Background Repair](cases/26-google-gfs-inactive-chunk-integrity.md) | **grounded** | replicated chunks + per-block persistent checksum metadata + chunk-version currentness + demand/idle verification + master-coordinated cloning toward a replication goal | separate copy count, version currentness, integrity validity, discovery timing, fallback-read availability, clone repair, and restored redundancy margin; show legal replica divergence makes byte equality an invalid corruption test | [2003 GFS integrity-scan grounding](evidence/26-gfs-2003-integrity-scan-grounding.md); later GFS/Colossus evolution, coded-fragment scrubbing, cryptographic integrity, and distributed audit protocols remain separate work |'
-          if 'cases/26-google-gfs-inactive-chunk-integrity.md' not in ci:
+          ci = p.read_text(encoding='utf-8')
+          row = '| [Google File System Inactive-Chunk Verification: Checksums, Valid Replicas, and Background Repair](cases/26-google-gfs-inactive-chunk-integrity.md) | **grounded** | replicated chunks + per-block persistent checksum metadata + chunk-version currentness + demand/idle verification + master-coordinated cloning toward a replication goal | separate copy count, version currentness, integrity validity, discovery timing, fallback-read availability, clone repair, and restored redundancy margin; show legal replica divergence makes byte equality an invalid corruption test | [2003 GFS integrity-scan grounding](evidence/26-gfs-2003-integrity-scan-grounding.md); later GFS/Colossus evolution, coded-fragment scrubbing, cryptographic integrity, and distributed audit protocols remain separate work |'
+          if row not in ci:
               lines = ci.splitlines()
               for i, line in enumerate(lines):
                   if line.startswith('| [OpenStack Swift EC Overwrites:'):
-                      lines.insert(i + 1, case_row)
+                      lines.insert(i + 1, row)
                       ci = '\n'.join(lines) + '\n'
                       break
               else:
-                  raise SystemExit('Case 25 table row marker not found')
-
-          matrix_row = '| Google File System / 2003 bounded integrity regime | replicated chunk payload + chunk version numbers + per-64 KB 32-bit checksums + current replica locations/replication goal | per-read checksum verification; idle-period scan of inactive chunks; failure/corruption-triggered master re-replication; throttled cloning from a valid replica | read verifies overlapping checksum blocks before returning data; checksum failure returns an error and requester can use another replica while repair follows | file/chunk handle resolves through replica locations; version number excludes stale replicas while checksum separately qualifies a local copy\'s integrity | physical replica membership changes as corrupt/unavailable copies are excluded, cloned, and deleted; chunk identity survives | no complete history; current chunk/version, integrity checksums, and enough valid placement/redundancy relations are retained |'
-          if '| Google File System / 2003 bounded integrity regime |' not in ci:
+                  raise SystemExit('case table anchor missing')
+          matrix = "| Google File System / 2003 bounded integrity regime | replicated chunk payload + chunk version numbers + per-64 KB 32-bit checksums + current replica locations/replication goal | per-read checksum verification; idle-period scan of inactive chunks; failure/corruption-triggered master re-replication; throttled cloning from a valid replica | read verifies overlapping checksum blocks before returning data; checksum failure returns an error and requester can use another replica while repair follows | file/chunk handle resolves through replica locations; version number excludes stale replicas while checksum separately qualifies a local copy's integrity | physical replica membership changes as corrupt/unavailable copies are excluded, cloned, and deleted; chunk identity survives | no complete history; current chunk/version, integrity checksums, and enough valid placement/redundancy relations are retained |"
+          if matrix not in ci:
               lines = ci.splitlines()
               for i, line in enumerate(lines):
                   if line.startswith('| OpenStack Swift EC / 2015–2016 bounded regime |'):
-                      lines.insert(i + 1, matrix_row)
+                      lines.insert(i + 1, matrix)
                       ci = '\n'.join(lines) + '\n'
                       break
               else:
-                  raise SystemExit('Swift matrix row marker not found')
-
+                  raise SystemExit('comparison matrix anchor missing')
           findings = [
               '236. **replica multiplicity ≠ valid replica count** — GFS explicitly warns that an inactive corrupted replica can make the master believe a chunk has enough valid replicas until the defect is discovered; redundancy quantity must therefore be qualified by replica usability.',
               '237. **version currentness ≠ integrity validity** — chunk version numbers exclude stale replicas while per-block checksums detect corruption of stored data. A copy can fail the currentness relation or the integrity relation, and one mechanism does not substitute for the other.',
               '238. **replica divergence ≠ corruption** — GFS states that divergent replicas may be legal under its mutation semantics, especially record append, so bytewise replica equality cannot serve as the universal integrity authority in this bounded system; local checksum relations do that work.',
-              '239. **demand-time verification ≠ proactive idle-time discovery** — normal reads verify the requested checksum blocks, while idle chunkservers can scan inactive chunks specifically to reveal corruption in rarely read state before ordinary demand happens to expose it.',
+              '239. **demand-time verification ≠ proactive idle-time discovery** — normal reads verify requested checksum blocks, while idle chunkservers can scan inactive chunks specifically to reveal corruption in rarely read state before ordinary demand happens to expose it.',
               '240. **defect discovery ≠ fallback service ≠ restored redundancy margin** — after a checksum failure the requester can use another replica while the master separately clones a valid replacement; good service can resume before the replication goal has been durably restored.',
               '241. **checksum metadata ≠ payload, but can be constitutive retention state** — GFS stores per-block checksums separately from user data because later verification and repair-source qualification depend on the data/checksum relation.',
               '242. **background integrity repair has a resource budget** — clone concurrency and bandwidth are explicitly limited so re-replication does not overwhelm clients, while inactive-chunk verification is scheduled during idle periods; background maintenance is real competed-for work.',
-              '243. **GFS idle verification ≠ ZFS `scrub` ≠ Dynamo anti-entropy** — the 2003 GFS paper documents `scan and verify` of inactive chunks, functionally predating this repository\'s 2004 `disk scrubbing` terminology anchor without using that word; ZFS later names pool scrubbing, while Dynamo anti-entropy targets replica divergence/currentness rather than local-copy corruption. This is a functional/prior-art boundary, not one shared historical mechanism or an invention claim.'
+              "243. **GFS idle verification ≠ ZFS `scrub` ≠ Dynamo anti-entropy** — the 2003 GFS paper documents `scan and verify` of inactive chunks, functionally predating this repository's 2004 `disk scrubbing` terminology anchor without using that word; ZFS later names pool scrubbing, while Dynamo anti-entropy targets replica divergence/currentness rather than local-copy corruption. This is a functional/prior-art boundary, not one shared historical mechanism or an invention claim."
           ]
-          if not any(line.startswith('236.') for line in ci.splitlines()):
+          if '236. **replica multiplicity ≠ valid replica count**' not in ci:
               lines = ci.splitlines()
               for i, line in enumerate(lines):
                   if line.startswith('235. '):
@@ -756,29 +101,19 @@ jobs:
                       ci = '\n'.join(lines) + '\n'
                       break
               else:
-                  raise SystemExit('finding 235 marker not found')
-
+                  raise SystemExit('finding 235 anchor missing')
           ci = ci.replace('twenty-six', 'twenty-seven')
-          old_regime = 'and Swift mutable-EC currentness bridges;'
-          new_regime = 'Swift mutable-EC currentness, and GFS distributed-integrity-verification bridges;'
-          if old_regime in ci:
-              ci = ci.replace(old_regime, new_regime, 1)
-          p.write_text(ci)
+          old_tail = 'and Swift mutable-EC currentness bridges;'
+          if old_tail in ci:
+              ci = ci.replace(old_tail, 'Swift mutable-EC currentness, and GFS distributed-integrity-verification bridges;', 1)
+          p.write_text(ci, encoding='utf-8')
           PY
-
-      - name: Validate and commit
-        shell: bash
-        run: |
           rm .github/workflows/automation-case26-gfs.yml
-          rmdir .github/workflows 2>/dev/null || true
-          rmdir .github 2>/dev/null || true
-          git diff --check
-          test -f cases/26-google-gfs-inactive-chunk-integrity.md
-          test -f evidence/26-gfs-2003-integrity-scan-grounding.md
-          grep -q 'twenty-seven bounded cases' CASE_INDEX.md
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add README.md ROADMAP.md CASE_INDEX.md .github/workflows/automation-case26-gfs.yml
+          git diff --cached --check
           grep -q 'cases/26-google-gfs-inactive-chunk-integrity.md' README.md ROADMAP.md CASE_INDEX.md
-          git config user.name 'technical-retention automation'
-          git config user.email 'actions@users.noreply.github.com'
-          git add README.md ROADMAP.md CASE_INDEX.md cases/26-google-gfs-inactive-chunk-integrity.md evidence/26-gfs-2003-integrity-scan-grounding.md .github || true
-          git commit -m 'case: ground GFS distributed integrity verification'
-          git push origin HEAD:main
+          grep -q 'After twenty-seven bounded cases' CASE_INDEX.md
+          git commit -m "docs: integrate grounded GFS integrity bridge"
+          git push
