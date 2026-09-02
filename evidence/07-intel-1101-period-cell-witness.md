@@ -10,6 +10,8 @@ The bounded question is:
 
 The answer is **yes, but only partially**. A 1973 period technical article supplies an Intel-1101-specific cell drawing and explicitly identifies the 1101 cell as static. Intel's current historical archive independently identifies the 1101 as a 1969 static random-access memory using MOS and silicon-gate technology. The Smithsonian records an Intel-supplied 1101 RAM mask dated February 1972. Together these sources make the remaining gap much more precise, but they do **not** yet justify promotion of Case 07 to `grounded`.
 
+A follow-up source-deepening note, [`07-5101-battery-backed-retention-transition.md`](07-5101-battery-backed-retention-transition.md), now covers a different Intel-specific gap: the 1975 5101L low-voltage retention specification and Intel's 1977 battery-backed system transition path. That follow-up strengthens device/system-level hold/failure analysis while leaving the 1101/2102 cell-topology gap open.
+
 ---
 
 ## Source 1 — George Sideris, *Electronics*, 26 April 1973
@@ -124,6 +126,22 @@ exact manufacturer or artifact-grounded cell mechanism
 
 The first layer is already strong. This run materially improves the second. The third remains open.
 
+### E — 5101 system-retention evidence is a separate axis
+
+The follow-up [`07-5101-battery-backed-retention-transition.md`](07-5101-battery-backed-retention-transition.md) should not be mistaken for a solution to this cell-topology problem. It instead establishes a different claim class: Intel's 5101L package specification and near-period system guidance make the transition among normal operation, deselection, battery-backed retention, and later recovery explicit.
+
+This separation is deliberate:
+
+```text
+cell topology / state-holding mechanism
+        ≠
+package retention-condition specification
+        ≠
+board-level power-transition infrastructure
+```
+
+Case 07 needs all three layers kept distinct rather than using strength in one layer to erase a gap in another.
+
 ---
 
 ## What this does **not** change
@@ -134,10 +152,10 @@ Still open before promotion:
 
 1. direct visual inspection of Vadasz–Chua–Grove 1971 pp. 43 and 47;
 2. a primary Intel schematic/design disclosure for the 1101/1101A or 2102-class static cell, **or** directly inspectable artifact evidence that can support an equivalent bounded mechanism claim;
-3. device-specific hold/failure/noise-margin evidence for one of the bounded Intel static products rather than transferring Fairchild margins;
+3. the 5101 follow-up now supplies an Intel-device-specific **system-level** power-transition/failure account, but a **cell-level** Intel-specific electrical hold/noise-margin account remains open if the case is to make transistor-level margin claims rather than only package/system retention-condition claims;
 4. cache semantics remain deferred.
 
-The Sideris figure is useful precisely because it narrows the gap without erasing it.
+The Sideris figure is useful precisely because it narrows the cell-source gap without erasing it; the 5101 follow-up is useful precisely because it deepens a different layer without being misused as a cell schematic.
 
 ---
 
@@ -153,6 +171,7 @@ The Sideris figure is useful precisely because it narrows the gap without erasin
 | the Smithsonian catalogs an Intel-supplied 1101 RAM mask dated February 1972 | H/S | supported |
 | the Smithsonian catalog record by itself reveals the bit-cell topology | X | unsupported |
 | the Intel-specific source gap has been narrowed from generic cell evidence to primary/artifact-level mechanism evidence | E | supported |
+| Intel 5101L system-level retention-transition evidence closes the 1101/2102 cell-topology gap | X | unsupported; these are different evidence layers |
 | Case 07 is ready to promote to `grounded` | X | not yet |
 
 ---
@@ -162,7 +181,9 @@ The Sideris figure is useful precisely because it narrows the gap without erasin
 1. George Sideris, **“The Intel 1103: The MOS memory that defied cores,”** *Electronics*, 26 April 1973, pp. 108–113. Period issue indexed by World Radio History and Bitsavers.
 2. Intel, **“The 1101,”** Intel historical timeline: <https://timeline.intel.com/1969/the-1101>.
 3. National Museum of American History, **“Intel 1101 Random Access Memory (RAM) Mask,”** object `1984.0124.11`: <https://americanhistory.si.edu/collections/object/nmah_713505>.
+4. Intel Corporation, *Intel Data Catalog*, 1975, 5101/5101L pp. 2-115–2-118; see the follow-up source-deepening note for the retention-transition analysis.
+5. Intel Corporation, *Memory Design Handbook*, May 1977, 5101 systems-considerations discussion; see the follow-up source-deepening note for the source-status boundary.
 
 ## Related-repository check
 
-A fresh search in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `SRAM`, `static RAM`, and `Intel 1101` still returned no dedicated case to reuse. Broad semiconductor-memory history should remain routed there; this note contributes only the retention-specific source boundary needed by Case 07.
+A fresh search in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `SRAM`, `static RAM`, `Intel 1101`, and `5101` still returned no dedicated case to reuse. Broad semiconductor-memory history should remain routed there; these notes contribute only the retention-specific source boundaries needed by Case 07.
