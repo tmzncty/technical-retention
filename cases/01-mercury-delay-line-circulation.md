@@ -2,7 +2,7 @@
 
 > **Research question:** can a state be technically retained not by remaining still, but by repeatedly leaving and returning?
 
-**Status:** first-pass case study with strong primary technical evidence and an existing engineering-history treatment in `computing-archaeology`.
+**Status:** grounded case study. Exact period-primary anchors are recorded in [`evidence/01-mercury-delay-line-1947-1958-grounding.md`](../evidence/01-mercury-delay-line-1947-1958-grounding.md); the broader engineering history remains in `computing-archaeology`.
 
 ## Scope
 
@@ -51,6 +51,8 @@ The patent also explicitly discusses:
 Source:
 
 - J. Presper Eckert Jr. and John W. Mauchly, **US2629827A, "Memory system"**, filed 1947-10-31, published 1953-02-24: <https://patents.google.com/patent/US2629827A/en>
+
+Exact anchors used by this case are recorded in the grounding file: printed cols. **3–4** for circulation / erasure / retiming / indexing and the figure map; cols. **5–6** for the insulated mercury tank and heating coil; cols. **15–18** for temperature-dependent acoustic delay and temperature/frequency correction.
 
 ### Wilkes / EDSAC
 
@@ -152,6 +154,8 @@ medium
 
 A tube of mercury without the surrounding timing and regeneration system is not a functioning memory.
 
+The 1958 **UNIVAC I Maintenance Manual** makes this machine-level boundary concrete: §§1-76 to 1-79 describe the acoustic delay, amplifier / detector / compensating-delay chassis, recirculation chassis with pulse former and retimer, and dedicated tank temperature-control channels; §§1-88 to 1-90 describe transit-time measurement driving the fine heating control. Those UNIVAC details are not projected backward onto EDSAC.
+
 ### Logical substrate
 
 Information is encoded by the presence, absence, or timing pattern of pulses in defined positions in a repeating stream.
@@ -179,6 +183,8 @@ This yields a central conclusion:
 > **The memory does not merely keep a pulse. It repeatedly manufactures a corrected successor to the pulse pattern.**
 
 The stable logical bit is produced by a sequence of physical events that are not individually stable.
+
+The grounding evidence also closes the environmental-control claim. Patent cols. 5–6 place insulation and a heating coil in the preferred tank construction; cols. 15–18 explicitly couple mercury acoustic velocity, temperature, phase coincidence, oscillator frequency, and pulse timing. The later UNIVAC I maintenance manual shows a production implementation in which a dedicated channel measures mercury transit time and adjusts tank heater power. `Environmental control is constitutive retention infrastructure` is therefore an **engineering reconstruction grounded in period mechanisms**, not a period slogan.
 
 ---
 
@@ -472,28 +478,29 @@ That article should remain the main repository for:
 
 ### Primary / contemporary
 
-1. J. Presper Eckert Jr. and John W. Mauchly, **US Patent 2,629,827, "Memory system"**, filed 31 October 1947: <https://patents.google.com/patent/US2629827A/en>
-2. Maurice V. Wilkes, **"The EDSAC (Electronic Delay Storage Automatic Calculator)"**, 1949, report DR 2/49: <https://ir.cwi.nl/pub/9563>
-3. J. P. Eckert Jr., I. L. Auerbach, R. F. Shaw, and C. B. Sheppard, **"Mercury Delay-Line Memory with Megacycle Pulse Rate,"** *Proceedings of the IRE* 37.8 (1949): 855–861. Bibliographic anchor and discussion: <https://www.computerhistory.org/storageengine/edsac-computer-employs-delay-line-storage/>
+1. J. Presper Eckert Jr. and John W. Mauchly, **US Patent 2,629,827, "Memory system"**, filed 31 October 1947: <https://patents.google.com/patent/US2629827A/en>. Exact patent anchors are listed in [`evidence/01-mercury-delay-line-1947-1958-grounding.md`](../evidence/01-mercury-delay-line-1947-1958-grounding.md).
+2. Maurice V. Wilkes, **"The EDSAC (Electronic Delay Storage Automatic Calculator)"**, 1949, report DR 2/49: <https://ir.cwi.nl/pub/9563>.
+3. Isaac L. Auerbach, J. Presper Eckert Jr., Robert F. Shaw, and C. Bradford Sheppard, **"Mercury Delay Line Memory Using a Pulse Rate of Several Megacycles,"** *Proceedings of the I.R.E.* 37.8 (August 1949): 855–861, DOI `10.1109/JRPROC.1949.229683`. Printed p. 855 was directly inspected; retrieval limits for interior pages are recorded in the grounding file.
+4. Remington Rand UNIVAC Division of Sperry Rand Corporation, **UNIVAC I Maintenance Manual for Univac I Central Computer Group**, January 1958: <https://bitsavers.computerhistory.org/pdf/univac/univac1/UNIVAC1_Maintenance_Manual_Jan58.pdf>. Relevant paragraph anchors: §§1-76–1-79 and §§1-88–1-90.
 
 ### Museum / institutional
 
-4. Computer History Museum, **"1949: EDSAC computer employs delay-line storage"**: <https://www.computerhistory.org/storageengine/edsac-computer-employs-delay-line-storage/>
-5. National Museum of American History, **SEAC mercury delay line memory**: <https://americanhistory.si.edu/collections/object/nmah_334294>
+5. Computer History Museum, **"1949: EDSAC computer employs delay-line storage"**: <https://www.computerhistory.org/storageengine/edsac-computer-employs-delay-line-storage/>.
+6. National Museum of American History, **SEAC mercury delay line memory**: <https://americanhistory.si.edu/collections/object/nmah_334294>.
 
 ### Existing repository synthesis
 
-6. `tmzncty/computing-archaeology`, **"Why Was Memory a Tube Full of Sound?"**: <https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-memory-was-a-tube-of-sound.md>
+7. `tmzncty/computing-archaeology`, **"Why Was Memory a Tube Full of Sound?"**: <https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-memory-was-a-tube-of-sound.md>.
 
 ---
 
-## Next evidence work
+## Grounding status and bounded next work
 
-Before promotion from `first-pass` to `grounded`:
+Case 01 is now **grounded**. The source-deepening record closes the original promotion blockers with exact patent locations, a directly inspected 1949 IRE page, and machine-specific manufacturer maintenance evidence for temperature-controlled mercury memory.
 
-- record exact patent column / figure locations for recirculation, retiming, erasure, and indexing claims;
-- inspect the 1949 IRE paper directly and add exact page anchors;
-- separate EDSAC's machine-specific organization from the generic Eckert–Mauchly patent architecture;
-- add a temperature-control primary source or machine manual rather than relying primarily on museum synthesis;
+Remaining work is not a grounding blocker:
+
+- obtain a conveniently renderable full facsimile of IRE pp. 856–861 if later argument needs additional figure/page anchors;
+- add EDSAC-specific temperature-control primary evidence only before making an EDSAC-specific thermal-control claim;
 - decide whether `recurrence` deserves a controlled-vocabulary entry distinct from `refresh`;
-- engage Wolfgang Ernst's storage / microtemporality texts with exact passages after the engineering case is fully anchored.
+- engage Wolfgang Ernst's storage / microtemporality texts with exact passages in a separate bounded philosophical test rather than enlarging this historical case.
