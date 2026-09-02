@@ -2,15 +2,20 @@
 
 ## Scope
 
-- **Status:** `first-pass`.
-- **Object / system:** a bounded 1968–1975 static-MOS semiconductor-memory bridge. Intel 1101/1101A, 2102, and 5101/5101L documentation supplies product/array behavior; Vadasz–Chua–Grove (1971) supplies period Intel vocabulary; NASA-CR-108672 (1970) and Fairchild US3530443A (filed 1968, published 1970) supply period cell-level witnesses without being silently relabeled as Intel product schematics.
-- **Date range:** 1968–1975 for this bounded bridge.
+- **Status:** `grounded`.
+- **Object / system:** a bounded 1968–1975 static-MOS semiconductor-memory bridge, with a 1976 publication of an Intel design filed in 1975. Intel 1101/1101A, 2102, and 5101/5101L documentation supplies product/array behavior; Vadasz–Chua–Grove (1971) supplies period Intel vocabulary; NASA-CR-108672 (1970) and Fairchild US3530443A (filed 1968, published 1970) supply independent period cell-level witnesses; Intel/Pashley US3946369A, filed in 1975, now supplies manufacturer-primary Intel static-RAM cell and array design evidence without being silently identified as a particular commercial part.
+- **Date range:** 1968–1975 for the bounded design/filing window; the Pashley filing was published in 1976.
 - **Primary question:** what changes, and what does not, when regenerative bistable retention moves from the grounded thermionic flip-flop case into monolithic semiconductor memory arrays?
-- **Why this case matters:** Case 06 established powered bistable working retention without scheduled refresh. Static semiconductor memory tests whether that distinction survives integration, array addressing, package-level read/write semantics, finite electrical margins, and low-power standby/data-retention modes.
+- **Why this case matters:** Case 06 established powered bistable working retention without scheduled refresh. Static semiconductor memory tests whether that distinction survives integration, array addressing, package-level read/write semantics, finite electrical margins, low-power standby/data-retention modes, and a manufacturer-primary Intel cell/selection/sensing design.
 
-This is **not** a general history of SRAM, bipolar scratchpad memory, cache, register files, CMOS scaling, or the modern six-transistor SRAM cell. Cache policy and hierarchy semantics remain intentionally excluded. A modern `6T SRAM` description must not be projected onto every 1968–1975 static MOS device without a cell-specific primary source.
+This is **not** a general history of SRAM, bipolar scratchpad memory, cache, register files, CMOS scaling, or the modern six-transistor CMOS SRAM cell. Cache policy and hierarchy semantics remain intentionally excluded. A modern `6T SRAM` description must not be projected onto every 1968–1975 static MOS device merely because one period depletion-load cell also contains six MOS devices.
 
-Source-deepening record: [`../evidence/07-fairchild-static-mos-regime-deepening.md`](../evidence/07-fairchild-static-mos-regime-deepening.md).
+Source-deepening / grounding records:
+
+- [`../evidence/07-fairchild-static-mos-regime-deepening.md`](../evidence/07-fairchild-static-mos-regime-deepening.md);
+- [`../evidence/07-intel-1101-period-cell-witness.md`](../evidence/07-intel-1101-period-cell-witness.md);
+- [`../evidence/07-5101-battery-backed-retention-transition.md`](../evidence/07-5101-battery-backed-retention-transition.md);
+- [`../evidence/07-intel-pashley-1975-static-ram-grounding.md`](../evidence/07-intel-pashley-1975-static-ram-grounding.md) — promotion record.
 
 ---
 
@@ -38,7 +43,7 @@ L. L. Vadasz, H. T. Chua, and A. S. Grove of Intel, writing in the May 1971 issu
 
 This source matters because the bridge from Case 06 to static semiconductor memory is not only a modern functional analogy: period engineers themselves used `flip-flop` vocabulary for MOS storage elements while separately discussing storage arrays, drive, sensing, decoding, and chip selection.
 
-**Source-status boundary:** the p. 43 / p. 47 locations and text are strongly identified, but this repository has still not obtained a reliably renderable facsimile of those exact pages for direct visual inspection. That archival task remains open.
+**Source-status boundary:** the p. 43 / p. 47 locations and text are strongly identified, but this repository has still not obtained a reliably renderable facsimile of those exact pages for direct visual inspection. That archival task remains open. It is no longer a promotion blocker because the central mechanism is independently grounded by other primary sources.
 
 **Primary anchor:** L. L. Vadasz, H. T. Chua, A. S. Grove, “Semiconductor random-access memories,” *IEEE Spectrum* 8(5), May 1971, pp. 40–48: <https://www.worldradiohistory.com/Archive-IEEE/1971/IEEE-Spectrum-1971-05.pdf>.
 
@@ -63,17 +68,27 @@ That vocabulary makes a distinction between **retaining the stored state** and *
 
 **Primary anchor:** Intel, *Data Catalog* (1975), 5101/5101L pp. 2-115–2-116.
 
+### 1975 filing / 1976 publication — Intel `static RAM`, `bistable circuits`, depletion loads
+
+Richard D. Pashley's Intel-assigned US3946369A, filed 21 April 1975 and published 23 March 1976, calls its object an **MOS static random-access memory** and describes static memories as employing **bistable circuits for memory cells**.
+
+Its preferred embodiment is an n-channel MOS `1,024 × 1` memory organized as a `32 × 32` array, operated from +5 V, with depletion-load devices and polycrystalline-silicon gates. The Figure 1 description explicitly places a bistable cell between VCC/VSS and a complementary pair of column lines and describes feedback between the two cell branches.
+
+This is the first Case-07 source that closes the broad **manufacturer-primary Intel cell-mechanism** gap. It still does not name the commercial part represented by the disclosed embodiment.
+
+**Primary anchor:** Richard D. Pashley, “High speed MOS RAM employing depletion loads,” US Patent 3,946,369, assigned to Intel Corporation, filed 21 April 1975, published 23 March 1976: <https://www.freepatentsonline.com/3946369.html>.
+
 ---
 
 ## Historical record
 
 ### H/P — period engineers explicitly described static MOS storage in flip-flop terms
 
-The Fairchild 1968-filed patent describes MOS flip-flop storage and cross-coupled stability. Vadasz, Chua, and Grove likewise use MOS flip-flop language for storage by 1971.
+The Fairchild 1968-filed patent describes MOS flip-flop storage and cross-coupled stability. Vadasz, Chua, and Grove likewise use MOS flip-flop language for storage by 1971. Pashley's Intel filing then describes an Intel static RAM in terms of bistable memory cells and explicit inter-branch feedback.
 
 The strongest historically safe claim is therefore:
 
-> by 1968–1971, period semiconductor-memory engineering sources explicitly described MOS memory cells through flip-flop / cross-coupled storage relations.
+> by 1968–1975, period semiconductor-memory engineering sources — including an Intel manufacturer-primary design — explicitly described static MOS memory cells through flip-flop / bistable / cross-coupled relations.
 
 This supports a historical vocabulary link to Case 06. It does **not** establish electrical identity between Eccles–Jordan/ENIAC circuits and any later MOS cell.
 
@@ -126,6 +141,16 @@ This establishes a bounded fact:
 
 It blocks the shortcut `static = unpowered`.
 
+### H/P — Intel US3946369A exposes one manufacturer-primary static cell and access path
+
+Pashley's 1975-filed Intel patent describes the preferred cell as a bistable circuit with two load/drive branches, feedback between the two branches, and two access transistors connecting the internal storage nodes to complementary column lines under X-line control. The array has 32 rows and 32 columns, X/Y decoding, paired column lines, column sense amplifiers, a read bus, output sensing/buffering, and write-bus connections.
+
+The patent's invention focuses heavily on the **access path** rather than on periodically restoring the cell. It limits column-line voltage swing, decouples unselected column capacitance from the read bus, senses small changes rapidly, and uses a cross-coupled address buffer so true/complement address signals switch together and do not create unintended multiple selection.
+
+This is central to the case because it directly separates two things that generic descriptions of `SRAM` often blur:
+
+> a bit may be held by a bistable cell while reliable selection and recovery still depend on distinct decoder, line-capacitance, sensing, and address-transition constraints.
+
 ### H/P — nearby Intel patent evidence can still belong to the dynamic branch
 
 Intel patent US3706079A, Vadasz and Karp, filed 16 September 1971, explicitly describes a **three-line dynamic storage cell**. It stores charge on parasitic capacitance and states that the charge is transient and must be refreshed periodically.
@@ -140,15 +165,15 @@ This patent is included as a negative control. Being an early Intel MOS-memory p
 
 ### H/P
 
-The period sources establish a static-MOS regime in which binary state can be held by DC-stable / cross-coupled flip-flop-type circuitry rather than by scheduled reconstruction of a transient storage charge.
+The period sources establish a static-MOS regime in which binary state can be held by DC-stable / cross-coupled flip-flop- or bistable-type circuitry rather than by scheduled reconstruction of a transient storage charge.
 
-The Fairchild patent and NASA report give independent period witnesses for cross-coupled static-MOS cell design; Vadasz et al. supply period flip-flop vocabulary; Intel product documentation supplies bounded package-level static behavior.
+Fairchild and NASA give independent period witnesses for cross-coupled static-MOS cell design; Vadasz et al. supply period flip-flop vocabulary; Intel product documentation supplies bounded package-level static behavior; and Pashley's 1975 filing supplies an Intel manufacturer-primary `1024 × 1` static-RAM cell/array design with explicit bistability and feedback.
 
 ### E — claim-specific reconstruction
 
 For the bounded comparison, the retained target is a **which-stable-logical-condition** relation inside a powered semiconductor cell, organized into an array whose surrounding selection and I/O circuits determine which cell can be read or changed.
 
-The repository still lacks a directly inspected transistor-level primary schematic/design source for the specific Intel 1101/1101A or 2102 bit cell. Therefore it does not assign those products a four-, six-, or other transistor topology merely because a nearby Fairchild patent, a generic NASA figure, or a later SRAM textbook shows one.
+The repository now has a directly interpretable transistor-level **Intel static-RAM design source**, but it does **not** have an explicit primary statement identifying Pashley's preferred embodiment as the commercial 1101, 1101A, 2102, or 2102A. Therefore exact product-topology claims remain open even though the broader Intel manufacturer-primary mechanism gap is closed.
 
 ---
 
@@ -156,7 +181,7 @@ The repository still lacks a directly inspected transistor-level primary schemat
 
 ### E
 
-For the bounded Intel static products, the mechanism-level relation is:
+For the bounded Intel static products, the package-level mechanism relation is:
 
 ```text
 write / state-setting action
@@ -184,6 +209,20 @@ array address
 differential read or state-switching write
 ```
 
+Pashley's Intel filing supplies a manufacturer-primary Intel implementation relation:
+
+```text
++5 V powered n-channel depletion-load cell
+        +
+feedback between two bistable branches
+        ↓
+retained static condition
+        ↓
+X-line access to complementary column pair
+        ↓
+Y selection + sense amplifier / read bus or write path
+```
+
 This resembles grounded Case 06 in one controlled respect: **holding can be regenerative/static under suitable powered conditions rather than deadline-driven refresh**.
 
 It differs in equally important ways:
@@ -192,6 +231,8 @@ It differs in equally important ways:
 - dense integration into arrays;
 - word/bit or row/column selection mediating access;
 - package-level read/write timing;
+- sense-amplifier and line-capacitance constraints;
+- address-transition integrity constraints;
 - explicitly engineered standby and retention-only supply conditions;
 - finite threshold/noise/process margins that constrain usable holding and access.
 
@@ -208,6 +249,7 @@ The comparison is functional and mechanism-level. It is not a genealogy of one u
 - 5101/5101-3 are explicitly discussed for battery operation or battery backup where non-volatility is required.
 - 5101L variants guarantee a low-voltage retention condition down to 2.0 V, not zero volts.
 - Fairchild's static-storage mode is likewise a powered bias regime, not an unpowered state.
+- Pashley's preferred Intel static-RAM embodiment explicitly uses a +5 V VCC condition.
 
 ### E
 
@@ -236,17 +278,23 @@ Future cross-case work should therefore ask at least four separate power questio
 
 Fairchild US3530443A is unusually useful because the disclosed basic cell family is discussed under several operating modes, including static storage and dynamic storage. In the dynamic mode, the patent states that all word lines must be periodically addressed and that restoring pulses are required before the natural storage interval is exceeded.
 
+Pashley's preferred embodiment is specifically an **n-channel depletion-load** static RAM cell. The presence of two loads, two drive/storage devices, and two access devices does not make it the same circuit technology as a later complementary-CMOS six-transistor cell.
+
 ### E
 
-This blocks another shortcut:
+This blocks two shortcuts:
 
 > **cross-coupled morphology alone does not settle the whole retention regime; biasing, array conditions, and maintenance protocol also matter.**
 
-For Intel 1101A/2102, the manufacturer documentation remains the authority for the package claim `fully DC stable` / no refresh. The Fairchild patent is not a substitute for an Intel cell disclosure; it is a period control showing why `static` and `dynamic` must be grounded in actual operation rather than inferred from a modern schematic stereotype.
+and
+
+> **same device count ≠ same historical SRAM topology.**
+
+For Intel 1101A/2102, the manufacturer documentation remains the authority for the package claim `fully DC stable` / no refresh. Pashley's patent grounds an Intel static-cell design class but is not silently relabeled as either product.
 
 ---
 
-## Read, write, and timing semantics
+## Read, write, timing, and recovery semantics
 
 ### H/P — read can be nondestructive
 
@@ -260,13 +308,19 @@ The 1101A sheet specifies read-cycle/access and write-cycle/write-pulse/setup/ho
 
 Fairchild's patent independently separates standby, address, read, and write bias conditions even within a static-storage regime.
 
+Pashley's Intel patent adds a different timing/reliability problem: high-capacitance column lines slow sensing, and mismatched switching of an address signal and its complement can create unintended multiple selection. The disclosed sense path and cross-coupled address buffer are designed to prevent these failures.
+
 ### E
 
 Thus:
 
 > **no periodic refresh ≠ no temporal constraints**.
 
-A state can be quiescent between useful operations while selection, sensing, output, writing, deselection, and re-entry from a retention-only condition remain explicitly timed or conditioned operations.
+And:
+
+> **retention stability ≠ access-path reliability**.
+
+A state can be quiescent between useful operations while selection, sensing, output, writing, deselection, address transitions, and re-entry from a retention-only condition remain explicitly timed or conditioned operations.
 
 This extends Case 06's distinction between **state-holding stability** and **transition/recovery dynamics** into semiconductor arrays.
 
@@ -278,7 +332,9 @@ This extends Case 06's distinction between **state-holding stability** and **tra
 
 The Fairchild patent compares operating arrangements in terms of threshold sensitivity, current transients, write speed, power dissipation, and noise immunity. It identifies one half-select arrangement as particularly sensitive to threshold variation and therefore problematic for yield, and compares alternative modes/circuits with different noise margins and power/write tradeoffs.
 
-These are **Fairchild-circuit-specific** engineering statements. They do not establish Intel 1101A/2102 noise margins.
+Pashley's Intel patent does not publish a static-noise-margin number for a named commercial part, but it does make two additional finite-margin problems explicit at the array interface: small column-line signals must be sensed reliably despite capacitance, and address-transition skew must not produce multiple selection.
+
+These are source-specific engineering statements. They should not be converted into an unsourced hold/noise-margin number for the 1101A or 2102.
 
 ### E
 
@@ -286,7 +342,11 @@ The bounded cross-case lesson is:
 
 > **bistability ≠ unlimited state-holding margin**.
 
-A cell can have two intended logical conditions while retention and successful access remain dependent on finite electrical/process margins and on the bias conditions of the surrounding array.
+and, separately:
+
+> **a valid held state does not by itself guarantee valid selection or sensing.**
+
+A cell can have two intended logical conditions while retention and successful access remain dependent on finite electrical/process margins and on the bias and timing conditions of the surrounding array.
 
 This deepens, rather than replaces, the existing distinction `cell bistability ≠ array-memory semantics`.
 
@@ -300,15 +360,19 @@ Vadasz et al. distinguish MOS storage arrays from drive, sense, and decode circu
 
 Fairchild US3530443A also places a storage cell within word/bit-line array conditions rather than treating the state-holding pair as a complete memory service in isolation.
 
+Pashley's Intel filing makes this separation even more explicit within one manufacturer-primary design: bistable cells, X/Y decoding, paired column lines, column sense amplifiers, a common read bus, output buffering, write paths, and address buffers are separate circuit roles.
+
 ### E
 
 The retained state of one cell is only one analytical layer:
 
 ```text
 cell-level stable state
-    ≠ electrical margin / bias regime
+    ≠ electrical hold margin
     ≠ array grouping
     ≠ row/column or word/bit selection
+    ≠ sensing margin
+    ≠ address-transition integrity
     ≠ package selection
     ≠ architectural role
     ≠ cache policy
@@ -322,37 +386,41 @@ A static semiconductor cell does not become a `cache` merely because later cache
 
 ### H/P
 
-The first pass now has two different kinds of bounded failure evidence:
+The grounded case now has several different bounded failure / validity boundaries:
 
 - **Intel retention-condition boundary:** 5101L retention is guaranteed only down to its specified 2.0 V floor; Intel explicitly invokes battery backup when non-volatility is desired.
 - **Fairchild electrical-margin boundary:** the 1968-filed patent discusses threshold sensitivity, current transients, noise immunity, and power/write tradeoffs across disclosed operating arrangements.
+- **Intel access/sensing boundary:** Pashley's filing treats column-line capacitance and small-signal sensing as access constraints and explicitly prevents transient multiple selection by making address/complement transitions coincident.
 
-Intentional write is also an explicit state replacement operation in both families.
+Intentional write is also an explicit state replacement operation in these static-memory families.
 
 ### E
 
 For this case, forgetting/unavailability can therefore occur through at least:
 
 1. **supply-condition loss** — the electrical condition required for retained state is no longer guaranteed;
-2. **insufficient electrical margin / disturbance** — a retained distinction can fail to remain or be recovered correctly if the actual circuit leaves its valid stability/read/write margins;
+2. **insufficient electrical hold margin / disturbance** — a retained distinction can fail to remain if the actual cell leaves its valid stability regime;
 3. **intentional rewrite** — a later write establishes another stable logical condition;
-4. **access-organization failure** — an intact cell state may become unusable if selection/I/O machinery cannot recover it.
+4. **selection failure** — an intact cell state can be addressed incorrectly or multiply selected because the decoder/address-transition relation fails;
+5. **sensing / I/O failure** — an intact selected state can fail to be recovered correctly through the column/sense/output path.
 
-The Fairchild patent closes a **generic period margin-mechanism** gap, not the roadmap's device-specific Intel hold/failure gap. Do not transfer Fairchild thresholds/noise values to Intel devices, and do not infer an Intel-2102 data-loss voltage from the 5101L specification.
+The last two are especially important because they show that **technical unavailability does not imply physical loss of the held bit**.
+
+The 5101L provides a device-specific retention-supply boundary; Fairchild supplies explicit generic period hold/noise-margin discussion; Pashley supplies Intel manufacturer-primary selection/sensing constraints. Exact 1101A/2102 static-noise-margin values remain a product-specific archival question, not a prerequisite for the bounded regime claim.
 
 ---
 
 ## Comparison with grounded Case 06 and DRAM
 
-| Dimension | Case 06: thermionic flip-flop | Case 07: bounded static MOS RAM | Grounded DRAM case |
+| Dimension | Case 06: thermionic flip-flop | Case 07: grounded static MOS RAM | Grounded DRAM case |
 | --- | --- | --- | --- |
-| state holding | regenerative bistability | DC-stable / cross-coupled flip-flop-type semiconductor state in period witnesses | decaying storage-node charge in bounded 1T1C regime |
+| state holding | regenerative bistability | DC-stable / cross-coupled bistable semiconductor state; Intel/Pashley directly grounds one manufacturer-primary static cell design | decaying storage-node charge in bounded 1T1C regime |
 | power | powered operating condition | powered; 5101L additionally separates low-V retention from ordinary operation | powered system plus scheduled regeneration |
 | periodic refresh merely to remain | not established | explicitly unnecessary in cited Intel static devices; Fairchild also distinguishes static from a separate dynamic mode | required in bounded dynamic regime |
-| read | state can condition later gates nondestructively | Intel 2102 / 5101 nondestructive read | device/regime dependent; bounded Dennard 1T1C destructive, later commercial examples can be nondestructive |
-| access organization | often directly wired into counters/controls; higher organization external | array + selection + chip enable + I/O; period Fairchild source also separates standby/address/read/write | decoded array + sense/restore infrastructure |
-| holding constraints | circuit operating condition + stability | supply + finite threshold/noise/process margin; exact values device-specific | leakage deadline + sense/restore margins |
-| timing problem | set / trigger / recovery margins | access/write/select timing + retention-to-operation recovery | access timing + refresh deadline + restore |
+| read | state can condition later gates nondestructively | Intel 2102 / 5101 nondestructive read; Pashley separately exposes sense-path constraints | device/regime dependent; bounded Dennard 1T1C destructive, later commercial examples can be nondestructive |
+| access organization | often directly wired into counters/controls; higher organization external | array + X/Y decode + access devices + complementary column lines + sensing + chip/interface control | decoded array + sense/restore infrastructure |
+| holding constraints | circuit operating condition + stability | supply + finite electrical/process margin; exact values claim/device specific | leakage deadline + sense/restore margins |
+| timing problem | set / trigger / recovery margins | access/write/select timing + address-transition integrity + sensing + retention-to-operation recovery | access timing + refresh deadline + restore |
 
 The result is not that SRAM is merely a smaller flip-flop or a faster DRAM. The cases expose different combinations of **state-holding relation, electrical support, array organization, maintenance trigger, access semantics, and engineering margin**.
 
@@ -362,7 +430,7 @@ The result is not that SRAM is merely a smaller flip-flop or a faster DRAM. The 
 
 ### A — useful bounded analogy
 
-A static MOS memory cell is **flip-flop-like in a historically supported sense**: period sources explicitly use flip-flop / cross-coupled language for MOS storage, and bounded static devices maintain state without scheduled refresh.
+A static MOS memory cell is **flip-flop-like in a historically supported sense**: period sources explicitly use flip-flop / bistable / cross-coupled language for MOS storage, and bounded static devices maintain state without scheduled refresh.
 
 ### X — do not infer
 
@@ -372,10 +440,13 @@ A static MOS memory cell is **flip-flop-like in a historically supported sense**
 - `static cell = register`;
 - `static RAM = cache`;
 - `all early static RAM = modern six-transistor CMOS SRAM`;
+- `six MOS devices = canonical CMOS 6T SRAM`;
 - `NASA 1970 generic cell = Intel 1101/2102 transistor-level schematic`;
 - `Fairchild US3530443A = Intel 1101/2102 transistor-level schematic`;
+- `Intel US3946369A = Intel 2102/2102A`;
 - `Intel US3706079A = static-cell evidence`;
-- `no refresh = maintenance-free system`.
+- `no refresh = maintenance-free system`;
+- `cell retains state = decoder/sense/interface must return it correctly`.
 
 ---
 
@@ -389,18 +460,22 @@ The case sharpens `quiescent retention`. A state may require **no recurring stat
 
 The 5101L adds a useful complication to the project's availability/addressability work without collapsing into philosophical vocabulary: a state can continue to count as retained under a lower-voltage condition while ordinary active service is not yet restored. Retention and full callability are therefore not identical operational states.
 
-This is a project interpretation, not Intel's philosophical vocabulary.
+### I — a retained state and its recoverability path can fail separately
+
+Pashley's cell/sense/decode separation makes another conceptual boundary concrete. A bit can remain in a valid bistable condition while the system's ability to designate, select, sense, or return it is compromised. This is a technical instance of the repository's broader distinction between **state survival** and **recoverability/serviceability**; it is not a claim that Intel used that philosophical vocabulary.
 
 ---
 
-## Evidence status and remaining gaps
+## Evidence status and remaining cleanup
 
-This case remains **`first-pass`**. The new Fairchild source materially deepens the mechanism, but it would be a category error to promote the Intel-bounded case by substituting a neighboring vendor's cell for the missing Intel-specific one.
+This case is now **`grounded`** for the bounded static-MOS retention comparison.
+
+The promotion does **not** mean that every product-specific topology question is solved. It means the central regime no longer depends on a neighboring vendor's cell or on package-level behavior alone: Intel/Pashley US3946369A supplies manufacturer-primary cell/array mechanism evidence, while Intel catalog documentation supplies product-level static/no-refresh/nondestructive-read and 5101L retention-mode behavior.
 
 ### Strongly supported now
 
-- period MOS flip-flop / cross-coupled storage vocabulary;
-- a 1968-filed primary cell design with explicit static-storage operation;
+- period MOS flip-flop / bistable / cross-coupled storage vocabulary;
+- a 1968-filed primary Fairchild cell design with explicit static-storage operation;
 - separation of standby/address/read/write conditions within a period static-MOS array discussion;
 - period evidence that `static` and `dynamic` can be operating regimes requiring source-controlled bias/maintenance analysis rather than merely modern topology labels;
 - Intel static-versus-dynamic product classification;
@@ -408,16 +483,21 @@ This case remains **`first-pass`**. The new Fairchild source materially deepens 
 - nondestructive read for the cited Intel devices;
 - decoded array / chip-selection organization;
 - explicit low-voltage data-retention mode and operation recovery in the 5101L family;
-- generic period evidence that threshold/noise/power margins constrain usable cell operation.
+- generic period evidence that threshold/noise/power margins constrain usable cell operation;
+- Intel manufacturer-primary `1024 × 1`, `32 × 32`, +5 V static-RAM cell/array design with explicit bistability and inter-branch feedback;
+- manufacturer-primary separation between held cell state, selection, sensing, address-transition integrity, and output path.
 
-### Promotion gaps still open
+### Archival / product-specific cleanup still open
 
 1. directly inspect a full, reliably renderable facsimile of Vadasz–Chua–Grove 1971 pp. 43 and 47 rather than treating indexed page text as visual inspection;
-2. obtain a **cell-specific primary schematic or design paper for an Intel 1101/1101A or 2102-class static bit cell**;
-3. add a source-controlled **Intel-device-specific** hold/failure/noise-margin account, rather than transferring the Fairchild circuit's margins or the 5101L low-V guarantee to another device;
-4. keep bipolar static memories and later canonical CMOS six-transistor SRAM separate unless they change the retention comparison.
+2. if an exact commercial-topology claim is later needed, obtain an explicit manufacturer-primary link from a transistor-level cell to the 1101/1101A/2102/2102A rather than identifying Pashley's design by resemblance;
+3. recover an Intel-product-specific static hold/noise-margin account beyond the already grounded 5101L retention-supply boundary and Pashley's access/sensing constraints;
+4. keep bipolar static memories and later canonical CMOS six-transistor SRAM separate unless they change the retention comparison;
+5. interpret the Smithsonian 1101 mask only if layer documentation makes that interpretation defensible.
 
-Cache remains deferred until the cell/array bridge is grounded enough that policy/hierarchy semantics cannot be mistaken for substrate properties.
+These tasks can deepen product genealogy and margins, but they no longer block the central static-MOS retention regime.
+
+Cache remains separate. It should be opened as the next bounded bridge only at the **policy / hierarchy / identity / replacement** layer, not as another cell-topology survey.
 
 ---
 
@@ -429,26 +509,27 @@ Cache remains deferred until the cell/array bridge is grounded enough that polic
 2. L. L. Vadasz, H. T. Chua, A. S. Grove, “Semiconductor random-access memories,” *IEEE Spectrum* 8(5), May 1971, pp. 40–48. Relevant indexed locations: p. 43 (MOS flip-flops / static MOS cell), p. 47 (fully decoded static MOS / Intel 1101 system example). Exact facsimile inspection remains open. <https://www.worldradiohistory.com/Archive-IEEE/1971/IEEE-Spectrum-1971-05.pdf>
 3. J. P. Green, A. L. Kosmala, F. H. Martin, *Engineering Study for a Mass Memory System for Advanced Spacecrafts*, NASA-CR-108672, 1 August 1970, Fig. 2.6.10 `Static MOS Memory Cell`. <https://ntrs.nasa.gov/citations/19710005248>
 4. Intel Corporation, *Intel Data Catalog*, 1975. RAM selection guide p. 2-2; Intel 1101A pp. 2-3–2-5; Intel 2102 p. 2-33; Intel 5101 / 5101L pp. 2-115–2-116. <https://deramp.com/downloads/mfe_archive/050-Component%20Specifications/Intel/Memory%20Components/1975_Intel_Data_Catalog.pdf>
-5. Leslie L. Vadasz, Joel A. Karp, “Three-line cell for random-access integrated circuit memory,” US Patent 3,706,079, filed 16 September 1971, published 12 December 1972. Used here as an explicit dynamic-cell negative control, not as evidence for Intel static topology. <https://patents.google.com/patent/US3706079A/en>
+5. Richard D. Pashley, “High speed MOS RAM employing depletion loads,” US Patent 3,946,369, assigned to Intel Corporation, filed 21 April 1975, published 23 March 1976. Figure 1 and its detailed description are the central manufacturer-primary cell/array anchors. <https://www.freepatentsonline.com/3946369.html>
+6. Leslie L. Vadasz, Joel A. Karp, “Three-line cell for random-access integrated circuit memory,” US Patent 3,706,079, filed 16 September 1971, published 12 December 1972. Used here as an explicit dynamic-cell negative control, not as evidence for Intel static topology. <https://patents.google.com/patent/US3706079A/en>
 
 ### Secondary / institutional context
 
-6. Computer History Museum, *The Storage Engine*, “1970: Semiconductors compete with magnetic cores.” Chronology only; central mechanism claims above do not depend on it. <https://www.computerhistory.org/storageengine/semiconductors-compete-with-magnetic-cores/>
+7. Computer History Museum, *The Storage Engine*, “1970: Semiconductors compete with magnetic cores.” Chronology only; central mechanism claims above do not depend on it. <https://www.computerhistory.org/storageengine/semiconductors-compete-with-magnetic-cores/>
 
 ---
 
-## First-pass conclusion
+## Grounded conclusion
 
-The static-semiconductor bridge survives a second, deeper test.
+The static-semiconductor bridge survives source deepening and can now be treated as grounded for its bounded retention question.
 
-What carries over from the grounded thermionic flip-flop case is **powered quiescent state holding without scheduled refresh**. The Fairchild 1968-filed disclosure now makes one period MOS implementation family more concrete: cross-coupled storage, powered standby, explicit address/read/write conditions, and finite electrical margins. Intel's product documentation then shows how static state holding is exposed as a decoded commercial memory service and, in the 5101L, how retention can have a lower supply condition than ordinary operation.
+What carries over from the grounded thermionic flip-flop case is **powered quiescent state holding without scheduled refresh**. The Fairchild 1968-filed disclosure makes one early MOS implementation family concrete; Intel's product documentation shows how static state holding is exposed as a decoded commercial memory service and, in the 5101L, how retention can have a lower supply condition than ordinary operation. Pashley's 1975 Intel filing then closes the remaining manufacturer-primary mechanism gap by placing an explicitly bistable, feedback-coupled static cell inside a 1024 × 1 decoded/sensed array.
 
-Two corrections matter most:
+Three corrections matter most:
 
 > **static retention is neither unpowered retention nor an ideal Boolean state outside electrical margins.**
 
-and
+> **cell retention, selection integrity, and sensing/recovery are distinct mechanism layers.**
 
-> **a period MOS circuit's vendor/date proximity is not enough to identify an Intel static bit-cell topology.**
+> **manufacturer-primary static-cell evidence does not license an unsourced commercial-model identity or a universal modern CMOS 6T topology.**
 
-The next promotion work therefore remains deliberately narrow: inspect Vadasz pp. 43/47 directly, locate a genuine Intel 1101/1101A/2102 static-cell design source, and ground an Intel-device-specific hold/failure margin before cache is opened.
+Case 07 is therefore closed as a bounded static-MOS substrate/array bridge. Exact 1101/2102 product genealogy and Vadasz facsimile inspection remain archival cleanup; the next new technical question should move upward to cache semantics rather than continuing to accumulate generic SRAM history.
