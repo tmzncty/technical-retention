@@ -1,0 +1,119 @@
+name: Integrate Case 35 navigation and status
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/integrate-case35.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Update README ROADMAP and CASE_INDEX
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          # README navigation
+          p = Path('README.md')
+          t = p.read_text()
+          case_anchor = "- [`cases/34-micron-temperature-dependent-dram-refresh.md`](cases/34-micron-temperature-dependent-dram-refresh.md) — grounded temperature-conditioned DRAM refresh bridge: Micron’s 1991-filed circuit maps a nearby temperature sensor through discrete comparator bands into oscillator/refresh cadence, separating the continuing refresh obligation from a worst-case fixed maintenance frequency and preserving earlier 1987-priority temperature-adaptive prior art."
+          case_new = "- [`cases/35-micron-mobile-ddr-automatic-tcsr.md`](cases/35-micron-mobile-ddr-automatic-tcsr.md) — grounded commercial Mobile DDR TCSR bridge: Micron’s Rev. J 2/08 product contract combines internally clocked self refresh with automatic on-die temperature control of the self-refresh oscillator, keeps PASR retention coverage separately controller-programmable, and distinguishes DPD array-payload loss from surviving mode-register state."
+          if case_new not in t:
+              if case_anchor not in t:
+                  raise SystemExit('README case anchor not found')
+              t = t.replace(case_anchor, case_anchor + '\n' + case_new, 1)
+          ev_anchor = "- [`evidence/34-micron-1991-temperature-dependent-refresh-grounding.md`](evidence/34-micron-1991-temperature-dependent-refresh-grounding.md) — Case-34 grounding record: Micron US5278796A anchors sensor → band classification → oscillator → refresh cadence, CardioData’s 1987-priority family blocks a Micron-first claim, and a later self-refresh patent preserves the cadence-versus-authority boundary."
+          ev_new = "- [`evidence/35-micron-2005-2008-mobile-ddr-tcsr-grounding.md`](evidence/35-micron-2005-2008-mobile-ddr-tcsr-grounding.md) — Case-35 grounding record: Micron’s Rev. J 2/08 Mobile DDR product datasheet directly anchors automatic on-die temperature control of the self-refresh oscillator, inert TCSR programming bits on this version, controller-selectable PASR coverage, internally clocked self refresh, and the DPD split between lost array payload and retained mode-register values."
+          if ev_new not in t:
+              if ev_anchor not in t:
+                  raise SystemExit('README evidence anchor not found')
+              t = t.replace(ev_anchor, ev_anchor + '\n' + ev_new, 1)
+          p.write_text(t)
+
+          # ROADMAP DRAM status
+          p = Path('ROADMAP.md')
+          t = p.read_text()
+          t = t.replace('partially advanced by five grounded bounded sub-slices', 'partially advanced by six grounded bounded sub-slices', 1)
+          old = "and [`cases/34-micron-temperature-dependent-dram-refresh.md`](cases/34-micron-temperature-dependent-dram-refresh.md), grounded by [`evidence/34-micron-1991-temperature-dependent-refresh-grounding.md`](evidence/34-micron-1991-temperature-dependent-refresh-grounding.md), adds temperature-conditioned cadence selection, guardband classification, sensor/control overhead, and an explicit prior-art boundary back to a 1987-priority ambient-temperature refresh system. The broad item stays unchecked because a true JEDEC standards chronology, exact normative DDR5 timing, broader LPDDR/per-bank refresh genealogy, standardized/commercial temperature-compensated self-refresh evolution beyond this patent slice, and modern per-row retention-aware policy remain distinct open regimes;"
+          new = "and [`cases/34-micron-temperature-dependent-dram-refresh.md`](cases/34-micron-temperature-dependent-dram-refresh.md), grounded by [`evidence/34-micron-1991-temperature-dependent-refresh-grounding.md`](evidence/34-micron-1991-temperature-dependent-refresh-grounding.md), adds temperature-conditioned cadence selection, guardband classification, sensor/control overhead, and an explicit prior-art boundary back to a 1987-priority ambient-temperature refresh system; [`cases/35-micron-mobile-ddr-automatic-tcsr.md`](cases/35-micron-mobile-ddr-automatic-tcsr.md), grounded by [`evidence/35-micron-2005-2008-mobile-ddr-tcsr-grounding.md`](evidence/35-micron-2005-2008-mobile-ddr-tcsr-grounding.md), then supplies the commercial automatic-TCSR bridge: internally clocked self refresh and on-die temperature-conditioned cadence coexist while PASR retention coverage remains separately controller-selectable, and DPD separates array-payload loss from surviving mode-register state. The broad item stays unchecked because a true JEDEC standards chronology, exact normative DDR5 timing, broader LPDDR/per-bank refresh genealogy, later LPDDR sensor/thermal-offset and fault-qualification semantics, and modern per-row retention-aware policy remain distinct open regimes;"
+          if old not in t and new not in t:
+              raise SystemExit('ROADMAP DRAM anchor not found')
+          t = t.replace(old, new, 1)
+          p.write_text(t)
+
+          # CASE_INDEX case row, matrix row, findings, counts, and summary
+          p = Path('CASE_INDEX.md')
+          t = p.read_text()
+          case_row = "| [Micron Mobile DDR Automatic TCSR: On-Die Temperature Sensing, Self-Refresh Cadence, and Selective Retention](cases/35-micron-mobile-ddr-automatic-tcsr.md) | **grounded** | volatile dynamic payload + internally clocked self refresh + on-die temperature-controlled oscillator + controller-selectable PASR coverage + DPD/control-state split | separate field presence from effective software authority; cadence from coverage; external-clock absence from maintenance absence; array-payload retention from control-state retention | [2005–2008 Mobile DDR TCSR grounding](evidence/35-micron-2005-2008-mobile-ddr-tcsr-grounding.md); full JEDEC TCSR/PASR genealogy, later LPDDR thermal/sensor semantics, and per-row retention-aware refresh remain separate work |"
+          matrix_row = "| [Micron Mobile DDR Automatic TCSR](cases/35-micron-mobile-ddr-automatic-tcsr.md) | dynamic-cell charge + on-die temperature sensor/oscillator + EMR/PASR control state | internal self-refresh cycles; temperature-conditioned cadence; selected-region maintenance | normal SDRAM reads are nondestructive at the interface level | bank/row/column access in ordinary operation; internal refresh addressing during self refresh | logical array locations remain designated, but PASR changes which locations receive retention work | No — PASR-excluded array state and DPD array payload can be intentionally lost |"
+          marker = '## Comparison matrix — provisional'
+          if marker not in t:
+              raise SystemExit('CASE_INDEX comparison marker not found')
+          before, after = t.split(marker, 1)
+          if case_row not in before:
+              lines = before.splitlines()
+              hits = [i for i, line in enumerate(lines) if 'cases/34-micron-temperature-dependent-dram-refresh.md' in line]
+              if not hits:
+                  raise SystemExit('CASE_INDEX Case 34 case-row anchor not found')
+              lines.insert(hits[-1] + 1, case_row)
+              before = '\n'.join(lines) + ('\n' if before.endswith('\n') else '')
+          if matrix_row not in after:
+              lines = after.splitlines()
+              hits = [i for i, line in enumerate(lines) if 'cases/34-micron-temperature-dependent-dram-refresh.md' in line]
+              if not hits:
+                  raise SystemExit('CASE_INDEX Case 34 matrix-row anchor not found')
+              lines.insert(hits[0] + 1, matrix_row)
+              after = '\n'.join(lines) + ('\n' if after.endswith('\n') else '')
+          t = before + marker + after
+
+          findings = """319. **register-field presence ≠ effective software authority** — the bounded Mobile DDR EMR still displays TCSR-labelled positions while the datasheet explicitly says programming them has no effect because the on-die sensor controls the self-refresh oscillator.
+320. **temperature-conditioned cadence ≠ host-visible cadence programmability** — automatic on-die sensing can select a temperature-appropriate self-refresh rate without granting the controller effective TCSR-bit authority on this product version.
+321. **external-clock absence ≠ maintenance absence** — SELF REFRESH retains array data without external clocking precisely because the SDRAM supplies internal clocking and performs its own recurring refresh cycles.
+322. **self-refresh cadence authority ≠ retained-array coverage authority** — the device automatically controls cadence from temperature while PASR separately lets the controller choose which banks/segments continue receiving refresh.
+323. **self-refresh active ≠ whole-array retained** — under PASR, only selected regions are refreshed and the datasheet explicitly warns that data in excluded regions will be lost.
+324. **array-payload retention ≠ mode/control-state retention** — Deep Power-Down stops retaining array data while the documented mode-register and extended-mode-register values survive exit from DPD; the physical mechanism for that control-state survival remains unspecified.
+325. **lower retention cost ≠ one uniform reduction of retention work** — TCSR reduces maintenance frequency, PASR reduces maintained state coverage, and DPD abandons array retention; three power-saving features change different retention relations.
+326. **automatic commercial TCSR ≠ invention priority or complete JEDEC genealogy** — Case 34 already grounds earlier temperature-adaptive prior art, while this product datasheet and Micron technical note do not replace revision-by-revision normative JEDEC evidence.
+327. **low-power mode ≠ retention mode** — ordinary power-down performs no refresh and is time-limited by the refresh period, SELF REFRESH performs internal maintenance, and DPD intentionally loses array payload; low-power states require mode-specific retention semantics.
+"""
+          prov = '\n\nThese are provisional cross-case findings'
+          if '319. **register-field presence ≠ effective software authority**' not in t:
+              if prov not in t:
+                  raise SystemExit('CASE_INDEX findings insertion marker not found')
+              t = t.replace(prov, '\n\n' + findings.rstrip() + prov, 1)
+
+          summary_anchor = "Case 34 is the grounded temperature-conditioned refresh continuation; [`evidence/34-micron-1991-temperature-dependent-refresh-grounding.md`](evidence/34-micron-1991-temperature-dependent-refresh-grounding.md) uses Micron's 1991-filed patent to anchor nearby temperature sensing, discrete guardbanded classification, oscillator-selected cadence, and sensing/control power tradeoffs, while the patent's own citation of a 1987-priority CardioData family blocks a Micron-first claim. It adds environmental condition → measurement/proxy → policy band → cadence to the DRAM retention decomposition without projecting later JEDEC TCSR, on-chip self-refresh authority, or per-row retention-aware refresh backward."
+          summary_new = "Case 35 is the grounded commercial automatic-TCSR continuation; [`evidence/35-micron-2005-2008-mobile-ddr-tcsr-grounding.md`](evidence/35-micron-2005-2008-mobile-ddr-tcsr-grounding.md) uses Micron's Rev. J 2/08 Mobile DDR product contract plus period manufacturer context to combine internally clocked SELF REFRESH with automatic on-die temperature control, while preserving independent PASR coverage authority and a DPD payload/control-state split. It closes the commercial-product bridge left by Case 34 without pretending the product datasheet is a complete JEDEC genealogy."
+          if summary_new not in t:
+              if summary_anchor not in t:
+                  raise SystemExit('CASE_INDEX Case 34 summary anchor not found')
+              t = t.replace(summary_anchor, summary_anchor + '\n' + summary_new, 1)
+
+          t = t.replace('thirty-five grounded regimes', 'thirty-six grounded regimes', 1)
+          t = t.replace('currently thirty-five;', 'currently thirty-six;', 1)
+          old_next = 'named-product adoption, JEDEC temperature-compensated-self-refresh genealogy, exact modern DDR/LPDDR semantics, sensor fault qualification, and per-row retention-aware scheduling remain separate work'
+          new_next = 'commercial automatic TCSR is now handled separately in Case 35; JEDEC temperature-compensated-self-refresh genealogy, exact later DDR/LPDDR semantics, sensor fault qualification, and per-row retention-aware scheduling remain separate work'
+          t = t.replace(old_next, new_next, 1)
+          p.write_text(t)
+          PY
+
+          git diff --check
+          git diff -- README.md ROADMAP.md CASE_INDEX.md
+      - name: Commit integrated navigation and remove transient workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/integrate-case35.yml
+          git add README.md ROADMAP.md CASE_INDEX.md
+          git commit -m "docs: integrate grounded Micron Mobile DDR TCSR bridge"
+          git push origin HEAD:main
