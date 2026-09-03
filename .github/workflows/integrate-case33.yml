@@ -1,0 +1,122 @@
+name: integrate-case33
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch navigation and ledgers
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def read(path):
+              return Path(path).read_text()
+
+          def write(path, text):
+              Path(path).write_text(text)
+
+          def insert_after_prefix(text, prefix, new_line):
+              if new_line in text:
+                  return text
+              lines = text.splitlines()
+              for i, line in enumerate(lines):
+                  if line.startswith(prefix):
+                      lines.insert(i + 1, new_line)
+                      return "\n".join(lines) + "\n"
+              raise RuntimeError(f"anchor not found: {prefix}")
+
+          # README repository map
+          p = 'README.md'
+          t = read(p)
+          t = insert_after_prefix(
+              t,
+              '- [`cases/32-intel-adr-eadr-power-fail-domain.md`]',
+              '- [`cases/33-micron-ddr5-same-bank-refresh-localization.md`](cases/33-micron-ddr5-same-bank-refresh-localization.md) — grounded DDR5 refresh-localization bridge: Micron `Same Bank Refresh` / `REFsb` targets a bank in each bank group, keeping other banks/groups available and separating the continuing refresh obligation from the spatial scope of maintenance-induced service blocking.'
+          )
+          t = insert_after_prefix(
+              t,
+              '- [`evidence/32-intel-2016-2021-adr-eadr-grounding.md`]',
+              '- [`evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md`](evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md) — Case-33 grounding record: public Micron DDR5 manufacturer material anchors `Same Bank Refresh` / `REFsb`, one-bank-per-bank-group targeting, and non-target-bank availability while preserving the boundary against a complete JEDEC timing/genealogy claim.'
+          )
+          write(p, t)
+
+          # ROADMAP DRAM bridge and cross-case question
+          p = 'ROADMAP.md'
+          t = read(p)
+          lines = t.splitlines()
+          new_dram = "- [ ] DRAM evolution and refresh machinery beyond the bounded case — **partially advanced by four grounded bounded sub-slices**: [`cases/09-dram-cbr-refresh-address-internalization.md`](cases/09-dram-cbr-refresh-address-internalization.md) separates the refresh deadline from the source of refresh-row addresses; [`cases/10-toshiba-leakage-tracked-self-refresh.md`](cases/10-toshiba-leakage-tracked-self-refresh.md) separates address internalization from schedule/trigger internalization; [`cases/21-micron-sdram-refresh-mode-handoff.md`](cases/21-micron-sdram-refresh-mode-handoff.md), grounded by [`evidence/21-micron-1999-sdram-refresh-mode-grounding.md`](evidence/21-micron-1999-sdram-refresh-mode-grounding.md), separates externally repeated `AUTO REFRESH` from CKE-entered `SELF REFRESH`, internal clocking, `tXSR` exit, and the return of externally issued refresh cadence; and [`cases/33-micron-ddr5-same-bank-refresh-localization.md`](cases/33-micron-ddr5-same-bank-refresh-localization.md), grounded by [`evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md`](evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md), adds DDR5 `Same Bank Refresh` / `REFsb` as a maintenance-target/interference geometry in which a bank in each bank group can be refreshed while other banks/groups remain available. The broad item stays unchecked because a true JEDEC standards chronology, exact normative DDR5 timing, broader LPDDR/per-bank refresh genealogy, temperature-compensated refresh, and retention-aware policy remain distinct open regimes;"
+          for i, line in enumerate(lines):
+              if line.startswith('- [ ] DRAM evolution and refresh machinery beyond the bounded case'):
+                  lines[i] = new_dram
+                  break
+          else:
+              raise RuntimeError('ROADMAP DRAM anchor not found')
+          t = "\n".join(lines) + "\n"
+          q = "- [ ] In bank-structured DRAM refresh, how should `refresh target geometry`, `bank-group correlation`, `maintenance-induced service blocking`, and `non-target-bank service availability` be separated from the continuing refresh obligation and from refresh-schedule authority?"
+          t = insert_after_prefix(t, '- [ ] In refresh-driven memory, how should `retention deadline`', q)
+          para = "The grounded DDR5 Same Bank Refresh bridge adds a spatial/interference dimension that the earlier DRAM cases intentionally left open. Micron's public DDR5 material identifies `Same Bank Refresh` / `REFsb` as targeting one bank per bank group / a bank in each BG, while later platform material explicitly ties that localization to keeping other bank groups available for processor access. Future DRAM work should therefore distinguish **refresh obligation**, **target-bank geometry**, **bank-group correlation**, **maintenance-induced service blocking**, **availability of non-target banks**, and **recurring refresh authority**. `Same Bank Refresh` remains the historical/manufacturer vocabulary here; the broader roadmap label `per-bank refresh` must not be projected onto DDR5 or earlier products without separate standards/product evidence."
+          if para not in t:
+              lns = t.splitlines()
+              for i, line in enumerate(lns):
+                  if line.startswith('The grounded Micron SDRAM refresh-mode bridge adds'):
+                      lns.insert(i + 1, '')
+                      lns.insert(i + 2, para)
+                      t = "\n".join(lns) + "\n"
+                      break
+              else:
+                  raise RuntimeError('ROADMAP Case21 paragraph anchor not found')
+          write(p, t)
+
+          # CASE_INDEX case table, comparison row, findings, counts, synthesis gate
+          p = 'CASE_INDEX.md'
+          t = read(p)
+          case_row = "| [Micron DDR5 Same-Bank Refresh: Localizing Maintenance Interference Without Removing the Refresh Obligation](cases/33-micron-ddr5-same-bank-refresh-localization.md) | **grounded** | volatile dynamic payload + DDR5 bank/bank-group organization + all-bank versus `Same Bank Refresh` / `REFsb` maintenance scope | separate the continuing refresh obligation from refresh target geometry and service-blocking scope; show non-target-bank availability can coexist with constitutive maintenance elsewhere; preserve `REFsb` rather than normalizing it into generic per-bank-refresh terminology | [2020–2023 Micron DDR5 same-bank-refresh grounding](evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md); exact JEDEC timing/revision chronology, LPDDR/per-bank genealogy, temperature-compensated refresh, and retention-aware scheduling remain separate work |"
+          t = insert_after_prefix(t, '| [Intel ADR/eADR: Moving the Power-Fail Protected Domain Upstream]', case_row)
+          matrix_row = "| Micron DDR5 Same Bank Refresh / 2020–2023 bounded regime | volatile dynamic-cell payload + bank/bank-group organization + `REFsb` target relation | periodic refresh remains constitutive; Same Bank Refresh localizes the selected maintenance scope to a bank position across bank groups while non-target banks/groups remain serviceable | ordinary access remains available to non-target banks/groups during the bounded refresh relation; refresh is therefore not one device-wide Boolean availability state | DDR5 bank/bank-group command geometry; Micron describes `REFsb` as refreshing a bank in each BG | fixed dynamic-cell locations; the changed relation is maintenance/interference scope, not logical-address relocation | no; current payload plus refresh-control relations only |"
+          t = insert_after_prefix(t, '| Intel ADR/eADR /', matrix_row)
+
+          t = t.replace('thirty-one grounded regimes now support the current relational criterion', 'thirty-four grounded regimes now support the current relational criterion')
+          t = t.replace('and NVMe 1.4 persistent-memory-region bridges; future write-back-cache', 'NVMe 1.4 persistent-memory-region, SNIA persistence-domain, Intel ADR/eADR power-fail-domain, and DDR5 same-bank-refresh-localization bridges; future write-back-cache')
+          t = t.replace('currently thirty-three;', 'currently thirty-four;')
+
+          findings = """300. **refresh obligation ≠ service-blocking scope** — Micron DDR5 `Same Bank Refresh` keeps periodic maintenance while narrowing which banked resources are unavailable together; the need to refresh does not determine the global scope of lost service.\n301. **same-bank refresh ≠ one globally singular bank** — Micron's more precise public wording is `one bank per bank group` / `a bank in each BG`; the historical name must not be flattened into a topology the manufacturer does not describe.\n302. **maintenance localization ≠ maintenance elimination** — `REFsb` is presented as an improved refresh scheme whose performance/availability benefit comes from narrower interference, not from making dynamic cells quiescent or nonvolatile.\n303. **non-target-bank availability ≠ refreshed-bank availability** — the 2023 Micron platform description explicitly keeps other bank groups accessible while refresh occurs, so `memory available during refresh` is target-relative rather than one Boolean device property.\n304. **refresh target geometry ≠ refresh schedule authority** — Case 21's normal/self-refresh handoff concerns who generates recurring maintenance work; Case 33 concerns which bank subset a refresh operation targets. Neither dimension implies the other.\n305. **bank-group concurrency ≠ a new retention substrate** — DDR5 can expose more useful ordinary-access concurrency during maintenance while retaining the same broad class of volatile dynamic state whose preservation still depends on refresh.\n306. **DDR5 `Same Bank Refresh` ≠ SDRAM `SELF REFRESH`** — Case 21 internalizes recurring clocking/refresh during a CKE-controlled retention mode; Case 33 localizes maintenance interference across bank groups. Shared `refresh` vocabulary does not establish mechanism identity.\n307. **DDR5 `Same Bank Refresh` ≠ generic historical `per-bank refresh`** — Micron's own DDR5 comparison preserves `same bank` as the refresh name, while `per bank` appears separately in command taxonomy; LPDDR or other per-bank-refresh regimes require their own period evidence.\n308. **manufacturer feature semantics ≠ complete normative timing contract** — public Micron HTML is sufficient to ground the bounded target/availability relation, but exact `REFsb` timing, sequencing, fine-granularity restrictions, and controller compliance remain open until a directly inspected normative specification or product datasheet supports them.\n\n"""
+          marker = 'These are provisional cross-case findings, not final philosophical conclusions.'
+          if '300. **refresh obligation ≠ service-blocking scope**' not in t:
+              if marker not in t:
+                  raise RuntimeError('CASE_INDEX findings marker not found')
+              t = t.replace(marker, findings + marker, 1)
+
+          gate = "- [x] at least one bank-localized refresh case where mandatory maintenance does not require all banked service resources to be unavailable together — Micron DDR5 Same Bank Refresh Case 33;"
+          t = insert_after_prefix(t, '- [x] at least one refresh-interface case where recurring maintenance responsibility moves', gate)
+
+          narrative = "Case 33 is the grounded DDR5 refresh-localization continuation; [`evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md`](evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md) uses public Micron manufacturer material to anchor `Same Bank Refresh` / `REFsb`, one-bank-per-bank-group targeting, and continued availability of non-target bank resources. It adds maintenance target/interference geometry to the earlier DRAM refresh decomposition without renaming the feature as generic `per-bank refresh` or pretending public feature pages are a complete JEDEC timing specification."
+          if narrative not in t:
+              lns = t.splitlines()
+              for i, line in enumerate(lns):
+                  if line.startswith('Case 32 is the grounded Intel platform-persistence continuation;'):
+                      lns.insert(i + 1, narrative)
+                      t = "\n".join(lns) + "\n"
+                      break
+              else:
+                  raise RuntimeError('CASE_INDEX Case32 narrative anchor not found')
+          write(p, t)
+          PY
+
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add README.md ROADMAP.md CASE_INDEX.md
+          git rm .github/workflows/integrate-case33.yml
+          git commit -m "docs: integrate grounded Micron DDR5 refresh-localization bridge"
+          git push
