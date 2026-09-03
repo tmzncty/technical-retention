@@ -1,0 +1,122 @@
+name: one-shot-case46
+
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-case46.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Integrate Case 46 navigation and status
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def insert_after_line(text, prefix, new_line):
+              lines = text.splitlines()
+              if any(new_line == line for line in lines):
+                  return text
+              for i, line in enumerate(lines):
+                  if line.startswith(prefix):
+                      lines.insert(i + 1, new_line)
+                      return "\n".join(lines) + ("\n" if text.endswith("\n") else "")
+              raise SystemExit(f"anchor not found: {prefix}")
+
+          readme = Path('README.md').read_text()
+          readme = insert_after_line(
+              readme,
+              '- [`cases/45-micron-ddr5-on-die-ecc-ecs.md`]',
+              '- [`cases/46-google-gfs-master-log-checkpoint-recovery.md`](cases/46-google-gfs-master-log-checkpoint-recovery.md) — grounded distributed-metadata-recovery bridge: GFS keeps master working metadata in memory, gates critical namespace/mapping visibility on a locally and remotely flushed operation log, bounds replay with complete checkpoints, and deliberately re-derives chunk replica locations from chunkservers rather than persisting one authoritative location table.'
+          )
+          readme = insert_after_line(
+              readme,
+              '- [`evidence/45-micron-ddr5-2021-2026-odecc-ecs-grounding.md`]',
+              '- [`evidence/46-gfs-2003-master-log-checkpoint-grounding.md`](evidence/46-gfs-2003-master-log-checkpoint-grounding.md) — Case-46 grounding record: the 2003 GFS system paper separates volatile master working state, replicated operation-log commitment, checkpoint-plus-suffix replay, incomplete-checkpoint rejection, re-derived chunk locations, shadow-master freshness, and earlier database logging/checkpoint prior art.'
+          )
+          Path('README.md').write_text(readme)
+
+          roadmap = Path('ROADMAP.md').read_text()
+          old_count = 'grounded Cases 19, 23, 24, 25, 26, 27, 28, 29, and 41'
+          new_count = 'grounded Cases 19, 23, 24, 25, 26, 27, 28, 29, 41, and 46'
+          if old_count in roadmap:
+              roadmap = roadmap.replace(old_count, new_count, 1)
+          elif new_count not in roadmap:
+              raise SystemExit('ROADMAP distributed case-list anchor not found')
+          marker = ' The broad item stays unchecked because other mutable-EC consistency protocols, cross-region coded maintenance, later Cassandra tombstone/repair semantics, later Swift durability-marker/on-disk evolution, later Swift tombstone/versioning/account-container-expiration semantics, later GFS/Colossus integrity semantics, later Ceph/BlueStore automatic-repair semantics, and additional repair-bandwidth/failure models remain separate regimes.'
+          addition = ' [`cases/46-google-gfs-master-log-checkpoint-recovery.md`](cases/46-google-gfs-master-log-checkpoint-recovery.md), grounded by [`evidence/46-gfs-2003-master-log-checkpoint-grounding.md`](evidence/46-gfs-2003-master-log-checkpoint-grounding.md), adds a distributed metadata-recovery regime inside the same 2003 GFS system without duplicating Case 26: namespace/file-to-chunk mutations cross a replicated operation-log durability boundary before visibility, complete checkpoints bound replay and make older history prefixes dispensable, while chunk replica locations are intentionally re-observed from chunkservers after restart rather than persisted as authoritative master state. This separates payload survival, namespace recoverability, replay recovery, participant re-observation, checkpoint admissibility, metadata durability, and shadow-read freshness.'
+          if addition not in roadmap:
+              if marker not in roadmap:
+                  raise SystemExit('ROADMAP insertion marker not found')
+              roadmap = roadmap.replace(marker, addition + marker, 1)
+          roadmap = roadmap.replace('later GFS/Colossus integrity semantics', 'later GFS/Colossus integrity and metadata-service evolution', 1)
+          Path('ROADMAP.md').write_text(roadmap)
+
+          ci = Path('CASE_INDEX.md').read_text()
+          case_row = '| [Google File System Master Metadata Recovery: Operation Log, Checkpoints, and Re-Derived Chunk Locations](cases/46-google-gfs-master-log-checkpoint-recovery.md) | **grounded** | volatile master working metadata + replicated persistent operation log + complete checkpoint + replay suffix + intentionally re-derived chunk locations + shadow read state | separate payload survival from namespace recoverability; replay from re-observation; historical recovery record from indefinite archive; checkpoint presence from admissibility; replicated recovery state from mutation authority | [2003 GFS master-log/checkpoint grounding](evidence/46-gfs-2003-master-log-checkpoint-grounding.md); later Colossus metadata architecture, consensus-replicated metadata services, independent fault injection, and broader database-log genealogy remain separate work |'
+          ci = insert_after_line(ci, '| [Micron DDR5 On-Die ECC and Error Check Scrub:', case_row)
+
+          comparison_row = '| Google File System master metadata recovery / 2003 bounded regime | volatile namespace/mapping/location working state + replicated operation-log history + complete checkpoint + post-checkpoint suffix + chunkserver-reported location state | metadata mutation log append/flush; remote log replication; checkpoint materialization; restart replay; chunkserver inventory re-observation; shadow-log following | namespace/mapping mutation is not exposed/committed before the corresponding log record is durable locally and remotely; shadow reads may remain available while slightly stale | namespace + file-to-chunk mapping recover through checkpoint/log replay; chunk-handle -> replica-location relation is re-derived from chunkservers instead of recovered from a persistent master location table | active master RAM embodiment may disappear and restart on another host; chunk payload locations persist/change independently and are rediscovered | bounded ordered mutation history is retained only as long as needed for recovery: a complete checkpoint can replace an older log prefix, while several older checkpoints/logs may be kept for catastrophe protection |'
+          ci = insert_after_line(ci, '| Micron DDR5 ODECC / ECS / 2021–2026 bounded commercial-device regime |', comparison_row)
+
+          findings = [
+              '435. **surviving chunks ≠ recoverable file-system namespace** — GFS explicitly warns that losing critical metadata history can lose the effective file-system state or recent operations even when chunk payloads survive; payload embodiments and the relations that name/order them are separate retention targets;',
+              '436. **volatile working embodiment ≠ volatile logical service state** — the GFS master keeps operational metadata in RAM while replicated log/checkpoint state provides a reconstruction path after process, machine, or disk loss;',
+              '437. **important metadata ≠ necessarily persistently recorded metadata** — GFS deliberately does not persist authoritative chunk-location state at the master; it asks chunkservers what they currently hold, so operational importance does not imply one retained historical representation;',
+              '438. **replay recovery ≠ re-observation recovery** — namespace/file-to-chunk relations come back from retained checkpoint/log history, whereas replica-location relations come back by observing surviving chunkservers; historical continuity and renewed observation are different recovery mechanisms;',
+              '439. **historical record ≠ indefinite history retention** — GFS calls the operation log a historical record, yet a complete checkpoint can make an older log prefix unnecessary for ordinary recovery;',
+              '440. **current-state reconstructability ≠ complete mutation-history retention** — checkpoint plus later log suffix can recover current master state after older mutation records are deleted, so present recoverability does not require preserving every transition that produced it;',
+              '441. **checkpoint presence ≠ recovery-admissible checkpoint** — GFS detects and skips incomplete checkpoints; physical persistence of checkpoint bytes is weaker than satisfying the completion condition that lets the representation count during recovery;',
+              '442. **replica multiplicity ≠ authority multiplicity** — operation logs/checkpoints are replicated across machines while one master remains mutation authority; redundant recovery state does not itself create multiple concurrent authorities;',
+              '443. **metadata durability ≠ metadata freshness** — shadow masters follow replicated log state and can serve read-only requests while lagging the primary, so availability of a durable metadata copy does not imply it is the freshest admissible mutation view;',
+              '444. **operation-log persistence boundary ≠ chunk-payload persistence boundary** — metadata visibility waits for replicated log flush even though payload chunks live on chunkservers; end-to-end file-system continuity composes distinct persistence relations rather than inheriting one medium property;',
+              '445. **GFS operation log/checkpoint ≠ database WAL, filesystem journal, or Kafka changelog** — earlier database logging/checkpoint systems establish prior art, while GFS uses its own operation-log/metadata semantics; functional recovery similarity does not establish historical or protocol identity;',
+              '446. **master-service identity ≠ one physical master host** — replicated recovery state plus external monitoring/canonical naming can restart the master on another machine, preserving the logical service relation while the active physical host changes;'
+          ]
+          if '435. **surviving chunks ≠ recoverable file-system namespace**' not in ci:
+              lines = ci.splitlines()
+              for i, line in enumerate(lines):
+                  if line.startswith('434. **commercial manufacturer feature evidence'):
+                      lines[i+1:i+1] = [''] + findings
+                      ci = '\n'.join(lines) + ('\n' if ci.endswith('\n') else '')
+                      break
+              else:
+                  raise SystemExit('finding 434 anchor not found')
+
+          ci = ci.replace('After forty-six bounded cases, **all forty-six cases are now `grounded`.**', 'After forty-seven bounded cases, **all forty-seven cases are now `grounded`.**', 1)
+          ci = ci.replace('**category coherence is provisional and evidence-gated** — forty-six grounded regimes now support', '**category coherence is provisional and evidence-gated** — forty-seven grounded regimes now support', 1)
+          old_bridge = 'and Micron DDR5 on-die-ECC/ECS corrective-scrub bridges;'
+          new_bridge = 'Micron DDR5 on-die-ECC/ECS corrective-scrub, and GFS master-log/checkpoint/re-derived-location recovery bridges;'
+          if old_bridge in ci:
+              ci = ci.replace(old_bridge, new_bridge, 1)
+          elif 'GFS master-log/checkpoint/re-derived-location recovery bridges;' not in ci:
+              raise SystemExit('finding 80 mechanism-list anchor not found')
+          ci = ci.replace('currently forty-six;', 'currently forty-seven;', 1)
+          Path('CASE_INDEX.md').write_text(ci)
+
+          # validation
+          checks = {
+              'README.md': ['cases/46-google-gfs-master-log-checkpoint-recovery.md', 'evidence/46-gfs-2003-master-log-checkpoint-grounding.md'],
+              'ROADMAP.md': ['Cases 19, 23, 24, 25, 26, 27, 28, 29, 41, and 46', 'cases/46-google-gfs-master-log-checkpoint-recovery.md'],
+              'CASE_INDEX.md': ['After forty-seven bounded cases', '435. **surviving chunks ≠ recoverable file-system namespace**', '446. **master-service identity ≠ one physical master host**', 'currently forty-seven;']
+          }
+          for p, needles in checks.items():
+              text = Path(p).read_text()
+              for needle in needles:
+                  if needle not in text:
+                      raise SystemExit(f'validation failed: {p}: {needle}')
+          PY
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add README.md ROADMAP.md CASE_INDEX.md
+          git rm .github/workflows/one-shot-case46.yml
+          git commit -m "docs: integrate grounded GFS master recovery bridge"
+          git push
