@@ -19,73 +19,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-
-          def replace_once(path, old, new):
-              p = Path(path)
-              text = p.read_text()
-              n = text.count(old)
-              if n != 1:
-                  raise SystemExit(f"{path}: expected one match, got {n}: {old[:120]!r}")
-              p.write_text(text.replace(old, new, 1))
-
-          # README: append the new bounded case after Case 37.
-          readme37 = "- [`cases/37-samsung-840-evo-old-data-performance-refresh.md`](cases/37-samsung-840-evo-old-data-performance-refresh.md) — grounded commercial-SSD old-data maintenance bridge: Samsung’s 2014 Performance Restoration path rewrote aging 840 EVO data, while its 2015 revised firmware was described by Samsung as using powered periodic refresh; the case separates logical payload survival, read-retry/calibration cost, read-path adaptation, rewrite renewal, power-off persistence, and read-performance continuity."
-          readme38 = "- [`cases/38-intel-dc-s3700-pli-self-test-validation.md`](cases/38-intel-dc-s3700-pli-self-test-validation.md) — grounded enterprise-SSD PLI-readiness bridge: Intel DC S3700/S3500 PLI exposes recurring capacitor self-test, separate power-loss-event and protection-health SMART state, administrator-visible test control, and a named hot-unplug/data-verification validation flow, keeping protection-path presence, readiness, validation, and independent compliance distinct."
-          replace_once("README.md", readme37, readme37 + "\n" + readme38)
-
-          # ROADMAP: add Case 38 to the SSD/controller bridge and narrow the remaining gap.
-          replace_once(
-              "ROADMAP.md",
-              "partially advanced by grounded Cases 15, 20, 30, 31, 32, 36, and 37",
-              "partially advanced by grounded Cases 15, 20, 30, 31, 32, 36, 37, and 38",
-          )
-          road37 = "[`cases/37-samsung-840-evo-old-data-performance-refresh.md`](cases/37-samsung-840-evo-old-data-performance-refresh.md), grounded by [`evidence/37-samsung-840-evo-2014-2015-performance-refresh-grounding.md`](evidence/37-samsung-840-evo-2014-2015-performance-refresh-grounding.md), closes one commercial-deployment gap without generalizing it: Samsung's 840 EVO moved from a 2014 rewrite-based Performance Restoration action to a 2015 firmware algorithm described by Samsung as powered periodic refresh, while independent testing separates immediate read-path improvement from later rewrite/optimization effects. It therefore separates logical payload continuity, read-retry/calibration cost, service performance, powered maintenance opportunity, and physical renewal rather than treating `nonvolatile` as a complete service contract."
-          road38 = "[`cases/38-intel-dc-s3700-pli-self-test-validation.md`](cases/38-intel-dc-s3700-pli-self-test-validation.md), grounded by [`evidence/38-intel-2014-2015-pli-health-validation-grounding.md`](evidence/38-intel-2014-2015-pli-health-validation-grounding.md), then advances the enterprise-PLP qualification axis using named Intel DC S3700/S3500 first-party evidence: PLI capacitor readiness is periodically self-tested and retained through separate event/health SMART state, while Intel documents a broader hot-unplug/data-verification validation loop. This closes the manufacturer-primary readiness/validation sub-slice without upgrading it into independent named-product fault compliance."
-          replace_once("ROADMAP.md", road37, road37 + " " + road38)
-          replace_once(
-              "ROADMAP.md",
-              "The broad item stays unchecked because controller-metadata recovery, enterprise PLP qualification, named-controller fault compliance, other platform-specific persistence-domain implementations, exact later NVMe 2.1+ terminology if evidence warrants it, and filesystem/database composition remain distinct regimes; the independent FAST '13 fault-injection evidence in Case 15 remains a contract-versus-compliance boundary rather than silently assigned to a named product.",
-              "The broad item stays unchecked because independent named-product PLP fault compliance, controller-metadata recovery under interruption, other platform-specific persistence-domain implementations, exact later NVMe 2.1+ terminology if evidence warrants it, and filesystem/database composition remain distinct regimes. Case 38 grounds a manufacturer-primary enterprise PLI health/validation sub-slice; it does not convert Intel's own 7000-repeat validation flow into independent certification, and the anonymized FAST '13 evidence in Case 15 remains a contract-versus-compliance boundary rather than silently assigned to a named product.",
-          )
-
-          # CASE_INDEX: update Case 15's stale next-work wording.
-          old15 = "| [Intel SSD 320 Power-Loss Protection: Volatile Staging, Flush, and Emergency Retention Work](cases/15-intel-ssd320-power-loss-durability.md) | **grounded** | nonvolatile NAND behind volatile controller/buffer state + explicit flush-to-media boundary + clean-shutdown handoff + power-failure-triggered emergency transfer using stored capacitor energy | separate medium nonvolatility from end-to-end durability; distinguish explicit flush, orderly shutdown, and unsafe-power-loss paths; treat stored energy as retention infrastructure rather than payload; separate interface contract from measured fault behavior | [2007–2013 SSD power-loss durability grounding](evidence/15-intel-ssd320-power-loss-durability-grounding.md); filesystem `fsync`, NVMe persistence domains, product-wide empirical PLP qualification, and generic SSD history remain separate work |"
-          new15 = "| [Intel SSD 320 Power-Loss Protection: Volatile Staging, Flush, and Emergency Retention Work](cases/15-intel-ssd320-power-loss-durability.md) | **grounded** | nonvolatile NAND behind volatile controller/buffer state + explicit flush-to-media boundary + clean-shutdown handoff + power-failure-triggered emergency transfer using stored capacitor energy | separate medium nonvolatility from end-to-end durability; distinguish explicit flush, orderly shutdown, and unsafe-power-loss paths; treat stored energy as retention infrastructure rather than payload; separate interface contract from measured fault behavior | [2007–2013 SSD power-loss durability grounding](evidence/15-intel-ssd320-power-loss-durability-grounding.md); manufacturer-primary enterprise PLI health/validation is now handled separately in Case 38, while independent named-product PLP compliance, filesystem `fsync`, NVMe persistence composition, and generic SSD history remain separate work |"
-          replace_once("CASE_INDEX.md", old15, new15)
-
-          row37 = "| [Samsung 840 EVO Old-Data Performance Restoration: Read Calibration, Rewrite Renewal, and Powered Periodic Refresh](cases/37-samsung-840-evo-old-data-performance-refresh.md) | **grounded** | commercial NAND SSD + age-sensitive read-retry/calibration + one-time rewrite restoration + powered background periodic refresh + manual optimization fallback | separate payload continuity from retrieval-performance continuity; read-path adaptation from physical rewrite; power-off physical persistence from powered maintenance opportunity | [2014–2018 Samsung 840 EVO grounding](evidence/37-samsung-840-evo-2014-2015-performance-refresh-grounding.md); Samsung-hosted 2014/2015 FAQ/Magician-4.6 archival recovery, exact internal read-reference algorithm, other TLC/3D-NAND products, and endurance/compliance measurements remain separate work |"
-          row38 = "| [Intel DC S3700/S3500 PLI Self-Test: Retention-Infrastructure Health, Fault Validation, and Readiness State](cases/38-intel-dc-s3700-pli-self-test-validation.md) | **grounded** | enterprise SSD + capacitor-backed PLI + periodic partial-discharge self-test + separate event/health SMART state + operator/SCT control + manufacturer hot-unplug validation | separate protection-path presence from current readiness; event exposure from capability health; component self-test from whole-device validation; manufacturer qualification from independent compliance | [2014–2015 Intel PLI health/validation grounding](evidence/38-intel-2014-2015-pli-health-validation-grounding.md); independent named-product fault compliance, full controller-metadata recovery, and higher-layer filesystem/database composition remain separate work |"
-          replace_once("CASE_INDEX.md", row37, row37 + "\n" + row38)
-
-          cmp37 = "| Samsung 840 EVO old-data maintenance / 2014–2015 bounded regime | NAND cell state + logical payload + FTL relation + controller read-management state + maintenance opportunity | 2014 one-time rewrite restoration; 2015 firmware described by Samsung as powered periodic refresh; supplementary Advanced Performance Optimization | old data remained a readable logical target in the bounded performance incident while aggressive read-retry/service cost could rise; independent testing saw immediate post-firmware improvement before refresh time elapsed | host logical blocks through controller/FTL; exact internal age/calibration representation is not exposed in inspected vendor sources | rewrite/migration can renew the physical embodiment while preserving logical payload; read-path adaptation can also improve service without a demonstrated rewrite | no history by default; current payload plus hidden mapping/read-management/maintenance state |"
-          cmp38 = "| Intel DC S3700/S3500 PLI health/validation / 2014–2015 bounded regime | current payload + temporary controller state + PLI capacitor energy reserve + AEh event history + AFh last-test/recency/count health state | failure-triggered capacitor-backed transfer; periodic or operator-invoked partial-discharge self-test; manufacturer hot-unplug/data-verification campaign | ordinary payload reads are not the changed relation; management reads expose protection-path health, while validation checks post-power-return stability and acknowledged-complete data | host LBAs remain separate from SMART/SCT management state; AEh/AFh make retention-infrastructure condition independently addressable | payload may move buffer→NAND during failure while health state describes a different object: the readiness of the mechanism performing that move | bounded operational history exists: unclean-shutdown count, last test, time since test, and lifetime test count; not an application history |"
-          replace_once("CASE_INDEX.md", cmp37, cmp37 + "\n" + cmp38)
-
-          replace_once("CASE_INDEX.md", "thirty-eight grounded regimes", "thirty-nine grounded regimes")
-          replace_once(
-              "CASE_INDEX.md",
-              "NAND-Flash FCR controller-maintenance, and commercial Samsung 840 EVO old-data performance-refresh bridges;",
-              "NAND-Flash FCR controller-maintenance, commercial Samsung 840 EVO old-data performance-refresh, and Intel DC S3700/S3500 PLI-health/validation bridges;",
-          )
-
-          f349 = "349. **commercial refresh deployment ≠ generic NAND requirement or academic-algorithm identity** — Case 37 grounds one Samsung 840 EVO remediation sequence; it neither proves that all TLC/NAND products require the same policy nor establishes that Samsung implemented Cai et al.'s 2012 FCR algorithms."
-          findings = """350. **retention mechanism presence ≠ retention mechanism readiness** — Intel's S3700/S3500 PLI path can be physically present while capacitor discharge capability remains a separately tested condition; AFh exists because installed protection hardware and current readiness are not the same relation.
-351. **retention infrastructure can itself require periodic verification** — Intel explicitly incorporates recurring PLI-circuitry verification over SSD life, so the apparatus intended to perform future failure-time retention work becomes a maintenance target in its own right.
-352. **future-fault protection ≠ payload-only retained state** — AEh/AFh retain unclean-shutdown count, last capacitor-test result, time since test, and lifetime test count; a durability regime can depend on operational state about the protection mechanism as well as on user payload.
-353. **power-loss event history ≠ protection-capability health** — AEh counts unclean shutdowns regardless of PLI activity, while AFh reports protection self-test health; exposure to a fault class and evidence of preparedness for that class are distinct retained relations.
-354. **self-test evidence ≠ whole-device fault validation** — the partial-discharge capacitor self-test checks one bounded readiness property, whereas Intel separately documents switch-timing, hot-unplug/reinsertion, LBA verification, acknowledged-command, and rare-operation validation.
-355. **manufacturer validation ≠ independent field compliance** — Intel's documented 7000-repeat PLI validation flow is strong first-party evidence for its validation method, but it does not identify the anonymized FAST '13 devices or independently prove every shipped S3700/S3500 fault outcome.
-356. **acknowledged-command durability target ≠ all possible in-flight or higher-layer state** — Intel names no data loss for commands acknowledged complete as a key PLI validation deliverable while separately discussing shorn/unaligned and write-order scenarios; drive validation must not be inflated into filesystem/database crash consistency.
-357. **failure endpoint ≠ failure transition envelope** — the S3700 specification conditions full enhanced-power-loss-management functionality on meeting its minimum supply fall time, so a durability contract can depend on how power disappears, not only on the eventual state `power = off`.
-358. **automatic self-test ≠ elimination of operational labor** — SMART and SCT move measurement/test machinery into the drive while exposing health, manual invocation, interval control, and replacement decisions to administrators; automation redistributes maintenance responsibility rather than making it vanish."""
-          replace_once("CASE_INDEX.md", f349 + "\n\nThese are provisional cross-case findings", f349 + "\n" + findings + "\n\nThese are provisional cross-case findings")
-          PY
-
+          python3 .github/scripts/case38_integrate.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm .github/workflows/automation-case38-pli.yml
+          git rm .github/workflows/automation-case38-pli.yml .github/scripts/case38_integrate.py
           git add README.md ROADMAP.md CASE_INDEX.md
           git diff --cached --check
           git commit -m "docs: integrate grounded Intel PLI health-validation bridge"
