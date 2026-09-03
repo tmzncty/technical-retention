@@ -1,0 +1,128 @@
+name: tmp-case44-integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tmp-case44-integration.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Integrate Case 44 navigation and findings
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def insert_after_line(text, marker, new_line):
+              lines = text.splitlines()
+              matches = [i for i, line in enumerate(lines) if marker in line]
+              if len(matches) != 1:
+                  raise SystemExit(f'marker {marker!r} matched {len(matches)} lines')
+              i = matches[0]
+              if new_line in lines:
+                  return text
+              lines.insert(i + 1, new_line)
+              return '\n'.join(lines) + ('\n' if text.endswith('\n') else '')
+
+          # README navigation
+          p = Path('README.md')
+          s = p.read_text()
+          s = insert_after_line(
+              s,
+              'cases/43-avatar-vrt-aware-dram-refresh-feedback.md',
+              '- [`cases/44-nvme13-deallocate-sanitize-forgetting.md`](cases/44-nvme13-deallocate-sanitize-forgetting.md) — grounded technical-forgetting interface bridge: NVMe 1.3 keeps advisory Dataset-Management deallocation, post-deallocate read semantics, subsystem-wide Sanitize scope, Block/Crypto/Overwrite mechanisms, and background sanitize completion/status separate; NVMe 1.2.1 bounds the earlier Format secure-erase path.'
+          )
+          s = insert_after_line(
+              s,
+              'evidence/43-avatar-2015-vrt-aware-refresh-grounding.md',
+              '- [`evidence/44-nvme12-13-deallocate-sanitize-grounding.md`](evidence/44-nvme12-13-deallocate-sanitize-grounding.md) — Case-44 grounding record: official NVMe 1.2.1/1.3 text separates advisory deallocation, permitted last-value reads, secure-erase prior semantics, sanitize mechanism classes, background operation completion, status evidence, and named-product compliance limits.'
+          )
+          p.write_text(s)
+
+          # ROADMAP status
+          p = Path('ROADMAP.md')
+          s = p.read_text()
+          old = 'Remaining cleanup: directly inspect Masuoka et al. 1987 IEDM full text if available. TRIM/deallocation/secure erase should be a separate later case.'
+          new = 'Remaining cleanup: directly inspect Masuoka et al. 1987 IEDM full text if available. Later host-interface deallocation versus media sanitization is now handled separately in grounded Case 44; ATA/SCSI genealogy, named-device sanitize compliance, and forensic validation remain distinct work.'
+          if old not in s:
+              raise SystemExit('Mapped-Flash cleanup anchor missing')
+          s = s.replace(old, new, 1)
+          old = '- [ ] SSD FTL/controller-mediated persistence beyond the bounded Ban/1990s case — **partially advanced by grounded Cases 15, 20, 30, 31, 32, 36, 37, 38, and 39**.'
+          new = '- [ ] SSD FTL/controller-mediated persistence beyond the bounded Ban/1990s case — **partially advanced by grounded Cases 15, 20, 30, 31, 32, 36, 37, 38, 39, and 44**.'
+          if old not in s:
+              raise SystemExit('SSD roadmap count anchor missing')
+          s = s.replace(old, new, 1)
+          anchor = ' The broad item stays unchecked because independent named-product PLP fault compliance, commercial/named-controller metadata recovery under interruption, other platform-specific persistence-domain implementations, exact later NVMe 2.1+ terminology if evidence warrants it, and filesystem/database composition remain distinct regimes.'
+          addition = ' [`cases/44-nvme13-deallocate-sanitize-forgetting.md`](cases/44-nvme13-deallocate-sanitize-forgetting.md), grounded by [`evidence/44-nvme12-13-deallocate-sanitize-grounding.md`](evidence/44-nvme12-13-deallocate-sanitize-grounding.md), adds the technical-forgetting interface boundary: Revision 1.3 Dataset Management is advisory and a deallocated LBA may still return its last-written value, while Sanitize targets caches plus unallocated/deallocated user-data-capable locations through distinct Block Erase, Crypto Erase, or Overwrite actions and reports operation completion separately from command completion. Revision 1.2.1 Format secure erase prevents a false `1.3 invented secure erase` chronology.'
+          if anchor not in s:
+              raise SystemExit('SSD roadmap broad-item anchor missing')
+          s = s.replace(anchor, addition + anchor, 1)
+          p.write_text(s)
+
+          # CASE_INDEX case row, comparison row, counts, findings
+          p = Path('CASE_INDEX.md')
+          s = p.read_text()
+          case_row = '| [NVM Express 1.3 Deallocate and Sanitize: Logical Forgetting, Media Sanitization, and Completion State](cases/44-nvme13-deallocate-sanitize-forgetting.md) | **grounded** | advisory logical-range deallocation + controller allocation/currentness state + subsystem-wide sanitize operation + Block/Crypto/Overwrite mechanisms + retained progress/result status | separate logical deallocation from media erasure; sanitize scope from allocated-LBA scope; request completion from operation completion; and forgotten payload from retained forgetting-status evidence | [2016–2017 NVMe grounding](evidence/44-nvme12-13-deallocate-sanitize-grounding.md); ATA/SCSI genealogy, named-controller/device sanitize compliance, hidden-media forensic validation, and filesystem/database deletion composition remain separate work |'
+          s = insert_after_line(s, 'cases/43-avatar-vrt-aware-dram-refresh-feedback.md', case_row)
+          comp_row = '| NVMe 1.3 Deallocate / Sanitize / 2016–2017 bounded interface regime | logical LBA designation + allocation/deallocation state + user data across allocated/deallocated/cache locations + sanitize progress/result state | Deallocate is advisory; reclamation is implementation policy; Sanitize performs background Block Erase, Crypto Erase, or Overwrite and retains operation status across the transition | deallocated reads may return zeroes, `FFh`, last-written data, or an enabled deallocation error; pre-successful-sanitize data is not admissibly accessible | namespace/LBA ranges for Deallocate; Sanitize scopes over all subsystem locations able to contain user data rather than only currently allocated LBAs | deallocation can end one logical retention obligation without proving physical embodiment destruction; sanitization can alter media or key relations across hidden/deallocated locations | no application history by default; sanitize progress/result is second-order control state proving whether the forgetting operation is still in progress or has completed |'
+          s = insert_after_line(s, '| AVATAR VRT-aware DRAM refresh / 2015 bounded research regime |', comp_row)
+          s = s.replace('After forty-four bounded cases, **all forty-four cases are now `grounded`.**', 'After forty-five bounded cases, **all forty-five cases are now `grounded`.**', 1)
+          s = s.replace('forty-four grounded regimes now support the current relational criterion', 'forty-five grounded regimes now support the current relational criterion', 1)
+          old = 'Kafka log-compaction/delete-marker-retention, and AVATAR runtime-VRT-aware ECC/scrub refresh-feedback bridges;'
+          new = 'Kafka log-compaction/delete-marker-retention, AVATAR runtime-VRT-aware ECC/scrub refresh-feedback, and NVMe 1.3 deallocate/sanitize-forgetting bridges;'
+          if old not in s:
+              raise SystemExit('finding 80 mechanism inventory anchor missing')
+          s = s.replace(old, new, 1)
+          findings = [
+              '412. **logical deallocation ≠ physical/media erasure** — NVMe 1.3 permits a deallocated logical block to return the last data written, so ending the allocation obligation does not establish that the prior medium embodiment was erased, overwritten, or cryptographically severed;',
+              '413. **host no-longer-needs hint ≠ executed reclamation** — Dataset Management is explicitly advisory and a compliant controller may choose to take no action; host intent and controller/media work are separate relations;',
+              '414. **deallocated logical block ≠ pre-sanitize unreadability** — the deallocated-read contract allows zeroes, `FFh`, or the last-written value, whereas a successful sanitize separately prohibits access to data and metadata written before that operation;',
+              '415. **sanitization target ≠ currently allocated LBA set** — Revision 1.3 scopes sanitize over all subsystem locations able to contain user data, explicitly including caches and unallocated/deallocated media areas;',
+              '416. **sanitize command completion ≠ sanitize-operation completion** — Block Erase, Crypto Erase, and Overwrite execute in the background; successful command completion establishes that the operation started, while completion is represented later through sanitize status/event state;',
+              '417. **forgetting payload can require retaining forgetting-status state** — Sanitize Status and `Global Data Erased` retain progress/result evidence even though the user-data objective is removal of prior accessibility; the control state and forgotten payload have different retention roles;',
+              '418. **Crypto Erase ≠ Block Erase ≠ Overwrite** — one high-level sanitization objective can be implemented by changing encryption-key relations, applying a media-specific low-level erase, or writing replacement patterns; technical forgetting has no single physical act;',
+              '419. **sanitize persistence across reset ≠ ordinary I/O availability** — Revision 1.3 makes a started sanitize non-abortable and continuing across controller reset/power cycles while ordinary commands are restricted; continuation of forgetting work and continuation of normal service are separate targets;',
+              '420. **stronger forgetting work ≠ zero material cost** — Revision 1.3 warns that multiple-pass overwrite on NAND may adversely affect endurance, so sanitization work can consume the same finite substrate lifetime that retention/update work depends on;',
+              '421. **logical deletion/currentness evidence ≠ media sanitization evidence** — Cassandra/Swift/Kafka negative-state mechanisms decide which application/distributed value counts as current, while NVMe Sanitize targets prior user-data accessibility across the storage subsystem; neither proves the other;',
+              '422. **NVMe 1.3 Sanitize ≠ invention of secure erase** — Revision 1.2.1 already provides User Data Erase and Cryptographic Erase through Format NVM, so the 1.3 contribution must be bounded to the dedicated sanitize command/operation/status model;',
+              '423. **standard sanitization contract ≠ named-product forensic compliance** — the ratified specification grounds required interface semantics for supported features, not an independent audit that every hidden physical embodiment in a particular SSD has been purged under every fault or adversary model.'
+          ]
+          lines = s.splitlines()
+          idxs = [i for i, line in enumerate(lines) if line.startswith('411. **retention-policy state can itself require revalidation**')]
+          if len(idxs) != 1:
+              raise SystemExit(f'finding 411 anchor matched {len(idxs)}')
+          i = idxs[0]
+          if not any(line.startswith('412. **logical deallocation') for line in lines):
+              lines[i+1:i+1] = [''] + findings
+          s = '\n'.join(lines) + ('\n' if p.read_text().endswith('\n') else '')
+          s = s.replace('currently forty-four;', 'currently forty-five;', 1)
+          p.write_text(s)
+
+          # Validate navigation/status, then remove this one-shot runner.
+          checks = {
+              'README.md': ['cases/44-nvme13-deallocate-sanitize-forgetting.md', 'evidence/44-nvme12-13-deallocate-sanitize-grounding.md'],
+              'ROADMAP.md': ['Cases 15, 20, 30, 31, 32, 36, 37, 38, 39, and 44', 'cases/44-nvme13-deallocate-sanitize-forgetting.md'],
+              'CASE_INDEX.md': ['cases/44-nvme13-deallocate-sanitize-forgetting.md', 'After forty-five bounded cases', '423. **standard sanitization contract ≠ named-product forensic compliance**', 'currently forty-five;'],
+          }
+          for fn, needles in checks.items():
+              txt = Path(fn).read_text()
+              for needle in needles:
+                  if needle not in txt:
+                      raise SystemExit(f'{fn}: missing {needle!r}')
+
+          Path('.github/workflows/tmp-case44-integration.yml').unlink()
+          PY
+          git config user.name 'technical-retention automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md ROADMAP.md CASE_INDEX.md .github/workflows/tmp-case44-integration.yml
+          git commit -m 'docs: integrate grounded NVMe deallocate and sanitize bridge'
+          git push origin main
