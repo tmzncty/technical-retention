@@ -1,0 +1,25 @@
+name: fix-case52-count
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/fix-case52-count.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    if: github.repository == 'tmzncty/technical-retention'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Reconcile Case 52 count
+        run: python tools/fix_case52_count.py
