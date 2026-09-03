@@ -1,0 +1,40 @@
+name: Fix Case 48 Matrix
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/fix-case48-matrix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Normalize table boundary
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('CASE_INDEX.md')
+          text = p.read_text()
+          lead = '| Cassandra incremental repair state / 2.1–4.0 bounded regime |'
+          text = text.replace('\n\n' + lead, '\n' + lead, 1)
+          tail = 'bounded maintenance history is intentionally retained because prior successful repair changes future repair eligibility; it is not a complete mutation or integrity history |\n---\n'
+          fixed = 'bounded maintenance history is intentionally retained because prior successful repair changes future repair eligibility; it is not a complete mutation or integrity history |\n\n---\n'
+          if tail not in text:
+              raise SystemExit('Case 48 matrix tail not found')
+          text = text.replace(tail, fixed, 1)
+          p.write_text(text)
+          PY
+          rm .github/workflows/fix-case48-matrix.yml
+          git config user.name 'technical-retention automation'
+          git config user.email 'technical-retention@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'docs: normalize Case 48 comparison matrix'
+          git push
