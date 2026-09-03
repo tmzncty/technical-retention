@@ -1,0 +1,35 @@
+name: run-case43-avatar
+on:
+  push:
+    branches:
+      - main
+permissions:
+  contents: write
+jobs:
+  integrate:
+    if: "github.actor == 'tmzncty'"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Extract and run staged integration
+        shell: bash
+        run: |
+          python -c 'from pathlib import Path; s=Path(".github/workflows/automation-case43-avatar.yml").read_text(); a=s.index("          from pathlib import Path"); b=s.index("\n          PY\n", a); lines=s[a:b].splitlines(); Path("/tmp/integrate.py").write_text("\n".join((x[10:] if x.startswith("          ") else x) for x in lines)+"\n")'
+          python /tmp/integrate.py
+      - name: Commit integrated case
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md ROADMAP.md CASE_INDEX.md cases/43-avatar-vrt-aware-dram-refresh-feedback.md evidence/43-avatar-2015-vrt-aware-refresh-grounding.md
+          git diff --cached --check
+          git commit -m 'case: add grounded AVATAR VRT-aware refresh bridge'
+          git push
+      - name: Remove one-shot runners
+        shell: bash
+        run: |
+          git rm .github/workflows/automation-case43-avatar.yml .github/workflows/run-case43-avatar.yml
+          git commit -m 'automation: remove Case 43 integration runners'
+          git push
