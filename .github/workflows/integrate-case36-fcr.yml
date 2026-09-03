@@ -1,0 +1,37 @@
+name: integrate-case36-fcr
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/integrate-case36-fcr.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Integrate Case 36 navigation and status
+        run: python3 tools/integrate_case36.py
+      - name: Validate diff
+        run: git diff --check
+      - name: Validate links and counts
+        run: |
+          grep -q 'cases/36-nand-flash-correct-and-refresh-maintenance.md' README.md ROADMAP.md CASE_INDEX.md
+          grep -q 'evidence/36-cai-2012-flash-correct-refresh-grounding.md' README.md ROADMAP.md CASE_INDEX.md
+          grep -q 'After thirty-seven bounded cases' CASE_INDEX.md
+          grep -q '339. \*\*retention refresh ≠ integrity scrub\*\*' CASE_INDEX.md
+      - name: Commit integrated state and remove staging files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/integrate-case36-fcr.yml tools/integrate_case36.py
+          git add README.md ROADMAP.md CASE_INDEX.md
+          git commit -m "docs: integrate grounded NAND Flash FCR bridge"
+          git push origin HEAD:main
