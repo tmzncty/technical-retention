@@ -1,0 +1,34 @@
+name: Integrate Case 40 navigation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/integrate-case40.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.event.head_commit.message == 'automation: integrate Case 40 navigation and status'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Integrate navigation and status
+        run: python .automation/integrate_case40.py
+
+      - name: Validate and commit
+        run: |
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add README.md ROADMAP.md CASE_INDEX.md
+          git rm .automation/integrate_case40.py .github/workflows/integrate-case40.yml
+          git diff --cached --check
+          git diff --cached --exit-code --quiet && { echo "no staged changes"; exit 1; } || true
+          git commit -m "docs: integrate grounded RAIDR retention-profile bridge"
+          git push origin HEAD:main
