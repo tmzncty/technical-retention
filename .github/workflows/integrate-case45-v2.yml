@@ -1,0 +1,134 @@
+name: Integrate Case 45 v2
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: ${{ github.event.head_commit.message == 'automation stage Case 45 integration v2' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Integrate navigation and case ledger
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def insert_after_prefix(path, prefix, new_line):
+              p = Path(path)
+              lines = p.read_text().splitlines()
+              if new_line in lines:
+                  return
+              matches = [i for i, line in enumerate(lines) if line.startswith(prefix)]
+              if len(matches) != 1:
+                  raise SystemExit(f'{path}: expected one anchor {prefix!r}, got {len(matches)}')
+              lines.insert(matches[0] + 1, new_line)
+              p.write_text('\n'.join(lines) + '\n')
+
+          insert_after_prefix(
+              'README.md',
+              '- [`cases/44-nvme13-deallocate-sanitize-forgetting.md`]',
+              '- [`cases/45-micron-ddr5-on-die-ecc-ecs.md`](cases/45-micron-ddr5-on-die-ecc-ecs.md) — grounded commercial-DDR5 integrity-maintenance bridge: Micron on-die ECC can correct a single-bit error on the read path, while ECS separately scans/corrects/writes back array state and reports correction evidence; ECS, ordinary refresh, and AVATAR-style refresh reclassification remain distinct.'
+          )
+          insert_after_prefix(
+              'README.md',
+              '- [`evidence/44-nvme12-13-deallocate-sanitize-grounding.md`]',
+              '- [`evidence/45-micron-ddr5-2021-2026-odecc-ecs-grounding.md`](evidence/45-micron-ddr5-2021-2026-odecc-ecs-grounding.md) — Case-45 grounding record: Micron manufacturer material, Linux 6.15 scrub-control documentation, and a 2021 scholarly ECS account separate read correction, corrective array writeback, ordinary refresh, correction telemetry, and later host policy without claiming a complete JESD79-5 audit.'
+          )
+
+          p = Path('ROADMAP.md')
+          rm = p.read_text()
+          old = 'partially advanced by eight grounded bounded sub-slices'
+          if old not in rm:
+              raise SystemExit('ROADMAP: eight-slice anchor missing')
+          rm = rm.replace(old, 'partially advanced by nine grounded bounded sub-slices', 1)
+          case45 = ('[`cases/45-micron-ddr5-on-die-ecc-ecs.md`](cases/45-micron-ddr5-on-die-ecc-ecs.md), grounded by '
+                    '[`evidence/45-micron-ddr5-2021-2026-odecc-ecs-grounding.md`](evidence/45-micron-ddr5-2021-2026-odecc-ecs-grounding.md), '
+                    'adds a commercial DDR5 integrity-maintenance composition: on-die ECC can correct a single-bit error for an ordinary read, while ECS separately reads/checks/corrects and writes corrected state back to the array and exposes correction evidence; Micron lists Same Bank Refresh separately, so charge refresh, integrity scrub, and AVATAR-style future-cadence reclassification remain distinct relations.')
+          needle = 'The broad item stays unchecked because a true JEDEC standards chronology'
+          if needle not in rm:
+              raise SystemExit('ROADMAP: DRAM open-work anchor missing')
+          if 'cases/45-micron-ddr5-on-die-ecc-ecs.md' not in rm:
+              rm = rm.replace(needle, case45 + ' ' + needle, 1)
+          old_gap = 'commercial retention-aware-refresh deployment, broader DPD-complete profiling and product-level ECC/refresh composition, and RowHammer-oriented refresh policy'
+          new_gap = 'commercial retention-aware-refresh deployment, broader DPD-complete profiling, direct normative ECS mode/timing semantics and system-level on-die-ECC composition, and RowHammer-oriented refresh policy'
+          if old_gap not in rm:
+              raise SystemExit('ROADMAP: ECC/refresh open-gap phrase missing')
+          rm = rm.replace(old_gap, new_gap, 1)
+          p.write_text(rm)
+
+          case_row = ('| [Micron DDR5 On-Die ECC and Error Check Scrub: Read Correction, Array Repair, and Error Transparency]'
+                      '(cases/45-micron-ddr5-on-die-ecc-ecs.md) | **grounded** | commercial DDR5 dynamic array + on-die SEC code + read-path correction + manual/automatic ECS corrective writeback + error-count evidence + separate ordinary refresh | '
+                      'separate correct logical read from repaired stored embodiment; ECS scrub from DRAM refresh; successful payload delivery from error observability; and device-internal automation from later host/platform policy | '
+                      '[2021–2026 ODECC/ECS grounding](evidence/45-micron-ddr5-2021-2026-odecc-ecs-grounding.md); direct revision-by-revision JESD79-5 audit, independent product fault validation, system-level ECC/PPR/sparing composition, and RowHammer interaction remain separate work |')
+          insert_after_prefix('CASE_INDEX.md', '| [NVM Express 1.3 Deallocate and Sanitize:', case_row)
+
+          comp_row = ('| Micron DDR5 ODECC / ECS / 2021–2026 bounded commercial-device regime | dynamic-cell data + on-die ECC code + correction-count/control evidence | '
+                      'ordinary refresh restores charge; ODECC can correct a single-bit error for a read; ECS separately traverses/checks/corrects and writes corrected state back; later host controls can expose selected policy/telemetry | '
+                      'a correct logical read can be produced from a raw state containing a correctable error; ECS makes stored-state repair explicit rather than inferring it from read success | '
+                      'ordinary memory address plus device-internal ECC/ECS traversal state; ECS coverage is distinct from refresh-row scheduling | '
+                      'fixed DRAM embodiment; the payload need not migrate, but its raw error state can be corrected and rewritten while logical value remains continuous | '
+                      'no application history; correction counts are second-order maintenance evidence about payload-bearing state, while ordinary successful reads may hide the correction event |')
+          insert_after_prefix('CASE_INDEX.md', '| NVMe 1.3 Deallocate / Sanitize /', comp_row)
+
+          p = Path('CASE_INDEX.md')
+          ci = p.read_text()
+          if '424. **read-path correction ≠ stored-array repair**' in ci:
+              raise SystemExit('CASE_INDEX: findings already present unexpectedly')
+          findings = '''424. **read-path correction ≠ stored-array repair** — Micron on-die ECC can correct a single-bit error for an ordinary read, while DDR5 ECS explicitly adds corrective writeback to the array; correct output now does not prove the retained embodiment was renewed for later accesses;
+425. **ECS scrub ≠ DRAM refresh** — ECS reads/checks/corrects error-bearing state and writes it back, while refresh satisfies the dynamic-cell charge-retention obligation; sharing internal array activity does not make the trigger, safety margin, or operation identical;
+426. **refresh deadline ≠ scrub coverage interval** — the earlier DRAM cases ground a short charge-restoration deadline, while Micron describes ECS completion on a recommended 24-hour scale; one memory device can therefore carry multiple maintenance clocks for different failure margins;
+427. **raw stored error ≠ immediate logical read failure** — a single-bit error can exist in the protected array while ODECC still reconstructs the intended read value;
+428. **successful payload delivery ≠ absence of correction work** — ordinary service can remain correct even when internal ECC was needed, so interface success is not a complete health observation;
+429. **payload availability ≠ error observability** — ECS can report corrected-error counts even though ODECC may have hidden correctable errors from the ordinary data path;
+430. **correction telemetry ≠ payload while correction telemetry can be retention infrastructure** — counts and related control evidence describe the medium/maintenance relation and can inform later RAS work without being the application value being retained;
+431. **automatic ECS ≠ elimination of external policy authority** — Micron preserves manual and automatic ECS, and later Linux/CXL control can expose count/threshold/reset policy to host software; automation relocates authority rather than proving it vanished;
+432. **on-die ECC ≠ end-to-end memory-system integrity** — Micron presents ODECC as complementary to wider server RAS and lists other integrity mechanisms separately, so one die-local correction domain cannot be generalized to every transfer/controller/platform failure path;
+433. **DDR5 ECS ≠ AVATAR runtime refresh reclassification** — the bounded commercial evidence establishes correction, writeback, coverage, and reporting, not a row-class update that changes future refresh cadence after an observed error;
+434. **commercial manufacturer feature evidence ≠ complete normative JESD79-5 genealogy or universal product compliance** — Micron and Linux ground a real DDR5 ODECC/ECS composition, but exact standard revisions, mode-register semantics, vendor differences, and independent fault behavior remain separate evidence tasks;
+'''
+          marker = '\nThese are provisional cross-case findings, not final philosophical conclusions.'
+          if marker not in ci:
+              raise SystemExit('CASE_INDEX: findings terminator missing')
+          ci = ci.replace(marker, '\n' + findings + marker, 1)
+
+          replacements = {
+              'After forty-five bounded cases, **all forty-five cases are now `grounded`.**': 'After forty-six bounded cases, **all forty-six cases are now `grounded`.**',
+              '— forty-five grounded regimes now support': '— forty-six grounded regimes now support',
+              'currently forty-five;': 'currently forty-six;',
+              'AVATAR runtime-VRT-aware ECC/scrub refresh-feedback, and NVMe 1.3 deallocate/sanitize-forgetting bridges': 'AVATAR runtime-VRT-aware ECC/scrub refresh-feedback, NVMe 1.3 deallocate/sanitize-forgetting, and Micron DDR5 on-die-ECC/ECS corrective-scrub bridges',
+          }
+          for old, new in replacements.items():
+              if old not in ci:
+                  raise SystemExit(f'CASE_INDEX: count/inventory anchor missing: {old}')
+              ci = ci.replace(old, new, 1)
+          if 'forty-five' in ci:
+              raise SystemExit('CASE_INDEX: stale forty-five count remains')
+          p.write_text(ci)
+
+          for path in ['README.md', 'ROADMAP.md', 'CASE_INDEX.md']:
+              txt = Path(path).read_text()
+              if 'cases/45-micron-ddr5-on-die-ecc-ecs.md' not in txt:
+                  raise SystemExit(f'{path}: missing Case 45 navigation')
+          if '434. **commercial manufacturer feature evidence ≠ complete normative JESD79-5 genealogy or universal product compliance**' not in Path('CASE_INDEX.md').read_text():
+              raise SystemExit('CASE_INDEX: final finding missing')
+          PY
+
+      - name: Commit integrated state
+        shell: bash
+        run: |
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add README.md ROADMAP.md CASE_INDEX.md
+          git diff --cached --check
+          git commit -m "docs: integrate grounded DDR5 ODECC and ECS bridge"
+          git push origin HEAD:main
