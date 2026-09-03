@@ -14,11 +14,22 @@ def insert_after_line(path: str, marker: str, new_line: str) -> None:
     p.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-# README navigation: keep case and evidence lists contiguous.
+# README navigation: keep case and evidence lists contiguous. The evidence list had drifted
+# and stopped at Case 37, so restore the missing Case 38/39 records while adding Case 40.
 insert_after_line(
     "README.md",
     "cases/39-geckoftl-power-failure-metadata-recovery.md",
     "- [`cases/40-raidr-retention-aware-dram-refresh.md`](cases/40-raidr-retention-aware-dram-refresh.md) — grounded retention-aware DRAM-refresh bridge: RAIDR retains row-level profiling/bin metadata in the memory controller to assign selective refresh cadence, while the 2013 commodity-DDR3 study shows that data-pattern dependence and variable retention time can make a surviving profile incomplete or non-conservative.",
+)
+insert_after_line(
+    "README.md",
+    "evidence/37-samsung-840-evo-2014-2015-performance-refresh-grounding.md",
+    "- [`evidence/38-intel-2014-2015-pli-health-validation-grounding.md`](evidence/38-intel-2014-2015-pli-health-validation-grounding.md) — Case-38 grounding record: Intel DC S3700/S3500 primary documentation separates PLI event history, capacitor-readiness self-test state, manufacturer hot-unplug validation, supply-fall-time envelope, and independent-compliance limits.",
+)
+insert_after_line(
+    "README.md",
+    "evidence/38-intel-2014-2015-pli-health-validation-grounding.md",
+    "- [`evidence/39-geckoftl-2015-2017-metadata-recovery-grounding.md`](evidence/39-geckoftl-2015-2017-metadata-recovery-grounding.md) — Case-39 grounding record: GeckoFTL research evidence separates nonvolatile NAND payload, Flash-resident mapping/validity metadata, checkpoint-bounded volatile state, partial-run admissibility, restart reconstruction, and commercial-deployment limits.",
 )
 insert_after_line(
     "README.md",
@@ -103,7 +114,7 @@ p.write_text(index, encoding="utf-8")
 
 # Sanity checks: all navigation targets and count must be present.
 checks = {
-    "README.md": ["cases/40-raidr-retention-aware-dram-refresh.md", "evidence/40-raidr-2012-2013-retention-profile-grounding.md"],
+    "README.md": ["cases/40-raidr-retention-aware-dram-refresh.md", "evidence/38-intel-2014-2015-pli-health-validation-grounding.md", "evidence/39-geckoftl-2015-2017-metadata-recovery-grounding.md", "evidence/40-raidr-2012-2013-retention-profile-grounding.md"],
     "ROADMAP.md": ["seven grounded bounded sub-slices", "cases/40-raidr-retention-aware-dram-refresh.md"],
     "CASE_INDEX.md": ["forty-one grounded regimes", "369. **refresh obligation", "380. **research evaluation"],
 }
