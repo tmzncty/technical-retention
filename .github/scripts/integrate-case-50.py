@@ -1,0 +1,100 @@
+from pathlib import Path
+
+
+def insert_after_line(text: str, needle: str, new_line: str) -> str:
+    lines = text.splitlines()
+    if new_line in lines:
+        return text
+    hits = [i for i, line in enumerate(lines) if needle in line]
+    if len(hits) != 1:
+        raise SystemExit(f"expected exactly one line containing {needle!r}, got {len(hits)}")
+    lines.insert(hits[0] + 1, new_line)
+    return "\n".join(lines) + ("\n" if text.endswith("\n") else "")
+
+
+# README navigation
+p = Path("README.md")
+s = p.read_text()
+case_line = "- [`cases/50-apache-hdfs-qjm-epoch-fencing.md`](cases/50-apache-hdfs-qjm-epoch-fencing.md) — grounded HDFS HA/QJM writer-authority bridge: JournalNodes persist a higher `lastPromisedEpoch` so quorum overlap can fence stale edit-log writers without requiring the old NameNode process to disappear; journal-write fencing remains distinct from stale-read/process fencing and from ZooKeeper election."
+s = insert_after_line(s, "cases/49-apache-hdfs-generation-stamp-lease-recovery.md", case_line)
+evidence_line = "- [`evidence/50-hadoop-qjm-2012-2016-epoch-fencing-grounding.md`](evidence/50-hadoop-qjm-2012-2016-epoch-fencing-grounding.md) — Case-50 grounding record: HDFS-3077's 2012 QJM design, Hadoop 2.7.3 HA documentation, and release source ground quorum epoch establishment, persistent JournalNode writer promises, lower-epoch rejection, and the boundary between shared-log fencing, process/read fencing, and ZooKeeper/ZKFC election."
+s = insert_after_line(s, "evidence/49-hadoop-018-273-generation-stamp-lease-recovery-grounding.md", evidence_line)
+p.write_text(s)
+
+# ROADMAP distributed-storage item
+p = Path("ROADMAP.md")
+s = p.read_text()
+old_count = "Cases 19, 23, 24, 25, 26, 27, 28, 29, 41, 46, 48, and 49"
+new_count = "Cases 19, 23, 24, 25, 26, 27, 28, 29, 41, 46, 48, 49, and 50"
+if old_count in s:
+    s = s.replace(old_count, new_count, 1)
+elif new_count not in s:
+    raise SystemExit("distributed-case list marker not found")
+marker = "[`cases/49-apache-hdfs-generation-stamp-lease-recovery.md`](cases/49-apache-hdfs-generation-stamp-lease-recovery.md)"
+idx = s.find(marker)
+if idx < 0:
+    raise SystemExit("Case 49 roadmap marker not found")
+new_sentence = " [`cases/50-apache-hdfs-qjm-epoch-fencing.md`](cases/50-apache-hdfs-qjm-epoch-fencing.md), grounded by [`evidence/50-hadoop-qjm-2012-2016-epoch-fencing-grounding.md`](evidence/50-hadoop-qjm-2012-2016-epoch-fencing-grounding.md), adds a shared-edit-log writer-authority regime: QJM establishes a higher writer epoch on a JournalNode quorum, persists `lastPromisedEpoch` at accepting JournalNodes, and uses quorum overlap plus lower-epoch rejection so a former Active can remain physically alive without retaining successful namespace-mutation authority; Apache separately keeps stale-read/process fencing and ZooKeeper/ZKFC election outside that journal-write promise."
+if "cases/50-apache-hdfs-qjm-epoch-fencing.md" not in s:
+    broad = s.find(" The broad item stays unchecked because", idx)
+    if broad < 0:
+        raise SystemExit("distributed roadmap closing marker not found")
+    s = s[:broad] + new_sentence + s[broad:]
+s = s.replace(
+    "later HDFS lease/pipeline recovery evolution and HA fencing",
+    "later HDFS lease/pipeline recovery evolution, DataNode command fencing, post-2.7 QJM/HA evolution, and Observer/read-freshness semantics",
+    1,
+)
+p.write_text(s)
+
+# CASE_INDEX case row
+p = Path("CASE_INDEX.md")
+s = p.read_text()
+row = "| [Apache HDFS QJM Epoch Fencing: Persisted Writer Promises, Quorum Overlap, and Split-Brain Containment](cases/50-apache-hdfs-qjm-epoch-fencing.md) | **grounded** | replicated namespace edit log + persistent JournalNode epoch promises + quorum overlap + separate HA/election/process-fencing state | separate process liveness from mutation authority; show durable refusal/control metadata fencing stale writers across failover; distinguish QJM journal fencing from process/read fencing and ZooKeeper election | [2012–2016 HDFS QJM epoch-fencing grounding](evidence/50-hadoop-qjm-2012-2016-epoch-fencing-grounding.md); DataNode command fencing, later QJM/Observer semantics, independent fault injection, and broader consensus genealogy remain separate work |"
+s = insert_after_line(s, "cases/49-apache-hdfs-generation-stamp-lease-recovery.md", row)
+
+matrix_row = "| HDFS QJM epoch fencing / 2012 design + Hadoop 2.7.3 bounded regime | replicated namespace edit records + persistent `lastPromisedEpoch` / `lastWriterEpoch` + current-epoch IPC ordering state + HA/election state | quorum edit replication; higher-epoch establishment and stale-writer rejection during failover; standby tailing; optional external/process fencing is separate work | old Active may still answer stale reads after losing QJM write authority, so read execution and shared-log mutation authority are distinct | logical HDFS nameservice/edit transaction stream resolved through a JournalNode quorum; writer epoch qualifies which mutation source may be admitted | Active role can move between physical NameNodes while the old process survives; retained higher promises remove its successful shared-log mutation authority | bounded edit history is retained for namespace recovery; epoch promises retain authority/future-refusal state rather than application payload history |"
+if matrix_row not in s:
+    lines = s.splitlines()
+    candidates = [i for i, line in enumerate(lines) if line.startswith("| HDFS") and "generation" in line.lower() and "recovery" in line.lower()]
+    if len(candidates) != 1:
+        raise SystemExit(f"expected one HDFS generation/recovery matrix row, got {len(candidates)}")
+    lines.insert(candidates[0] + 1, matrix_row)
+    s = "\n".join(lines) + ("\n" if s.endswith("\n") else "")
+
+findings = """488. **process survival ≠ retained mutation authority** — after a higher QJM epoch is accepted by a JournalNode quorum, an older NameNode may remain alive while lower-epoch edit mutations cease to satisfy the shared-log admission relation;
+489. **local `Active` belief/state ≠ quorum-authorized edit authority** — the HA role a process believes it has cannot substitute for the JournalNodes' retained epoch promises when shared namespace mutations are attempted;
+490. **durable refusal state can be constitutive retention state** — `lastPromisedEpoch` is not namespace payload, yet retaining it makes future rejection of older writers survive JournalNode restart and protects continuity of the accepted mutation history;
+491. **epoch-establishment quorum ≠ every JournalNode updated** — QJM proceeds after a majority accepts the new epoch; immediate all-node agreement is not the documented completion condition;
+492. **minority reachability or acceptance ≠ committed namespace mutation** — an old writer may still communicate with some JournalNodes, but successful namespace edit durability requires a quorum and therefore crosses the higher-epoch quorum's overlap boundary;
+493. **quorum overlap can preserve one-writer authority without physically erasing the old writer** — QJM changes protocol admissibility rather than requiring the former Active's process, RAM, sockets, or packets to disappear;
+494. **journal-write fencing ≠ process termination ≠ stale-read elimination** — Apache explicitly warns that QJM can block the old Active from shared-log writes while that process may temporarily continue serving stale reads, motivating separate fencing methods;
+495. **ZooKeeper election ≠ QJM writer epoch/fencing** — ZKFC/ZooKeeper elects and coordinates Active/Standby failover, while JournalNode epoch promises independently gate mutation of the shared edit log;
+496. **`lastPromisedEpoch` ≠ `lastWriterEpoch` ≠ current-epoch IPC serial** — Hadoop 2.7.3 source stores/checks these separately: a promise floor, the writer epoch associated with journal writes, and an in-memory ordering/retry guard within an epoch;
+497. **authority transition can require persistent acceptor-side state** — the new NameNode's local role is insufficient by itself; JournalNodes must retain the higher promise that constrains future requests from older writers;
+498. **edit durability ≠ instantaneous JournalNode completeness** — successful QJM edit logging is majority-based, so durable namespace continuity is compatible with a lagging or unavailable minority while quorum assumptions hold;
+499. **QJM writer epoch ≠ HDFS block generation stamp** — Case 49 qualifies last-block replica/recovery currentness, while Case 50 qualifies NameNode shared-edit-log mutation authority; monotonic numbering is functional similarity, not semantic identity;
+500. **HDFS QJM epoch design ≠ invention of epoch/quorum fencing** — the 2012 HDFS-3077 design itself cites Paxos and ZAB and describes borrowing epoch-generation ideas from that prior distributed-systems literature."""
+if "488. **process survival ≠ retained mutation authority**" not in s:
+    marker2 = "These are provisional cross-case findings, not final philosophical conclusions."
+    if marker2 not in s:
+        raise SystemExit("findings closing marker not found")
+    s = s.replace(marker2, findings + "\n\n" + marker2, 1)
+
+for a, b in {
+    "**50** bounded cases": "**51** bounded cases",
+    "50 bounded cases": "51 bounded cases",
+    "fifty bounded cases": "fifty-one bounded cases",
+    "currently fifty": "currently fifty-one",
+    "50/50": "51/51",
+}.items():
+    s = s.replace(a, b)
+
+case_rows = [line for line in s.splitlines() if line.startswith("| [") and "(cases/" in line]
+if len(case_rows) != 51:
+    raise SystemExit(f"expected 51 case rows, got {len(case_rows)}")
+if not all("**grounded**" in line for line in case_rows):
+    raise SystemExit("not all case rows are grounded")
+if "500. **HDFS QJM epoch design ≠ invention of epoch/quorum fencing**" not in s:
+    raise SystemExit("Case 50 findings missing")
+p.write_text(s)
