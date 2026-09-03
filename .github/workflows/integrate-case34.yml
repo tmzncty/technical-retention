@@ -1,0 +1,124 @@
+name: integrate-case34
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch navigation and ledgers
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def read(path):
+              return Path(path).read_text()
+
+          def write(path, text):
+              Path(path).write_text(text)
+
+          def insert_after_prefix(text, prefix, new_line):
+              if new_line in text:
+                  return text
+              lines = text.splitlines()
+              for i, line in enumerate(lines):
+                  if line.startswith(prefix):
+                      lines.insert(i + 1, new_line)
+                      return "\n".join(lines) + "\n"
+              raise RuntimeError(f"anchor not found: {prefix}")
+
+          # README repository map
+          p = 'README.md'
+          t = read(p)
+          t = insert_after_prefix(
+              t,
+              '- [`cases/33-micron-ddr5-same-bank-refresh-localization.md`]',
+              '- [`cases/34-micron-temperature-dependent-dram-refresh.md`](cases/34-micron-temperature-dependent-dram-refresh.md) — grounded temperature-conditioned DRAM refresh bridge: Micron’s 1991-filed circuit maps a nearby temperature sensor through discrete comparator bands into oscillator/refresh cadence, separating the continuing refresh obligation from a worst-case fixed maintenance frequency and preserving earlier 1987-priority temperature-adaptive prior art.'
+          )
+          t = insert_after_prefix(
+              t,
+              '- [`evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md`]',
+              '- [`evidence/34-micron-1991-temperature-dependent-refresh-grounding.md`](evidence/34-micron-1991-temperature-dependent-refresh-grounding.md) — Case-34 grounding record: Micron US5278796A anchors sensor → band classification → oscillator → refresh cadence, CardioData’s 1987-priority family blocks a Micron-first claim, and a later self-refresh patent preserves the cadence-versus-authority boundary.'
+          )
+          write(p, t)
+
+          # ROADMAP DRAM bridge and cross-case question
+          p = 'ROADMAP.md'
+          t = read(p)
+          lines = t.splitlines()
+          new_dram = "- [ ] DRAM evolution and refresh machinery beyond the bounded case — **partially advanced by five grounded bounded sub-slices**: [`cases/09-dram-cbr-refresh-address-internalization.md`](cases/09-dram-cbr-refresh-address-internalization.md) separates the refresh deadline from the source of refresh-row addresses; [`cases/10-toshiba-leakage-tracked-self-refresh.md`](cases/10-toshiba-leakage-tracked-self-refresh.md) separates address internalization from schedule/trigger internalization; [`cases/21-micron-sdram-refresh-mode-handoff.md`](cases/21-micron-sdram-refresh-mode-handoff.md), grounded by [`evidence/21-micron-1999-sdram-refresh-mode-grounding.md`](evidence/21-micron-1999-sdram-refresh-mode-grounding.md), separates externally repeated `AUTO REFRESH` from CKE-entered `SELF REFRESH`, internal clocking, `tXSR` exit, and the return of externally issued refresh cadence; [`cases/33-micron-ddr5-same-bank-refresh-localization.md`](cases/33-micron-ddr5-same-bank-refresh-localization.md), grounded by [`evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md`](evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md), adds DDR5 `Same Bank Refresh` / `REFsb` as a maintenance-target/interference geometry in which a bank in each bank group can be refreshed while other banks/groups remain available; and [`cases/34-micron-temperature-dependent-dram-refresh.md`](cases/34-micron-temperature-dependent-dram-refresh.md), grounded by [`evidence/34-micron-1991-temperature-dependent-refresh-grounding.md`](evidence/34-micron-1991-temperature-dependent-refresh-grounding.md), adds temperature-conditioned cadence selection, guardband classification, sensor/control overhead, and an explicit prior-art boundary back to a 1987-priority ambient-temperature refresh system. The broad item stays unchecked because a true JEDEC standards chronology, exact normative DDR5 timing, broader LPDDR/per-bank refresh genealogy, standardized/commercial temperature-compensated self-refresh evolution beyond this patent slice, and modern per-row retention-aware policy remain distinct open regimes;"
+          for i, line in enumerate(lines):
+              if line.startswith('- [ ] DRAM evolution and refresh machinery beyond the bounded case'):
+                  lines[i] = new_dram
+                  break
+          else:
+              raise RuntimeError('ROADMAP DRAM anchor not found')
+          t = "\n".join(lines) + "\n"
+
+          q = "- [ ] In temperature-sensitive DRAM refresh, how should `physical retention constraint`, `environmental condition`, `temperature measurement`, `guardband/policy classification`, `chosen refresh cadence`, `measurement/control overhead`, and `refresh authority` be separated?"
+          t = insert_after_prefix(t, '- [ ] In bank-structured DRAM refresh, how should `refresh target geometry`', q)
+
+          para = "The grounded temperature-dependent DRAM refresh bridge adds an environmental-policy axis that the earlier DRAM cases intentionally left open. Micron's 1991-filed circuit classifies a sensor near the DRAM array into discrete temperature bands and uses the resulting control state to select oscillator/refresh cadence; its own prior-art section identifies an earlier processor/table approach. Future DRAM work should therefore distinguish **physical retention constraint**, **environmental condition**, **measurement/proxy state**, **guardband and policy discretization**, **chosen cadence**, **refresh authority**, and **the energy cost of sensing/control**. The bounded patent evidence does not establish a complete JEDEC temperature-compensated-self-refresh chronology or modern per-row retention-aware policy."
+          if para not in t:
+              lns = t.splitlines()
+              for i, line in enumerate(lns):
+                  if line.startswith('The grounded DDR5 Same Bank Refresh bridge adds'):
+                      lns.insert(i + 1, '')
+                      lns.insert(i + 2, para)
+                      t = "\n".join(lns) + "\n"
+                      break
+              else:
+                  raise RuntimeError('ROADMAP Case33 paragraph anchor not found')
+          write(p, t)
+
+          # CASE_INDEX table, comparison row, findings, counts, synthesis gate
+          p = 'CASE_INDEX.md'
+          t = read(p)
+          case_row = "| [Micron Temperature-Dependent DRAM Refresh: Guardband, Environmental Sensing, and Adaptive Maintenance](cases/34-micron-temperature-dependent-dram-refresh.md) | **grounded** | volatile dynamic payload + nearby temperature measurement + discrete band/guardband state + oscillator-selected refresh cadence + system refresh logic | separate the continuing refresh obligation from worst-case maintenance frequency; distinguish physical environment, measured proxy, policy discretization, cadence, authority, and control-energy cost; preserve 1987-priority temperature-adaptive prior art | [1991 Micron temperature-dependent refresh grounding](evidence/34-micron-1991-temperature-dependent-refresh-grounding.md); named-product adoption, JEDEC temperature-compensated-self-refresh genealogy, exact modern DDR/LPDDR semantics, sensor fault qualification, and per-row retention-aware scheduling remain separate work |"
+          t = insert_after_prefix(t, '| [Micron DDR5 Same-Bank Refresh:', case_row)
+
+          matrix_row = "| Micron temperature-dependent DRAM refresh / 1991-filed bounded regime | volatile dynamic-cell payload + measured temperature proxy + comparator/encoder policy state + oscillator/counter cadence state | refresh remains constitutive, but the chosen maintenance frequency changes with sensed temperature bands instead of remaining at one worst-case high-temperature cadence | ordinary service/refresh authority are not the primary changed relation in this case; the changed relation is environment-conditioned maintenance frequency and its sensing/control cost | fixed DRAM array plus nearby sensor and system refresh logic; no per-row retention profiling established | fixed dynamic-cell locations; no logical relocation | no; payload plus transient/environment-derived control state only |"
+          t = insert_after_prefix(t, '| Micron DDR5 Same Bank Refresh /', matrix_row)
+
+          t = t.replace('thirty-four grounded regimes now support the current relational criterion', 'thirty-five grounded regimes now support the current relational criterion')
+          t = t.replace('currently thirty-four;', 'currently thirty-five;')
+
+          findings = """309. **retention constraint ≠ one universal fixed refresh interval** — Micron's bounded design exists because a worst-case high-temperature cadence can be conservative at lower temperature; the selected interval is a policy for an environmental envelope, not evidence of a temperature-independent physical loss deadline.\n310. **retention obligation ≠ worst-case maintenance frequency** — lower-temperature cadence reduction saves refresh work while leaving dynamic-cell preservation dependent on recurring restoration.\n311. **temperature observation ≠ direct payload-retention measurement** — the nearby sensor is documented as reflecting DRAM temperature; it does not read user bits or directly measure every cell/row's remaining retention time.\n312. **adaptive refresh ≠ zero guardband** — Micron explicitly uses discrete threshold steps as guardbanding; environment adaptation replaces one global worst-case policy with another bounded sensing/classification policy rather than abolishing margin.\n313. **temperature-band granularity ≠ cell-retention granularity** — the five-band embodiment is a control discretization, and the patent itself permits more/fewer bands; it is not evidence that DRAM cells possess five intrinsic retention states.\n314. **maintenance optimization ≠ zero-cost retention infrastructure** — increasing comparator/band resolution can consume enough power to exceed the refresh-power savings, so sensing/control work is part of the retention-energy budget.\n315. **temperature-conditioned cadence ≠ self-refresh authority** — Micron's 1991 circuit feeds system logic that produces refresh, while later patents explicitly combine temperature sensing with self-refresh; the condition that changes cadence and the locus of recurring maintenance authority are separable.\n316. **temperature-conditioned array refresh ≠ per-row retention-aware scheduling** — Case 34 changes an array-level cadence from an environmental proxy; it does not profile individual rows or assign row-specific refresh periods.\n317. **Micron 1991 temperature-dependent refresh ≠ invention priority for temperature-adaptive DRAM refresh** — US5278796A itself cites U.S. Patent 4,920,489, whose 1987-priority family already describes thermistor/A-D/table-controlled ambient-temperature refresh.\n318. **historical temperature/refresh rule of thumb ≠ timeless semiconductor law** — the Micron patent explicitly says its bands and refresh rates may change with technology, so its illustrative temperature multiplier and 8/16/32/64/128 ms schedule must remain period-bounded.\n\n"""
+          marker = 'These are provisional cross-case findings, not final philosophical conclusions.'
+          if '309. **retention constraint ≠ one universal fixed refresh interval**' not in t:
+              if marker not in t:
+                  raise RuntimeError('CASE_INDEX findings marker not found')
+              t = t.replace(marker, findings + marker, 1)
+
+          gate = "- [x] at least one temperature-conditioned refresh case where measured environment changes maintenance cadence without removing the dynamic-cell refresh obligation — Micron temperature-dependent DRAM Case 34;"
+          t = insert_after_prefix(t, '- [x] at least one bank-localized refresh case where mandatory maintenance does not require all banked service resources', gate)
+
+          narrative = "Case 34 is the grounded temperature-conditioned refresh continuation; [`evidence/34-micron-1991-temperature-dependent-refresh-grounding.md`](evidence/34-micron-1991-temperature-dependent-refresh-grounding.md) uses Micron's 1991-filed patent to anchor nearby temperature sensing, discrete guardbanded classification, oscillator-selected cadence, and sensing/control power tradeoffs, while the patent's own citation of a 1987-priority CardioData family blocks a Micron-first claim. It adds environmental condition → measurement/proxy → policy band → cadence to the DRAM retention decomposition without projecting later JEDEC TCSR, on-chip self-refresh authority, or per-row retention-aware refresh backward."
+          if narrative not in t:
+              lns = t.splitlines()
+              for i, line in enumerate(lns):
+                  if line.startswith('Case 33 is the grounded DDR5 refresh-localization continuation;'):
+                      lns.insert(i + 1, narrative)
+                      t = "\n".join(lns) + "\n"
+                      break
+              else:
+                  raise RuntimeError('CASE_INDEX Case33 narrative anchor not found')
+          write(p, t)
+          PY
+
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add README.md ROADMAP.md CASE_INDEX.md
+          git rm .github/workflows/integrate-case34.yml
+          git commit -m "docs: integrate grounded Micron temperature-refresh bridge"
+          git push
