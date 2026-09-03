@@ -117,8 +117,8 @@ jobs:
           assert Path(case_path).exists()
           assert Path(evidence_path).exists()
           r = readme.read_text()
-          assert r.count(case_path) == 1
-          assert r.count(evidence_path) == 1
+          assert r.count(case_nav) == 1
+          assert r.count(evidence_nav) == 1
           ro = roadmap.read_text()
           assert case_path in ro and evidence_path in ro
           ci = index.read_text()
