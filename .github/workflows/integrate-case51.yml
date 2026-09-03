@@ -1,0 +1,25 @@
+name: integrate-case51
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/integrate-case51.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.repository == 'tmzncty/technical-retention'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Integrate Case 51
+        run: python tools/integrate_case51.py
