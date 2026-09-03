@@ -1,8 +1,9 @@
-name: technical-retention Case 49 one-shot integration
+name: Integrate Case 49
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
       - '.github/workflows/technical-retention-case49-once.yml'
 
@@ -16,8 +17,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Integrate Case 49 navigation and status
+      - name: Integrate navigation and status
         shell: bash
         run: |
           set -euo pipefail
@@ -27,7 +27,6 @@ jobs:
           readme = Path('README.md')
           roadmap = Path('ROADMAP.md')
           index = Path('CASE_INDEX.md')
-
           case_path = 'cases/49-apache-hdfs-generation-stamp-lease-recovery.md'
           evidence_path = 'evidence/49-hadoop-018-273-generation-stamp-lease-recovery-grounding.md'
 
@@ -38,17 +37,15 @@ jobs:
               lines = text.splitlines()
               hits = [i for i, line in enumerate(lines) if needle in line]
               if len(hits) != 1:
-                  raise SystemExit(f'{path}: expected exactly one anchor {needle!r}, got {len(hits)}')
+                  raise SystemExit(f'{path}: expected one anchor {needle!r}, got {len(hits)}')
               lines.insert(hits[0] + 1, newline)
               path.write_text('\n'.join(lines) + '\n')
 
-          # README navigation.
           case_nav = '- [`cases/49-apache-hdfs-generation-stamp-lease-recovery.md`](cases/49-apache-hdfs-generation-stamp-lease-recovery.md) — grounded HDFS writer-failure/currentness bridge: lease recovery advances a generation/recovery stamp, gathers last-block replica state, converges valid replicas on a recovery-selected length, and commits NameNode metadata; surviving bytes, version admissibility, writer authority, and recovered file length remain distinct.'
           evidence_nav = '- [`evidence/49-hadoop-018-273-generation-stamp-lease-recovery-grounding.md`](evidence/49-hadoop-018-273-generation-stamp-lease-recovery-grounding.md) — Case-49 grounding record: 2008 Apache append/lease-recovery issues plus the exact Hadoop 2.7.3 release source anchor generation-stamp lineage, minimum-length block synchronization, recovery-ID fencing, stale-replica exclusion, and crash-persistent lease-reassignment evidence.'
           insert_after_matching_line(readme, 'cases/48-apache-cassandra-incremental-repair-state.md', case_nav)
           insert_after_matching_line(readme, 'evidence/48-cassandra-21-40-incremental-repair-state-grounding.md', evidence_nav)
 
-          # ROADMAP status: extend the existing distributed-storage bounded slice rather than create a generic HDFS history item.
           rlines = roadmap.read_text().splitlines()
           hits = [i for i, line in enumerate(rlines) if line.startswith('- [ ] distributed replication and erasure coding beyond RADOS')]
           if len(hits) != 1:
@@ -71,64 +68,57 @@ jobs:
           rlines[i] = line
           roadmap.write_text('\n'.join(rlines) + '\n')
 
-          # CASE_INDEX case-table row.
           case_row = '| [Apache HDFS Generation-Stamp Lease Recovery: Replica Currentness, Common-Length Convergence, and Recovery Fencing](cases/49-apache-hdfs-generation-stamp-lease-recovery.md) | **grounded** | replicated last-block payload + generation stamp + replica length/state + writer lease + recovery ID + NameNode BlockInfo/edit-log transition | separate physical survival from replica admissibility; show writer-failure recovery can advance authority/version state and intentionally exclude a disputed longer suffix; keep generation currentness distinct from checksum integrity and replication count | [2008–2016 HDFS generation-stamp/lease-recovery grounding](evidence/49-hadoop-018-273-generation-stamp-lease-recovery-grounding.md); later pipeline-recovery variants, HA fencing, modern erasure-coded HDFS, and independent fault injection remain separate work |'
           insert_after_matching_line(index, 'cases/48-apache-cassandra-incremental-repair-state.md', case_row)
 
-          # Comparison-matrix row.
           matrix_row = '| HDFS generation-stamp lease recovery / 0.18 lineage, 2.7.3 bounded implementation | replicated block bytes + block ID/generation stamp + per-replica length/state + writer lease + recovery ID + NameNode block metadata | lease/block recovery selects a primary, advances the recovery generation, gathers replica state, converges valid replicas on a minimum length, updates NameNode metadata, and records the transition | a physically surviving replica can be excluded as stale by generation; recovery can retain a common prefix while declining a longer disputed suffix | pathname/file -> block ID -> generation/UC state/lease -> DataNode replicas; recovery ID qualifies which recovery attempt is current | replica embodiments can survive while their authority changes; a longer replica need not become the recovered state | no complete payload history; current block/version/lease/recovery metadata and the durable metadata transition are retained long enough to define the recovered file |'
           insert_after_matching_line(index, '| Cassandra incremental repair state / 2.1–4.0 bounded regime |', matrix_row)
 
-          # Keep the matrix contiguous if earlier one-shot insertions left isolated blank lines between table rows.
           text = index.read_text()
-          text = text.replace('| Apache Kafka log compaction / 0.8.1 bounded regime', '| Apache Kafka log compaction / 0.8.1 bounded regime')
           lines = text.splitlines()
           start = next(i for i, l in enumerate(lines) if l.startswith('## Comparison matrix'))
           end = next(i for i in range(start + 1, len(lines)) if lines[i] == '---')
           cleaned = []
           for pos, l in enumerate(lines[start:end]):
               if l == '' and cleaned and cleaned[-1].startswith('|'):
-                  # remove a blank only when the next source line is also a table row
                   next_abs = start + pos + 1
                   if next_abs < end and lines[next_abs].startswith('|'):
                       continue
               cleaned.append(l)
           lines[start:end] = cleaned
           text = '\n'.join(lines) + '\n'
-
-          # Count/status text.
           text = text.replace('After forty-nine bounded cases, **all forty-nine cases are now `grounded`.**', 'After fifty bounded cases, **all fifty cases are now `grounded`.**')
           text = text.replace('currently forty-nine;', 'currently fifty;')
 
-          findings = '''473. **replica presence ≠ replica currentness/admissibility** — Hadoop 2.7.3 can remove a physically represented under-construction replica from current block membership when its generation stamp does not match the recovered generation; byte survival alone does not settle currentness.
-474. **same block ID ≠ same current block state** — generation stamp, length, under-construction/recovery state, and lease/recovery authority can differ while replicas still refer to the same logical block identifier.
-475. **replica multiplicity ≠ replica agreement** — HADOOP-3310 explicitly motivates lease recovery by the possibility that replicas of the leased block carry different generation stamps; several copies can survive while the last-block state remains unresolved.
-476. **recovery initiation ≠ synchronized/committed recovery completion** — selecting a recovery primary and allocating a new generation/recovery stamp precede replica interrogation, length selection, replica update, NameNode `BlockInfo` update, lease removal, and edit-log commit.
-477. **maximum surviving bytes ≠ recovered committed length** — the bounded 2.7.3 lease-recovery algorithm computes the minimum block length and applies that length to valid-generation replicas rather than automatically promoting the longest physical survivor.
-478. **retention through recovery can require deliberate suffix exclusion** — engineering reconstruction of the minimum-length rule shows that a common admissible prefix may be retained by refusing a disputed longer suffix; this is convergence/forgetting of currentness, not secure media erasure.
-479. **longer surviving replica ≠ automatically more authoritative replica** — physical extent is evidence about one embodiment, while the recovery protocol separately qualifies generation and chooses the state to commit.
-480. **generation stamp ≠ checksum/integrity proof** — HDFS 2.7.3 documents checksum validation separately; a replica can be byte-integral yet stale in generation, or current in generation while still requiring integrity checking.
-481. **HDFS generation stamp ≠ Dynamo vector clock** — both can qualify which retained state counts, but Dynamo vector clocks encode causal ancestry/concurrency whereas the bounded HDFS stamp identifies a NameNode-assigned block/recovery generation; the comparison is functional, not genealogical.
-482. **recovery-ID state ≠ payload, while recovery-ID state can be retention infrastructure** — `blockRecoveryId` is not file data, yet the source explicitly uses the new generation stamp/recovery ID to distinguish the right recovery when abandoned attempts reappear.
-483. **expected replica location ≠ observed replica existence** — the under-construction replica source warns that an expected DataNode/storage assignment is not guaranteed to have a corresponding physical replica, separating placement expectation from surviving embodiment.
-484. **abandoned recovery reappearance ≠ restored recovery authority** — the recovery-generation mechanism exists specifically so an older recovery can reappear without automatically becoming the valid recovery again.
-485. **in-memory recovery authority ≠ crash-persistent recovery authority** — HDFS-1149 showed that lease reassignment performed during recovery could be lost across NameNode restart, allowing the old leaseholder to act again until the authority transition was persisted.
-486. **last-block synchronization ≠ restored replication margin** — the bounded lease-recovery algorithm establishes a synchronized block/file state; ordinary HDFS re-replication remains a separate robustness mechanism for restoring desired replica count after DataNode loss.
-487. **Hadoop 2.7.3 recovery semantics ≠ mechanism origin** — HADOOP-3283 and HADOOP-3310 place generation-stamp updates and lease recovery in the 2008 append lineage (0.18/0.19 era), so the 2.7.3 source is a reproducible implementation witness rather than an invention-priority claim.
-'''
+          findings = '\n'.join([
+              '473. **replica presence ≠ replica currentness/admissibility** — Hadoop 2.7.3 can remove a physically represented under-construction replica from current block membership when its generation stamp does not match the recovered generation; byte survival alone does not settle currentness.',
+              '474. **same block ID ≠ same current block state** — generation stamp, length, under-construction/recovery state, and lease/recovery authority can differ while replicas still refer to the same logical block identifier.',
+              '475. **replica multiplicity ≠ replica agreement** — HADOOP-3310 explicitly motivates lease recovery by the possibility that replicas of the leased block carry different generation stamps; several copies can survive while the last-block state remains unresolved.',
+              '476. **recovery initiation ≠ synchronized/committed recovery completion** — selecting a recovery primary and allocating a new generation/recovery stamp precede replica interrogation, length selection, replica update, NameNode `BlockInfo` update, lease removal, and edit-log commit.',
+              '477. **maximum surviving bytes ≠ recovered committed length** — the bounded 2.7.3 lease-recovery algorithm computes the minimum block length and applies that length to valid-generation replicas rather than automatically promoting the longest physical survivor.',
+              '478. **retention through recovery can require deliberate suffix exclusion** — engineering reconstruction of the minimum-length rule shows that a common admissible prefix may be retained by refusing a disputed longer suffix; this is convergence/forgetting of currentness, not secure media erasure.',
+              '479. **longer surviving replica ≠ automatically more authoritative replica** — physical extent is evidence about one embodiment, while the recovery protocol separately qualifies generation and chooses the state to commit.',
+              '480. **generation stamp ≠ checksum/integrity proof** — HDFS 2.7.3 documents checksum validation separately; a replica can be byte-integral yet stale in generation, or current in generation while still requiring integrity checking.',
+              '481. **HDFS generation stamp ≠ Dynamo vector clock** — both can qualify which retained state counts, but Dynamo vector clocks encode causal ancestry/concurrency whereas the bounded HDFS stamp identifies a NameNode-assigned block/recovery generation; the comparison is functional, not genealogical.',
+              '482. **recovery-ID state ≠ payload, while recovery-ID state can be retention infrastructure** — `blockRecoveryId` is not file data, yet the source explicitly uses the new generation stamp/recovery ID to distinguish the right recovery when abandoned attempts reappear.',
+              '483. **expected replica location ≠ observed replica existence** — the under-construction replica source warns that an expected DataNode/storage assignment is not guaranteed to have a corresponding physical replica, separating placement expectation from surviving embodiment.',
+              '484. **abandoned recovery reappearance ≠ restored recovery authority** — the recovery-generation mechanism exists specifically so an older recovery can reappear without automatically becoming the valid recovery again.',
+              '485. **in-memory recovery authority ≠ crash-persistent recovery authority** — HDFS-1149 showed that lease reassignment performed during recovery could be lost across NameNode restart, allowing the old leaseholder to act again until the authority transition was persisted.',
+              '486. **last-block synchronization ≠ restored replication margin** — the bounded lease-recovery algorithm establishes a synchronized block/file state; ordinary HDFS re-replication remains a separate robustness mechanism for restoring desired replica count after DataNode loss.',
+              '487. **Hadoop 2.7.3 recovery semantics ≠ mechanism origin** — HADOOP-3283 and HADOOP-3310 place generation-stamp updates and lease recovery in the 2008 append lineage (0.18/0.19 era), so the 2.7.3 source is a reproducible implementation witness rather than an invention-priority claim.',
+          ])
           anchor = 'These are provisional cross-case findings, not final philosophical conclusions.'
           if '473. **replica presence ≠ replica currentness/admissibility**' not in text:
               if anchor not in text:
                   raise SystemExit('CASE_INDEX: findings anchor drifted')
-              text = text.replace(anchor, findings + '\n' + anchor, 1)
+              text = text.replace(anchor, findings + '\n\n' + anchor, 1)
           index.write_text(text)
 
-          # Validation.
-          assert Path(case_path).exists(), case_path
-          assert Path(evidence_path).exists(), evidence_path
+          assert Path(case_path).exists()
+          assert Path(evidence_path).exists()
           r = readme.read_text()
-          assert r.count(case_path) == 1, r.count(case_path)
-          assert r.count(evidence_path) == 1, r.count(evidence_path)
+          assert r.count(case_path) == 1
+          assert r.count(evidence_path) == 1
           ro = roadmap.read_text()
           assert case_path in ro and evidence_path in ro
           ci = index.read_text()
@@ -136,8 +126,6 @@ jobs:
           assert 'currently fifty;' in ci
           assert '473. **replica presence ≠ replica currentness/admissibility**' in ci
           assert '487. **Hadoop 2.7.3 recovery semantics ≠ mechanism origin**' in ci
-
-          # Count the main case table exactly.
           ilines = ci.splitlines()
           cs = ilines.index('## Cases')
           ce = next(i for i in range(cs + 1, len(ilines)) if ilines[i] == '---')
@@ -147,12 +135,10 @@ jobs:
           if any('**grounded**' not in l for l in rows):
               raise SystemExit('CASE_INDEX contains a non-grounded case row')
           PY
-
           rm -f .github/workflows/technical-retention-case49-once.yml
-          git diff --check
-          git status --short
           git config user.name 'technical-retention automation'
           git config user.email 'technical-retention@users.noreply.github.com'
-          git add README.md ROADMAP.md CASE_INDEX.md .github/workflows/technical-retention-case49-once.yml
+          git add -A
+          git diff --cached --check
           git commit -m 'docs: integrate grounded HDFS lease-recovery case'
-          git push origin HEAD:main
+          git push
