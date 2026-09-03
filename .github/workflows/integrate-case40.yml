@@ -12,7 +12,6 @@ permissions:
 
 jobs:
   integrate:
-    if: github.event.head_commit.message == 'automation: integrate Case 40 navigation and status'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,6 +28,9 @@ jobs:
           git add README.md ROADMAP.md CASE_INDEX.md
           git rm .automation/integrate_case40.py .github/workflows/integrate-case40.yml
           git diff --cached --check
-          git diff --cached --exit-code --quiet && { echo "no staged changes"; exit 1; } || true
+          if git diff --cached --quiet; then
+            echo "no staged changes"
+            exit 1
+          fi
           git commit -m "docs: integrate grounded RAIDR retention-profile bridge"
           git push origin HEAD:main
