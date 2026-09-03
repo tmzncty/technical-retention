@@ -22,10 +22,10 @@ jobs:
         run: |
           test -f cases/41-apache-cassandra-tombstone-gc-grace-resurrection.md
           test -f evidence/41-cassandra-3x-tombstone-repair-grounding.md
-          grep -q 'forty-two grounded regimes' CASE_INDEX.md
-          grep -q '381. \*\*logical deletion' CASE_INDEX.md
-          grep -q 'Case 41' README.md
-          grep -q 'Cases 19, 23, 24, 25, 26, 27, 28, 29, and 41' ROADMAP.md
+          grep -Fq 'forty-two grounded regimes' CASE_INDEX.md
+          grep -Fq '381. **logical deletion' CASE_INDEX.md
+          grep -Fq 'cases/41-apache-cassandra-tombstone-gc-grace-resurrection.md' README.md
+          grep -Fq 'Cases 19, 23, 24, 25, 26, 27, 28, 29, and 41' ROADMAP.md
           rm -f .github/scripts/integrate_case41.py .github/workflows/integrate-case41.yml
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
