@@ -52,7 +52,12 @@ before, after = t.split(marker, 1)
 case_row = "| [Micron Mobile DDR Automatic TCSR: On-Die Temperature Sensing, Self-Refresh Cadence, and Selective Retention](cases/35-micron-mobile-ddr-automatic-tcsr.md) | **grounded** | volatile dynamic payload + internally clocked self refresh + on-die temperature-controlled oscillator + controller-selectable PASR coverage + DPD/control-state split | separate field presence from effective software authority; cadence from coverage; external-clock absence from maintenance absence; array-payload retention from control-state retention | [2005–2008 Mobile DDR TCSR grounding](evidence/35-micron-2005-2008-mobile-ddr-tcsr-grounding.md); full JEDEC TCSR/PASR genealogy, later LPDDR thermal/sensor semantics, and per-row retention-aware refresh remain separate work |"
 before = insert_after_line(before, "cases/34-micron-temperature-dependent-dram-refresh.md", case_row, last=True)
 matrix_row = "| [Micron Mobile DDR Automatic TCSR](cases/35-micron-mobile-ddr-automatic-tcsr.md) | dynamic-cell charge + on-die temperature sensor/oscillator + EMR/PASR control state | internal self-refresh cycles; temperature-conditioned cadence; selected-region maintenance | normal SDRAM reads are nondestructive at the interface level | bank/row/column access in ordinary operation; internal refresh addressing during self refresh | logical array locations remain designated, but PASR changes which locations receive retention work | No — PASR-excluded array state and DPD array payload can be intentionally lost |"
-after = insert_after_line(after, "cases/34-micron-temperature-dependent-dram-refresh.md", matrix_row)
+if matrix_row not in after:
+    section_end = "\n---\n"
+    pos = after.find(section_end)
+    if pos < 0:
+        raise RuntimeError("comparison matrix end marker missing")
+    after = after[:pos].rstrip() + "\n" + matrix_row + "\n\n" + after[pos:]
 t = before + marker + after
 
 findings = """319. **register-field presence ≠ effective software authority** — the bounded Mobile DDR EMR still displays TCSR-labelled positions while the datasheet explicitly says programming them has no effect because the on-die sensor controls the self-refresh oscillator.
