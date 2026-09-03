@@ -1,5 +1,6 @@
 name: integrate-case51
 
+# v2: robust bounded integration runner
 on:
   push:
     branches:
