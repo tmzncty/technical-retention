@@ -1,0 +1,47 @@
+name: integrate-case73
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/scripts/integrate_case73.py'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply Case 73 research slice
+        run: python .github/scripts/integrate_case73.py
+      - name: Validate and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md ROADMAP.md CASE_INDEX.md cases evidence
+          git rm .github/scripts/integrate_case73.py .github/workflows/integrate-case73.yml
+          git diff --cached --check
+          python - <<'PY'
+          from pathlib import Path
+          case_files = sorted(Path('cases').glob('[0-9][0-9]-*.md'))
+          nums = sorted(int(p.name[:2]) for p in case_files)
+          assert nums == list(range(74)), nums
+          assert Path('cases/73-google-gfs-lazy-garbage-collection.md').exists()
+          assert Path('evidence/73-gfs-2003-lazy-garbage-collection-grounding.md').exists()
+          for p in ['README.md', 'ROADMAP.md', 'CASE_INDEX.md']:
+              text = Path(p).read_text()
+              assert '73-google-gfs-lazy-garbage-collection.md' in text, p
+          idx = Path('CASE_INDEX.md').read_text()
+          assert '845. **application delete ≠ immediate physical-storage reclamation**' in idx
+          assert '860. **storage reclamation ≠ secure sanitization**' in idx
+          print('validated 00-73 contiguous case ledger and Case 73 navigation/findings')
+          PY
+          git commit -m 'case73: ground GFS lazy garbage collection'
+          git push origin HEAD:main
