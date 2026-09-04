@@ -21,5 +21,21 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+      - name: Repair legacy README evidence-list assumption
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("tools/integrate_case80.py")
+          s = p.read_text(encoding="utf-8")
+          old = '''insert_after(
+              readme,
+              lambda line: line.startswith("- [`evidence/79-hadoop-2010-2016-startup-safemode-grounding.md`"),
+              readme_evidence_line,
+          )
+          '''
+          if old not in s:
+              raise SystemExit("case80 patch anchor not found")
+          p.write_text(s.replace(old, "", 1), encoding="utf-8")
+          PY
       - name: Integrate case 80
         run: python3 tools/integrate_case80.py
