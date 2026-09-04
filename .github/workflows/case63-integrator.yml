@@ -1,0 +1,49 @@
+name: Case 63 one-shot integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/case63-integrator.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch navigation and status
+        run: python .github/scripts/integrate_case63.py
+      - name: Validate bounded case ledger
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          cases = sorted(Path('cases').glob('[0-9][0-9]-*.md'))
+          nums = [int(p.name[:2]) for p in cases]
+          assert nums == list(range(64)), (len(nums), nums[:3], nums[-3:])
+          assert Path('cases/63-apache-kafka-transactional-read-visibility.md').exists()
+          assert Path('evidence/63-kafka-0110-transaction-lso-grounding.md').exists()
+          idx = Path('CASE_INDEX.md').read_text()
+          assert 'After sixty-four bounded cases, **all sixty-four cases are now `grounded`.**' in idx
+          assert idx.count('cases/63-apache-kafka-transactional-read-visibility.md') >= 2
+          print('validated 64 bounded cases, 00-63')
+          PY
+          git diff --check
+      - name: Commit integrated result and remove one-shot runner
+        shell: bash
+        run: |
+          rm -f .github/scripts/integrate_case63.py .github/workflows/case63-integrator.yml
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+            exit 0
+          fi
+          git config user.name 'technical-retention automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'docs: integrate grounded Kafka transaction visibility case'
+          git push origin HEAD:main
