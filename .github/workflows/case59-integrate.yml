@@ -35,6 +35,16 @@ jobs:
       - name: Apply and validate Case 59 navigation patch
         run: python3 scripts/integrate_case59.py
 
+      - name: Normalize Markdown EOF
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in ('README.md', 'ROADMAP.md', 'CASE_INDEX.md'):
+              p = Path(name)
+              p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
+
       - name: Check diff
         run: git diff --check
 
