@@ -1,0 +1,23 @@
+name: integrate-case67
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/integrate-case67.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Integrate grounded Case 67 and clean one-shot runner
+        run: python .github/scripts/integrate_case67.py
