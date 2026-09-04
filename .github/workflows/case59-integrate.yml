@@ -1,0 +1,38 @@
+name: one-shot-case59-integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/case59-integrate.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply and validate Case 59 navigation patch
+        run: python3 scripts/integrate_case59.py
+
+      - name: Check diff
+        run: git diff --check
+
+      - name: Commit integration and remove one-shot machinery
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f scripts/integrate_case59.py
+          rm -f .github/workflows/case59-integrate.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "docs: integrate grounded NAND program-interference case"
+          git push origin HEAD:main
