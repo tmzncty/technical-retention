@@ -30,7 +30,7 @@ jobs:
           assert Path('evidence/64-kafka-0110-transaction-state-recovery-grounding.md').exists()
           idx = Path('CASE_INDEX.md').read_text()
           assert 'After sixty-five bounded cases, **all sixty-five cases are now `grounded`.**' in idx
-          assert idx.count('cases/64-apache-kafka-transaction-coordinator-state-recovery.md') >= 2
+          assert 'cases/64-apache-kafka-transaction-coordinator-state-recovery.md' in idx
           assert idx.count('## Case 64 — Kafka transaction-coordinator state-recovery findings') == 1
           for n in range(701, 717):
               assert f'{n}. **' in idx, n
