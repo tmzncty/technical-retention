@@ -25,6 +25,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
+          python3 -c "from pathlib import Path; p=Path('CASE_INDEX.md'); p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')"
           test -f cases/76-jedec-ssd-endurance-retention-qualification.md
           test -f evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md
           test ! -e .github/scripts/case76_integrate.py
