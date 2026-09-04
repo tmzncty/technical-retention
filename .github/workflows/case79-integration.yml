@@ -1,0 +1,34 @@
+name: case79-integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/case79-integration.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Integrate Case 79
+        run: python .github/case79_integrate.py
+      - name: Validate diff
+        run: |
+          git diff --check
+          test -f cases/79-apache-hdfs-startup-safemode-block-report-reobservation.md
+          test -f evidence/79-hadoop-2010-2016-startup-safemode-grounding.md
+          test ! -e .github/case79_integrate.py
+          test ! -e .github/workflows/case79-integration.yml
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "case79: ground HDFS startup safemode reobservation"
+          git push
