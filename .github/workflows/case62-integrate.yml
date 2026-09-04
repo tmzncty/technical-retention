@@ -18,6 +18,32 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Restore missing recent evidence navigation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('README.md')
+          lines = p.read_text(encoding='utf-8').splitlines()
+          anchor = '- [`evidence/58-raft-2014-snapshot-log-compaction-grounding.md`](evidence/58-raft-2014-snapshot-log-compaction-grounding.md) — Case-58 grounding record: official Ongaro/Ousterhout 2014 Raft paper anchors stable snapshotting, boundary metadata, prefix retirement, InstallSnapshot recovery, cadence costs, and an explicit prior-art boundary against claiming Raft invented snapshotting/log compaction.'
+          additions = [
+              '- [`evidence/59-nand-2002-2014-program-interference-grounding.md`](evidence/59-nand-2002-2014-program-interference-grounding.md) — Case-59 grounding record: 2002 and 2007–2008 prior art plus 2013–2014 commercial-chip research separate cell-to-cell program interference, page-program order, neighbor data dependence, read-reference adaptation, and deployment limits.',
+              '- [`evidence/60-apollo-core-rope-1964-1972-grounding.md`](evidence/60-apollo-core-rope-1964-1972-grounding.md) — Case-60 grounding record: MIT/NASA primary evidence separates sense-wire/core topology from ferrite read transduction, runtime read-only behavior from physical revision, and Apollo implementation from earlier wired-core fixed-memory prior art.',
+              '- [`evidence/61-hadoop-2017-2020-observer-stateid-grounding.md`](evidence/61-hadoop-2017-2020-observer-stateid-grounding.md) — Case-61 grounding record: HDFS-12943/HDFS-14272 and Hadoop source separate Observer-applied transaction progress, RPC-carried client state-ID lower bounds, `msync()` frontier import, read alignment, Active fallback, and write authority.',
+          ]
+          if not all(x in lines for x in additions):
+              hits = [i for i, line in enumerate(lines) if line == anchor]
+              if len(hits) != 1:
+                  raise SystemExit(f'README evidence58 anchor count={len(hits)}')
+              i = hits[0] + 1
+              for item in additions:
+                  if item not in lines:
+                      lines.insert(i, item)
+                      i += 1
+          p.write_text('\n'.join(lines).rstrip() + '\n', encoding='utf-8')
+          PY
+
       - name: Patch navigation and findings
         shell: bash
         run: |
@@ -32,6 +58,9 @@ jobs:
           test -f evidence/62-ibm-bell-1950-1970-tros-grounding.md
           grep -q 'cases/62-ibm-system360-model40-tros-replaceable-control-store.md' README.md
           grep -q 'evidence/62-ibm-bell-1950-1970-tros-grounding.md' README.md
+          grep -q 'evidence/59-nand-2002-2014-program-interference-grounding.md' README.md
+          grep -q 'evidence/60-apollo-core-rope-1964-1972-grounding.md' README.md
+          grep -q 'evidence/61-hadoop-2017-2020-observer-stateid-grounding.md' README.md
           grep -q 'advanced by grounded Cases 02, 60, and 62' ROADMAP.md
           grep -q 'After sixty-three bounded cases, \*\*all sixty-three cases are now `grounded`\.\*\*' CASE_INDEX.md
           grep -q '^684\. \*\*IBM Model 40 TROS' CASE_INDEX.md
