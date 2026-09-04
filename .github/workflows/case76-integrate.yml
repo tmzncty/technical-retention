@@ -30,7 +30,7 @@ jobs:
           test ! -e .github/scripts/case76_integrate.py
           test ! -e .github/workflows/case76-integrate.yml
           grep -n 'Case 76' README.md | head
-          grep -n 'Case 76' ROADMAP.md | head
+          grep -n 'cases/76-jedec-ssd-endurance-retention-qualification.md' ROADMAP.md | head
           grep -n 'Case 76' CASE_INDEX.md | head
           grep -n '893\. \*\*SSD endurance rating' CASE_INDEX.md
           grep -n '908\. \*\*JESD218 SSD-level composition' CASE_INDEX.md
