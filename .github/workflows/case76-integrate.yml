@@ -1,0 +1,43 @@
+name: case76-integration
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/case76-integrate.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Integrate Case 76
+        run: python3 .github/scripts/case76_integrate.py
+      - name: Validate and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f cases/76-jedec-ssd-endurance-retention-qualification.md
+          test -f evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md
+          test ! -e .github/scripts/case76_integrate.py
+          test ! -e .github/workflows/case76-integrate.yml
+          grep -q 'Case 76' README.md
+          grep -q 'Case 76' ROADMAP.md
+          grep -q 'Case 76' CASE_INDEX.md
+          grep -q '893\. \*\*SSD endurance rating' CASE_INDEX.md
+          grep -q '908\. \*\*JESD218 SSD-level composition' CASE_INDEX.md
+          test "$(find cases -maxdepth 1 -type f -name '[0-9][0-9]-*.md' | wc -l)" -eq 77
+          git diff --check
+          git config user.name 'technical-retention automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git commit -m 'case76: ground JESD218 endurance retention qualification'
+          git push origin HEAD:main
