@@ -23,496 +23,82 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import re
-
-          ROOT = Path('.')
-          CASE_PATH = ROOT / 'cases/69-jedec-ddr4-refresh-postponement-pullin.md'
-          EVIDENCE_PATH = ROOT / 'evidence/69-jedec-ddr4-2012-refresh-scheduling-grounding.md'
-
-          case = r'''# JEDEC DDR4 Refresh Postponement and Pull-In: Bounded Scheduling Elasticity, Fine-Granularity Refresh, and Maintenance Accounting
-
-## Status
-
-**`grounded`** — bounded to JEDEC's September 2012 DDR4 SDRAM standard, especially JESD79-4 §§4.9 and 4.26, with IBM's 2010 and 2013 refresh-scheduling work used as prior-art and independent engineering context.
-
-Grounding record: [`../evidence/69-jedc-ddr4-2012-refresh-scheduling-grounding.md`](../evidence/69-jedec-ddr4-2012-refresh-scheduling-grounding.md).
-
-## Scope
-
-This case asks a narrow retention question:
-
-> If DRAM must be refreshed periodically, does persistence require one refresh command at every exact nominal `tREFI` instant, or can maintenance work move in time while the retention obligation remains bounded and auditable?
-
-The bounded object is the initial 2012 DDR4 refresh contract:
-
-- the ordinary external `REF` command and average `tREFI` requirement;
-- bounded postponement and bounded pull-in of refresh commands;
-- the 1x/2x/4x Fine Granularity Refresh (FGR) modes;
-- on-the-fly FGR rate changes and their sequencing restrictions;
-- the interaction between FGR and Temperature Controlled Refresh in this revision;
-- extra refresh work required after some Self Refresh entry histories.
-
-This is **not**:
-
-- a complete JEDEC DDR/DDR2/DDR3/DDR4/DDR5 refresh chronology;
-- a claim that DDR4 invented refresh postponement, refresh scheduling, or DRAM refresh;
-- a controller implementation study identifying the exact counter/register used to track postponed or pulled-in work;
-- a claim that FGR always improves performance or reliability;
-- a replacement for Cases 03, 21, 33, 34, 40, 43, 53, or 54.
-
-## Historical vocabulary
-
-The 2012 standard directly uses:
-
-- `Refresh command (REF)`;
-- `average periodic interval of tREFI`;
-- `postponing` and `pulling-in` refresh commands;
-- `Fine Granularity Refresh Mode`;
-- `Fixed 1x`, `Fixed 2x`, `Fixed 4x`;
-- `on-the-fly` 1x/2x and 1x/4x modes;
-- `tREFI1`, `tREFI2`, `tREFI4`;
-- `tRFC1`, `tRFC2`, `tRFC4`;
-- `Temperature Controlled Refresh mode`;
-- `Self Refresh entry and exit`.
-
-Project phrases such as `maintenance debt`, `maintenance credit`, `schedule-control state`, and `temporal scheduling elasticity` are **engineering reconstructions**, not JEDEC vocabulary.
-
-## Historical record
-
-### `tREFI` is an average cadence, not one exact command timestamp
-
-JESD79-4 §4.26 describes the normal-operation `REF` command as nonpersistent: the controller must issue a command whenever refresh is required. The device internally generates refresh addresses, but the external command cadence remains a system responsibility in this mode.
-
-The same section does **not** require each command to occur at one exact periodic instant. It explicitly allows some flexibility in the absolute interval for scheduling efficiency.
-
-In 1x mode, at most eight refresh commands may be postponed. If eight are postponed consecutively, the interval between the surrounding refresh commands may grow to at most `9 × tREFI`. In 2x and 4x modes, the corresponding maxima are sixteen/thirty-two postponed commands and gaps of `17 × tREFI2` / `33 × tREFI4`.
-
-Therefore:
-
-> **nominal refresh interval ≠ exact per-command timestamp**.
-
-and:
-
-> **bounded postponement ≠ canceled refresh obligation**.
-
-The standard changes *when* bounded maintenance is performed; it does not waive the requirement that the deferred work be accounted for.
-
-### Pull-in can pre-pay later refresh work, but only within a bound
-
-JESD79-4 §4.26 also permits refresh commands to be issued in advance. In 1x mode, up to eight pulled-in commands can each reduce the number of regular commands required later by one; the corresponding limits are sixteen and thirty-two in 2x/4x modes.
-
-Issuing more than those limits does not buy additional future exemption.
-
-This yields:
-
-> **pulled-in refresh ≠ unbounded future refresh credit**.
-
-A controller may move bounded work earlier, but the specification caps how much later work that history is allowed to replace.
-
-### FGR pairs refresh frequency with refresh-cycle time
-
-JESD79-4 §4.9 makes both refresh-cycle time (`tRFC`) and average refresh interval (`tREFI`) mode-dependent. The initial standard defines fixed 1x, 2x, and 4x modes plus on-the-fly 1x/2x and 1x/4x operation.
-
-For the bounded table, moving from 1x to 2x halves the nominal interval and uses a shorter `tRFC2`; 4x quarters the nominal interval and uses a still shorter `tRFC4`. The point is not simply `more refresh`. The command frequency and duration of each service-blocking refresh are changed together.
-
-IBM's 2013 ISCA analysis describes the same feature as a trade-off between refresh latency and refresh frequency and reports that no one FGR mode is best for every workload.
-
-Thus:
-
-> **shorter individual refresh pause ≠ necessarily lower aggregate refresh overhead**.
-
-and:
-
-> **FGR mode ≠ a simple retention-strength ranking**.
-
-### On-the-fly mode changes retain sequencing constraints
-
-JESD79-4 §4.9.3 states that changing refresh rate applies the corresponding new `tREFI` and `tRFC` parameters immediately, but the change is not unconstrained.
-
-For 2x operation, an even number of `REF2x` commands must satisfy the relevant grouping conditions before certain rate changes; for 4x, the analogous requirement is a multiple of four. The standard explicitly says that if the listed conditions are not met, DDR4 data retention cannot be guaranteed.
-
-This means the admissibility of a future mode transition depends on the recent maintenance sequence:
-
-> **mode-register change ≠ schedule-history reset**.
-
-The standard does not prescribe that a memory controller use one particular counter representation. The project therefore infers only that a compliant controller must retain or derive enough schedule position to avoid illegal transitions and over-postponement.
-
-### Self Refresh can close a mode boundary without erasing all prior scheduling state
-
-JESD79-4 §4.9.5 allows Self Refresh entry from 1x/2x/4x without first completing a particular FGR grouping. But on exit, an incomplete pre-entry 2x or 4x grouping can require extra `REF1x`, `REF2x`, or `REF4x` commands. Those catch-up commands are explicitly excluded from the average-`tREFI` calculation.
-
-So:
-
-> **Self Refresh entry/exit ≠ automatic erasure of prior fine-granularity accounting**.
-
-A mode handoff can preserve data while still leaving a bounded maintenance obligation that must be discharged on the other side.
-
-### The initial DDR4 standard does not freely compose FGR with temperature-controlled refresh
-
-In JESD79-4 §4.9.4, Temperature Controlled Refresh may be enabled only with normal fixed 1x. Selecting another FGR mode requires Temperature Controlled Refresh to be disabled.
-
-This is a useful historical boundary against treating every refresh optimization as an orthogonal switch:
-
-> **temperature-conditioned refresh ≠ automatically composable with every fine-granularity mode**.
-
-Later revisions and products may change the composition and must be sourced separately.
-
-## Prior-art boundary
-
-DDR4 did **not** invent the general idea of shifting refresh commands in time. IBM's 2010 MICRO paper `Elastic Refresh` already describes exploiting the flexibility of then-current JEDEC DDRx specifications to postpone refresh operations and proposes workload-aware scheduling over that allowed range.
-
-The defensible 2012 historical claim is narrower:
-
-> JESD79-4 specifies a DDR4 composition of bounded postpone/pull-in accounting together with 1x/2x/4x FGR timing regimes and explicit transition/self-refresh constraints.
-
-Likewise, IBM's 2013 work does not invent JEDEC FGR; its own abstract describes FGR as a feature recently announced in the DDR4 specification and analyzes/adapts it.
-
-## Retained state and lifetime split
-
-At least six state classes should remain distinct:
-
-1. **DRAM payload state** — charge distinctions that ultimately need refresh;
-2. **internal refresh-address state** — device-side row enumeration used when `REF` executes;
-3. **external schedule position** — how much ordinary refresh work has recently been postponed or pulled in;
-4. **FGR mode state** — the selected fixed or on-the-fly 1x/2x/4x regime;
-5. **recent FGR grouping position** — enough history to know whether an even/multiple-of-four transition constraint is satisfied;
-6. **Self Refresh mode state** — internal autonomous retention mode whose entry/exit can create catch-up requirements.
-
-The specification does not prove that items 3 and 5 are stored in named registers. They are **logical controller obligations**: a compliant controller must preserve or reconstruct the information needed to obey the schedule contract.
-
-## Engineering reconstruction
-
-### A retention deadline can be represented as bounded scheduling slack
-
-Case 03 establishes that DRAM persistence needs time-triggered regeneration. Case 69 adds that an interface may expose that obligation not as `one command exactly every nominal interval`, but as an average cadence plus a bounded deviation envelope.
-
-The important invariant is therefore not one timestamp but a constrained relation among:
-
-```text
-nominal cadence
-+ recent refresh schedule
-+ postpone/pull-in bounds
-+ maximum gap
-+ active FGR mode
-+ legal transition grouping
-```
-
-### Maintenance history can be compressed without becoming payload history
-
-The controller does not need a complete log of every prior refresh forever. It needs only enough recent accounting to know what work is still owed, what work has been prepaid, and whether a mode transition is legal.
-
-This gives a retention-specific relation:
-
-> **refresh scheduling history can become retained control state without becoming retained application history**.
-
-The exact hardware representation is outside the source boundary.
-
-### Maintenance can be moved without becoming optional
-
-Postponement, pull-in, FGR, and Self Refresh all change the temporal placement or authority of maintenance. None turns dynamic cell retention into quiescent nonvolatility.
-
-> **temporal flexibility of maintenance ≠ disappearance of the maintenance requirement**.
-
-## Cross-case boundaries
-
-### Versus Case 03 — basic DRAM refresh deadline
-
-Case 03 establishes leakage plus periodic regeneration. Case 69 refines the externally visible scheduling relation: the nominal interval can have bounded elasticity. This is a scheduling-contract refinement, not a different cell-retention mechanism.
-
-### Versus Case 21 — AUTO REFRESH / SELF REFRESH authority handoff
-
-Case 21 asks who generates recurring refresh work and how responsibility moves across Self Refresh entry/exit. Case 69 asks how externally issued refreshes can move in time and how FGR grouping can leave catch-up work across a Self Refresh boundary.
-
-### Versus Case 33 — DDR5 Same Bank Refresh
-
-Case 33 localizes **where** refresh blocks service. Case 69 changes **when/how frequently** refresh commands are scheduled in the bounded DDR4 regime.
-
-> **temporal refresh scheduling ≠ spatial refresh localization**.
-
-### Versus Case 34 — temperature-dependent refresh
-
-Case 34 treats environmental measurement/policy as cadence-selection state. Case 69 supplies a specific 2012 interface boundary in which Temperature Controlled Refresh and non-1x FGR are not freely composable.
-
-### Versus Cases 53–54 — RowHammer / RFM
-
-Those cases add workload-induced maintenance urgency and a later host/device mitigation split. Case 69 concerns the ordinary data-retention refresh schedule and its bounded timing flexibility. `Postponed REF` and `RFM opportunity` are not interchangeable commands or histories.
-
-## Failure and forgetting boundaries
-
-Distinct failure modes include:
-
-- external scheduling exceeds the allowed postponed-refresh count;
-- a gap exceeds the mode-specific maximum interval;
-- software/controller logic treats extra pull-ins beyond the cap as additional future exemption;
-- recent 2x/4x grouping state is lost or miscomputed before a rate change;
-- FGR mode changes without satisfying its sequence constraint;
-- Self Refresh exit omits required catch-up refresh work;
-- Temperature Controlled Refresh is combined with a disallowed FGR mode in the bounded 2012 contract;
-- a controller retains correct payload data now but loses the schedule state needed to guarantee future retention.
-
-These are not all the same as immediate physical bit loss. Several are failures of retained **maintenance authority/accounting** that can later cause the physical retention guarantee to fail.
-
-## Historical record / reconstruction / analogy ledger
-
-| Claim | Layer | Evidence boundary |
-| --- | --- | --- |
-| JESD79-4 defines average `tREFI` plus bounded postpone/pull-in | `H/P` | JEDEC 2012 §4.26 |
-| 1x/2x/4x have different `tREFI` and `tRFC` timing regimes | `H/P` | JEDEC 2012 §4.9.2 |
-| 2x/4x rate changes have even/multiple-of-four sequencing constraints | `H/P` | JEDEC 2012 §4.9.3 |
-| some Self Refresh exits require extra FGR catch-up refreshes | `H/P` | JEDEC 2012 §4.9.5 |
-| controller must retain a literal JEDEC-defined `refresh debt counter` | `X` | no such implementation requirement is established; `debt` is project vocabulary |
-| recent refresh schedule is control state needed to obey the bounded contract | `E` | follows from postpone/pull-in and transition limits, representation unspecified |
-| FGR universally improves performance | `X` | IBM 2013 explicitly reports no one-size-fits-all mode |
-| DDR4 invented refresh postponement | `X` | IBM 2010 documents earlier JEDEC DDRx postponement flexibility |
-| refresh debt resembles deferred repair/GC debt | `A` | functional analogy only; mechanisms and history differ |
-
-## Philosophical interpretation — bounded
-
-Case 69 adds one narrow conceptual pressure:
-
-> Persistence can depend on a **bounded obligation whose execution is temporally movable**, rather than on either quiescent endurance or perfectly periodic repetition.
-
-The relevant retained thing is not only cell charge. A system must also maintain an admissible relation between past maintenance already performed and maintenance still owed. Calling that relation `memory` would be too loose; calling it **retention-control state** keeps the mechanism visible.
-
-The interpretation stops there. DDR4 refresh scheduling is not evidence that all maintenance is debt, that every temporal obligation is memory, or that JEDEC engineers were theorizing philosophical retention.
-
-## Sources
-
-### Primary
-
-- JEDEC Solid State Technology Association, **JESD79-4: DDR4 SDRAM**, September 2012, especially §§4.9 and 4.26, pp. 35–37 and 123–124. JEDEC-authored PDF mirrored by Texas Instruments E2E: <https://e2e.ti.com/cfs-file/__key/communityserver-discussions-components-files/196/JESD79_2D00_4.pdf>.
-
-### Independent / prior-art context
-
-- Jeffrey Stuecheli, Dimitris Kaseridis, Hillery C. Hunter, Lizy K. John, **“Elastic refresh: Techniques to mitigate refresh penalties in high density memory,”** MICRO 2010. IBM Research record: <https://research.ibm.com/publications/elastic-refresh-techniques-to-mitigate-refresh-penalties-in-high-density-memory>.
-- Janani Mukundan, Hillery Hunter, Kyu-Hyoun Kim, Jeffrey Stuecheli, José F. Martínez, **“Understanding and mitigating refresh overheads in high-density DDR4 DRAM systems,”** ISCA 2013, pp. 48–59. IBM Research record: <https://research.ibm.com/publications/understanding-and-mitigating-refresh-overheads-in-high-density-ddr4-dram-systems>.
-
-## Related repositories
-
-`tmzncty/computing-archaeology` was searched for a dedicated Fine Granularity Refresh case before this slice. None was found. Broader DRAM standards/history belongs there if developed; this case keeps only the retention-specific scheduling/accounting argument.
-'''
-
-          evidence = r'''# Case 69 grounding record — JEDEC DDR4 refresh scheduling, 2010–2013
-
-## Scope
-
-This record grounds [`../cases/69-jedec-ddr4-refresh-postponement-pullin.md`](../cases/69-jedec-ddr4-refresh-postponement-pullin.md).
-
-The bounded question is not `how does all DDR4 refresh work?` It is:
-
-> What primary evidence establishes that ordinary DDR4 retention refresh can be postponed or pulled in within explicit bounds, and how do 1x/2x/4x Fine Granularity Refresh modes preserve a retention-safe accounting relation across rate and Self Refresh transitions?
-
-## Source A — JEDEC JESD79-4, September 2012
-
-**Type:** `H/P`, normative standard.
-
-**Artifact:** JEDEC Solid State Technology Association, `JESD79-4: DDR4 SDRAM`, September 2012.
-
-**Inspected copy:** JEDEC-authored PDF mirrored by Texas Instruments E2E:
-<https://e2e.ti.com/cfs-file/__key/communityserver-discussions-components-files/196/JESD79_2D00_4.pdf>
-
-The cover/copyright pages identify the document as JEDEC Standard No. 79-4, DDR4 SDRAM, September 2012. The mirror is not treated as a separate TI standard or a claim of TI authorship.
-
-### §4.26 / printed p. 123 — ordinary REF scheduling
-
-Direct inspection establishes:
-
-- `REF` is used during normal operation and is nonpersistent, so it must be issued each time refresh is required;
-- refresh addresses are generated internally once `REF` begins;
-- refresh cycles are required at an **average** interval `tREFI`;
-- 1x permits at most 8 postponed refresh commands, with a maximum surrounding-command gap of `9 × tREFI`;
-- 2x/4x scale the postponed limits to 16/32 and maximum gaps to `17 × tREFI2` / `33 × tREFI4`;
-- up to 8/16/32 commands may be pulled in and each allowed pulled-in command reduces one later regular command requirement;
-- additional pull-ins beyond the specified cap do not continue buying later exemptions.
-
-**Supported relations:**
-
-- `nominal tREFI ≠ exact per-command timestamp`;
-- `bounded postponement ≠ canceled maintenance`;
-- `pull-in ≠ unlimited future credit`.
-
-### §4.9.1–4.9.2 / printed p. 35 — FGR mode vocabulary
-
-Direct inspection establishes:
-
-- MR3 selects Fixed 1x, Fixed 2x, Fixed 4x, enable-on-the-fly 2x, or enable-on-the-fly 4x;
-- in 2x, refresh-command frequency is doubled relative to base while a distinct `tRFC2` applies;
-- in 4x, frequency is quadrupled while a distinct `tRFC4` applies;
-- on-the-fly modes allow the command to select between the permitted rate pairs.
-
-The case therefore treats FGR as a **frequency / per-command-cycle-time composition**, not a one-dimensional `more refresh` scale.
-
-### §4.9.3–4.9.4 / printed p. 36 — rate-change and temperature constraints
-
-Direct inspection establishes:
-
-- new `tREFI` / `tRFC` timing applies from a rate change;
-- an even number of `REF2x` commands is required in the specified 2x transition/grouping cases;
-- a multiple of four `REF4x` commands is required in the specified 4x cases;
-- the standard warns that data retention cannot be guaranteed if these conditions are not satisfied;
-- Temperature Controlled Refresh in this revision is allowed only in normal Fixed 1x; other FGR modes require it disabled.
-
-**Supported relation:** a mode-setting change does not erase the relevance of recent refresh sequence history.
-
-### §4.9.5 / printed p. 37 — Self Refresh boundary
-
-Direct inspection establishes:
-
-- Self Refresh may be entered from 1x/2x/4x without a pre-entry restriction on how many relevant FGR commands have already occurred;
-- on exit, incomplete 2x/4x grouping can require extra refresh command(s);
-- those catch-up commands are not counted in the average-`tREFI` calculation.
-
-**Supported relation:** Self Refresh can preserve payload while leaving a bounded externally discharged maintenance obligation at exit.
-
-## Source B — IBM `Elastic Refresh`, MICRO 2010
-
-**Type:** `H/S`, institutional record of a peer-reviewed research paper; used for prior-art boundary, not as the DDR4 normative source.
-
-IBM Research record:
-<https://research.ibm.com/publications/elastic-refresh-techniques-to-mitigate-refresh-penalties-in-high-density-memory>
-
-The abstract states that then-current methods did not fully exploit DRAM flexibility to **postpone** refresh and that the proposed Elastic Refresh mechanisms exploit the dynamic range allowed by JEDEC DDRx SDRAM specifications.
-
-This blocks the claim:
-
-> `DDR4 2012 invented the general idea of postponable refresh scheduling`.
-
-The case makes only the narrower claim about the exact DDR4 composition visible in JESD79-4.
-
-## Source C — IBM/Cornell FGR analysis, ISCA 2013
-
-**Type:** `H/S`, institutional record of peer-reviewed analysis.
-
-IBM Research record:
-<https://research.ibm.com/publications/understanding-and-mitigating-refresh-overheads-in-high-density-ddr4-dram-systems>
-
-The abstract describes FGR as a feature recently announced in JEDEC's DDR4 specification, explicitly characterizes it as a trade-off between refresh latency and refresh frequency, and reports that no one mode fits every workload.
-
-This source is used to support an engineering boundary, not to substitute for the standard:
-
-- shorter `tRFC` does not imply universally lower system-level refresh cost;
-- FGR is not IBM's invention claim in this paper;
-- workload choice among modes is a later policy layer over the JEDEC contract.
-
-## Claim ledger
-
-| Claim | Status | Evidence |
-| --- | --- | --- |
-| JESD79-4 uses average `tREFI` and permits bounded postponement/pull-in | supported `H/P` | Source A §4.26 |
-| 1x allows 8 postponed / 8 pulled-in commands and max `9 × tREFI` gap | supported `H/P` | Source A §4.26 |
-| 2x/4x use 16/32 limits and `17 × tREFI2` / `33 × tREFI4` gaps | supported `H/P` | Source A §4.26 |
-| FGR couples command frequency to distinct `tRFC` values | supported `H/P` | Source A §§4.9.1–4.9.2 |
-| FGR rate change is unconstrained | rejected `X` | Source A §4.9.3 |
-| Self Refresh erases all prior FGR schedule obligations | rejected `X` | Source A §4.9.5 |
-| non-1x FGR freely composes with Temperature Controlled Refresh in 2012 | rejected `X` | Source A §4.9.4 |
-| exact controller implementation uses a JEDEC-defined `debt counter` | unsupported `X` | representation is not prescribed by inspected clauses |
-| some schedule/accounting state must be retained or derivable | engineering reconstruction `E` | follows from finite postpone/pull-in and transition constraints |
-| DDR4 invented postponable refresh | rejected `X` | Source B predates DDR4 standard and cites JEDEC DDRx flexibility |
-| FGR has one universally best mode | rejected `X` | Source C |
-
-## Historical / engineering boundary
-
-The following are JEDEC historical/normative facts:
-
-- the exact 1x/2x/4x modes and command constraints;
-- bounded postponement and pull-in;
-- maximum gaps;
-- rate-transition grouping requirements;
-- the bounded 2012 TCR/FGR compatibility rule;
-- Self Refresh exit catch-up requirements.
-
-The following are project engineering vocabulary:
-
-- `maintenance debt` / `maintenance credit`;
-- `schedule-control state`;
-- `temporal scheduling elasticity`;
-- describing pull-in as `pre-paying` maintenance.
-
-These phrases summarize the relation but must not be attributed to JEDEC actors.
-
-## What this evidence does not establish
-
-It does **not** establish:
-
-- a full JEDEC revision-by-revision genealogy before or after September 2012;
-- the exact hardware counter/register structure of any memory controller;
-- compliance of a named DIMM/controller implementation;
-- empirical failure thresholds after intentionally violating the specification;
-- that 1x/2x/4x FGR changes the underlying cell-retention physics;
-- that FGR universally improves performance, energy, or reliability;
-- that later DDR4/DDR5 temperature or per-bank refresh rules remain identical to the 2012 text.
-
-## Related-repository check
-
-`tmzncty/computing-archaeology` was searched before this slice for a dedicated `Fine Granularity Refresh` case; no matching case was found. A future broad standards chronology should be routed there, while `technical-retention` keeps this bounded maintenance-accounting comparison.
-
-## Grounding decision
-
-**`grounded`** for the bounded 2012 DDR4 scheduling claim.
-
-Reason: the central numeric and sequencing claims come directly from an inspected JEDEC standard artifact, and independent IBM research records supply both earlier postponement prior art and contemporaneous FGR engineering interpretation. The unresolved gaps concern later genealogy, exact controller implementation, and empirical compliance, not the bounded standard-level mechanism.
-'''
-
-          if CASE_PATH.exists() or EVIDENCE_PATH.exists():
+          import subprocess
+
+          root = Path('.')
+          old = subprocess.check_output(
+              ['git', 'show', 'HEAD^:.github/workflows/integrate-case69.yml'],
+              text=True,
+          )
+          case_match = re.search(r"case = r'''(.*?)\n'''", old, re.S)
+          evidence_match = re.search(r"evidence = r'''(.*?)\n'''", old, re.S)
+          if not case_match or not evidence_match:
+              raise SystemExit('could not recover Case 69 payloads from previous integrator commit')
+          case = case_match.group(1).replace(
+              '../evidence/69-jedc-ddr4-2012-refresh-scheduling-grounding.md',
+              '../evidence/69-jedec-ddr4-2012-refresh-scheduling-grounding.md',
+          )
+          evidence = evidence_match.group(1)
+
+          case_path = root / 'cases/69-jedec-ddr4-refresh-postponement-pullin.md'
+          evidence_path = root / 'evidence/69-jedec-ddr4-2012-refresh-scheduling-grounding.md'
+          if case_path.exists() or evidence_path.exists():
               raise SystemExit('Case 69 paths already exist; refusing duplicate integration')
-          CASE_PATH.write_text(case.rstrip() + '\n', encoding='utf-8')
-          EVIDENCE_PATH.write_text(evidence.rstrip() + '\n', encoding='utf-8')
+          case_path.write_text(case.rstrip() + '\n', encoding='utf-8')
+          evidence_path.write_text(evidence.rstrip() + '\n', encoding='utf-8')
 
-          readme_path = ROOT / 'README.md'
-          readme = readme_path.read_text(encoding='utf-8')
+          def insert_after_first(lines, needle, new_line):
+              out = []
+              done = False
+              for line in lines:
+                  out.append(line)
+                  if needle in line and not done:
+                      out.append(new_line)
+                      done = True
+              return out, done
+
+          readme_path = root / 'README.md'
+          readme_lines = readme_path.read_text(encoding='utf-8').splitlines()
           case_nav = "- [`cases/69-jedec-ddr4-refresh-postponement-pullin.md`](cases/69-jedec-ddr4-refresh-postponement-pullin.md) — grounded DDR4 refresh-scheduling bridge: JESD79-4 permits bounded REFRESH postponement and pull-in around nominal `tREFI`, scales those bounds across 1x/2x/4x Fine Granularity Refresh, and constrains rate transitions and Self Refresh exit; separates average cadence, deferred/prepaid maintenance, single-command blocking time, and retention-safe schedule state."
           evidence_nav = "- [`evidence/69-jedec-ddr4-2012-refresh-scheduling-grounding.md`](evidence/69-jedec-ddr4-2012-refresh-scheduling-grounding.md) — Case-69 grounding record: inspected JESD79-4 §§4.9/4.26 plus IBM 2010/2013 records separate nominal `tREFI`, bounded postpone/pull-in, FGR latency/frequency trade-offs, transition constraints, and invention-priority limits."
-          lines = readme.splitlines()
-          out = []
-          inserted_case = False
-          inserted_evidence = False
-          for line in lines:
-              out.append(line)
-              if 'cases/68-amazon-dynamo-membership-failure-boundary.md' in line and not inserted_case:
-                  out.append(case_nav)
-                  inserted_case = True
-              if 'evidence/68-dynamo-2007-membership-failure-grounding.md' in line and not inserted_evidence:
-                  out.append(evidence_nav)
-                  inserted_evidence = True
-          if not inserted_case:
+          readme_lines, ok_case = insert_after_first(readme_lines, 'cases/68-amazon-dynamo-membership-failure-boundary.md', case_nav)
+          if not ok_case:
               raise SystemExit('README Case 68 navigation anchor not found')
-          if not inserted_evidence:
-              # Keep evidence discoverable even if the prior run did not add a dedicated evidence-nav line.
-              idx = out.index(case_nav) + 1
-              out.insert(idx, evidence_nav)
-          readme_path.write_text('\n'.join(out).rstrip() + '\n', encoding='utf-8')
+          readme_lines, ok_evidence = insert_after_first(readme_lines, 'evidence/68-dynamo-2007-membership-failure-grounding.md', evidence_nav)
+          if not ok_evidence:
+              case_idx = readme_lines.index(case_nav)
+              readme_lines.insert(case_idx + 1, evidence_nav)
+          readme_path.write_text('\n'.join(readme_lines).rstrip() + '\n', encoding='utf-8')
 
-          roadmap_path = ROOT / 'ROADMAP.md'
+          roadmap_path = root / 'ROADMAP.md'
           roadmap = roadmap_path.read_text(encoding='utf-8')
           if 'eleven grounded bounded sub-slices' not in roadmap:
               raise SystemExit('ROADMAP DRAM-count anchor changed; refusing blind patch')
           roadmap = roadmap.replace('eleven grounded bounded sub-slices', 'twelve grounded bounded sub-slices', 1)
-          case69_clause = ("[`cases/69-jedec-ddr4-refresh-postponement-pullin.md`](cases/69-jedec-ddr4-refresh-postponement-pullin.md), grounded by "
-                           "[`evidence/69-jedec-ddr4-2012-refresh-scheduling-grounding.md`](evidence/69-jedec-ddr4-2012-refresh-scheduling-grounding.md), adds a DDR4 temporal-scheduling regime: nominal `tREFI` is an average cadence with bounded postpone/pull-in flexibility, while 1x/2x/4x FGR couples command frequency to `tRFC` and preserves sequencing/catch-up obligations across rate and Self Refresh transitions. ")
-          marker = 'The broad item stays unchecked because'
+          case69_clause = "[`cases/69-jedec-ddr4-refresh-postponement-pullin.md`](cases/69-jedec-ddr4-refresh-postponement-pullin.md), grounded by [`evidence/69-jedec-ddr4-2012-refresh-scheduling-grounding.md`](evidence/69-jedec-ddr4-2012-refresh-scheduling-grounding.md), adds a DDR4 temporal-scheduling regime: nominal `tREFI` is an average cadence with bounded postpone/pull-in flexibility, while 1x/2x/4x FGR couples command frequency to `tRFC` and preserves sequencing/catch-up obligations across rate and Self Refresh transitions. "
           dram_start = roadmap.find('- [ ] DRAM evolution and refresh machinery beyond the bounded case')
+          marker = 'The broad item stays unchecked because'
           marker_at = roadmap.find(marker, dram_start)
           if dram_start < 0 or marker_at < 0:
               raise SystemExit('ROADMAP DRAM broad-item marker not found')
           roadmap = roadmap[:marker_at] + case69_clause + roadmap[marker_at:]
           refresh_bullet = "- [ ] In refresh-driven memory, how should `retention deadline`, `row enumeration`, `recurring command generation`, `self-refresh mode authority`, `ordinary service availability`, and `exit/recovery timing` be separated?"
-          checked = ("- [x] In DDR4 ordinary externally issued refresh, separate nominal average cadence, bounded postponed work, pulled-in prepayment, maximum inter-refresh gap, FGR mode/`tRFC` coupling, and transition accounting — grounded in [`cases/69-jedec-ddr4-refresh-postponement-pullin.md`](cases/69-jedec-ddr4-refresh-postponement-pullin.md) with [`evidence/69-jedec-ddr4-2012-refresh-scheduling-grounding.md`](evidence/69-jedec-ddr4-2012-refresh-scheduling-grounding.md); exact later JESD79-4 revision evolution and controller implementation remain separate work.")
+          checked = "- [x] In DDR4 ordinary externally issued refresh, separate nominal average cadence, bounded postponed work, pulled-in prepayment, maximum inter-refresh gap, FGR mode/`tRFC` coupling, and transition accounting — grounded in [`cases/69-jedec-ddr4-refresh-postponement-pullin.md`](cases/69-jedec-ddr4-refresh-postponement-pullin.md) with [`evidence/69-jedec-ddr4-2012-refresh-scheduling-grounding.md`](evidence/69-jedec-ddr4-2012-refresh-scheduling-grounding.md); exact later JESD79-4 revision evolution and controller implementation remain separate work."
           if refresh_bullet not in roadmap:
               raise SystemExit('ROADMAP Phase-3 refresh bullet anchor not found')
           roadmap = roadmap.replace(refresh_bullet, refresh_bullet + '\n' + checked, 1)
           roadmap_path.write_text(roadmap.rstrip() + '\n', encoding='utf-8')
 
-          index_path = ROOT / 'CASE_INDEX.md'
-          index = index_path.read_text(encoding='utf-8')
-          row68_fragment = 'cases/68-amazon-dynamo-membership-failure-boundary.md) | **grounded** |'
+          index_path = root / 'CASE_INDEX.md'
+          index_lines = index_path.read_text(encoding='utf-8').splitlines()
           row69 = "| [JEDEC DDR4 Refresh Postponement and Pull-In: Bounded Scheduling Elasticity, Fine-Granularity Refresh, and Maintenance Accounting](cases/69-jedec-ddr4-refresh-postponement-pullin.md) | **grounded** | externally issued DDR4 REFRESH + average `tREFI` contract + bounded postpone/pull-in accounting + 1x/2x/4x FGR timing modes + transition/Self Refresh catch-up constraints | separate nominal refresh cadence from exact issue time; deferred maintenance from cancellation; pulled-in work from unlimited credit; `tRFC` shortening from command frequency; and schedule-control state from payload | [2012 DDR4 refresh-scheduling grounding](evidence/69-jedec-ddr4-2012-refresh-scheduling-grounding.md); exact later JESD79-4 revision chronology, controller counter representation, and independent hardware timing validation remain separate work |"
-          idx_lines = index.splitlines()
+          matrix_row = "| JEDEC DDR4 refresh scheduling / 2012 bounded regime | volatile DRAM payload + device-internal refresh addressing + external refresh schedule + bounded postpone/pull-in relation + MR3 FGR mode | periodic refresh remains mandatory, but bounded work may shift earlier/later; 1x/2x/4x pair command frequency with different `tRFC`; some Self Refresh exits require catch-up work | each rank-level refresh blocks ordinary rank access for its applicable `tRFC` in the bounded FGR analysis; this case focuses on maintenance scheduling rather than cell-read destructiveness | normal data addressing is unchanged; `REF` uses internal refresh addressing while the controller retains/derives temporal schedule position | payload cell location stays fixed while maintenance windows move in time | no payload history; only bounded recent maintenance-accounting/grouping state is needed or derivable to know what work is owed/prepaid and which transition is legal |"
           out = []
           inserted_row = False
           inserted_matrix = False
-          matrix_row = "| JEDEC DDR4 refresh scheduling / 2012 bounded regime | volatile DRAM payload + device-internal refresh addressing + external refresh schedule + bounded postpone/pull-in relation + MR3 FGR mode | periodic refresh remains mandatory, but bounded work may shift earlier/later; 1x/2x/4x pair command frequency with different `tRFC`; some Self Refresh exits require catch-up work | each rank-level refresh blocks ordinary rank access for its applicable `tRFC` in the bounded FGR analysis; this case focuses on maintenance scheduling rather than cell-read destructiveness | normal data addressing is unchanged; `REF` uses internal refresh addressing while the controller retains/derives temporal schedule position | payload cell location stays fixed while maintenance windows move in time | no payload history; only bounded recent maintenance-accounting/grouping state is needed or derivable to know what work is owed/prepaid and which transition is legal |"
-          for line in idx_lines:
+          for line in index_lines:
               out.append(line)
-              if row68_fragment in line and not inserted_row:
+              if 'cases/68-amazon-dynamo-membership-failure-boundary.md) | **grounded** |' in line and not inserted_row:
                   out.append(row69)
                   inserted_row = True
               if line.startswith('| DRAM |') and not inserted_matrix:
@@ -521,40 +107,34 @@ Reason: the central numeric and sequencing claims come directly from an inspecte
           if not inserted_row or not inserted_matrix:
               raise SystemExit(f'CASE_INDEX anchors missing: row={inserted_row}, matrix={inserted_matrix}')
           index = '\n'.join(out).rstrip()
-          findings = r'''
-
-## Case 69 — DDR4 refresh-scheduling findings
-
-781. **nominal refresh interval ≠ exact per-command timestamp** — JESD79-4 defines average `tREFI` while permitting bounded movement of individual `REF` commands;
-782. **bounded postponement ≠ canceled refresh obligation** — postponed work remains capped and the surrounding-command gap remains bounded;
-783. **pulled-in refresh ≠ permanently increased refresh requirement** — each allowed advance command can replace one later regular command rather than creating an additional permanent cadence;
-784. **maintenance credit ≠ unbounded future exemption** — pull-ins beyond the mode-specific cap do not buy further reduction of later required refreshes;
-785. **refresh scheduling history can become retention-control state** — compliance depends on recent postpone/pull-in and grouping position even though the standard does not mandate one physical counter representation;
-786. **controller accounting state ≠ DRAM payload** — the schedule relation is retention infrastructure, not application data stored in the array;
-787. **average-cadence compliance ≠ zero temporal elasticity** — maintenance can move earlier or later while remaining inside a bounded retention-safe contract;
-788. **shorter `tRFC` ≠ lower refresh-command frequency** — 2x/4x FGR shortens the individual refresh cycle while doubling/quadrupling nominal command frequency;
-789. **FGR mode ≠ retention-strength grade** — 1x/2x/4x are paired timing regimes, not a simple ranking in which a larger multiplier universally means safer retention;
-790. **shorter single refresh pause ≠ necessarily lower aggregate refresh overhead** — IBM's 2013 analysis treats FGR as a latency/frequency trade-off and finds no universally best mode;
-791. **on-the-fly refresh mode ≠ unconstrained mode switching** — 2x/4x transitions retain even/multiple-of-four command-group conditions tied explicitly to the retention guarantee;
-792. **mode-register change ≠ schedule-history reset** — recent `REF2x`/`REF4x` grouping still constrains whether the next rate transition is admissible;
-793. **Self Refresh entry/exit ≠ erasure of prior fine-granularity accounting** — incomplete pre-entry grouping can require extra catch-up refreshes after exit;
-794. **Temperature Controlled Refresh ≠ freely composable with all 2012 FGR modes** — JESD79-4 permits it only with normal Fixed 1x in the bounded revision;
-795. **temporal refresh scheduling ≠ Same Bank Refresh spatial localization** — Case 69 moves maintenance in time, while Case 33 changes which bank geometry is blocked/served;
-796. **DDR4 FGR/postponement ≠ invention of refresh scheduling elasticity** — IBM's 2010 Elastic Refresh already describes exploiting postpone flexibility in JEDEC DDRx specifications; the bounded 2012 claim is the specific DDR4 timing/accounting composition.
-'''
-          if '## Case 69 — DDR4 refresh-scheduling findings' in index:
-              raise SystemExit('Case 69 findings already present')
           if '780. **Dynamo 2007 membership/failure composition' not in index:
               raise SystemExit('Finding 780 anchor missing')
-          index_path.write_text(index + findings.rstrip() + '\n', encoding='utf-8')
+          findings = [
+              "781. **nominal refresh interval ≠ exact per-command timestamp** — JESD79-4 defines average `tREFI` while permitting bounded movement of individual `REF` commands;",
+              "782. **bounded postponement ≠ canceled refresh obligation** — postponed work remains capped and the surrounding-command gap remains bounded;",
+              "783. **pulled-in refresh ≠ permanently increased refresh requirement** — each allowed advance command can replace one later regular command rather than creating an additional permanent cadence;",
+              "784. **maintenance credit ≠ unbounded future exemption** — pull-ins beyond the mode-specific cap do not buy further reduction of later required refreshes;",
+              "785. **refresh scheduling history can become retention-control state** — compliance depends on recent postpone/pull-in and grouping position even though the standard does not mandate one physical counter representation;",
+              "786. **controller accounting state ≠ DRAM payload** — the schedule relation is retention infrastructure, not application data stored in the array;",
+              "787. **average-cadence compliance ≠ zero temporal elasticity** — maintenance can move earlier or later while remaining inside a bounded retention-safe contract;",
+              "788. **shorter `tRFC` ≠ lower refresh-command frequency** — 2x/4x FGR shortens the individual refresh cycle while doubling/quadrupling nominal command frequency;",
+              "789. **FGR mode ≠ retention-strength grade** — 1x/2x/4x are paired timing regimes, not a simple ranking in which a larger multiplier universally means safer retention;",
+              "790. **shorter single refresh pause ≠ necessarily lower aggregate refresh overhead** — IBM's 2013 analysis treats FGR as a latency/frequency trade-off and finds no universally best mode;",
+              "791. **on-the-fly refresh mode ≠ unconstrained mode switching** — 2x/4x transitions retain even/multiple-of-four command-group conditions tied explicitly to the retention guarantee;",
+              "792. **mode-register change ≠ schedule-history reset** — recent `REF2x`/`REF4x` grouping still constrains whether the next rate transition is admissible;",
+              "793. **Self Refresh entry/exit ≠ erasure of prior fine-granularity accounting** — incomplete pre-entry grouping can require extra catch-up refreshes after exit;",
+              "794. **Temperature Controlled Refresh ≠ freely composable with all 2012 FGR modes** — JESD79-4 permits it only with normal Fixed 1x in the bounded revision;",
+              "795. **temporal refresh scheduling ≠ Same Bank Refresh spatial localization** — Case 69 moves maintenance in time, while Case 33 changes which bank geometry is blocked/served;",
+              "796. **DDR4 FGR/postponement ≠ invention of refresh scheduling elasticity** — IBM's 2010 Elastic Refresh already describes exploiting postpone flexibility in JEDEC DDRx specifications; the bounded 2012 claim is the specific DDR4 timing/accounting composition.",
+          ]
+          index += '\n\n## Case 69 — DDR4 refresh-scheduling findings\n\n' + '\n'.join(findings) + '\n'
+          index_path.write_text(index, encoding='utf-8')
 
-          # Basic integration validation.
-          ids = sorted(int(p.name.split('-', 1)[0]) for p in (ROOT / 'cases').glob('[0-9][0-9]-*.md'))
+          ids = sorted(int(p.name.split('-', 1)[0]) for p in (root / 'cases').glob('[0-9][0-9]-*.md'))
           if ids != list(range(70)):
               raise SystemExit(f'case ledger is not continuous 00-69: {ids[-10:]}')
           for path in [readme_path, roadmap_path, index_path]:
-              txt = path.read_text(encoding='utf-8')
-              if 'cases/69-jedec-ddr4-refresh-postponement-pullin.md' not in txt:
+              if 'cases/69-jedec-ddr4-refresh-postponement-pullin.md' not in path.read_text(encoding='utf-8'):
                   raise SystemExit(f'Case 69 navigation missing from {path}')
           if '796. **DDR4 FGR/postponement' not in index_path.read_text(encoding='utf-8'):
               raise SystemExit('Case 69 finding tail missing')
