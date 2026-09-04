@@ -1,0 +1,35 @@
+name: Integrate Case 77
+
+on:
+  push:
+    paths:
+      - '.github/scripts/integrate_case77.py'
+      - '.github/workflows/integrate-case77.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Integrate research slice
+        run: python .github/scripts/integrate_case77.py
+      - name: Validate and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git status --short
+          git config user.name "technical-retention automation"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md ROADMAP.md CASE_INDEX.md \
+            cases/77-data-general-dram-sniff-refresh-ecc-scrub.md \
+            evidence/77-ibm-data-general-1971-1988-ecc-scrub-grounding.md
+          git diff --cached --check
+          git commit -m "case77: ground refresh-coupled ECC sniffing"
+          git push
