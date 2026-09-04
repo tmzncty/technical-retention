@@ -28,10 +28,12 @@ jobs:
           assert nums == list(range(64)), (len(nums), nums[:3], nums[-3:])
           assert Path('cases/63-apache-kafka-transactional-read-visibility.md').exists()
           assert Path('evidence/63-kafka-0110-transaction-lso-grounding.md').exists()
-          idx = Path('CASE_INDEX.md').read_text()
+          idx_path = Path('CASE_INDEX.md')
+          idx = idx_path.read_text()
           assert 'After sixty-four bounded cases, **all sixty-four cases are now `grounded`.**' in idx
           assert idx.count('cases/63-apache-kafka-transactional-read-visibility.md') >= 1
           assert idx.count('Apache Kafka transactional read visibility / 0.11.0.0 bounded regime') == 1
+          idx_path.write_text(idx.rstrip() + '\n')
           print('validated 64 bounded cases, 00-63')
           PY
           git diff --check
