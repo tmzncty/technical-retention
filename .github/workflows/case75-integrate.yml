@@ -1,151 +1,47 @@
-name: Integrate Case 75
+name: integrate-case75
+
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+    paths:
+      - '.github/scripts/integrate_case75.py'
+
 permissions:
   contents: write
+
 jobs:
   integrate:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Integrate navigation and findings
+      - name: Complete Case 75 navigation and findings
+        run: python .github/scripts/integrate_case75.py
+      - name: Validate and commit
         shell: bash
         run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md ROADMAP.md CASE_INDEX.md
+          git rm .github/scripts/integrate_case75.py .github/workflows/case75-integrate.yml
+          git diff --cached --check
           python - <<'PY'
           from pathlib import Path
-
-          case_path = "cases/75-nvme13-reservation-persistence-ptpl.md"
-          evidence_path = "evidence/75-nvme-2001-2019-reservation-persistence-grounding.md"
-
-          # README: add Case 75 directly after Case 74 in the case/navigation list.
-          p = Path("README.md")
-          text = p.read_text()
-          if case_path not in text:
-              lines = text.splitlines()
-              inserted = False
-              for i, line in enumerate(lines):
-                  if "cases/74-linux-jbd-revoke-stale-replay-suppression.md" in line:
-                      lines.insert(i + 1, "- [`Case 75 — NVM Express 1.3d Reservations: Retained Access Authority, PTPL, and Preemption`](cases/75-nvme13-reservation-persistence-ptpl.md) — `grounded`; reservation/registrant state survives ordinary controller/subsystem reset, while namespace PTPL separately decides whether that access-authority relation crosses power loss; preemption changes authority without relocating payload, and Reservation Report `GEN` is bounded change evidence rather than a complete history. Grounding: [`evidence/75-nvme-2001-2019-reservation-persistence-grounding.md`](evidence/75-nvme-2001-2019-reservation-persistence-grounding.md).")
-                      inserted = True
-                      break
-              if not inserted:
-                  raise SystemExit("README Case 74 anchor not found")
-              text = "\n".join(lines) + "\n"
-          # Correct aggregate case-range/count wording only where the line explicitly describes bounded cases.
-          out = []
-          for line in text.splitlines():
-              if "bounded cases" in line:
-                  line = line.replace("75 bounded cases", "76 bounded cases").replace("00–74", "00–75")
-              out.append(line)
-          p.write_text("\n".join(out) + "\n")
-
-          # ROADMAP: close one precise authority-retention decomposition without claiming NVMe genealogy complete.
-          p = Path("ROADMAP.md")
-          text = p.read_text()
-          marker = "- [x] In reservation-capable NVMe namespaces, separate `namespace payload`, `registration/key state`, `reservation-holder/type state`, ordinary reset persistence, `PTPL` power-loss policy, current-state reporting, and preemption/clear/release authority"
-          if marker not in text:
-              anchor = "- [ ] How should `command completion`, `volatile-cache residence`, `nonvolatile-media commitment`, `cross-command ordering`, and `power-fail atomicity` be separated at storage interfaces?"
-              addition = marker + " — grounded in [`cases/75-nvme13-reservation-persistence-ptpl.md`](cases/75-nvme13-reservation-persistence-ptpl.md), with [`evidence/75-nvme-2001-2019-reservation-persistence-grounding.md`](evidence/75-nvme-2001-2019-reservation-persistence-grounding.md); named-controller implementation/fault validation and a full SCSI→NVMe reservation genealogy remain separate work."
-              if anchor not in text:
-                  raise SystemExit("ROADMAP anchor not found")
-              text = text.replace(anchor, anchor + "\n" + addition, 1)
-          p.write_text(text)
-
-          # CASE_INDEX: main ledger row after Case 74.
-          p = Path("CASE_INDEX.md")
-          text = p.read_text()
-          main_row = "| [NVM Express 1.3d Reservations: Retained Access Authority, PTPL, and Preemption](cases/75-nvme13-reservation-persistence-ptpl.md) | **grounded** | namespace registration keys + registrant/holder/type authority state + reset persistence + namespace PTPL policy + current Reservation Report/GEN + release/clear/preemption transitions | separate payload durability from authority durability; ordinary reset from power-loss reset; reservation support from PTPL enablement; current authority state from complete history; and preemption from payload relocation or sanitization | [2001–2019 SCSI/NVMe reservation-persistence grounding](evidence/75-nvme-2001-2019-reservation-persistence-grounding.md); named-controller PTPL implementation/fault validation, NVMe-oF deployment behavior, exact NVMe introduction revision, and full SCSI→NVMe genealogy remain separate work |"
-          if case_path not in text:
-              lines = text.splitlines()
-              for i, line in enumerate(lines):
-                  if line.startswith("| [") and "cases/74-linux-jbd-revoke-stale-replay-suppression.md" in line:
-                      lines.insert(i + 1, main_row)
-                      break
-              else:
-                  raise SystemExit("CASE_INDEX main Case 74 row not found")
-              text = "\n".join(lines) + "\n"
-
-          # CASE_INDEX comparison matrix row: insert after the JBD comparison row when present;
-          # if Case 74 has not yet been given a matrix row, append before the findings section.
-          matrix_row = "| NVMe 1.3d reservations / 2019 bounded regime | namespace user payload + registration keys + registrant/holder/type authority state + namespace PTPL state + wrapping GEN/current report | no payload rewrite merely to retain authority; Register/Acquire/Release/Clear/Preempt revise control state; ordinary reset preserves it while PTPL separately governs power-loss retention | reads/writes may be allowed or rejected with Reservation Conflict according to holder/registrant/type state; Reservation Report reads current authority state | namespace/Host Identifier/reservation-key relations identify who is registered and who may act; physical metadata placement is unspecified | payload location need not change when authority changes; reservation relations can survive reset or be forgotten at power loss independently of payload | no complete authority history by default; current status plus wrapping GEN and optional notifications are not an append-only audit log |"
-          if matrix_row not in text:
-              lines = text.splitlines()
-              inserted = False
-              for i, line in enumerate(lines):
-                  if line.startswith("| Linux JBD") and "revoke" in line.lower():
-                      lines.insert(i + 1, matrix_row)
-                      inserted = True
-                      break
-              if not inserted:
-                  # Place it at the end of the comparison matrix, just before the next thematic section.
-                  start = next((i for i,l in enumerate(lines) if l.startswith("## Comparison matrix")), None)
-                  if start is None:
-                      raise SystemExit("CASE_INDEX comparison matrix heading not found")
-                  end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ") and i > start + 1), None)
-                  if end is None:
-                      # findings begin with a case heading; find the first one after matrix start
-                      end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## Case ")), None)
-                  if end is None:
-                      raise SystemExit("CASE_INDEX matrix end not found")
-                  lines.insert(end, matrix_row)
-              text = "\n".join(lines) + "\n"
-
-          # Aggregate status wording.
-          lines = []
-          for line in text.splitlines():
-              if "bounded cases" in line:
-                  line = line.replace("75 bounded cases", "76 bounded cases").replace("00–74", "00–75")
-                  if "75 are `grounded`" in line:
-                      line = line.replace("75 are `grounded`", "76 are `grounded`")
-                  if "75 `grounded`" in line:
-                      line = line.replace("75 `grounded`", "76 `grounded`")
-              lines.append(line)
-          text = "\n".join(lines).rstrip() + "\n"
-
-          # Findings 877–892.
-          if "## Case 75 — NVMe reservation-persistence findings" not in text:
-              findings = r'''
-
-## Case 75 — NVMe reservation-persistence findings
-
-877. **payload durability ≠ access-authority durability** — namespace data can survive while reservation registrations/holder state are deliberately cleared at a power-loss boundary, or both state classes can survive;
-878. **Controller Level Reset / NVM Subsystem Reset ≠ power-loss reset** — Revision 1.3d preserves registrations and reservations across the former while making the latter separately conditional on PTPL;
-879. **reset-persistent authority ≠ power-loss-persistent authority** — the word `persistent` is incomplete unless the failure boundary is named;
-880. **PTPL capability/state support ≠ PTPL currently enabled** — a reservation-capable namespace exposes PTPL state, but the current value determines whether reservation/registrant relations cross power loss;
-881. **PTPL state ≠ reservation/registrant state** — PTPL is second-order control state that decides the failure-boundary retention policy of the access-authority relation itself;
-882. **specified persistence semantics ≠ specified physical persistence implementation** — NVMe defines externally visible reservation survival/clearing behavior without prescribing the medium that stores reservation metadata;
-883. **registration/key state ≠ reservation-holder state ≠ reservation type** — becoming a registrant, holding a reservation, and determining the exclusion rule are separate relations in the normative model;
-884. **payload presence ≠ command admissibility** — intact namespace bytes can coexist with `Reservation Conflict` because retained authority state qualifies who may read/write;
-885. **authority transfer ≠ payload relocation** — preemption can replace registrations/holder state atomically while leaving the namespace payload in place;
-886. **Preempt and Abort ≠ guaranteed instantaneous cancellation** — the standard explicitly treats abort of affected in-flight commands as best effort and waits for abort or ordinary completion;
-887. **explicit Release ≠ Clear ≠ power-loss-triggered authority forgetting** — orderly holder release, administrative clearing, and PTPL=0 failure-boundary clearing have different triggers and semantics;
-888. **authority forgetting ≠ media sanitization** — clearing reservation relations does not establish erase, overwrite, cryptographic severance, or forensic absence of namespace payload;
-889. **Reservation Report current state ≠ complete authority history** — the report exposes current registration/reservation state plus a 32-bit wrapping GEN counter rather than an append-only transition record;
-890. **GEN change evidence ≠ event chronology** — selected successful reservation operations increment GEN, but the counter does not preserve actors, order beyond the scalar relation, or every prior transition after wrap;
-891. **NVMe reservation persistence ≠ NVMe Persistent Event Log** — Case 75 retains current exclusion authority across chosen failure boundaries, whereas Case 66 retains a bounded device-event history with different lifecycle/retrieval rules;
-892. **NVMe 1.3d reservation/PTPL semantics ≠ invention of persistent reservations** — SPC-2/SPC-3-era T10 material already documents reservation keys, preemption, and optional persist-through-power-loss behavior; the grounded claim is the NVMe-specific normative composition, not first invention.
-'''
-              text += findings.lstrip("\n")
-          p.write_text(text)
-
-          # Basic consistency checks before commit.
-          for f in ["README.md", "ROADMAP.md", "CASE_INDEX.md", case_path, evidence_path]:
-              if not Path(f).exists():
-                  raise SystemExit(f"missing expected file: {f}")
-          assert case_path in Path("README.md").read_text()
-          assert case_path in Path("ROADMAP.md").read_text()
-          ci = Path("CASE_INDEX.md").read_text()
-          assert case_path in ci and "877." in ci and "892." in ci
+          case_files = sorted(Path('cases').glob('[0-9][0-9]-*.md'))
+          nums = sorted(int(p.name[:2]) for p in case_files)
+          assert nums == list(range(76)), nums
+          assert Path('cases/75-nvme13-reservation-persistence-ptpl.md').exists()
+          assert Path('evidence/75-nvme-2001-2019-reservation-persistence-grounding.md').exists()
+          for p in ['README.md', 'ROADMAP.md', 'CASE_INDEX.md']:
+              text = Path(p).read_text()
+              assert '75-nvme13-reservation-persistence-ptpl.md' in text, p
+          idx = Path('CASE_INDEX.md').read_text()
+          assert '877. **payload durability ≠ access-authority durability**' in idx
+          assert '892. **NVMe 1.3d reservation/PTPL semantics ≠ invention of persistent reservations**' in idx
+          print('validated 00-75 contiguous case ledger, Case 75 evidence/navigation, and findings 877-892')
           PY
-
-          git diff --check
-          git rm .github/workflows/case75-integrate.yml
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add README.md ROADMAP.md CASE_INDEX.md .github/workflows/case75-integrate.yml
-          git commit -m "case75: integrate NVMe reservation persistence navigation"
-          git push
+          git commit -m 'case75: integrate NVMe reservation persistence navigation'
+          git push origin HEAD:main
