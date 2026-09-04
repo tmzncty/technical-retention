@@ -1,0 +1,36 @@
+name: integrate-case57
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/scripts/integrate_case57.py'
+      - '.github/workflows/integrate-case57.yml'
+      - '.github/payloads/case57.zlib'
+      - '.github/payloads/evidence57.zlib'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.repository == 'tmzncty/technical-retention'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Integrate Case 57
+        run: python .github/scripts/integrate_case57.py
+      - name: Commit integrated files and remove one-shot runner
+        run: |
+          git config user.name "technical-retention automation"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md ROADMAP.md CASE_INDEX.md cases/57-google-bigtable-tablet-log-memtable-recovery.md evidence/57-bigtable-2006-log-memtable-sstable-grounding.md
+          git rm .github/scripts/integrate_case57.py .github/workflows/integrate-case57.yml .github/payloads/case57.zlib .github/payloads/evidence57.zlib
+          git status --short
+          git commit -m "docs: integrate grounded Bigtable recovery case"
+          git push origin HEAD:main
