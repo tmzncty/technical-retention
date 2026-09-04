@@ -1,0 +1,142 @@
+name: one-shot-case61-integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/case61-integrate.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch navigation and findings
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          # README navigation
+          p = Path("README.md")
+          lines = p.read_text(encoding="utf-8").splitlines()
+          prefix = "- [`cases/60-apollo-core-rope-wired-topology.md`]"
+          hits = [i for i, line in enumerate(lines) if line.startswith(prefix)]
+          if len(hits) != 1:
+              raise SystemExit(f"README Case 60 anchor count={len(hits)}")
+          case61_nav = "- [`cases/61-apache-hdfs-observer-stateid-read-freshness.md`](cases/61-apache-hdfs-observer-stateid-read-freshness.md) — grounded HDFS Observer read-freshness bridge: RPC-carried client state IDs record a monotonic lower bound on namespace progress; coordinated Observer reads wait/retry until the Observer catches up, while `msync()` imports an Active frontier across client/out-of-band boundaries and writes remain Active-only."
+          if case61_nav not in lines:
+              lines.insert(hits[0] + 1, case61_nav)
+          p.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+
+          # ROADMAP Phase 2 + Phase 3
+          p = Path("ROADMAP.md")
+          lines = p.read_text(encoding="utf-8").splitlines()
+          hits = [i for i, line in enumerate(lines) if line.startswith("- [ ] distributed replication and erasure coding beyond RADOS")]
+          if len(hits) != 1:
+              raise SystemExit(f"ROADMAP distributed anchor count={len(hits)}")
+          i = hits[0]
+          line = lines[i]
+          old = "grounded Cases 19, 23, 24, 25, 26, 27, 28, 29, 41, 46, 48, 49, 50, 51, 56, 57, and 58"
+          new = "grounded Cases 19, 23, 24, 25, 26, 27, 28, 29, 41, 46, 48, 49, 50, 51, 56, 57, 58, and 61"
+          if line.count(old) != 1:
+              raise SystemExit(f"ROADMAP case-list anchor count={line.count(old)}")
+          line = line.replace(old, new, 1)
+          marker = "The broad item stays unchecked"
+          case61_summary = "[`cases/61-apache-hdfs-observer-stateid-read-freshness.md`](cases/61-apache-hdfs-observer-stateid-read-freshness.md), grounded by [`evidence/61-hadoop-2017-2020-observer-stateid-grounding.md`](evidence/61-hadoop-2017-2020-observer-stateid-grounding.md), adds the Observer/read-freshness slice left open by Cases 50–51: a non-Active NameNode may serve reads only when its transaction-backed state ID is sufficiently current for the client's retained lower bound; `msync()` can refresh that bound from the Active across new-client/out-of-band boundaries, while edit-tail speed, write authority, DataNode command authority, and read admissibility remain separate. "
+          if line.count(marker) != 1:
+              raise SystemExit(f"ROADMAP broad-item marker count={line.count(marker)}")
+          line = line.replace(marker, case61_summary + marker, 1)
+          lines[i] = line
+
+          phase3_anchor = "- [ ] In consensus snapshotting, how should committed command history, applied state, stable snapshot payload, log-position/term boundary metadata, cluster configuration, remaining log suffix, follower progress, and state-transfer repair be separated?"
+          hits = [j for j, l in enumerate(lines) if l == phase3_anchor]
+          if len(hits) != 1:
+              raise SystemExit(f"ROADMAP Phase3 anchor count={len(hits)}")
+          phase3_q = "- [ ] In lagging read replicas, how should mutation authority, replica-applied transaction progress, a client's retained seen-state lower bound, `msync`/frontier import, edit-tail maintenance, read-admission waiting/retry, and Active fallback be separated?"
+          if phase3_q not in lines:
+              lines.insert(hits[0] + 1, phase3_q)
+          p.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+
+          # CASE_INDEX case row, comparison row, status count, findings
+          p = Path("CASE_INDEX.md")
+          lines = p.read_text(encoding="utf-8").splitlines()
+
+          hits = [i for i, line in enumerate(lines) if line.startswith("| [Apollo Guidance Computer Core Rope:")]
+          if len(hits) != 1:
+              raise SystemExit(f"CASE_INDEX Case60 row count={len(hits)}")
+          case61_row = "| [Apache HDFS Observer NameNode: State-ID Read Freshness Beyond Writer Authority](cases/61-apache-hdfs-observer-stateid-read-freshness.md) | **grounded** | Active/journal namespace progress + lagging Observer replica + RPC-carried client `stateId` + `msync` + Observer-aware proxy routing | separate mutation authority from read authority; replica existence from client-qualified freshness; edit-tail speed from read-admission criterion; and client frontier from complete operation history | [2017–2020 HDFS Observer state-ID grounding](evidence/61-hadoop-2017-2020-observer-stateid-grounding.md); RBF propagation, post-3.3 evolution, independent stale-read fault injection, and end-to-end data-path composition remain separate work |"
+          if case61_row not in lines:
+              lines.insert(hits[0] + 1, case61_row)
+
+          hits = [i for i, line in enumerate(lines) if line.startswith("| RADOS |")]
+          if len(hits) != 1:
+              raise SystemExit(f"CASE_INDEX RADOS row count={len(hits)}")
+          matrix = "| HDFS Observer NameNode | journal-ordered namespace replica + Observer last-applied transaction frontier + client maximum-seen state ID | edit-log tailing advances replicas; state alignment waits/retries; `msync` refreshes the client frontier from Active; proxy can fall back to Active | selected coordinated reads may be served by a sufficiently caught-up Observer; writes/active-only operations remain Active-directed | client state ID is a lower bound on acceptable namespace progress, distinct from HA role and writer fencing | logical namespace identity survives while serving NameNode varies and Observer lag changes | bounded max-seen frontier only; it does not retain complete client or namespace history |"
+          if matrix not in lines:
+              lines.insert(hits[0] + 1, matrix)
+
+          joined = "\n".join(lines)
+          old_count = "After sixty-one bounded cases, **all fifty-nine cases are now `grounded`.**"
+          new_count = "After sixty-two bounded cases, **all sixty-two cases are now `grounded`.**"
+          if joined.count(old_count) != 1:
+              raise SystemExit(f"CASE_INDEX count anchor count={joined.count(old_count)}")
+          joined = joined.replace(old_count, new_count, 1)
+          lines = joined.splitlines()
+
+          findings = '''## Case 61 — HDFS Observer read-freshness findings
+
+651. **Read-capable replica ≠ sufficiently fresh replica for every client.** An Observer may be healthy and permitted to serve reads while still lagging a state already observed by a particular client.
+652. **Replica existence ≠ read admissibility.** Namespace state can physically survive on an Observer without satisfying the client's transaction-backed lower bound.
+653. **Retained observation frontier ≠ retained operation history.** `ClientGSIContext` keeps the maximum seen `stateId`, not the sequence of operations that produced it.
+654. **Client freshness state ≠ server namespace state.** The RPC-carried client frontier constrains future service but is neither a namespace snapshot nor the Observer's own applied state.
+655. **Server transaction progress ≠ mutation authority.** The state ID used for Observer alignment is not a JournalNode fencing epoch and does not grant write authority.
+656. **Writer fencing ≠ DataNode command authority ≠ Observer read freshness.** Cases 50, 51, and 61 use different control relations even when transaction-like monotonic numbers appear in each.
+657. **Observer catch-up capability ≠ client knowledge of the required catch-up frontier.** Without a frontier imported from the relevant Active state, a client can accept a stale-but-valid Observer result.
+658. **`msync()` ≠ forcing every Observer instantly current.** It refreshes the client's lower bound against the Active; an Observer must still tail edits and align before serving the coordinated read.
+659. **Wall-clock/program order across client processes ≠ retained protocol causality.** HDFS-14272 shows that a later shell command can start a new client that does not inherit the previous client's state ID.
+660. **Freshness failure ≠ namespace-data loss.** A read may wait, retry, or fall back because the Observer is behind while the authoritative mutation remains retained elsewhere in HDFS HA state.
+661. **Replica-maintenance speed ≠ read-admissibility criterion.** Fast edit tailing reduces expected lag/waiting but does not replace the client/server state-alignment relation.
+662. **Read-only operation ≠ Observer-eligible operation ≠ state-aligned operation.** Hadoop's `ReadOnly` metadata keeps `activeOnly` and `isCoordinated` separate.
+663. **Conditional read delegation ≠ mutation delegation.** `ObserverReadProxyProvider` can route eligible reads to Observer while writes remain Active-directed.
+664. **Bounded client state can be constitutive currentness infrastructure without being durable payload.** A small runtime scalar can determine which future replica state is acceptable even though it is not user data.
+665. **Process restart can erase a freshness frontier without erasing the underlying authoritative state.** Startup `msync` exists because a new client instance cannot be assumed to retain another process's observed state.
+666. **HDFS Observer state ID ≠ Kafka high watermark.** Both constrain visibility using progress metadata, but HDFS keeps a client lower bound checked against a candidate replica, whereas bounded Kafka Case 56 derives a partition committed prefix from ISR progress.
+667. **Ordered catch-up ≠ divergent-version reconciliation.** HDFS Observer waits for one journal-ordered namespace replica to reach a frontier; Dynamo Case 23 may retain concurrent versions that require reconciliation.
+668. **HDFS-12943 ≠ invention of consistent follower reads.** The supported historical claim is the Apache-specific composition of Observer role, transaction-backed state ID, `msync`, alignment, routing/fallback, and faster edit tailing.'''
+          if "## Case 61 — HDFS Observer read-freshness findings" not in lines:
+              lines.extend([""] + findings.splitlines())
+          p.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+          PY
+
+      - name: Validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f cases/61-apache-hdfs-observer-stateid-read-freshness.md
+          test -f evidence/61-hadoop-2017-2020-observer-stateid-grounding.md
+          grep -q "cases/61-apache-hdfs-observer-stateid-read-freshness.md" README.md
+          grep -q "grounded Cases 19, 23, 24, 25, 26, 27, 28, 29, 41, 46, 48, 49, 50, 51, 56, 57, 58, and 61" ROADMAP.md
+          grep -q 'After sixty-two bounded cases, \*\*all sixty-two cases are now `grounded`\.\*\*' CASE_INDEX.md
+          grep -q '^668\. \*\*HDFS-12943' CASE_INDEX.md
+          test "$(find cases -maxdepth 1 -type f -name '*.md' | wc -l)" -eq 62
+          git diff --check
+
+      - name: Commit integration and remove one-shot machinery
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/case61-integrate.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "docs: integrate grounded HDFS Observer freshness case"
+          git push origin HEAD:main
