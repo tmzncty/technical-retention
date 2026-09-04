@@ -27,8 +27,8 @@ jobs:
         run: |
           git config user.name "technical-retention automation"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md ROADMAP.md CASE_INDEX.md cases/56-apache-kafka-replicated-log-high-watermark.md evidence/56-kafka-082-replication-high-watermark-grounding.md
+          git add README.md ROADMAP.md CASE_INDEX.md
           git rm .github/scripts/integrate_case56.py .github/workflows/integrate-case56.yml
-          git diff --cached --check
+          git status --short
           git commit -m "docs: integrate grounded Kafka replication case"
-          git push
+          git push origin HEAD:main
