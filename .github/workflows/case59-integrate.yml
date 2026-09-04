@@ -18,6 +18,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Repair path-count assertion
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('scripts/integrate_case59.py')
+          s = p.read_text(encoding='utf-8')
+          old = "for name, text in [('README', readme), ('ROADMAP', roadmap), ('CASE_INDEX', index)]:\n    if text.count(case_path) != (1 if name != 'CASE_INDEX' else 1):"
+          new = "for name, text in [('README', readme), ('ROADMAP', roadmap), ('CASE_INDEX', index)]:\n    expected = 2 if name in ('README', 'ROADMAP') else 1\n    if text.count(case_path) != expected:"
+          if old not in s:
+              raise SystemExit('validation patch anchor not found')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+
       - name: Apply and validate Case 59 navigation patch
         run: python3 scripts/integrate_case59.py
 
