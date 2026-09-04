@@ -1,0 +1,25 @@
+name: Integrate Case 80 HDFS decommission
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - tools/integrate_case80.py
+      - .github/workflows/case80-integration.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Integrate case 80
+        run: python3 tools/integrate_case80.py
