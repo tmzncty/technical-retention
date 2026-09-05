@@ -126,7 +126,45 @@ It is therefore categorized as **prior-art/comparative boundary evidence**, not 
 
 ---
 
-### E — Smithsonian publication artifact metadata
+### E — IBM System/360 Model 65 Functional Characteristics, September 1968
+
+**Source:** IBM, *IBM System/360 Model 65 Functional Characteristics*, Fourth Edition, September 1968, Form A22-6884-3.  
+**Primary status:** manufacturer-primary / contemporary.  
+**Direct scan:** <https://www.bitsavers.org/pdf/ibm/360/functional_characteristics/GA22-6884-3_System_360_Model_65_Functional_Characteristics_196809.pdf>  
+**Searchable inspection aid:** <https://manualzilla.com/doc/5665606/ibm-360-65---bitsavers.org>  
+**Location:** `System Control Panel`, printed pp. 13–14, `POWER ON Pushbutton` and `POWER OFF Pushbutton`.
+
+#### Directly supported facts
+
+The manual states that:
+
+1. the `POWER ON` pushbutton initiates the power-on sequence;
+2. that sequence performs a **system reset** so no instructions or I/O operations occur until explicitly directed;
+3. **the contents of main storage are preserved** across that power-on/reset sequence;
+4. the `POWER OFF` pushbutton initiates the system power-off sequence;
+5. main-storage contents are preserved on normal power-off **provided the CPU is in the stopped state**;
+6. the manual explicitly excludes `controls in storage associated with the protection feature` from that preservation statement;
+7. there is a **5-second delay** between depression of `POWER OFF` and removal of power.
+
+#### Why it matters here
+
+This is not another KR01 witness. It supplies a contrasting contemporary transition protocol in which ordinary main-storage state survives a normal reset/power cycle while a named class of storage-associated control state does not share the same preservation contract.
+
+It therefore strengthens the bounded distinctions:
+
+- `system reset ≠ main-storage erase`;
+- `main-storage payload continuity ≠ protection/control continuity`;
+- `controlled power-off preservation ≠ automatic restart after arbitrary failure`.
+
+The source does **not** establish:
+
+- that the 5-second delay is the physical cause of storage retention;
+- that an unplanned power failure preserves the same state;
+- that the machine automatically resumes an interrupted program after power returns;
+- that IBM's design influenced DEC KR01;
+- or that every Model 65 storage/control component has the same physical retention mechanism.
+
+### F — Smithsonian publication artifact metadata
 
 **Source:** Smithsonian National Museum of American History, catalog record for DEC *Programmed Data Processor-8 Users Handbook*.  
 **Status:** institutional provenance / secondary metadata.  
@@ -136,7 +174,7 @@ Used only to corroborate the existence/provenance of the 1966 DEC publication. M
 
 ---
 
-### F — related-repository source reuse
+### G — related-repository source reuse
 
 **Source:** [`tmzncty/computing-archaeology/docs/memory/why-core-memory-was-worth-weaving.md`](https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md).
 
@@ -158,6 +196,10 @@ Used only to corroborate the existence/provenance of the 1966 DEC publication. M
 | Power Clear clears internal controls and I/O device registers | DEC 1966, Ch. 9 | H/P | strong | does not imply physical core erase |
 | same basic save/restart relation continues in KP8/L/KP8/I family | DEC 1968; DEC 1970 §6-2 | H/P | strong | no claim of exact circuit identity |
 | processor/control reset and core clear can be separate authorities | IBM 7090 Operator's Guide | H/P | strong | comparative prior art only |
+| Model 65 power-on reset preserves main storage | IBM 1968 Model 65 manual | H/P | strong | normal documented sequence only |
+| Model 65 normal power-off preserves main storage but excludes protection-associated controls | IBM 1968 Model 65 manual | H/P | strong | requires stopped CPU; not arbitrary failure |
+| controlled shutdown preservation ≠ failure-triggered automatic restart | IBM 1968 + DEC 1966 | E | strong bounded comparison | no lineage/circuit equivalence claim |
+
 | core-content survival ≠ execution-context survival | DEC sources + Case 02 | E | strong reconstruction | project phrasing, not DEC terminology |
 | active state is migrated into a stronger power-loss substrate | DEC sources | E | strong reconstruction | `state-class migration` is modern wording |
 | restart entry ≠ restored runnable context | DEC sources | E | strong reconstruction | address 0000 only initiates restore |
@@ -172,6 +214,8 @@ Used only to corroborate the existence/provenance of the 1966 DEC publication. M
 This record intentionally makes **no first-invention claim**.
 
 The IBM 7090 witness already demonstrates an earlier commercially documented distinction between resetting processor/control state and deliberately clearing core storage. Other machines likely had power-fail, restart, and nonvolatile-core operational practices as well. Establishing a full chronology would require a wider survey of vendor manuals, power-supply circuitry, operating practices, and software conventions.
+
+The September 1968 IBM Model 65 witness is used differently: it is a contemporary **counterexample/control boundary** showing that a normal reset/power sequence can preserve main storage while excluding a named protection-control class. It is not evidence of a DEC→IBM or IBM→DEC genealogy and does not extend the KR01 sudden-failure contract to the Model 65.
 
 The defensible historical claim is narrower:
 
@@ -199,6 +243,8 @@ DEC explicitly documents:
 
 IBM explicitly documents separate `Clear` and `Reset` effects on core versus processor/control state.
 
+IBM Model 65 documentation separately states that power-on system reset preserves main storage and that normal power-off preserves main storage, subject to a stopped-CPU condition, while excluding protection-feature controls and delaying power removal for five seconds.
+
 ### Engineering reconstruction
 
 From those documented operations, this project infers:
@@ -209,6 +255,8 @@ From those documented operations, this project infers:
 - `restart entry ≠ restored computation`;
 - `selected state preservation can coexist with deliberate control-state reset`;
 - `processor continuation ≠ peripheral/external-world continuity`.
+- `controlled power-transition preservation ≠ arbitrary-failure restart`;
+- `main-storage continuity ≠ protection/control continuity`.
 
 These are mechanism-level reconstructions, not quotations from DEC.
 
@@ -251,6 +299,18 @@ Case 06 shows state that exists only while a powered bistable system is operatin
 ### Cases 15, 32, 38 — later power-fail retention
 
 Only functional comparison is permitted. Do not back-project `PLP`, `ADR`, `eADR`, `persistence domain`, `hold-up capacitor`, or modern durability terminology into DEC 1966.
+
+### IBM System/360 Model 65 controlled-transition comparison
+
+Use the 1968 IBM source only to establish a contrasting state-class and transition boundary:
+
+```text
+power-on system reset + main storage preserved
+normal power-off + stopped CPU + main storage preserved
+protection-associated controls explicitly excluded
+```
+
+Do not convert this into evidence that the Model 65 automatically resumed an interrupted program after sudden power loss. DEC KR01 remains the failure-triggered save/restart mechanism in this case.
 
 ### IBM 7090 comparison
 

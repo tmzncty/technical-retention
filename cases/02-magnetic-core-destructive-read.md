@@ -1,5 +1,9 @@
 # Magnetic Core Memory: Retention at Rest, Destruction in Reading
 
+**Status:** `grounded`
+
+Grounding record: [`../evidence/02-magnetic-core-1951-1954-grounding.md`](../evidence/02-magnetic-core-1951-1954-grounding.md)
+
 ## Scope
 
 - **Object / system:** classic coincident-current magnetic-core memory, with MIT Project Whirlwind / Memory Test Computer as the principal historical anchor;
@@ -268,7 +272,7 @@ These mechanisms should not be collapsed into `the memory forgot the bit`.
 
 ## Historical record
 
-The current first-pass rests on four evidence layers.
+The case is now `grounded` through the dedicated evidence record. The layers below remain useful orientation, while that record adds exact primary-source anchors, an implemented read–rewrite witness, and bounded nondestructive-read counterexamples.
 
 ### Primary / contemporary
 
@@ -392,6 +396,8 @@ The patent and MIT reports establish one major development line. They do not by 
 
 - [`tmzncty/computing-archaeology/docs/memory/why-core-memory-was-worth-weaving.md`](https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md) — detailed historical-engineering and labor account;
 - [`tmzncty/computing-archaeology/experiments/core-memory/`](https://github.com/tmzncty/computing-archaeology/tree/main/experiments/core-memory) — synthetic demonstration of half-selection and destructive read / restore;
+- [`Case 86 — DEC PDP-8 core-resident power-fail save and automatic restart`](86-dec-pdp8-core-power-fail-auto-restart.md) — system-level boundary: remanent main-memory contents can survive a power transition while volatile execution/control state still requires a separate save, reset, and restart protocol;
+
 - [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) — methodological guard against converting the modern category `nonvolatile memory` into an assumed historical problem statement.
 
 ---
@@ -411,15 +417,17 @@ The patent and MIT reports establish one major development line. They do not by 
 
 ---
 
-## Evidence gaps before `grounded`
+## Grounding status and remaining archival cleanup
 
-This case remains `first-pass` until at least the following are done:
+This case is `grounded`. The dedicated grounding record closes the former promotion blockers with:
 
-- inspect the patent PDF directly and add exact page / figure anchors for the destructive-read and rewrite passages;
-- inspect Papian's April 1952 IRE paper directly rather than relying on the archival abstract for the remanence / disturbance claim;
-- add one machine-specific primary Whirlwind or MTC document showing the implemented read–restore cycle, not only the general patent description;
-- verify a primary source for power-off retention or explicitly keep that point at the material-mechanism level rather than claiming a machine behavior;
-- add a narrow source on nondestructive-read core as the counterexample boundary.
+- direct Forrester patent page/figure anchors for two stable states, destructive read, and rewrite;
+- Papian's 1953 *The M.I.T. Magnetic-Core Memory* as a machine-specific implemented destructive-read / rewrite witness;
+- Mayer & Papian M-2121 for the address/buffer-register and write-part-of-cycle control path;
+- Widrow 1954 and Brown's 1953-filed patent as bounded contemporary nondestructive-read counterexamples;
+- a separate Case 86 system-level witness showing why remanent main-memory state must not be equated with whole-machine restart state.
+
+Remaining archival cleanup is narrower: obtain a conveniently renderable full scan of Papian's 1952 IRE paper for direct page-level inspection. The central Case-02 claims no longer depend uniquely on its abstract.
 
 ---
 
@@ -437,7 +445,7 @@ This case remains `first-pass` until at least the following are done:
 
 The Forrester patent is primary evidence for the proposed storage and selection mechanism and explicitly describes destructive reading and rewriting. A patent does not by itself establish later production practice, commercial success, or uncontested invention priority.
 
-Papian's IRE paper is contemporary technical evidence. This first pass currently uses the MIT archival abstract for its explicit statement about remanent flux and repeated nonselecting disturbances; the full paper still requires direct inspection.
+Papian's 1952 IRE paper remains contemporary technical evidence for remanence and repeated nonselecting disturbances; direct page-level inspection of a conveniently renderable full scan remains archival cleanup. The case no longer depends uniquely on that abstract because the grounding record adds Papian's 1953 implemented-memory paper, Mayer & Papian M-2121, and other primary witnesses.
 
 Widrow's M-2383 memorandum is primary operational evidence tied to an actual 32 × 32 core memory under test. Its reported operating values should not be generalized to all core-memory systems.
 
