@@ -1,0 +1,60 @@
+name: case86-integrate
+
+'on':
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/case86-integrate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply Case 86 navigation and status updates
+        run: python .github/case86_integrate.py
+
+      - name: Validate bounded integration
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          expected = {
+              'README.md': ['cases/86-dec-pdp8-core-power-fail-auto-restart.md'],
+              'ROADMAP.md': ['cases/86-dec-pdp8-core-power-fail-auto-restart.md'],
+              'CASE_INDEX.md': [
+                  'cases/86-dec-pdp8-core-power-fail-auto-restart.md',
+                  '| DEC PDP-8 KR01 power-fail restart / 1966 bounded system |',
+                  '1053. **core-content survival ≠ processor execution-state survival**',
+                  '1068. **retention can require state-class migration before interruption**',
+                  'currently eighty-seven (Cases 00–86)',
+                  'After eighty-seven bounded cases, **all eighty-seven cases are now `grounded`.**',
+              ],
+          }
+          for path, needles in expected.items():
+              text = Path(path).read_text(encoding='utf-8')
+              for needle in needles:
+                  assert needle in text, (path, needle)
+          assert Path('cases/86-dec-pdp8-core-power-fail-auto-restart.md').exists()
+          assert Path('evidence/86-dec-1960-1970-core-power-restart-grounding.md').exists()
+          PY
+          git diff --check
+
+      - name: Commit integrated research state
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm .github/case86_integrate.py .github/workflows/case86-integrate.yml
+          git add -A
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m 'case86: integrate PDP-8 power-fail restart navigation'
+          git push origin HEAD:main
