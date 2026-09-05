@@ -1,0 +1,136 @@
+name: Case 97 integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/case97-integration.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Integrate Case 97 navigation and status
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          # README: add one canonical navigation entry after Case 96.
+          p = Path('README.md')
+          s = p.read_text()
+          if 'cases/97-nand-flash-read-disturb-access-conditioned-retention.md' not in s:
+              m = re.search(r'^- \[`cases/96-openzfs-draid-distributed-spare-sequential-resilver\.md`\].*$', s, re.M)
+              if not m:
+                  raise SystemExit('README Case 96 anchor not found')
+              entry = "\n- [`cases/97-nand-flash-read-disturb-access-conditioned-retention.md`](cases/97-nand-flash-read-disturb-access-conditioned-retention.md) — grounded NAND read-disturb bridge: Fujitsu 2002-priority manufacturer evidence, NASA/JPL 2008 qualification testing, and Cai et al. 2015 MLC characterization show that a logically successful page read can cumulatively shift threshold voltages in unread cells of the same block; read count, wear, ECC margin, voltage policy, and rewrite/migration therefore form an access-conditioned retention relation distinct from ordinary retention loss and DRAM RowHammer; see [`evidence/97-nand-2002-2015-read-disturb-grounding.md`](evidence/97-nand-2002-2015-read-disturb-grounding.md)."
+              s = s[:m.end()] + entry + s[m.end():]
+              p.write_text(s)
+
+          # ROADMAP: record the bounded bridge without pretending the broad NAND history is closed.
+          p = Path('ROADMAP.md')
+          s = p.read_text()
+          if 'cases/97-nand-flash-read-disturb-access-conditioned-retention.md' not in s:
+              m = re.search(r'^- \[x\] OpenZFS dRAID distributed-spare / sequential-resilver recovery window.*$', s, re.M)
+              if not m:
+                  raise SystemExit('ROADMAP Case 96 anchor not found')
+              entry = "\n- [x] NAND Flash read-disturb / access-conditioned retention bridge — [`cases/97-nand-flash-read-disturb-access-conditioned-retention.md`](cases/97-nand-flash-read-disturb-access-conditioned-retention.md), grounded by [`evidence/97-nand-2002-2015-read-disturb-grounding.md`](evidence/97-nand-2002-2015-read-disturb-grounding.md), separates wall-clock retention loss from cumulative read-induced disturbance of unread cells in the same block. Fujitsu 2002-priority evidence anchors period NAND `read disturb` vocabulary; NASA/JPL 2008 supplies both mitigation guidance and an explicit no-disturb-failure test result; Cai et al. 2015 directly characterize MLC threshold shifts and the Vpass/ECC tradeoff. Broader NAND/3D-NAND/controller genealogy, named commercial read-reclaim implementations, and device-specific threshold validation remain open and should be coordinated with `computing-archaeology`."
+              s = s[:m.end()] + entry + s[m.end():]
+              p.write_text(s)
+
+          # CASE_INDEX ledger, comparison matrix, and findings.
+          p = Path('CASE_INDEX.md')
+          s = p.read_text()
+          if 'cases/97-nand-flash-read-disturb-access-conditioned-retention.md' not in s:
+              m = re.search(r'^\| \[OpenZFS dRAID: Distributed Spare Capacity, Sequential Resilver, and the Duration of Reduced Redundancy\].*$', s, re.M)
+              if not m:
+                  raise SystemExit('CASE_INDEX Case 96 ledger anchor not found')
+              row = "\n| [NAND Flash Read Disturb: Access-Conditioned Retention and Neighbor-State Maintenance](cases/97-nand-flash-read-disturb-access-conditioned-retention.md) | **grounded** | nonvolatile NAND threshold-voltage state + series-string read geometry + pass-through bias + cumulative read exposure + ECC/voltage/migration maintenance state | separate selected logical read from wider physical stress scope; distinguish wall-clock retention loss from access-induced disturbance, correct ECC output from unchanged physical state, and bounded maintenance summaries from complete access history | [2002–2015 NAND read-disturb grounding](evidence/97-nand-2002-2015-read-disturb-grounding.md); later 3D-NAND/TLC/QLC behavior, commercial controller read-reclaim policy, exact vendor limits, and independent named-product validation remain separate work |"
+              s = s[:m.end()] + row + s[m.end():]
+
+          if '| NAND read disturb / 2002–2015 bounded regime |' not in s:
+              m = re.search(r'^\| Mapped Flash \|.*$', s, re.M)
+              if not m:
+                  raise SystemExit('CASE_INDEX Mapped Flash matrix anchor not found')
+              row = "\n| NAND read disturb / 2002–2015 bounded regime | nonvolatile threshold-voltage state in NAND blocks/strings + ECC margin + optional read-count/voltage/mapping maintenance state | ordinary reads can cumulatively disturb unread neighbor cells through pass-through bias; mitigation can include ECC, Vpass tuning, read-count-triggered rewrite/migration, and erase renewal | logically nondestructive for the requested payload in the bounded sense, but physically non-neutral to unread cells sharing the NAND read path | page/block selection below an optional FTL; the logical target is narrower than the physically biased string/block neighborhood | payload can remain in place until mitigation rewrites/remaps it; relocation can preserve logical identity through Case-04-style mapping | no complete read history by default; bounded exposure/control summaries can be enough for maintenance decisions |"
+              s = s[:m.end()] + row + s[m.end():]
+
+          if '### Case 97 — NAND Flash read-disturb findings' not in s:
+              findings = r'''
+
+### Case 97 — NAND Flash read-disturb findings
+
+1229. **logical read target ≠ physical stress target** — selecting one NAND row/page requires pass-through bias on unselected series-connected cells, so the physically affected neighborhood is wider than the requested logical object.
+
+1230. **successful read return ≠ zero preservation cost elsewhere** — the selected page can be returned correctly while unread cells in the same block accumulate threshold-voltage shift.
+
+1231. **payload-nondestructive read ≠ physically non-disturbing read** — `nondestructive` is safe only when scoped to the selected logical value; it must not be expanded into a claim that every neighboring storage state remains physically unchanged.
+
+1232. **time-conditioned retention ≠ access-conditioned retention** — ordinary retention loss depends on elapsed aging, while read disturb adds workload-dependent degradation driven by repeated neighboring reads.
+
+1233. **read count ≠ wall-clock age** — two blocks of the same chronological age can accumulate different disturbance exposure if one receives a much hotter read workload.
+
+1234. **read-disturb mechanism ≠ universal fixed read limit** — JPL's 2008 test ran up to 1M page reads yet reported no disturb failure in its tested devices; process, wear, pattern, voltage, and device generation qualify any threshold.
+
+1235. **ECC-correct output ≠ unchanged physical state** — error correction can preserve the logical value after raw-cell shifts or bit errors have already consumed physical/error margin.
+
+1236. **ECC margin ≠ free disturbance budget** — spending unused ECC capability to permit lower Vpass exchanges one correctness margin for another and still requires conservative qualification.
+
+1237. **lower Vpass ≠ monotonically free reliability gain** — reducing pass-through voltage lowers disturb stress but can introduce separate read errors if unselected cells no longer conduct adequately.
+
+1238. **read-triggered rewrite/migration ≠ application mutation** — moving and reprogramming the same logical data can be maintenance intended to renew physical reliability margin rather than a user-requested value change.
+
+1239. **refresh/rewrite renewal ≠ zero-cost preservation** — renewing read-disturb margin consumes background bandwidth, program/erase endurance, free blocks, mapping work, and controller energy.
+
+1240. **per-block read counter ≠ complete read history** — a controller can preserve a bounded exposure summary sufficient for threshold policy without archiving every read event.
+
+1241. **small maintenance metadata ≠ small retention significance** — Cai et al.'s proposed two bytes per block for tuned Vpass and predicted worst-case page illustrate how tiny controller state can govern the safe read policy of much larger payload.
+
+1242. **read-disturb maintenance state ≠ user payload** — counters, voltage settings, ECC margin estimates, and mapping state can be constitutive reliability infrastructure without being application data.
+
+1243. **NAND read disturb ≠ DRAM RowHammer** — both are access-induced neighboring-state disturbance regimes, but pass-through-bias/threshold-shift Flash physics and repeated-activation DRAM physics must remain historically and technically distinct.
+
+1244. **NAND read disturb ≠ magnetic-core half-select disturbance** — both make logical nonselection physically non-neutral, but the shared pattern is a functional analogy rather than a device lineage.
+
+1245. **physical nonvolatility ≠ workload-independent reliable retention** — a bit can survive power loss yet become less safely recoverable because normal service activity consumes read-disturb margin.
+
+1246. **maintenance can be caused by use rather than waiting** — Case 97 adds an access-triggered nonvolatile-memory regime in which preservation work may become necessary because a block is repeatedly read, not merely because charge has aged for a long interval.
+'''
+              if not s.rstrip().endswith('1228. **redundancy is a time-varying relation during repair** — after failure, the system can remain serviceable while possessing less future failure tolerance, and maintenance work can later reconstitute that margin; nominal layout alone does not describe the whole retention trajectory.'):
+                  raise SystemExit('CASE_INDEX findings tail anchor changed')
+              s = s.rstrip() + findings + '\n'
+
+          # Update aggregate wording if it exists in the index. Fail-safe: only exact current totals.
+          s = s.replace('95 bounded cases, 95 of them `grounded`', '96 bounded cases, 96 of them `grounded`')
+          s = s.replace('95 bounded cases, all 95 `grounded`', '96 bounded cases, all 96 `grounded`')
+          s = s.replace('95 canonical cases', '96 canonical cases')
+          p.write_text(s)
+
+          # Sanity checks.
+          assert Path('cases/97-nand-flash-read-disturb-access-conditioned-retention.md').exists()
+          assert Path('evidence/97-nand-2002-2015-read-disturb-grounding.md').exists()
+          for f in ['README.md', 'ROADMAP.md', 'CASE_INDEX.md']:
+              t = Path(f).read_text()
+              assert 'cases/97-nand-flash-read-disturb-access-conditioned-retention.md' in t, f
+          assert '1246. **maintenance can be caused by use rather than waiting**' in Path('CASE_INDEX.md').read_text()
+          PY
+
+      - name: Commit integrated research slice and remove one-shot workflow
+        shell: bash
+        run: |
+          git config user.name 'chatgpt-research-agent'
+          git config user.email 'chatgpt-research-agent@users.noreply.github.com'
+          git rm .github/workflows/case97-integration.yml
+          git add README.md ROADMAP.md CASE_INDEX.md cases/97-nand-flash-read-disturb-access-conditioned-retention.md evidence/97-nand-2002-2015-read-disturb-grounding.md
+          git diff --cached --check
+          git commit -m 'case97: integrate NAND read-disturb retention'
+          git push origin HEAD:main
