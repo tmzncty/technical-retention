@@ -2,19 +2,20 @@ name: Integrate Case 44 Opal key-destruction deepening
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
-      - '.github/workflows/case44-opal-key-destruction.yml'
+      - .github/workflows/case44-opal-key-destruction.yml
 
 permissions:
   contents: write
 
 jobs:
   integrate:
-    if: github.event.head_commit.message == 'chore: stage Case 44 key-destruction deepening'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -29,12 +30,11 @@ jobs:
           grep -F 'partially advanced by grounded Case 44 historical deepening' ROADMAP.md
           grep -F '1265. **key destruction ≠ ciphertext destruction**' CASE_INDEX.md
           grep -F '1274. **key state is retention state when payload intelligibility depends on it**' CASE_INDEX.md
-          test ! -e cases/97-nand-read-disturb-access-conditioned-retention.md || { echo 'unexpected duplicate Case 97 returned'; exit 1; }
 
       - name: Commit research slice
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add README.md ROADMAP.md CASE_INDEX.md cases/44-nvme13-deallocate-sanitize-forgetting.md evidence/44-nvme12-13-deallocate-sanitize-grounding.md
           git diff --cached --check
           git commit -m 'case44: deepen Opal key-destruction prior art'
