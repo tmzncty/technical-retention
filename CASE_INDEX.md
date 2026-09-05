@@ -151,6 +151,7 @@ A claim may have more than one label, for example `H/P` or `E/A`.
 | [ATA LBA / CHS Translation: Logical-Sector Identity Across Geometry Representation](cases/89-ata-lba-chs-translation-logical-sector-identity.md) | **grounded** | magnetic-disk logical sectors + stable LBA designation + mutable logical-CHS translation parameters + separately hidden physical media placement | separate LBA continuity from CHS-coordinate continuity; logical geometry from physical geometry; current-CHS reachability from total LBA reachability; and translation change from physical relocation/defect reassignment | [1994–1997 ATA translation grounding](evidence/89-ata-1994-1997-lba-chs-translation-grounding.md); full CHS→LBA/BIOS/ATA genealogy, actual zoned platter geometry, LBA48 evolution, and named-drive physical mapping remain separate work |
 | [Apache Kafka 0.11 Leader-Epoch Recovery: Log Lineage, Safe Truncation, and Retained Recovery Metadata](cases/90-apache-kafka-leader-epoch-safe-truncation.md) | **grounded** | replicated partition log + leader epochs + per-replica epoch→start-offset checkpoint + `OffsetsForLeaderEpoch` exchange + explicit follower truncation phase | separate committed-prefix high watermark from recovery lineage; distinguish physical suffix survival from common-lineage authority; show epoch metadata must itself be pruned/reconciled with the retained log | [2016–2017 Kafka leader-epoch grounding](evidence/90-kafka-2016-2017-leader-epoch-truncation-grounding.md); pre-Kafka epoch genealogy, later KIP refinements, KRaft, production incident/fault tests, and media-forensic truncation remain separate work |
 | [DRAM Variable Retention Time: Profile Staleness and Unstable Preservation Deadlines](cases/93-dram-variable-retention-time-profile-staleness.md) | **grounded** | volatile DRAM charge + retention-time profiling + retained row/bin classification + profile-driven refresh + DPD/VRT-dependent profile uncertainty | separate physical retention behavior from the retained profile that governs maintenance; show that preserved profile metadata can become stale and unsafe; distinguish stochastic VRT and data-pattern context from RowHammer and ordinary temperature scaling | [1987–2013 VRT/profiling grounding](evidence/93-dram-1987-2013-vrt-profiling-grounding.md); exact transistor-defect genealogy, JEDEC/vendor screening, production adaptive profiling, later on-die ECC, and DDR4/DDR5 standards remain separate work |
+| [RAID-6 P+Q: Dual-Erasure Reconstructability and the Corruption-Location Boundary](cases/94-raid6-pq-dual-erasure-corruption-boundary.md) | **grounded** | block stripe + independent P XOR and Q Reed–Solomon syndromes + member-position/failure-location relation + parity currentness | separate two-known-erasure reconstructability from unknown corruption diagnosis; show extra syndrome expands a typed recovery margin without becoming replication, write-hole closure, or universal integrity | [1993–2011 P+Q / Linux RAID-6 grounding](evidence/94-raid6-1993-2011-pq-dual-erasure-grounding.md); exact RAID-6 genealogy, production-controller crash semantics, modern RAID-Z/dRAID variants, URE-aware rebuild policy, and independent fault injection remain separate work |
 
 ---
 
@@ -262,6 +263,7 @@ This matrix should become more precise as cases mature.
 | Apache Cassandra tombstone grace / compaction purge | user-value versions + timestamped deletion marker + local deletion time + grace/purge threshold + compaction overlap knowledge + distributed replica/reconciliation state | delete writes a negative marker; marker must continue to suppress older versions through compaction/replica lag; after grace and applicable closure conditions, compaction can retire obsolete marker/data | reads reject versions older than the tombstone; an unreconciled stale value can become visible again if deletion evidence disappears too early | timestamp ordering + marker presence qualify currentness; local overlap checks bound safe compaction purge; distributed correctness also depends on stale-replica reconciliation assumptions | old positive bytes may survive after logical deletion; correct reclamation can later discard both old values and the no-longer-needed negative marker | no complete operation history; a selective deletion/currentness witness is retained only while older state can still matter |
 | DRAM RowHammer / targeted refresh | victim-cell charge + ordinary refresh cadence + aggressor/victim relation + optional access-count/threshold state + physical-adjacency mapping | ordinary timed refresh restores charge; repeated aggressor activation can accelerate victim leakage; stronger global refresh or targeted neighbor refresh adds workload/topology-conditioned maintenance | row activation restores the opened aggressor yet can indirectly endanger neighboring victims; once a victim value has corrupted, refresh alone is not evidence of original-payload reconstruction | refresh cadence plus disturbance-mitigation policy qualify reliability; physical adjacency/mapping knowledge matters for selective victim refresh | no authorized deletion path in the bounded case; a bit flip is unintended state change, not deliberate forgetting | no complete access history is required by PARA; counter-based alternatives retain bounded activity/threshold state rather than a full trace |
 | DRAM VRT / retention-time profiling | payload charge + profiled row/cell retention class + refresh-policy state + measurement context | ordinary refresh restores charge; controller may reduce work using retained retention-time bins, but DPD/VRT can invalidate a previously safe classification | ordinary activation/read restoration remains DRAM semantics; the bounded case centers on whether the chosen future refresh deadline remains valid | profile/bin metadata can qualify a row for slower refresh only while conservative for the current physical/context state; revalidation or error tolerance may be required | no authorized deletion path; data can be lost because stale maintenance metadata permits too-long a restoration interval | no complete leakage/history trace is retained; a compressed classification survives while hidden physical VRT state or data-pattern context can change |
+| RAID-6 P+Q / 1993–2011 bounded regime | data blocks + independent P XOR and Q finite-field syndromes + member-position/failure-location relation | update both P/Q; reconstruct one/two known missing contributions; rebuild/restore full margin separately; preserve syndrome currentness | surviving direct reads remain ordinary; known missing contributions are reconstructed; arbitrary dual corruption is not generally self-locating | stripe/member index determines Q coefficient; recovery additionally needs which positions failed | physical members may be replaced while the logical stripe contribution is reconstructed; the code relation remains usable only while P/Q/currentness/position relations stay valid | no complete history; retains current coded constraints plus bounded layout/failure/currentness state needed by the recovery model |
 
 ---
 
@@ -880,7 +882,7 @@ Case 35 is the grounded commercial automatic-TCSR continuation; [`evidence/35-mi
 
 The **mechanism gate is now closed**. A synthesis pass may begin, but it must be bounded and evidence-led rather than a declaration of one universal ontology of storage.
 
-- [x] at least four contrasting cases at `grounded` or better — currently eighty-eight (Cases 00–87);
+- [x] at least four contrasting cases at `grounded` or better — currently ninety-three active canonical bounded cases (with intentional numbering gaps after duplicate consolidation);
 - [x] at least one **passive-position** case at `grounded` or better — grounded Case 00;
 - [x] at least one case of active refresh / circulation at `grounded` or better — grounded mercury delay line supplies continuous circulation and grounded DRAM supplies deadline-driven refresh;
 - [x] at least one case of nonvolatile physical remanence or trapped state at `grounded` or better — grounded magnetic core, mapped Flash, floating-gate EPROM, byte-erasable EEPROM, coarse-erase early Flash, and disk media satisfy this through different mechanisms;
@@ -1647,4 +1649,38 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 1178. **retention-aware refresh trades maintenance work for retained classification knowledge** — skipping unnecessary refreshes is enabled by storing a more differentiated account of which rows need restoration sooner.
 1179. **stale preservation metadata can actively cause failure** — an obsolete control relation can remain authoritative in exactly the direction that omits necessary maintenance.
 1180. **maintenance policy may itself require maintenance / revalidation** — once preservation depends on learned deadlines, profiling, guardbanding, online remeasurement, error tolerance, or conservative fallback become second-order retention work.
+
+### Case 94 — RAID-6 P+Q dual-erasure findings
+
+1181. **one-parity reconstructability ≠ two-syndrome reconstructability** — P+Q adds an independent relation that can solve two known missing contributions; it is not merely a second copy of RAID5 parity.
+
+1182. **P syndrome ≠ Q syndrome** — in the bounded Linux P+Q formulation, P is ordinary XOR while Q is a position-weighted Reed–Solomon / finite-field relation.
+
+1183. **two redundant disks ≠ two full replicas** — lost data are synthesized from coded constraints rather than selected from two complete duplicate payloads.
+
+1184. **two known drive losses ≠ arbitrary two-drive corruption recovery** — known missing positions and unknown silent-corruption locations create different recovery problems.
+
+1185. **erasure-location knowledge can be constitutive recovery state** — Anvin's equations and Linux's `faila` / `failb` interface require the failed positions as inputs to two-data reconstruction.
+
+1186. **disk-position identity ≠ incidental layout detail** — Q coefficients depend on position, so stripe/member ordering participates in how the retained redundancy is interpreted.
+
+1187. **surviving syndrome bytes ≠ trustworthy redundancy if the coded relation is stale** — currentness remains a prerequisite to admissible reconstruction.
+
+1188. **dual-erasure tolerance ≠ write-hole closure** — an extra syndrome increases coded equations; it does not make multi-member updates crash-atomic.
+
+1189. **first-failure survival ≠ unchanged future-failure margin** — a RAID-6 array may continue after one known loss while having consumed part of its bounded two-erasure margin.
+
+1190. **degraded service ≠ restored redundancy** — completed rebuild/repair, not mere continued I/O, re-establishes the full bounded redundancy margin.
+
+1191. **a third independent missing contribution ≠ covered by this two-syndrome case** — the bounded P+Q relation should not be generalized into universal recoverability.
+
+1192. **successful algebraic reconstruction ≠ corruption diagnosis** — solving for values at known failed positions does not establish which apparently present member is wrong.
+
+1193. **dual-corruption ambiguity can make automated repair harmful** — Anvin's diagnostic warning shows that unjustified source/fault selection can propagate corruption into another member.
+
+1194. **P+Q RAID-6 ≠ all double-failure coding** — EVENODD provides a contemporary two-redundant-disk alternative using XOR-only coding, blocking a one-algorithm story.
+
+1195. **Chen 1993 RAID Level 6 ≠ universal invention-priority proof** — the report grounds period taxonomy and mechanism, not every earlier/later double-parity genealogy claim.
+
+1196. **additional redundancy is failure-model-relative information** — the second independent syndrome expands solvable unknowns under the known-erasure/currentness model; it does not automatically add equivalent fault-location or integrity knowledge.
 

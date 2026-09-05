@@ -125,6 +125,8 @@ Detailed cross-case findings live in [`CASE_INDEX.md`](CASE_INDEX.md).
 
 ## Phase 2 — Build missing technical bridges
 
+- [x] RAID-6 P+Q dual-erasure boundary — [`cases/94-raid6-pq-dual-erasure-corruption-boundary.md`](cases/94-raid6-pq-dual-erasure-corruption-boundary.md), grounded by [`evidence/94-raid6-1993-2011-pq-dual-erasure-grounding.md`](evidence/94-raid6-1993-2011-pq-dual-erasure-grounding.md), separates two-known-erasure reconstruction from arbitrary dual-corruption diagnosis and keeps code strength, syndrome currentness, and write-hole closure distinct. The broad RAID/scrub/rebuild roadmap remains open for controller genealogy, RAID-Z/dRAID, URE-aware rebuild policy, and fault injection.
+
 Coordinate with `computing-archaeology` rather than duplicating it.
 
 Priority bridges:
