@@ -1,8 +1,8 @@
-# Case 44 Grounding — NVMe Deallocate and Sanitize (2016–2017)
+# Case 44 Grounding — TCG Opal / NVMe Deallocate and Sanitize (2009–2017)
 
 ## Purpose
 
-This record grounds [`../cases/44-nvme13-deallocate-sanitize-forgetting.md`](../cases/44-nvme13-deallocate-sanitize-forgetting.md) in official NVM Express Revision 1.3 and Revision 1.2.1 text. It records the exact evidence needed to keep four different relations apart:
+This record grounds [`../cases/44-nvme13-deallocate-sanitize-forgetting.md`](../cases/44-nvme13-deallocate-sanitize-forgetting.md) in official TCG Opal 1.0 Revision 1.0 plus NVM Express Revision 1.3 and Revision 1.2.1 text. It records the exact evidence needed to keep deallocation, physical erasure, cryptographic key retirement, and completed subsystem sanitization from collapsing into one generic `erase` relation:
 
 ```text
 host deallocation hint
