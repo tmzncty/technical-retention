@@ -371,9 +371,9 @@ Once preservation depends on a learned profile, continued correctness may requir
 
 Case 03 establishes ordinary deadline-driven restoration; Case 09 moves refresh-address enumeration on-chip; Case 10 internalizes refresh scheduling through a leakage-tracked mechanism. Case 93 asks a different question: **what if the controller stores a learned per-row deadline and that learned relation later becomes false?** It does not replace those earlier refresh regimes.
 
-### A — Case 92 RowHammer
+### A — Case 53 RowHammer
 
-Both Case 92 and Case 93 show that `retention time` cannot always be treated as a simple fixed scalar. The causal regimes differ sharply:
+Both Case 53 and Case 93 show that `retention time` cannot always be treated as a simple fixed scalar. The causal regimes differ sharply:
 
 - RowHammer: repeated activity in an aggressor row accelerates a victim row's loss;
 - VRT: the cell itself changes among leakage/retention states over time;

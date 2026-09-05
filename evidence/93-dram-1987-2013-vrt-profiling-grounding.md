@@ -299,7 +299,7 @@ The claimed process uses temperature/reverse-bias stress to reduce variable-rete
 | profile persistence ≠ profile correctness | `E` | RAIDR profile persistence + VRT/DPD evidence | project formulation |
 | retention metadata ≠ payload | `E` | RAIDR controller bins versus DRAM data | project formulation |
 | maintenance policy may require revalidation/online profiling/error tolerance | `E` | Liu et al. §6.3 + architecture dependency | not a claim one historical standard mandated this |
-| VRT ≠ RowHammer | `A/X` | comparison to Case 92 | different causal mechanisms; no genealogy |
+| VRT ≠ RowHammer | `A/X` | comparison to Case 53 | different causal mechanisms; no genealogy |
 
 ---
 

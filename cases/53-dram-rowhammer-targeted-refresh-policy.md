@@ -176,6 +176,18 @@ For this bounded historical case the safe conclusion is:
 
 A targeted refresh tries to restore the vulnerable victim before corruption manifests. ECC acts after raw errors exist, within a correction envelope. The two mechanisms may compose but are not interchangeable.
 
+### Additional 2014 retention anchors recovered during duplicate-case audit
+
+The later duplicate RowHammer pass recovered three exact ISCA 2014 anchors that strengthen this already-established case and are retained here rather than as a second case number.
+
+First, Kim et al. explicitly distinguish disturbance `victim cells` from ordinary short-retention `weak cells`. In §7 (`Victim Cells ≠ Weak Cells`), they compare RowHammer victims with cells found by a long no-access/no-refresh retention test and report only a small overlap in the characterized modules. The paper cautiously concludes that the coupling pathway responsible for disturbance errors may be independent of the process variation responsible for ordinary weak cells. Therefore **RowHammer victim ≠ merely the shortest ordinary-retention cell** in the bounded experimental record.
+
+Second, the ordinary DRAM access path sharpens the interference relation. Activating a row senses and restores that opened row's charge. Repeated activation can therefore repeatedly restore the aggressor while, through disturbance coupling, accelerating charge loss in nearby victims. The same access episode can be **restorative for one retained state and destructive to another**. This is an engineering reconstruction from the paper's ordinary sense/restore description plus its aggressor/victim measurements, not period terminology.
+
+Third, §8.1 gives a quantitative cost witness for replacing targeted mitigation with globally faster refresh. For the paper's illustrative 8.2 ms refresh interval, estimated refresh-time overhead rises to about 11–35%, compared with the cited 1.4–4.5% baseline range. The numbers are paper/model/sample-specific, but they support the stronger distinction **global faster refresh ≠ targeted refresh**: the former spends maintenance work across the entire array, while the latter requires some access/topology-conditioned selection relation.
+
+These anchors do not change the prior-art boundary already established here: Intel's 2012-priority filing remains the earlier industry witness for row-hammer-specific targeted refresh, and the 2014 paper remains the open experimental characterization / PARA source rather than the origin of the entire engineering problem.
+
 ## Relation to other DRAM cases
 
 ### Case 03 — ordinary scheduled refresh

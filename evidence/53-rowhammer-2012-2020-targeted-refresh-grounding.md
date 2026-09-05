@@ -117,6 +117,40 @@ The paper evaluates PARA as a research proposal. Its reported performance/reliab
 
 ---
 
+## B.1 Additional exact ISCA 2014 anchors retained after duplicate-case consolidation
+
+A later research pass accidentally created a second RowHammer case around the same 2012 Intel patent and 2014 Kim et al. paper. That duplicate case has been removed; the useful non-duplicative source anchors are retained here.
+
+### §2.2–§2.4 — aggressor restoration can coexist with victim degradation
+
+Kim et al. describe ordinary row activation as sensing through the row buffer followed by restoration of the opened row's cell charge. Combined with the measured aggressor/victim disturbance relation, this supports the bounded engineering reconstruction:
+
+> repeated aggressor activation can repeatedly restore the aggressor row while contributing to accelerated leakage in physically nearby victim rows.
+
+This is not a claim that the paper used the phrase `aggressor restoration`; it is a mechanism-level inference from the documented access/restore path and disturbance measurements.
+
+### §7 — victim cells are not merely ordinary weak-retention cells
+
+The paper's `Victim Cells ≠ Weak Cells` subsection compares disturbance victims with cells identified by a long no-access/no-refresh retention test and reports little overlap in the characterized modules. The authors state cautiously that the disturbance coupling pathway may be independent of the process variation responsible for ordinary weak cells.
+
+Use this to block:
+
+- `RowHammer victim = shortest ordinary retention-time cell`;
+- `RowHammer is only ordinary passive leakage with a uniformly faster clock`.
+
+The conclusion remains sample-bounded to the measured devices.
+
+### §8.1 — quantitative global-refresh cost witness
+
+Kim et al. report that globally shortening the refresh interval can eliminate disturbance errors under the tested conditions, but at substantial performance/energy cost. Their illustrative 8.2 ms interval is associated with estimated refresh-time overhead of roughly 11–35%, compared with the cited baseline range of roughly 1.4–4.5%.
+
+Use this to support:
+
+- `global faster refresh ≠ targeted refresh`;
+- the choice of mitigation changes trigger, scope, retained control state, and maintenance cost even when the underlying restoration operation is still refresh.
+
+Do not universalize these percentages beyond the paper's assumptions and devices.
+
 ## C. Micron DDR4 `Target Row Refresh Mode` record
 
 ### Document anchor
