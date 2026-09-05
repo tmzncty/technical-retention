@@ -120,6 +120,70 @@ They must not be treated as one timer or one guarantee.
 
 ---
 
+
+## Historical deepening — Cassandra 1.2.19, local purge ordering, and pre-Cassandra prior art
+
+The canonical case is centered on Cassandra 3.x because that release family exposes the later repair-aware purge option especially clearly. A separate later-added Case 41 repeated most of the same tombstone / grace / resurrection mechanism while adding useful older evidence. That older evidence is retained here rather than maintained as a duplicate case.
+
+### H/P — Cassandra 1.2.19 makes the deletion marker an explicit retained object
+
+The `cassandra-1.2.19` source contains `DeletedColumn`, a `Column` subclass whose deletion state is represented explicitly: `isMarkedForDelete()` returns true, `getMarkedForDeleteAt()` returns the column timestamp, `getLocalDeletionTime()` retains the local deletion time, and serialization uses the deletion mask.
+
+**Primary anchor:** Apache Cassandra `DeletedColumn.java`, tag `cassandra-1.2.19`: <https://github.com/apache/cassandra/blob/cassandra-1.2.19/src/java/org/apache/cassandra/db/DeletedColumn.java>.
+
+This is direct implementation evidence for a narrow point already used by the case: deletion is not represented merely by absence; negative/currentness state has an embodiment of its own.
+
+### H/P — the 1.2.19 grace interval is policy state, while overlap still constrains local purge
+
+`CFMetaData.java` in the same tag defines `DEFAULT_GC_GRACE_SECONDS = 864000` for ordinary user tables. More importantly, `CompactionController.shouldPurge(key, maxDeletionTimestamp)` is documented around the condition that all versions of the row be present in the compaction set; it checks overlapping SSTables and refuses purge when an overlapping SSTable can still contain a version at or before the deletion timestamp.
+
+**Primary anchors:**
+
+- <https://github.com/apache/cassandra/blob/cassandra-1.2.19/src/java/org/apache/cassandra/config/CFMetaData.java>
+- <https://github.com/apache/cassandra/blob/cassandra-1.2.19/src/java/org/apache/cassandra/db/compaction/CompactionController.java>
+
+The historical/engineering boundary is therefore sharper than `ten days makes deletion safe`:
+
+```text
+grace age
+    -> purge eligibility input
+
+but
+
+overlapping older representations
+    -> can still block local purge
+```
+
+`safe-forgetting closure` remains a project reconstruction, not Cassandra vocabulary.
+
+### H/P — CASSANDRA-7810 is a one-node counterexample to “this is only a stale-replica problem”
+
+ASF issue **CASSANDRA-7810**, resolved in August 2014 with fix versions including 1.2.19, 2.0.11, and 2.1.0, reproduces resurrection in a single-node cluster with `gc_grace_seconds = 0`: insert, delete, flush, compact, and the deleted row reappears. The issue diagnosis is that expired tombstones were discarded before their suppressive effect had been correctly applied during compaction. Cassandra 1.2.19 `CHANGES.txt` records `Track expired tombstones (CASSANDRA-7810)`.
+
+**Primary/institutional anchors:**
+
+- <https://issues.apache.org/jira/browse/CASSANDRA-7810>
+- <https://github.com/apache/cassandra/blob/cassandra-1.2.19/CHANGES.txt>
+
+This adds a distinct failure boundary to the distributed zombie example: even with no remote stale replica, **retiring negative evidence in the wrong local operation order can restore older positive state**.
+
+### H/P prior art — deletion entries that must survive non-major compaction predate Cassandra
+
+Chang et al.'s **Bigtable** paper (OSDI 2006), §5.4, states that SSTables produced by non-major compactions can contain `special deletion entries` that suppress deleted data in older live SSTables; a major compaction can later produce an SSTable containing neither deletion information nor deleted data.
+
+**Primary anchor:** Fay Chang et al., “Bigtable: A Distributed Storage System for Structured Data,” OSDI 2006, §5.4, HTML proceedings: <https://static.usenix.org/event/osdi06/tech/chang/chang_html/>.
+
+This is earlier primary prior art for the **function** `retain deletion evidence while older immutable representations remain live, then retire both when compaction closes the relation`. It does **not** establish implementation identity, direct Bigtable → Cassandra code descent, or invention priority for the wider tombstone concept.
+
+### Version boundary preserved
+
+Do not project the later Cassandra 3.x `only_purge_repaired_tombstones` option backward into 1.2.19. Conversely, do not use the older `DeletedColumn` embodiment as if it were the exact encoding of every later tombstone type. The canonical case now intentionally uses two bounded historical layers:
+
+- 1.2.19 / 2014 for explicit deletion-marker embodiment, overlap-aware purge, and the CASSANDRA-7810 local sequencing failure;
+- 3.x / 3.11 for the later documented hints/repair/grace model and repair-qualified purge option.
+
+---
+
 ## Retained state
 
 The bounded regime retains several different kinds of state.

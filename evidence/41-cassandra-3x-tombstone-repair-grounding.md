@@ -107,6 +107,83 @@ Used only as a later continuity/terminology check. Current Apache documentation 
 
 ---
 
+
+## Historical deepening — exact 1.2.19 artifacts, CASSANDRA-7810, and Bigtable prior art
+
+This section absorbs the unique evidence from the now-consolidated later Case 41. It does not change the canonical Case 41 thesis; it gives that thesis a deeper historical and implementation floor.
+
+### P7 — Apache Cassandra `DeletedColumn.java`, tag `cassandra-1.2.19`
+
+**URL:** <https://github.com/apache/cassandra/blob/cassandra-1.2.19/src/java/org/apache/cassandra/db/DeletedColumn.java>
+
+Directly inspected implementation facts retained from the older evidence slice:
+
+- `DeletedColumn` extends `Column`;
+- `isMarkedForDelete()` returns true;
+- `getMarkedForDeleteAt()` returns the column timestamp;
+- `getLocalDeletionTime()` decodes retained local deletion time;
+- serialization uses `ColumnSerializer.DELETION_MASK`.
+
+**Use:** strong primary implementation evidence that a deletion marker is first-class retained database state, not mere absence.
+
+**Boundary:** this does not describe every later Cassandra tombstone kind or encoding.
+
+### P8 — Apache Cassandra `CFMetaData.java`, tag `cassandra-1.2.19`
+
+**URL:** <https://github.com/apache/cassandra/blob/cassandra-1.2.19/src/java/org/apache/cassandra/config/CFMetaData.java>
+
+`DEFAULT_GC_GRACE_SECONDS = 864000` provides an exact 1.2.19 implementation witness for the ordinary user-table ten-day default.
+
+**Use:** grounds a historical retention-policy timescale distinct from deleted-value lifetime.
+
+**Boundary:** a configured time window is not proof of repair or global convergence.
+
+### P9 — Apache Cassandra `CompactionController.java`, tag `cassandra-1.2.19`
+
+**URL:** <https://github.com/apache/cassandra/blob/cassandra-1.2.19/src/java/org/apache/cassandra/db/compaction/CompactionController.java>
+
+`shouldPurge(key, maxDeletionTimestamp)` checks overlapping SSTables and refuses purge when an overlapping SSTable may still contain an older version at or before the deletion timestamp.
+
+**Use:** direct implementation evidence that elapsed grace is not the complete local purge condition; older shadowed representations outside the compaction set remain relevant.
+
+**Boundary:** this is local compaction admissibility, not proof that every distributed replica has converged.
+
+### P10 — CASSANDRA-7810 and Cassandra 1.2.19 `CHANGES.txt`
+
+**Issue:** <https://issues.apache.org/jira/browse/CASSANDRA-7810>
+
+**Release record:** <https://github.com/apache/cassandra/blob/cassandra-1.2.19/CHANGES.txt>
+
+The ASF defect record reproduces a deleted row reappearing on a **single node** with `gc_grace_seconds = 0` after flush/compaction, and records fix versions 1.2.19, 2.0.11, and 2.1.0. The 1.2.19 change record includes `Track expired tombstones (CASSANDRA-7810)`.
+
+**Use:** strong project/institutional evidence that purge sequencing itself is semantically significant: a tombstone can be old enough to collect yet still be needed to suppress an older local representation during the current compaction operation.
+
+**Boundary:** this one defect does not explain every Cassandra resurrection bug.
+
+### P11 — Chang et al., Bigtable, OSDI 2006, §5.4
+
+**HTML proceedings:** <https://static.usenix.org/event/osdi06/tech/chang/chang_html/>
+
+The paper states that SSTables produced by non-major compactions can contain `special deletion entries` that suppress deleted data in older live SSTables; a major compaction can later produce an SSTable with neither deletion information nor deleted data.
+
+**Use:** earlier primary prior art for temporarily retaining deletion evidence across immutable representations and later retiring it through a stronger compaction closure.
+
+**Boundary:** prior function is not implementation identity and does not prove a direct Bigtable → Cassandra genealogy.
+
+### Cross-version claim controls added by the deepening
+
+| Claim | Type | Grounding | Boundary |
+| --- | --- | --- | --- |
+| Cassandra 1.2.19 represents column deletion with explicit `DeletedColumn` state | `H/P` | P7 | exact tagged implementation, not every later encoding |
+| 1.2.19 ordinary user-table default grace is 864000 seconds | `H/P` | P8 | policy default, not convergence proof |
+| older overlapping SSTable state can block local tombstone purge | `H/P` | P9 | local compaction relation only |
+| CASSANDRA-7810 resurrected a deleted row on one node when expired tombstones were discarded too early | `H/P` | P10 | one historical defect class |
+| deletion-marker retention across immutable SSTables predates Cassandra | `H/P` prior art | P11 | functional prior art, not direct genealogy |
+| `only_purge_repaired_tombstones` existed in Cassandra 1.2.19 | `X` | contradicted by version boundary used here | rejected |
+| Bigtable deletion entries and Cassandra tombstones are implementation-identical | `X` | none | rejected |
+
+---
+
 ## Claim ledger
 
 | Claim | Type | Grounding | Boundary |
