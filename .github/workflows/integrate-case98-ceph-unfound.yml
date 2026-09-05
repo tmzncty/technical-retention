@@ -1,0 +1,31 @@
+name: Integrate Case 98 Ceph unfound boundary
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/integrate-case98-ceph-unfound.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply bounded Case 98 research slice
+        run: python .github/scripts/integrate_case98_ceph_unfound.py
+      - name: Validate Markdown diff
+        run: git diff --check
+      - name: Commit research changes and remove one-shot integration files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/scripts/integrate_case98_ceph_unfound.py .github/workflows/integrate-case98-ceph-unfound.yml
+          git add -A
+          git diff --cached --check
+          git commit -m "case98: integrate Ceph unfound loss boundary"
+          git push origin HEAD:main
