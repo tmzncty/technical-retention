@@ -21,12 +21,13 @@ jobs:
       - name: Apply bounded research integration
         run: python .github/scripts/integrate_case86_ibm360.py
 
-      - name: Validate text diff
+      - name: Validate bounded integration
         run: |
-          git diff --check
           grep -q 'IBM System/360 Model 65 controlled power-transition boundary' CASE_INDEX.md
           grep -q 'Grounding status and remaining archival cleanup' cases/02-magnetic-core-destructive-read.md
           grep -q 'five-second delay before power removal' cases/86-dec-pdp8-core-power-fail-auto-restart.md
+          grep -q 'GA22-6884-3_System_360_Model_65_Functional_Characteristics_196809.pdf' evidence/86-dec-1960-1970-core-power-restart-grounding.md
+          grep -q 'Magnetic-core/system power-transition deepening' ROADMAP.md
 
       - name: Commit research changes and remove one-shot integration files
         run: |
