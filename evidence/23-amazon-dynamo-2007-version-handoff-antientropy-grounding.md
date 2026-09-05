@@ -17,7 +17,7 @@ Reasons:
 - the central mechanism is anchored in the directly inspected 2007 SOSP primary paper;
 - the key pages for version branching, hinted handoff, anti-entropy, read repair, and background-task scheduling were checked in the page-preserving PDF facsimile;
 - the Amazon Science publication record independently anchors title/authors/year/conference identity;
-- prior-art controls are supplied by Dynamo's own `well known techniques` statement plus earlier ACM records for epidemic replica maintenance and Bayou conflict handling;
+- prior-art controls are supplied by Dynamo's own `well known techniques` statement, Lamport 1978, Parker et al. 1983, Mattern 1989, and earlier ACM records for epidemic replica maintenance and Bayou conflict handling;
 - the `computing-archaeology` repository was searched for a dedicated Dynamo / anti-entropy treatment and none was found in the indexed state inspected this round;
 - reconstruction vocabulary is explicitly separated from period vocabulary.
 
@@ -265,6 +265,136 @@ This is enough to prevent a broad claim that Dynamo was the first replicated sto
 
 ---
 
+## Source F — Lamport, logical clocks and event ordering, 1978
+
+### Bibliographic record
+
+Leslie Lamport, **“Time, Clocks, and the Ordering of Events in a Distributed System,”** *Communications of the ACM* 21(7), July 1978, pp. 558–565.
+
+Microsoft Research author/publication record:
+
+<https://www.microsoft.com/en-us/research/publication/time-clocks-ordering-events-distributed-system/>
+
+DOI:
+
+<https://doi.org/10.1145/359545.359563>
+
+### Inspection level
+
+**Primary-paper institutional publication record + abstract/author context; Dynamo reference list directly inspected.**
+
+### Use
+
+Lamport's paper establishes the `happened before` partial order and a synchronized logical-clock mechanism that can totally order events consistently with that causal relation. Dynamo's 2007 reference [12] points directly to Lamport 1978.
+
+**Established:** Lamport is direct causal-order/logical-clock prior art for the problem Dynamo cites.
+
+**Not established:** that Lamport 1978 used a per-object vector of site counters, the term `version vector`, or the exact Dynamo clock representation. The historical distinction matters because `logical clock` is not one fixed data structure across all later literature.
+
+---
+
+## Source G — Parker et al., replicated-file version vectors, 1983
+
+### Bibliographic record
+
+D. Stott Parker Jr., Gerald J. Popek, Gerard Rudisin, Allen Stoughton, Bruce J. Walker, Evelyn Walton, Johanna M. Chow, David Edwards, Stephen Kiser, and Charles Kline, **“Detection of Mutual Inconsistency in Distributed Systems,”** *IEEE Transactions on Software Engineering* 9(3), May 1983, pp. 240–247.
+
+DOI:
+
+<https://doi.org/10.1109/TSE.1983.236733>
+
+Direct facsimile mirror inspected for text:
+
+<https://pages.cs.wisc.edu/~remzi/Classes/739/Fall2018/Papers/parker83detection.pdf>
+
+### Inspection level
+
+**Primary-paper direct PDF text, especially printed pp. 242–244 (§III.C–D).**
+
+### Use
+
+The paper explicitly uses the term `version vector`. It proposes keeping a vector with each copy of each replicated file; each component counts updates made at one site. The authors define componentwise compatibility/dominance, increment the originating site's component on update, combine predecessor maxima during reconciliation, and state that the vector is committed with the updated file.
+
+The retention-specific motivation is especially important: the paper rejects retaining an entire potentially unbounded partition/history graph and instead proposes a version-numbering scheme encoding only the necessary characteristics of that history graph.
+
+This grounds:
+
+- `version vector` terminology no later than 1983 in a replicated-file partition context;
+- `causal/history summary ≠ full history archive`;
+- a small retained relation can authorize conflict detection without retaining every historical event.
+
+### Counterexamples / limits
+
+The authors also state two limits that must survive comparison with Dynamo:
+
+1. identical independent updates in separate partitions can still be reported as a version conflict;
+2. the bounded scheme applies to single files and can miss a cross-file transaction serialization conflict.
+
+Therefore `vector compatibility` is not a universal test for semantic equality or arbitrary transactional consistency.
+
+**Not used to claim:** code lineage from this paper to Dynamo, or that Parker's exact file-copy semantics are identical to Dynamo's object clocks.
+
+---
+
+## Source H — Mattern, vector time and explicit relation to Fidge/Parker, 1989
+
+### Bibliographic record
+
+Friedemann Mattern, **“Virtual Time and Global States of Distributed Systems,”** in M. Cosnard et al. (eds.), *Proceedings of the Workshop on Parallel and Distributed Algorithms*, North-Holland / Elsevier, 1989, pp. 215–226.
+
+Official ETH publication/facsimile:
+
+<https://vs.inf.ethz.ch/publ/papers/VirtTimeGlobStates.pdf>
+
+Official ETH bibliographic record:
+
+<https://vs.inf.ethz.ch/publ/bibtex.html?file=papers%2FVirtTimeGlobStates>
+
+### Inspection level
+
+**Primary paper, direct text + page-image inspection.** The vector-time construction was checked around reprint printed p. 126, and the Fidge/Parker comparison around printed p. 129.
+
+### Use
+
+Mattern builds `vector time` from one logical-clock component per process, increments the local component, piggybacks the vector, and merges received knowledge with componentwise maximum. In the applications discussion he says that Fidge independently suggested vectors of logical clocks for distributed debugging. He then explicitly describes Parker et al.'s older replicated-file `version vector`, including per-site update counts and conflict detection for independent modifications under partition.
+
+This is a particularly strong terminology bridge because it is a late-1980s primary author explicitly relating:
+
+```text
+vectors of logical clocks / vector time
+        to
+an earlier replicated-file version-vector scheme
+```
+
+**Boundary:** Mattern's wording establishes a contemporaneous relationship and an independent-work statement about Fidge; it does not settle a universal priority dispute for every vector-clock/version-vector concept.
+
+---
+
+## Source A addendum — Dynamo clock truncation is deliberate causal-metadata forgetting
+
+### Anchor
+
+DeCandia et al. §4.4 / author-hosted online text corresponding to printed pp. 210–211.
+
+### Inspection level
+
+**Primary paper / author-hosted text.**
+
+### Use
+
+Dynamo states that vector-clock size can grow when many servers coordinate writes. Its bounded scheme stores a timestamp with each `(node, counter)` pair and removes the oldest pair after a threshold (the paper gives 10 as an example). The authors explicitly say this can make descendant relationships impossible to derive accurately and therefore create reconciliation inefficiency; they also report that this had not surfaced in production and was not thoroughly investigated.
+
+This directly grounds:
+
+- `causal metadata is itself retained state`;
+- `bounded metadata growth can require deliberate metadata forgetting`;
+- `metadata forgetting ≠ payload-version deletion`;
+- `smaller retained causal summary can reduce future reconciliation precision`.
+
+It does **not** establish a quantified probability of false conflict/loss, nor a general claim that truncation is unsafe in every workload.
+
+---
+
 ## Prior-art controls
 
 The bounded case rejects the following priority stories:
@@ -274,7 +404,9 @@ The bounded case rejects the following priority stories:
 | `Dynamo invented anti-entropy` | **rejected** | epidemic replica-maintenance literature predates Dynamo by two decades; Dynamo itself describes a synthesis of known techniques |
 | `Dynamo invented application-specific conflict reconciliation` | **rejected** | Bayou 1995 is earlier direct literature; Dynamo cites a broader prior-art lineage |
 | `Dynamo invented Merkle trees` | **rejected** | the paper cites Ralph Merkle's earlier work; no invention-priority argument is made here |
-| `Dynamo invented vector clocks` | **rejected / not investigated as a priority question** | the case only grounds Dynamo's use of vector clocks; a correct clock-history genealogy requires a separate literature slice |
+| `Dynamo invented vector clocks` | **rejected** | Lamport 1978 is causal/logical-clock prior art; Parker et al. 1983 directly use `version vector` for replicated files; Mattern 1989 relates vector time, Fidge's independent vectors of logical clocks, and Parker's earlier version vectors |
+| `Lamport 1978 already contains the Dynamo/Parker vector data structure` | **rejected / unsupported** | Lamport's bounded inspected result is happened-before + logical clocks/total ordering; do not infer the later per-site vector representation from Dynamo's citation alone |
+| `Parker version vector = Dynamo vector clock in every semantic detail` | **rejected** | useful functional/prior-art relation, but different systems, vocabulary, object models, and stated limits |
 | `Dynamo = DynamoDB` | **rejected** | this case is bounded to the internal 2007 Dynamo system/paper |
 
 No positive invention-priority claim is required for the retention comparison.
@@ -288,6 +420,8 @@ No positive invention-priority claim is required for the retention comparison.
 Directly grounded terms/mechanisms:
 
 - multiple object versions;
+- Dynamo's historical term `vector clock` and per-object `(node, counter)` representation;
+- clock-component timestamping/truncation as an explicit bounded-metadata mechanism;
 - vector-clock causality;
 - ancestor version `can be forgotten`;
 - client semantic reconciliation of conflicts;
@@ -309,6 +443,10 @@ Project-level comparison terms introduced from those facts:
 - `availability ≠ convergence`;
 - `divergence detection ≠ repair completion`;
 - `causal ancestry can authorize forgetting`;
+- `causal summary ≠ full history archive`;
+- `clock truncation ≠ object-version deletion`;
+- `metadata-size control can trade causal precision for bounded retained state`;
+- `vector dominance ≠ semantic equality or arbitrary transaction-consistency proof`;
 - `background maintenance has a resource budget`.
 
 These expressions should never be attributed to DeCandia et al. as their historical vocabulary unless the phrase itself occurs in the primary text.
@@ -349,12 +487,13 @@ The case remains grounded only if the following limits remain explicit:
 
 ## Related-repository duplication check
 
-Before writing, the indexed `tmzncty/computing-archaeology` repository was searched for:
+Before writing and again during the vector/version-vector deepening, the indexed `tmzncty/computing-archaeology` repository was checked for a dedicated treatment of:
 
 - `Dynamo`;
-- `Merkle tree anti entropy replication`.
+- `Merkle tree anti entropy replication`;
+- vector clocks / version vectors.
 
-No dedicated matching treatment was returned.
+No dedicated matching treatment was returned in the inspected index/search state.
 
 Therefore this bounded retention argument is not duplicating an existing companion-repository technical history in the inspected state. A future broad genealogy of DHTs, consistent hashing, vector clocks, quorums, epidemic replication, weak consistency, and Dynamo descendants should be routed primarily to `computing-archaeology` and linked from here.
 
@@ -379,7 +518,7 @@ The central claims survive the required checks:
 
 Future slices may separately investigate:
 
-- the exact historical genealogy of vector clocks (including the distinction from Lamport logical clocks);
+- the **full** priority genealogy beyond the bounded Lamport 1978 → Parker 1983 → Fidge/Mattern late-1980s anchors established here, including terminology drift and later database/filesystem descendants;
 - detailed Bayou→Dynamo comparison;
 - later Dynamo descendants and DynamoDB semantics;
 - anti-entropy protocol evolution beyond this 2007 Merkle-tree design;

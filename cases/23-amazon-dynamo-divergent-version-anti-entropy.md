@@ -113,6 +113,14 @@ When a read encounters several branches that cannot be syntactically reconciled,
 
 The paper's Figure 3 example makes the boundary concrete: versions D1 and D2 can be garbage-collected after a descendant is known, while two causally unrelated descendants such as D3 and D4 must both remain until reconciliation establishes a later successor.
 
+The same section also makes the causal metadata itself a bounded retention object. Dynamo notes that a clock can grow when many different servers coordinate writes. To cap that growth, it stores a timestamp with each `(node, counter)` pair and removes the oldest pair after a configured threshold is reached (the paper gives 10 as an example). The authors explicitly warn that, after truncation, descendant relationships may no longer be derived accurately, which can make reconciliation less efficient; they also say the issue had not surfaced in production and was not thoroughly investigated.
+
+This adds a second forgetting boundary:
+
+> **payload-version retention and causal-metadata retention are coupled but not identical.**
+
+Dynamo can deliberately forget part of the causal summary without deleting the object version itself, accepting reduced precision in later ancestry/reconciliation reasoning.
+
 ### Engineering reconstruction
 
 This yields a retention rule that differs from ordinary `latest-value` intuition:
@@ -125,7 +133,10 @@ For this bounded case:
 - `version existence ≠ version authority`;
 - `newer arrival ≠ proof of supersession`;
 - `causal ancestry can authorize forgetting`;
-- `causal incomparability can create a positive retention obligation`.
+- `causal incomparability can create a positive retention obligation`;
+- `causal summary ≠ full update history`;
+- `clock truncation ≠ object-version deletion`;
+- `metadata-size control can trade retained causal precision for bounded state`.
 
 The repository should therefore not define distributed `currentness` as necessarily singular. In one regime, the admissible current state of a key can be a set of unresolved leaves.
 
@@ -322,14 +333,33 @@ Amazon's contemporary engineering account by Werner Vogels also states that Dyna
 
 Dynamo's own paper says it synthesizes `well known techniques`; the novelty of this case is therefore **not** an invention-priority claim for its ingredients.
 
-Two earlier lines are especially relevant:
+The causal-metadata boundary can now be stated more precisely.
 
-- Alan Demers et al., **“Epidemic Algorithms for Replicated Database Maintenance,”** PODC 1987, pp. 1–12, DOI <https://doi.org/10.1145/41840.41841>. This is direct prior art for randomized propagation / replica convergence well before Dynamo's anti-entropy deployment.
-- Douglas B. Terry et al., **“Managing Update Conflicts in Bayou, a Weakly Connected Replicated Storage System,”** SOSP 1995, pp. 172–182, DOI <https://doi.org/10.1145/224057.224070>. This is earlier primary literature for weakly connected replicated storage with application-specific conflict handling.
+- Leslie Lamport's 1978 **“Time, Clocks, and the Ordering of Events in a Distributed System”** establishes `happened before` as a partial order and gives synchronized **logical clocks** whose scalar values can support a total order consistent with that relation. Dynamo cites this paper as reference [12]. That citation is foundational causal-order prior art; it is **not evidence that Lamport 1978 already used Dynamo's per-object `(node, counter)` vector representation**. Microsoft Research publication record: <https://www.microsoft.com/en-us/research/publication/time-clocks-ordering-events-distributed-system/>; DOI <https://doi.org/10.1145/359545.359563>.
+- D. Stott Parker Jr. et al., **“Detection of Mutual Inconsistency in Distributed Systems,”** *IEEE Transactions on Software Engineering* 9(3), 1983, pp. 240–247, directly use the historical term **`version vector`** for replicated files under network partition. Each component counts updates at one site; componentwise dominance/compatibility is used to detect independently modified versions. Crucially for this repository, the authors motivate the vector as a way to encode the necessary characteristics of the history graph without retaining the entire arbitrarily growing graph. DOI <https://doi.org/10.1109/TSE.1983.236733>.
+- Friedemann Mattern's **“Virtual Time and Global States of Distributed Systems,”** 1989, develops `vector time` from vectors of logical clocks and componentwise maximum. Mattern explicitly says Fidge independently proposed vectors of logical clocks for distributed debugging, and then identifies Parker et al.'s earlier replicated-file `version vector` as a very similar scheme for detecting independent modifications under partition. Official ETH facsimile and bibliographic record: <https://vs.inf.ethz.ch/publ/papers/VirtTimeGlobStates.pdf> and <https://vs.inf.ethz.ch/publ/bibtex.html?file=papers%2FVirtTimeGlobStates>.
+- Alan Demers et al., **“Epidemic Algorithms for Replicated Database Maintenance,”** PODC 1987, pp. 1–12, DOI <https://doi.org/10.1145/41840.41841>, remains prior art for randomized propagation / replica convergence before Dynamo's anti-entropy deployment.
+- Douglas B. Terry et al., **“Managing Update Conflicts in Bayou, a Weakly Connected Replicated Storage System,”** SOSP 1995, pp. 172–182, DOI <https://doi.org/10.1145/224057.224070>, remains earlier primary literature for weakly connected replicated storage with application-specific conflict handling.
 
-The present case therefore makes **no** claim that Dynamo invented eventual consistency, divergent-version reconciliation, anti-entropy, vector clocks, or Merkle trees.
+Terminology must remain source-specific:
 
-A full genealogy of vector clocks, epidemic replication, consistent hashing, quorums, Merkle trees, and weak consistency belongs in distributed-systems history, not in this bounded retention slice.
+```text
+Lamport 1978 logical clock / happened-before
+        !=
+Parker et al. 1983 replicated-file version vector
+        !=
+Mattern/Fidge late-1980s vector time / vectors of logical clocks
+        !=
+Dynamo 2007 per-object "vector clock"
+```
+
+The mechanisms are historically related enough to establish prior art and a comparison boundary, but this repository does **not** silently rename Parker's `version vector` as a Dynamo `vector clock`, or vice versa. Nor does Mattern's statement that Fidge worked independently settle a universal first-invention priority.
+
+Parker also supplies two useful limits against overgeneralization: equal bytes produced independently can still carry conflicting version vectors, and the paper's bounded scheme is explicitly a **single-file** conflict detector that does not by itself detect every cross-file transaction serialization error. Therefore:
+
+> **vector dominance ≠ semantic equivalence ≠ complete transaction-consistency proof.**
+
+The present case makes no claim that Dynamo invented eventual consistency, divergent-version reconciliation, anti-entropy, vector clocks, version vectors, or Merkle trees. A full priority genealogy of logical clocks, vector timestamps, version vectors, epidemic replication, quorums, consistent hashing, and later descendants belongs in distributed-systems history—preferably `computing-archaeology` if that history is later built—rather than being duplicated here.
 
 ---
 
