@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to NAND read-disturb as documented before and through Yu Cai et al.'s 2015 DSN experimental characterization of commercial 2Y-nm MLC NAND, with a 2009-priority controller patent and 2013 APSys paper used to constrain prior-art claims. The case distinguishes measured device behavior from proposed controller mitigation/recovery and does not claim commercial deployment of the 2015 mechanisms.
+**`grounded`** — bounded to NAND read disturb from a Fujitsu 2002-priority manufacturer filing through Yu Cai et al.'s 2015 DSN experimental characterization. NASA/JPL's March 2008 qualification study is retained as an independent institutional witness, including its explicit negative result; a 2009-priority Texas Memory Systems patent and a 2013 APSys paper constrain controller/FTL prior-art claims. The case separates measured device behavior, engineering reconstruction, and proposed mitigation/recovery, and does not claim commercial deployment of the 2015 mechanisms.
 
 Grounding record: [`../evidence/52-cai-2009-2015-nand-read-disturb-grounding.md`](../evidence/52-cai-2009-2015-nand-read-disturb-grounding.md).
 
@@ -25,6 +25,22 @@ This is **not**:
 - a complete history of modern 3D-NAND read reclaim, read retry, LDPC, or controller firmware.
 
 ## Historical vocabulary and record
+
+### Earlier manufacturer-primary witness — Fujitsu, 2002 priority / 2003 publication
+
+Fujitsu's **US20030137873A1, “Read disturb alleviated flash memory,”** has a 22 January 2002 priority date and a 24 July 2003 U.S. publication date. The original assignee is Fujitsu Ltd. The application explicitly concerns NAND-type Flash and uses `read disturb` as period vocabulary. Its background explains that a high voltage is applied to non-selected word lines during read so those cells conduct; this can put non-selected cells into a light-programming condition, add floating-gate charge, raise threshold voltage, and eventually compromise the erased/programmed distinction. The disclosed design varies the non-selected-word-line voltage and makes a tradeoff explicit: lowering it can suppress disturb, while lowering it too far can make some cells fail to conduct correctly during read.
+
+Primary source: <https://patents.google.com/patent/US20030137873A1/en>.
+
+This is an earlier manufacturer-primary witness than the 2009-priority controller patent already used in this case. It is **not** evidence that Fujitsu first discovered read disturb or invented every later mitigation technique.
+
+### Independent qualification witness — NASA/JPL, March 2008
+
+Douglas Sheldon and Michael Freie's NASA/JPL **_Disturb Testing in Flash Memories_**, JPL Publication 08-7, treats read disturb as a NAND reliability and qualification problem. The report says manufacturers acknowledged disturb failures and supplied guidance, describes read disturb as a neighboring-cell/state problem within a block, and records a contemporary rule of thumb of roughly one million READ cycles per block for SLC and 100,000 for MLC. If that guidance had to be exceeded, it recommends moving data to another block and erasing the original block, restarting that block's read-disturb exposure cycle.
+
+Institutional source: <https://nepp.nasa.gov/files/13582/07-100%20Sheldon_JPL%20Distrub%20Testing%20in%20Flash%20Mem.pdf>.
+
+The same report supplies a valuable **negative result**. Program 8 performed 50k, 100k, 500k, and 1M page-read operations on a single page, yet the report states that no program-disturb or read-disturb failures were detected in the tested devices. Therefore the report's read-count figures are historical guidance, not universal physical thresholds.
 
 ### Recognized `Read Disturb` before 2015
 
@@ -86,6 +102,16 @@ And more narrowly:
 
 This does not mean every read immediately changes a decoded neighbor value. The point is cumulative margin consumption: the current request can succeed while making a future request more error-prone.
 
+### Recognized mechanism ≠ universal read-count failure threshold
+
+The NASA/JPL 2008 result prevents an easy but incorrect upgrade from `read disturb exists` to `a fixed read count predicts failure`. The report used large read-count sequences and contemporary migration/erase guidance, yet its own tested devices did not reproduce a disturb failure.
+
+Therefore:
+
+> **read-disturb mechanism ≠ universal fixed read-count failure threshold**.
+
+A practical threshold is qualified by device generation, process, wear, data pattern, temperature, voltage, ECC margin, and test/workload conditions.
+
 ### Read count can become a maintenance clock
 
 Case 36 uses elapsed retention time and wear as inputs to proactive Flash Correct-and-Refresh. Read disturb exposes a different trigger class. A physically hot block can accumulate disturbance because of **how often it is read**, even if user data is not being rewritten and little wall-clock time has passed.
@@ -144,6 +170,16 @@ and:
 
 The reported 21% average endurance improvement is an evaluation result from empirical characterization plus workload-trace simulation, not a measured field-lifetime result from a shipped SSD.
 
+### Compact maintenance summaries can govern much larger payloads
+
+Cai et al.'s proposed `Vpass Tuning` implementation gives one bounded research example: one byte per block for the tuned `Vpass` setting and one byte for the predicted worst-case page. For the paper's assumed 512GB / 65,536-block configuration, that is 128KB total metadata.
+
+This is a proposal/evaluation cost estimate, not a universal commercial SSD format. Its narrower methodological result is:
+
+> **small maintenance metadata ≠ small retention significance**.
+
+A controller can retain a counter, tuned setting, error-margin estimate, or worst-case-page summary without retaining a complete read history, yet that small control state can still govern when future reads remain safe.
+
 ### Recovery can use additional disturbance as diagnostic evidence
 
 The 2015 RDR proposal deliberately reverses the ordinary instinct to stop disturbing a failed block. After an ECC-uncorrectable read, RDR records susceptible cells' threshold voltages, intentionally induces additional read disturbs, measures how strongly those cells shift, classifies them as disturb-prone or disturb-resistant, probabilistically estimates their earlier logical state, and then retries ECC.
@@ -169,6 +205,12 @@ That extends Case 04 with another relocation trigger:
 > **retention maintenance under access stress ≠ physical-location stability**.
 
 The historical mechanisms remain distinct. Case 04's bounded mapped-Flash lineage centers erase/rewrite/reclamation and logical mapping; Case 52 adds read activity itself as a reason to retire or relocate an embodiment before its error budget becomes unsafe.
+
+### Boundary with Case 67 — later 3-D NAND adaptive read reclaim
+
+Case 52 remains the canonical physical/access-induced read-disturb case and now carries the 2002–2015 historical bridge. Case 67 remains a distinct later controller-policy slice: a 2017-priority / 2019 SK hynix disclosure uses compressed read-count proxies, thresholded ECC qualification, adaptive checking, 3-D neighborhood sampling, and conditional reclaim. The shared trigger family does not make the controller policies historically or technically identical.
+
+> **generic read-disturb mechanism/history ≠ one later 3-D NAND controller policy**.
 
 ## Read semantics compared with magnetic core
 

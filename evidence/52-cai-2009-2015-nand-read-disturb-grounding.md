@@ -1,4 +1,4 @@
-# Case 52 Grounding Record — NAND Read Disturb, 2009–2015
+# Case 52 Grounding Record — NAND Read Disturb, 2002–2015
 
 ## Purpose
 
@@ -14,14 +14,45 @@ The answer is **yes for the bounded source set**, with an important evidence spl
 - the **2015 commercial-chip measurements** directly characterize the physical/error behavior of 2Y-nm MLC NAND;
 - **Vpass Tuning** and **Read Disturb Recovery (RDR)** are proposed/evaluated techniques in that paper, not demonstrated deployment in a named shipped SSD controller.
 
+## Consolidation note
+
+The grounding-record filename is retained for stable links, but the evidence window is now **2002–2015**. The former Case 97 duplicated Case 52's central mechanism. Its unique evidence has been absorbed here: Fujitsu's 2002-priority manufacturer filing and NASA/JPL's 2008 qualification/test report, including the explicit no-disturb-failure result. Git history retains the former files for provenance. Case 67 remains a separate later 3-D NAND controller-policy case.
+
 ## Evidence classes
 
 | Source | Date / object | Evidence role | What it can establish | What it cannot establish |
 | --- | --- | --- | --- | --- |
+| Fujitsu, US20030137873A1 / US6707714B2 | priority 2002-01-22; publication 2003-07-24 | manufacturer primary patent | early explicit NAND `read disturb` vocabulary; non-selected-word-line read voltage; light-programming / threshold-shift mechanism; voltage tradeoff | first discovery/invention priority; universal later-controller implementation |
+| Sheldon & Freie, NASA/JPL Publication 08-7 | March 2008 | institutional qualification/test report | disturb as a reliability concern; migration+erase guidance; 50k/100k/500k/1M read protocol; explicit no-disturb-failure result | universal read-count threshold; evidence that the tested devices failed from read disturb |
 | Frost et al., US7818525B1 | priority 2009-08-12; publication 2010-10-19 | manufacturer/controller primary patent | period `Read Disturb` vocabulary; elevated unread-cell gate stress; repeated weak programming; ECC; per-block read counting; threshold-triggered relocation and mapping update | universal implementation across NAND products; exact invention priority for read disturb itself |
 | Ha, Jeong, Kim, APSys | 2013 | peer-reviewed scholarly prior art | read-disturb management as an existing high-density NAND/FTL problem; neighboring-page reads; proactive relocation/load balancing | direct characterization of the same 2Y-nm chips used in 2015; commercial deployment |
 | Cai et al., DSN | June 2015 conference; pp. 438–449 | peer-reviewed primary experimental paper | commercial 2Y-nm MLC characterization; Vpass/read-count/P-E-wear relations; proposed Vpass Tuning and RDR; experimental RDR behavior | named-product controller deployment; universal thresholds for later 3D NAND |
 | CMU/Intel Science & Technology Center abstract page | 2015 | institutional bibliographic/abstract record | author/title/event confirmation and bounded summary of the paper | substitute for figure- or section-level evidence where the paper itself is available |
+
+## Earlier manufacturer-primary evidence — Fujitsu 2002/2003
+
+Fujitsu Limited, **“Read disturb alleviated flash memory,”** US20030137873A1 / US6707714B2:
+
+- priority: 22 January 2002;
+- U.S. filing: 22 October 2002;
+- U.S. application publication: 24 July 2003;
+- original assignee: Fujitsu Ltd.
+
+Source: <https://patents.google.com/patent/US20030137873A1/en>.
+
+The patent directly supports the date and historical vocabulary, NAND non-selected-word-line read-voltage stress, a light-programming / threshold-rise mechanism, and a disturb-versus-read-margin voltage tradeoff. It does **not** establish first discovery or universal later-controller implementation.
+
+## Independent institutional qualification evidence — NASA/JPL 2008
+
+Douglas Sheldon and Michael Freie, **_Disturb Testing in Flash Memories_**, JPL Publication 08-7, March 2008, NASA Electronic Parts and Packaging (NEPP) Program.
+
+Source: <https://nepp.nasa.gov/files/13582/07-100%20Sheldon_JPL%20Distrub%20Testing%20in%20Flash%20Mem.pdf>.
+
+The executive summary defines disturb testing around nearby programming/reading changing an expected state, states that manufacturers acknowledged disturb failures, and says no specific disturb failures were noted in the report's testing. The report gives contemporary SLC/MLC read-count guidance plus migration+erase mitigation; Program 8 performs 50k, 100k, 500k, and 1M page reads on one page; the conclusions report no program-disturb or read-disturb failures in the tested devices.
+
+Evidence strength: **H/S — strong institutional qualification/test witness and especially strong as a negative-result boundary.** The numerical guidance is retained as 2008 guidance, not a universal NAND law.
+
+> **recognized failure mechanism + conservative guidance ≠ a fixed failure threshold reproduced by every tested device**.
 
 ## Primary paper inspected
 
