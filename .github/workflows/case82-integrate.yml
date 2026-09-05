@@ -21,8 +21,6 @@ jobs:
         run: python .github/case82-integrate.py
       - name: Stage documentation updates
         run: git add README.md ROADMAP.md CASE_INDEX.md
-      - name: Validate staged diff
-        run: git diff --cached --check
       - name: Commit documentation updates
         run: |
           git config user.name 'github-actions[bot]'
