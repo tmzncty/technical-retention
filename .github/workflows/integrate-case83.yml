@@ -1,0 +1,44 @@
+name: integrate-case83
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/scripts/integrate_case83.py'
+      - '.github/workflows/integrate-case83.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Integrate Case 83
+        run: python .github/scripts/integrate_case83.py
+      - name: Validate diff
+        run: |
+          git diff --check
+          test -f cases/83-apache-hdfs-block-scanner-checksum-verification.md
+          test -f evidence/83-hadoop-2003-2016-block-scanner-grounding.md
+          grep -q '1005\. \*\*replica presence ≠ content-integrity qualification\*\*' CASE_INDEX.md
+          grep -q '1020\. \*\*HDFS does not establish invention priority for proactive distributed integrity scanning\*\*' CASE_INDEX.md
+      - name: Commit and push
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'No integration changes needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md ROADMAP.md CASE_INDEX.md
+          git commit -m 'case83: integrate HDFS block-scanner navigation'
+          git push
