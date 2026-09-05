@@ -1,0 +1,40 @@
+name: case93-integration
+
+on:
+  push:
+    paths:
+      - '.github/workflows/case93-integration.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Integrate Case 93 navigation and status
+        run: python .github/scripts/case93_integrate.py
+      - name: Validate and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f cases/93-dram-variable-retention-time-profile-staleness.md
+          test -f evidence/93-dram-1987-2013-vrt-profiling-grounding.md
+          grep -Fq 'cases/93-dram-variable-retention-time-profile-staleness.md' README.md
+          grep -Fq 'cases/93-dram-variable-retention-time-profile-staleness.md' ROADMAP.md
+          grep -Fq 'cases/93-dram-variable-retention-time-profile-staleness.md' CASE_INDEX.md
+          grep -Fq 'After ninety-four bounded cases, **all ninety-four cases are now `grounded`.**' CASE_INDEX.md
+          grep -Fq '1165. **measured retention time ≠ immutable cell property**' CASE_INDEX.md
+          grep -Fq '1180. **maintenance policy may itself require maintenance / revalidation**' CASE_INDEX.md
+          grep -Fq 'refresh failure — **partially advanced by grounded Cases 92 and 93**' ROADMAP.md
+          test ! -e .github/scripts/case93_integrate.py
+          test ! -e .github/workflows/case93-integration.yml
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'case93: integrate DRAM VRT profile staleness'
+          git push origin HEAD:main
