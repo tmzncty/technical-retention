@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to the NVM Express 1.3 interface semantics for Dataset Management `Deallocate` and `Sanitize`, with NVM Express 1.2.1 `Format NVM` secure-erase semantics used as the immediate prior-version boundary. The case asks what the interface means when a host says that a logical range is no longer needed, versus when it requests that prior user data be made unavailable across the NVM subsystem.
+**`grounded`** — bounded to the NVM Express 1.3 interface semantics for Dataset Management `Deallocate` and `Sanitize`, with NVM Express 1.2.1 `Format NVM` secure-erase semantics used as the immediate prior-version boundary. TCG Opal 1.0 Revision 1.0 (January 2009) is now used as an earlier storage-security prior-art boundary for media-encryption-key eradication and for the explicit `KeepGlobalRangeKey` counterexample in which a security-provider lifecycle reset occurs without cryptographic erase. The case asks what the interface means when a host says that a logical range is no longer needed, versus when it requests that prior user data be made unavailable across the NVM subsystem.
 
 Grounding record: [`../evidence/44-nvme12-13-deallocate-sanitize-grounding.md`](../evidence/44-nvme12-13-deallocate-sanitize-grounding.md).
 
@@ -210,11 +210,45 @@ The narrower historical claim is that Revision 1.3 introduced the dedicated `San
 
 NVM Express's own later material likewise describes Sanitize as a Revision-1.3 addition and contrasts it with the pre-existing Format secure-erase path.
 
+## Earlier storage-security prior art — TCG Opal 1.0 key eradication (2009)
+
+The **TCG Storage Security Subsystem Class: Opal Specification, Version 1.0, Revision 1.0**, dated **January 27, 2009**, supplies an earlier storage-interface witness for a relation that later appears in NVMe Crypto Erase. The direct TCG PDF is:
+
+<https://trustedcomputinggroup.org/wp-content/uploads/Opal_SSC_1.0_rev1.0-Final.pdf>
+
+Historical vocabulary must remain source-specific. Opal speaks about a `Locking SP`, `Revert`, `RevertSP`, a `media encryption key`, `KeepGlobalRangeKey`, and `cryptographic erase`; this repository should not silently rewrite those 2009 lifecycle/security terms into later NVMe `Sanitize` terminology.
+
+In §5.2.2 (`Revert`, printed p. 76), the specification says that reverting the Locking SP returns it to its original factory state and securely erases personalization. An informative note then states that reverting the Locking SP causes **media encryption keys to be eradicated**, with the side effect of securely erasing data in the User LBA portion. The precise secure-erasure implementation is left implementation-specific.
+
+Section §5.2.3 (`RevertSP`, printed p. 77) provides the more important counterexample. Its optional `KeepGlobalRangeKey` parameter allows the Locking SP to be turned off **without eradicating the media encryption key for the Global locking range** and explicitly describes this as avoiding a **cryptographic erase** of the user data associated with that range. If the parameter is true, the TPer continues using the existing media encryption key after the state transition.
+
+That primary source supports two separate layers.
+
+**Historical record:**
+
+> **security-provider lifecycle reset ≠ cryptographic erase.**
+
+The same family of reset operations can either eradicate a relevant media key or deliberately preserve it.
+
+**Engineering reconstruction:**
+
+> **media-encryption-key eradication ≠ physical ciphertext overwrite.**
+
+In an encrypted-storage regime, recoverability can depend on a retained relation between ciphertext and key material. Destroying that relation can make the old user data unavailable without requiring the same physical transformation as block erase or overwrite. Conversely, preserving the key can preserve that decryptability relation while ownership/security-provider state is reset.
+
+This also blocks a tempting category error:
+
+> **factory-state reset ≠ universal proof of data destruction.**
+
+The effect depends on which retained control and key relations the operation actually retires.
+
+This is a **prior-art boundary**, not an invention claim. The 2009 specification establishes that explicit media-key-eradication / cryptographic-erase semantics predate NIST SP 800-88 Rev. 1 (2014) and NVMe 1.2.1/1.3 (2016–2017), but it does not prove that TCG invented cryptographic erasure, nor does a standards-level contract prove named-product compliance.
+
 ## Broader prior art boundary
 
-Media-sanitization vocabulary and cryptographic erasure also predate NVMe 1.3. NIST SP 800-88 Rev. 1 was finalized in December 2014 and defines media sanitization as rendering access to target data infeasible for a stated level of effort; its keyword set includes `crypto erase` and `secure erase`.
+Media-sanitization vocabulary and cryptographic erasure also predate NVMe 1.3. The TCG Opal 1.0 witness above pushes explicit storage-interface key-eradication / cryptographic-erase semantics back to 2009. NIST SP 800-88 Rev. 1 was finalized in December 2014 and defines media sanitization as rendering access to target data infeasible for a stated level of effort; its keyword set includes `crypto erase` and `secure erase`.
 
-This source is used only to block an invention-priority shortcut. It does **not** imply that NVMe 1.3 simply copied NIST's taxonomy or that the interface semantics are reducible to the policy document.
+These sources are used to block invention-priority shortcuts and to separate engineering layers. They do **not** imply that NVMe 1.3 simply copied TCG or NIST taxonomy, that TCG originated cryptographic erasure, or that later NVMe interface semantics are reducible to either earlier document.
 
 Similarly, Revision 1.3 itself points from Deallocate to earlier ATA Trim and SCSI UNMAP interfaces. The case therefore makes no `NVMe invented deallocation` claim.
 
@@ -292,6 +326,10 @@ These are project interpretations, not claims about the intentions of the NVMe a
 | Sanitize progress/result is separately represented in Sanitize Status / Global Data Erased state | H/P | Revision 1.3 §8.15 |
 | Multi-pass overwrite may adversely affect NAND endurance | H/P | Revision 1.3 §8.15 |
 | NVMe 1.2.1 already provided User Data Erase / Cryptographic Erase through Format NVM | H/P | Revision 1.2.1 §5.16 |
+| TCG Opal 1.0 Rev. 1.0 (Jan. 27, 2009) states that Locking-SP Revert eradicates media encryption keys, with secure erasure of User-LBA data as the described side effect | H/P | Opal 1.0 Rev. 1.0 §5.2.2, printed p. 76; secure-erasure note is informative |
+| Opal `RevertSP` with `KeepGlobalRangeKey=true` can reset/turn off the Locking SP while preserving the Global-range media key and avoiding cryptographic erase for that range | H/P | Opal 1.0 Rev. 1.0 §5.2.3, printed p. 77 |
+| `security-provider lifecycle reset != cryptographic erase` | E | reconstruction from the `KeepGlobalRangeKey` counterexample |
+| `media-encryption-key eradication != physical ciphertext overwrite` | E | bounded reconstruction from encrypted-storage key dependence; not a forensic-unrecoverability claim |
 | `logical deallocation != physical/media erasure` | E | reconstruction from permitted deallocated-read semantics and sanitize scope |
 | `forgetting user data can require retaining sanitization state` | E/I | reconstruction from background operation + status contract |
 | NVMe 1.3 invented secure erase, sanitization, crypto erase, or deallocation | X | contradicted by 1.2.1, NIST prior vocabulary, and NVMe's own ATA/SCSI comparison |

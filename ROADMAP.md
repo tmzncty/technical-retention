@@ -286,7 +286,7 @@ Build a mechanism-sensitive map of:
 - [ ] stale/corrupt integrity metadata, false checksum mismatch, or premature restoration of trust before prescribed verification coverage;
 - [ ] missed externally issued refresh cadence, failed self-refresh entry, loss of the powered self-refresh regime, or premature service resumption across a refresh-mode exit;
 - [ ] reusing a changed real page frame before required page-out, stale/lost residency or auxiliary-location state, backing-store exhaustion, or page-in failure;
-- [ ] key destruction;
+- [ ] key destruction — **partially advanced by grounded Case 44 historical deepening**: TCG Opal 1.0 (January 2009) explicitly links media-encryption-key eradication to cryptographic erasure and, through `KeepGlobalRangeKey`, supplies the counterexample that a Locking-SP/factory-state transition can preserve the relevant key and avoid cryptographic erase. Application/file-level key hierarchies, wrapped/escrowed/backup keys, HSM/KMS failure, selective multi-key erasure, key-recovery policy, named-product compliance, and forensic validation remain open;
 - [ ] bit rot — **partially advanced by grounded Case 83 at the HDFS replicated-block layer**: periodic/suspect-triggered checksum verification can discover a corrupt local replica before ordinary demand and report it into distributed repair control, but device/media error physics, correlated corruption, checksum failure, independent fault validation, and long-term archival bit-rot regimes remain open;
 - [ ] controller failure;
 - [ ] replica divergence and failed repair;
