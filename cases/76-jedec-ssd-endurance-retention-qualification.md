@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to the September 2010 JESD218 SSD-level endurance/retention qualification relation, with Intel's June 2012 retention application note used to expose the difference between standardized TBW and actual media wear, and Intel's September 2015 DC P3608 specification used as a named commercial product witness.
+**`grounded`** — bounded to the September 2010 JESD218 SSD-level endurance/retention qualification relation, with Intel's June 2012 retention application note used to expose the difference between standardized TBW and actual media wear, and Intel's September 2015 DC P3608 specification used as a named commercial product witness. Prior-art deepening now also separates the earlier JESD22-A117 device-level program/erase-endurance-and-retention test family from JESD218's later SSD-level host-TBW service contract, using a 2006 Renesas standards inventory, JEDEC's own later revision ledger, and a 2002 IEEE post-cycling retention paper.
 
 Grounding record: [`../evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md`](../evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md).
 
@@ -52,6 +52,24 @@ Intel's 2012 application note additionally uses `Media Wearout Indicator` when e
 ---
 
 ## Historical record
+
+### Device-level program/erase endurance and retention qualification predates the SSD-level TBW relation
+
+JESD218 itself cites **JESD22-A117, _Electrically Erasable Programmable ROM (EEPROM) Program/Erase Endurance and Data Retention Stress Test_**.[^jesd218] A Renesas Technology reliability handbook dated August 31, 2006 lists `JESD22-A117` in its JEDEC standards table as established in **2000**.[^renesas2006] This is manufacturer-retrospective standards evidence rather than a directly inspected original 2000 JEDEC facsimile, so the bounded historical claim is only that the A117 device-level test family existed by 2000.
+
+JEDEC's later **JESD22-A117E** retains an informative predecessor ledger. It identifies `JESD22-A117B` as the **March 2009** predecessor to A117C and records, among the changes from A117A to A117B, a read-disturb addition to the retention definition, a new `Uncorrectable bit error rate` definition, bad-block-aware endurance-failure wording, transient-error handling, and UBER calculation.[^a117e] Because this evidence comes from a later JEDEC revision ledger, it establishes revision-level terminology by A117B; it does **not** prove that A117B invented read disturb, UBER, bad-block management, or endurance testing.
+
+A separate period technical witness predates both A117B and JESD218. Belgal et al.'s 2002 IEEE IRPS paper describes stress-induced leakage after Flash program/erase cycling, fits data from several technology generations and multi-year bakes, and reports that the affected fraction scales with cycle count.[^belgal2002] This grounds a physical reason why **post-cycling retention** is not the same question as retention of an otherwise identical but uncycled cell.
+
+Together these sources block a false chronology:
+
+```text
+JESD218 (2010)
+    != origin of cycling-conditioned data-retention qualification
+    != origin of UBER/read-disturb vocabulary in JEDEC NVM qualification
+```
+
+The bounded contribution of JESD218 in this case is different: it composes a **whole-SSD**, host-visible endurance rating in TBW with application-class workload, capacity, UBER/FFR, and a subsequent power-off retention requirement.
 
 ### JESD218 makes endurance and retention separate concepts, then composes them
 
@@ -140,6 +158,22 @@ This is a named commercial witness for the enterprise-class relation. It is not 
 
 ## Engineering reconstruction
 
+### Device qualification and drive qualification operate at different interface levels
+
+The A117 family and JESD218 should not be collapsed merely because both use `endurance`, `retention`, and later `UBER` vocabulary. A117 is a device/cell/module qualification method for reprogrammable nonvolatile memories; JESD218 deliberately expresses its endurance boundary in **host-written terabytes** for an SSD and composes that boundary with controller/workload effects and drive-level capacity/error/failure requirements.
+
+Project reconstruction:
+
+```text
+cell / device cycling-retention qualification
+        can inform
+SSD controller + media design and qualification
+        but is not identical to
+host-visible SSD TBW + service-envelope qualification
+```
+
+The distinction matters because controller write amplification, wear leveling, bad-block replacement, ECC, and workload can mediate the relation between one host write and the physical stress experienced by individual NVM cells. Lower-level qualification evidence can therefore underwrite a higher-level service contract without becoming that contract.
+
 ### Rated endurance is a qualification boundary, not an instant physical death line
 
 The standard says the drive must meet a set of requirements **through the stated rating**. It does not say the first write beyond TBW instantaneously destroys the payload, nor does it define TBW as the physical P/E limit of every NAND block.
@@ -222,13 +256,20 @@ TBW provides no claim that data is erased when the rating is reached or exceeded
 
 ## Prior art and anti-anachronism
 
-JESD218 itself cites **JESD22-A117, _Electrically Erasable Programmable ROM (EEPROM) Program/Erase Endurance and Data Retention Stress Test_** as a reference document.[^jesd218]
+The prior-art boundary is now stronger than the earlier observation that JESD218 merely cites A117.
 
-Therefore this repository does **not** claim that JESD218 invented the practice of cycling nonvolatile memory and then testing retention. The bounded historical contribution used here is more specific:
+- Renesas's 2006 manufacturer handbook inventories **JESD22-A117** as established in **2000**.[^renesas2006]
+- Belgal et al. 2002 independently document program/erase-cycling-conditioned Flash retention physics.[^belgal2002]
+- JEDEC's own later A117E revision ledger identifies **A117B (March 2009)** and records that A117B added UBER definition/calculation and read-disturb wording to the A117 family.[^a117e]
+- JESD218 then cites A117 while defining a distinct SSD-level qualification relation.[^jesd218]
 
-> by September 2010, JESD218 standardized an **SSD-level**, application-class-specific endurance rating expressed as host TBW and tied it to workload, capacity, UBER/FFR, and a subsequent power-off retention requirement.
+Therefore this repository does **not** claim that JESD218 invented cycling-plus-retention testing, cycling-conditioned retention physics, read-disturb vocabulary, or UBER as a NVM reliability metric. Nor does the later A117E revision ledger establish invention priority for any of those concepts; it establishes only what that standards family says changed between revisions.
 
-A full history of JESD22-A117, JESD219, NAND qualification, or the later A/B revisions of JESD218 remains separate work.
+The bounded historical contribution used here remains more specific:
+
+> by September 2010, JESD218 standardized an **SSD-level**, application-class-specific endurance rating expressed as host TBW and tied it to workload, capacity, UBER/FFR, and a subsequent power-off retention requirement, above an already-existing device-level endurance/retention qualification tradition.
+
+A full pre-2000 EEPROM/Flash qualification genealogy, direct facsimile archaeology of original A117/A117B, the complete JESD219 workload history, and later JESD218 revision history remain separate work best coordinated with `computing-archaeology`.
 
 ---
 
@@ -268,9 +309,11 @@ actual instant of future unreadability
 
 It complements:
 
+- **Cases 11–13** — floating-gate/EEPROM/early-Flash substrate, program, erase, and cycling constraints below the SSD qualification layer;
 - **Case 15 / Case 20** — immediate power-loss durability and interface persistence;
 - **Case 36** — powered ECC-bounded Flash correct-and-refresh maintenance;
 - **Case 37** — commercial old-data read-performance restoration/refresh;
+- **Case 52** — read-disturb as a concrete access-induced NAND mechanism; A117B's terminology is prior-art evidence, not evidence that read disturb and time-aged retention are one mechanism;
 - **Case 55** — current/lifetime endurance telemetry and model-derived health state;
 - **Cases 44 / 47** — logical/sanitization/forensic forgetting rather than wear qualification.
 
@@ -281,3 +324,6 @@ The mechanisms should not be collapsed simply because all of them can be describ
 [^jesd218]: JEDEC, **JESD218, _Solid-State Drive (SSD) Requirements and Endurance Test Method_**, September 2010. Public copy preserved as USPTO PTAB Exhibit 1009: <https://ptacts.uspto.gov/ptacts/public-informations/petitions/1557329/download-documents?artifactId=2_lC_lThPTFMDbmibT3Hg39BJ0KyMU5imHIj-TvKQIl7pYfwt1_SX4I>. Key locations: pp. 1–5 definitions and references; p. 7 §§6.2–6.3 / Table 1; p. 8 §7.
 [^intel-ret]: Intel, **_Data Retention in Intel Solid-State Drives_**, Application Note 325999-002US, June 2012. Preserved by Solidigm: <https://community.solidigm.com/hzhwu46669/attachments/hzhwu46669/Solid_State_Drives/3096/1/App_note_SSD_Data_retention.pdf>. Key locations: pp. 4–7 for powered refresh and wear/temperature mechanisms; pp. 12–18 for JESD218A qualification and Intel SSD wear/retention examples.
 [^p3608]: Intel, **_Intel Solid-State Drive DC P3608 Series Product Specification_**, 333055-001US, September 2015, especially §2.6 / Table 14: <https://www.intel.com/content/dam/www/public/us/en/documents/product-specifications/ssd-dc-p3608-spec.pdf>.
+[^renesas2006]: Renesas Technology, **_Semiconductor Reliability Handbook_**, REJ27L0001-0100, Rev. 1.00, August 31, 2006, Section 7 JEDEC-standards table, pp. 335–336 of the handbook pagination; the table lists `JESD22-A117` and `2000` under `Established`: <https://studylib.net/doc/28351596/semiconductor-reliability>. This is manufacturer-retrospective standards inventory evidence, not a substitute for an original 2000 JEDEC facsimile.
+[^a117e]: JEDEC, **JESD22-A117E, _Electrically Erasable Programmable ROM (EEPROM) Program / Erase Endurance and Data Retention Stress Test_**, November 2018, especially Annex A.2–A.3. Publicly indexed inspection copy: <https://www.scribd.com/document/837818477/22A117E>. Annex A.2 identifies A117B as March 2009; Annex A.3 records the A117A→A117B additions of read-disturb wording, UBER definition/calculation, bad-block-aware endurance-failure wording, and transient-error handling. This later JEDEC ledger is used as revision evidence, not invention-priority evidence.
+[^belgal2002]: Hanmant P. Belgal et al., **“A New Reliability Model for Post-Cycling Charge Retention of Flash Memories,”** _2002 IEEE International Reliability Physics Symposium_, 7–11 April 2002, DOI 10.1109/RELPHY.2002.996604: <https://doi.org/10.1109/RELPHY.2002.996604>. The abstract directly describes stress-induced leakage after P/E cycling, multi-generation/multi-year-bake data, and cycle-count dependence.
