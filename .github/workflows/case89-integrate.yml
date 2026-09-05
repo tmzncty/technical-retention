@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/case89-integrate.yml'
+      - '.github/scripts/case89_integrate.py'
 
 permissions:
   contents: write
