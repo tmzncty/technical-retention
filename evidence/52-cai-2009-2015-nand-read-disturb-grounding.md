@@ -6,7 +6,7 @@ This record grounds [`../cases/52-nand-flash-read-disturb-access-induced-decay.m
 
 The bounded question is:
 
-> Can an ordinary NAND read leave the requested value recoverable now while cumulatively degrading other retained cells in the same physical block, and what evidence existed by 2009–2015 for controller mitigation and recovery?
+> Can an ordinary NAND read leave the requested value recoverable now while cumulatively degrading other retained cells in the same physical block, and what evidence existed from 2002 through 2015 for mechanism recognition, qualification, controller mitigation, and recovery?
 
 The answer is **yes for the bounded source set**, with an important evidence split:
 
@@ -233,6 +233,8 @@ A current repository search for `read disturb NAND flash` in [`tmzncty/computing
 
 **`grounded`** is justified because the bounded central claims no longer depend on a single evidence type:
 
+- the 2002-priority Fujitsu filing directly establishes earlier manufacturer-primary NAND `read disturb` vocabulary, mechanism class, and a read-voltage tradeoff without proving invention priority;
+- the 2008 NASA/JPL qualification report independently establishes contemporary reliability guidance while its explicit no-disturb-failure result blocks universal read-count thresholds;
 - the 2009-priority controller patent directly establishes pre-2015 terminology and read-count/migration prior art;
 - the 2013 peer-reviewed record independently establishes read-disturb management as an existing FTL/reliability problem;
 - the 2015 peer-reviewed paper directly measures commercial 2Y-nm MLC chips and exposes the physical/error relations used in the case;
