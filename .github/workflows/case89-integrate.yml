@@ -1,0 +1,41 @@
+name: case89-integrate
+
+on:
+  push:
+    paths:
+      - '.github/workflows/case89-integrate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Integrate Case 89 navigation and status
+        run: python .github/scripts/case89_integrate.py
+
+      - name: Validate permanent diff and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f cases/89-ata-lba-chs-translation-logical-sector-identity.md
+          test -f evidence/89-ata-1994-1997-lba-chs-translation-grounding.md
+          grep -Fq 'cases/89-ata-lba-chs-translation-logical-sector-identity.md' README.md
+          grep -Fq 'ATA-2 / ATA-3 logical-CHS translation and LBA-invariance bridge' ROADMAP.md
+          grep -Fq 'After ninety bounded cases,' CASE_INDEX.md
+          grep -Fq '1116. **ATA-2/ATA-3/SyQuest evidence ≠ invention-priority proof**' CASE_INDEX.md
+          test ! -e .github/scripts/case89_integrate.py
+          test ! -e .github/workflows/case89-integrate.yml
+          git status --short
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'case89: integrate ATA translation navigation'
+          git push origin HEAD:main
