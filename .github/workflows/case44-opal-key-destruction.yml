@@ -20,7 +20,13 @@ jobs:
           fetch-depth: 0
 
       - name: Apply bounded Case 44 deepening
-        run: python scripts/integrate_case44_opal_key_destruction.py
+        run: |
+          python scripts/integrate_case44_opal_key_destruction.py
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('CASE_INDEX.md')
+          p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
 
       - name: Validate research changes
         run: |
