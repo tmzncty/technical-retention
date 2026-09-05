@@ -23,7 +23,8 @@ def replace_prefixed_line(text: str, prefix: str, new_line: str, label: str) -> 
     return '\n'.join(lines) + ('\n' if text.endswith('\n') else '')
 
 
-# README navigation
+# README navigation. Recent cases carry their grounding link inline rather than
+# duplicating a standalone evidence entry, so Case 89 follows that convention.
 p = ROOT / 'README.md'
 text = p.read_text()
 readme_case = "- [`cases/89-ata-lba-chs-translation-logical-sector-identity.md`](cases/89-ata-lba-chs-translation-logical-sector-identity.md) — grounded ATA logical-addressing bridge: ATA-2/ATA-3 keep a logical sector's LBA invariant across mutable logical-CHS translation, separately report current CHS capacity and total LBA-addressable sectors, and a 1997 SyQuest EIDE manual explicitly says logical sector address does not imply actual physical media location; see [`evidence/89-ata-1994-1997-lba-chs-translation-grounding.md`](evidence/89-ata-1994-1997-lba-chs-translation-grounding.md)."
@@ -32,13 +33,6 @@ text = insert_after_line(
     lambda line: line.startswith('- [`cases/88-linux-md-raid5-partial-parity-log.md`]'),
     readme_case,
     'README Case 88',
-)
-readme_evidence = "- [`evidence/89-ata-1994-1997-lba-chs-translation-grounding.md`](evidence/89-ata-1994-1997-lba-chs-translation-grounding.md) — Case-89 grounding record: ATA-2/ATA-3 standards text plus SyQuest's 1997 commercial EIDE manual separate stable LBA designation, mutable logical-CHS presentation, current-CHS versus total-LBA reachability, and actual physical media location without turning address translation into defect remapping, payload relocation, secure erasure, or an ATA invention-priority claim."
-text = insert_after_line(
-    text,
-    lambda line: line.startswith('- [`evidence/88-linux-1993-2017-raid5-ppl-grounding.md`]'),
-    readme_evidence,
-    'README evidence 88',
 )
 p.write_text(text)
 
@@ -125,5 +119,5 @@ for fn, needles in checks.items():
             raise RuntimeError(f'{fn}: missing {needle}')
 
 # One-shot cleanup: remove integration machinery from the final tree.
-(Path('.github/scripts/case89_integrate.py')).unlink(missing_ok=True)
-(Path('.github/workflows/case89-integrate.yml')).unlink(missing_ok=True)
+Path('.github/scripts/case89_integrate.py').unlink(missing_ok=True)
+Path('.github/workflows/case89-integrate.yml').unlink(missing_ok=True)
