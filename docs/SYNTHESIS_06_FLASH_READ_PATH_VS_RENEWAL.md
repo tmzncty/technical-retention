@@ -1,18 +1,4 @@
-from pathlib import Path
-
-ROOT = Path('.')
-
-
-def replace_once(path: str, old: str, new: str) -> None:
-    p = ROOT / path
-    text = p.read_text(encoding='utf-8')
-    count = text.count(old)
-    if count != 1:
-        raise SystemExit(f'{path}: expected one match, found {count}: {old[:120]!r}')
-    p.write_text(text.replace(old, new, 1), encoding='utf-8')
-
-
-synthesis = r'''# Flash Retention Synthesis — Read-Path Adaptation, Recovery Cost, and Representation Renewal
+# Flash Retention Synthesis — Read-Path Adaptation, Recovery Cost, and Representation Renewal
 
 **Status:** `grounded cross-case synthesis`
 
@@ -262,58 +248,3 @@ The following remain valid future work without reopening this exact synthesis qu
 3. Jisung Park et al., **“Reducing Solid-State Drive Read Latency by Optimizing Read-Retry,”** ASPLOS 2021, DOI `10.1145/3445814.3446719`: <https://arxiv.org/abs/2104.09611>.
 4. Toshiba/Nagashima 2009-priority **“Memory system”** family, representative US publication: <https://patents.google.com/patent/US20120268994A1/en>.
 5. The Samsung 840 EVO and 3D-NAND ReMAR source chains remain fully enumerated in the grounded records for [Case 37](../evidence/37-samsung-840-evo-2014-2015-performance-refresh-grounding.md) and [Case 65](../evidence/65-3d-nand-2010-2018-early-retention-grounding.md); this synthesis does not duplicate those source ledgers.
-'''
-
-out = ROOT / 'docs/SYNTHESIS_06_FLASH_READ_PATH_VS_RENEWAL.md'
-if out.exists():
-    raise SystemExit(f'{out}: already exists; refusing to overwrite')
-out.write_text(synthesis, encoding='utf-8')
-
-roadmap_old = "- [ ] In controller-managed Flash, how should physical embodiment age, read-retry/calibration cost, logical payload recoverability, read-performance envelope, powered maintenance opportunity, read-path adaptation, and rewrite renewal be separated?"
-roadmap_new = "- [x] In controller-managed Flash, separate `physical embodiment age`, `read-retry/calibration cost`, `logical payload recoverability`, `read-performance envelope`, `powered maintenance opportunity`, `read-path adaptation`, and `rewrite renewal` — closed at the bounded relation-decomposition level by [`docs/SYNTHESIS_06_FLASH_READ_PATH_VS_RENEWAL.md`](docs/SYNTHESIS_06_FLASH_READ_PATH_VS_RENEWAL.md), synthesizing grounded Cases 36, 37, 65, and 85 and adding the Cai et al. 2015 / Park et al. 2021 empirical latency-and-reference-voltage bridge. Vendor retry-command genealogy, QLC/newer 3D-NAND behavior, named-product telemetry, exact maintenance energy/scheduling, on-die-ECC visibility, and cross-vendor fault injection remain separate work."
-replace_once('ROADMAP.md', roadmap_old, roadmap_new)
-
-readme_anchor = "This chain is a **research heuristic**, not a claim that all of these mechanisms are historically or philosophically identical."
-readme_insert = "A focused Flash/SSD comparison is now available in [`docs/SYNTHESIS_06_FLASH_READ_PATH_VS_RENEWAL.md`](docs/SYNTHESIS_06_FLASH_READ_PATH_VS_RENEWAL.md). It separates physical embodiment age, reader-side adaptation, ECC/retry cost, logical recoverability, service performance, powered maintenance opportunity, and physical rewrite/renewal across grounded Cases 36, 37, 65, and 85."
-replace_once('README.md', readme_anchor, readme_insert + "\n\n" + readme_anchor)
-
-index = ROOT / 'CASE_INDEX.md'
-index_text = index.read_text(encoding='utf-8')
-if '### Cross-case Flash retention synthesis — Cases 36, 37, 65, and 85' in index_text:
-    raise SystemExit('CASE_INDEX.md: Flash synthesis findings already present')
-expected_tail = "1280. **element nonvolatility ≠ uniform state-class nonvolatility** — Case 02 grounds remanent core state at the memory-element/access-cycle level, while Case 86 and the IBM counterexample show that processor, protection, I/O, and main-storage state can cross the same power lifecycle under different preservation rules."
-if not index_text.rstrip().endswith(expected_tail):
-    raise SystemExit('CASE_INDEX.md: unexpected findings tail; repository advanced concurrently')
-findings = r'''
-
-### Cross-case Flash retention synthesis — Cases 36, 37, 65, and 85
-
-1281. **physical embodiment age ≠ logical-object lifetime** — a host-visible object can outlive one NAND cell population through rewrite/remap, while an old physical embodiment can also remain logically readable without being physically renewed.
-
-1282. **logical recoverability ≠ original read-performance envelope** — aged Flash can remain ECC/retry-recoverable while sensing attempts, decoding work, and latency increase enough to become a service problem.
-
-1283. **read-retry/calibration work can grow before logical forgetting** — Park et al.'s measured 3D-TLC retry behavior supplies an empirical witness that added recovery steps are an intermediate state, not proof that the payload is already absent.
-
-1284. **read-path adaptation ≠ representation renewal** — changed `VREF`, shifted read, ROR, or age-aware reading changes interpretation of surviving cells; reprogram/remap/rewrite creates a renewed physical embodiment.
-
-1285. **successful reader-side recovery ≠ restored future physical margin** — a page can be decoded now under a better reference/ECC path while its aged threshold distribution and wear history remain.
-
-1286. **powered maintenance opportunity ≠ power-off payload retention** — NAND can preserve data without operating power while proactive controller rewrite/refresh policies remain unable to execute and maintenance debt can accumulate.
-
-1287. **retained age/read-condition metadata ≠ refreshed cell state** — controller evidence about program time, wear, or a useful read condition can improve future interpretation without putting leaked charge back into the cell.
-
-1288. **ECC margin can be a service-performance resource without becoming free reliability** — Park et al. use remaining final-retry correction margin to motivate shorter sensing latency; spending margin on latency does not make the physical error population disappear.
-
-1289. **one Flash maintenance target ≠ another** — Case 36 targets ECC-bounded reliability/lifetime, Case 37 old-data read performance, Case 65 age-aware error reduction, and Case 85 present retry recoverability; shared controller work does not erase those different contracts.
-
-1290. **controller-managed Flash retention is a staged relation rather than one `nonvolatile` Boolean** — physical charge survival, read interpretation, raw-error population, ECC recovery, retry cost, service performance, powered maintenance, physical renewal, and renewed future margin can change at different times.
-'''
-index.write_text(index_text.rstrip() + findings + '\n', encoding='utf-8')
-
-# Lightweight integrity checks for this bounded integration.
-for path in ['README.md', 'ROADMAP.md', 'CASE_INDEX.md', 'docs/SYNTHESIS_06_FLASH_READ_PATH_VS_RENEWAL.md']:
-    text = (ROOT / path).read_text(encoding='utf-8')
-    if '\r' in text:
-        raise SystemExit(f'{path}: unexpected CR character')
-
-print('Integrated Flash read-path-vs-renewal synthesis.')

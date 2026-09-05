@@ -93,6 +93,8 @@ replicated / distributed storage
     → a logical fact may persist even though no single physical copy is privileged or permanent
 ```
 
+A focused Flash/SSD comparison is now available in [`docs/SYNTHESIS_06_FLASH_READ_PATH_VS_RENEWAL.md`](docs/SYNTHESIS_06_FLASH_READ_PATH_VS_RENEWAL.md). It separates physical embodiment age, reader-side adaptation, ECC/retry cost, logical recoverability, service performance, powered maintenance opportunity, and physical rewrite/renewal across grounded Cases 36, 37, 65, and 85.
+
 This chain is a **research heuristic**, not a claim that all of these mechanisms are historically or philosophically identical.
 
 For example, describing an abacus as `register-like` may be a useful **functional reconstruction**, but it would be anachronistic to claim that historical abacus users possessed the modern computer-architecture concept of a register.

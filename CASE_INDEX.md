@@ -1859,3 +1859,25 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 1279. **controlled shutdown path ≠ sudden-failure path** — IBM's normal `POWER OFF` witness must not be projected onto DEC KR01's approximately 1 ms emergency save interval or onto arbitrary external power failure.
 
 1280. **element nonvolatility ≠ uniform state-class nonvolatility** — Case 02 grounds remanent core state at the memory-element/access-cycle level, while Case 86 and the IBM counterexample show that processor, protection, I/O, and main-storage state can cross the same power lifecycle under different preservation rules.
+
+### Cross-case Flash retention synthesis — Cases 36, 37, 65, and 85
+
+1281. **physical embodiment age ≠ logical-object lifetime** — a host-visible object can outlive one NAND cell population through rewrite/remap, while an old physical embodiment can also remain logically readable without being physically renewed.
+
+1282. **logical recoverability ≠ original read-performance envelope** — aged Flash can remain ECC/retry-recoverable while sensing attempts, decoding work, and latency increase enough to become a service problem.
+
+1283. **read-retry/calibration work can grow before logical forgetting** — Park et al.'s measured 3D-TLC retry behavior supplies an empirical witness that added recovery steps are an intermediate state, not proof that the payload is already absent.
+
+1284. **read-path adaptation ≠ representation renewal** — changed `VREF`, shifted read, ROR, or age-aware reading changes interpretation of surviving cells; reprogram/remap/rewrite creates a renewed physical embodiment.
+
+1285. **successful reader-side recovery ≠ restored future physical margin** — a page can be decoded now under a better reference/ECC path while its aged threshold distribution and wear history remain.
+
+1286. **powered maintenance opportunity ≠ power-off payload retention** — NAND can preserve data without operating power while proactive controller rewrite/refresh policies remain unable to execute and maintenance debt can accumulate.
+
+1287. **retained age/read-condition metadata ≠ refreshed cell state** — controller evidence about program time, wear, or a useful read condition can improve future interpretation without putting leaked charge back into the cell.
+
+1288. **ECC margin can be a service-performance resource without becoming free reliability** — Park et al. use remaining final-retry correction margin to motivate shorter sensing latency; spending margin on latency does not make the physical error population disappear.
+
+1289. **one Flash maintenance target ≠ another** — Case 36 targets ECC-bounded reliability/lifetime, Case 37 old-data read performance, Case 65 age-aware error reduction, and Case 85 present retry recoverability; shared controller work does not erase those different contracts.
+
+1290. **controller-managed Flash retention is a staged relation rather than one `nonvolatile` Boolean** — physical charge survival, read interpretation, raw-error population, ECC recovery, retry cost, service performance, powered maintenance, physical renewal, and renewed future margin can change at different times.
