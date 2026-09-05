@@ -1,0 +1,38 @@
+name: Fix Case 44 grounding header
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/case44-grounding-header-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply fix
+        run: python scripts/fix_case44_grounding_header.py
+      - name: Validate
+        run: |
+          git diff --check
+          grep -F '# Case 44 Grounding — TCG Opal / NVMe Deallocate and Sanitize (2009–2017)' evidence/44-nvme12-13-deallocate-sanitize-grounding.md
+          grep -F 'cryptographic key retirement' evidence/44-nvme12-13-deallocate-sanitize-grounding.md
+      - name: Commit fix
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add evidence/44-nvme12-13-deallocate-sanitize-grounding.md
+          git commit -m 'case44: align Opal grounding header'
+          git push origin HEAD:main
+      - name: Clean one-shot machinery
+        run: |
+          git rm scripts/fix_case44_grounding_header.py .github/workflows/case44-grounding-header-fix.yml
+          git commit -m 'case44: clean grounding-header workflow'
+          git push origin HEAD:main
