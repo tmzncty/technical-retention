@@ -110,7 +110,7 @@ Used only as a later continuity/terminology check. Current Apache documentation 
 
 ## Historical deepening — exact 1.2.19 artifacts, CASSANDRA-7810, and Bigtable prior art
 
-This section absorbs the unique evidence from the now-consolidated later Case 41. It does not change the canonical Case 41 thesis; it gives that thesis a deeper historical and implementation floor.
+This section absorbs the unique evidence from the now-consolidated duplicate case. It does not change the canonical Case 41 thesis; it gives that thesis a deeper historical and implementation floor.
 
 ### P7 — Apache Cassandra `DeletedColumn.java`, tag `cassandra-1.2.19`
 

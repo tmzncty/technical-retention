@@ -123,7 +123,7 @@ They must not be treated as one timer or one guarantee.
 
 ## Historical deepening — Cassandra 1.2.19, local purge ordering, and pre-Cassandra prior art
 
-The canonical case is centered on Cassandra 3.x because that release family exposes the later repair-aware purge option especially clearly. A separate later-added Case 41 repeated most of the same tombstone / grace / resurrection mechanism while adding useful older evidence. That older evidence is retained here rather than maintained as a duplicate case.
+The canonical case is centered on Cassandra 3.x because that release family exposes the later repair-aware purge option especially clearly. A separate later-added duplicate case repeated most of the same tombstone / grace / resurrection mechanism while adding useful older evidence. That older evidence is retained here rather than maintained as a duplicate case.
 
 ### H/P — Cassandra 1.2.19 makes the deletion marker an explicit retained object
 
