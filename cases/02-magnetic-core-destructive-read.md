@@ -397,7 +397,6 @@ The patent and MIT reports establish one major development line. They do not by 
 - [`tmzncty/computing-archaeology/docs/memory/why-core-memory-was-worth-weaving.md`](https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md) — detailed historical-engineering and labor account;
 - [`tmzncty/computing-archaeology/experiments/core-memory/`](https://github.com/tmzncty/computing-archaeology/tree/main/experiments/core-memory) — synthetic demonstration of half-selection and destructive read / restore;
 - [`Case 86 — DEC PDP-8 core-resident power-fail save and automatic restart`](86-dec-pdp8-core-power-fail-auto-restart.md) — system-level boundary: remanent main-memory contents can survive a power transition while volatile execution/control state still requires a separate save, reset, and restart protocol;
-
 - [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) — methodological guard against converting the modern category `nonvolatile memory` into an assumed historical problem statement.
 
 ---

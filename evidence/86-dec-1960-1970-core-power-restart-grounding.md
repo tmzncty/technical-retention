@@ -199,7 +199,6 @@ Used only to corroborate the existence/provenance of the 1966 DEC publication. M
 | Model 65 power-on reset preserves main storage | IBM 1968 Model 65 manual | H/P | strong | normal documented sequence only |
 | Model 65 normal power-off preserves main storage but excludes protection-associated controls | IBM 1968 Model 65 manual | H/P | strong | requires stopped CPU; not arbitrary failure |
 | controlled shutdown preservation ≠ failure-triggered automatic restart | IBM 1968 + DEC 1966 | E | strong bounded comparison | no lineage/circuit equivalence claim |
-
 | core-content survival ≠ execution-context survival | DEC sources + Case 02 | E | strong reconstruction | project phrasing, not DEC terminology |
 | active state is migrated into a stronger power-loss substrate | DEC sources | E | strong reconstruction | `state-class migration` is modern wording |
 | restart entry ≠ restored runnable context | DEC sources | E | strong reconstruction | address 0000 only initiates restore |
@@ -254,7 +253,7 @@ From those documented operations, this project infers:
 - `state-class migration` from volatile active registers into core;
 - `restart entry ≠ restored computation`;
 - `selected state preservation can coexist with deliberate control-state reset`;
-- `processor continuation ≠ peripheral/external-world continuity`.
+- `processor continuation ≠ peripheral/external-world continuity`;
 - `controlled power-transition preservation ≠ arbitrary-failure restart`;
 - `main-storage continuity ≠ protection/control continuity`.
 
