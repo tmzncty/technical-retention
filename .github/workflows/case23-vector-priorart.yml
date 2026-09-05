@@ -1,0 +1,43 @@
+name: Case 23 vector prior-art deepening
+
+on:
+  push:
+    paths:
+      - '.github/workflows/case23-vector-priorart.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply Case 23 deepening
+        run: |
+          set -euo pipefail
+          git config user.name 'chatgpt-research-agent'
+          git config user.email 'chatgpt-research-agent@users.noreply.github.com'
+          git pull --rebase origin main
+          python3 .github/case23-vector-priorart.py
+          git rm .github/case23-vector-priorart.py .github/workflows/case23-vector-priorart.yml
+          git add README.md ROADMAP.md CASE_INDEX.md cases/23-amazon-dynamo-divergent-version-anti-entropy.md evidence/23-amazon-dynamo-2007-version-handoff-antientropy-grounding.md
+          git diff --check
+          python3 - <<'PY'
+          from pathlib import Path
+          idx = Path('CASE_INDEX.md').read_text(encoding='utf-8')
+          road = Path('ROADMAP.md').read_text(encoding='utf-8')
+          case = Path('cases/23-amazon-dynamo-divergent-version-anti-entropy.md').read_text(encoding='utf-8')
+          ev = Path('evidence/23-amazon-dynamo-2007-version-handoff-antientropy-grounding.md').read_text(encoding='utf-8')
+          assert 'Case 23 deepening — logical clocks, version vectors, and bounded causal metadata' in idx
+          assert '- [x] In divergent-version replication' in road
+          assert 'Parker et al. 1983' in case
+          assert 'Source G — Parker et al.' in ev
+          files = list(Path('cases').glob('[0-9][0-9]-*.md'))
+          grounded = sum('**`grounded`**' in p.read_text(encoding='utf-8') for p in files)
+          print(f'canonical numeric case files: {len(files)}; grounded markers in files: {grounded}')
+          PY
+          git commit -m 'case23: deepen vector-clock prior art and causal metadata retention'
+          git push origin HEAD:main
