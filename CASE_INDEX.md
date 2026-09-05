@@ -261,7 +261,7 @@ This matrix should become more precise as cases mature.
 
 ## Cross-case findings already supported
 
-After ninety bounded cases, **all eighty-nine cases are now `grounded`.** The repository satisfies both the numeric and mechanism-variety gates for bounded synthesis. This does **not** make the provisional theses conclusions: new technical bridges must remain free to break or revise the current relational criterion.
+After ninety bounded cases, **all ninety cases are now `grounded`.** The repository satisfies both the numeric and mechanism-variety gates for bounded synthesis. This does **not** make the provisional theses conclusions: new technical bridges must remain free to break or revise the current relational criterion.
 
 1. **state retention ≠ history retention** — all cases preserve current working state without automatically preserving the complete sequence that produced it;
 2. **retention mechanism ≠ apparent persistence** — an abacus configuration can sit still, a delay-line pattern survives by continual circulation, a core can remain magnetized at rest, a DRAM cell survives for a bounded interval before scheduled regeneration, mapped Flash can preserve a logical object while relocating its physical embodiment, and RADOS can preserve an object while replica membership changes;
