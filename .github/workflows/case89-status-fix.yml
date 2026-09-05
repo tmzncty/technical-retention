@@ -1,0 +1,32 @@
+name: case89-status-fix
+
+on:
+  push:
+    paths:
+      - '.github/workflows/case89-status-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fix aggregate status
+        run: python .github/scripts/case89_status_fix.py
+      - name: Validate and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'After ninety bounded cases, **all ninety cases are now `grounded`.**' CASE_INDEX.md
+          test ! -e .github/scripts/case89_status_fix.py
+          test ! -e .github/workflows/case89-status-fix.yml
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'case89: fix aggregate grounded count'
+          git push origin HEAD:main
