@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/scripts/consolidate_case97_into_case52.py'
+      - '.github/scripts/consolidate_case97_v2.py'
       - '.github/workflows/case97-consolidation.yml'
 
 permissions:
@@ -21,13 +21,13 @@ jobs:
           fetch-depth: 0
 
       - name: Apply consolidation
-        run: python .github/scripts/consolidate_case97_into_case52.py
+        run: python .github/scripts/consolidate_case97_v2.py
 
       - name: Validate and commit
         run: |
           git config user.name "chatgpt-research-agent"
           git config user.email "chatgpt-research-agent@users.noreply.github.com"
-          git rm .github/scripts/consolidate_case97_into_case52.py .github/workflows/case97-consolidation.yml
+          git rm .github/scripts/consolidate_case97_into_case52.py .github/scripts/consolidate_case97_v2.py .github/workflows/case97-consolidation.yml
           git add -A
           git diff --cached --check
           git status --short
