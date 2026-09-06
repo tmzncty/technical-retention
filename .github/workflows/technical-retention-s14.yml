@@ -16,6 +16,19 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Normalize exact ROADMAP matcher
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('.github/integration/technical_retention_s14.py')
+          s = p.read_text(encoding='utf-8')
+          old = 'How should acknowledged, visible, replicated, and durably committed be separated across systems'
+          new = 'How should `acknowledged`, `visible`, `replicated`, and `durably committed` be separated across systems'
+          count = s.count(old)
+          if count != 3:
+              raise SystemExit(f'unexpected matcher occurrence count={count}')
+          p.write_text(s.replace(old, new), encoding='utf-8')
+          PY
       - run: python .github/integration/technical_retention_s14.py
       - run: |
           git diff --check
