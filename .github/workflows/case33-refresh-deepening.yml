@@ -1,10 +1,11 @@
-name: case33 same-bank refresh evidence deepening
+name: case33-refresh-deepening
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
-      - '.github/workflows/case33-refresh-deepening.yml'
+      - .github/workflows/case33-refresh-deepening.yml
 
 permissions:
   contents: write
@@ -15,237 +16,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
-      - name: Apply bounded Case 33 deepening
+      - name: Apply Case 33 research deepening
         shell: bash
         run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          def replace_once(path, old, new):
-              p = Path(path)
-              s = p.read_text(encoding='utf-8')
-              if old not in s:
-                  raise SystemExit(f'anchor missing in {path}: {old[:120]!r}')
-              if s.count(old) != 1:
-                  raise SystemExit(f'anchor not unique in {path}: {old[:120]!r}')
-              p.write_text(s.replace(old, new, 1), encoding='utf-8')
-
-          # Case 33: replace the former post-2020-only scope with the now-inspectable
-          # November 2019 Micron design witness while preserving the final-JEDEC boundary.
-          replace_once(
-              'cases/33-micron-ddr5-same-bank-refresh-localization.md',
-              "**`grounded`** — bounded to public Micron manufacturer documentation describing DDR5 `Same Bank Refresh` / `REFsb` after the July 2020 JEDEC DDR5 standard announcement and in 2021–2023 DDR5 enablement/deployment material.",
-              "**`grounded`** — bounded to Micron manufacturer documentation spanning a **November 2019 Rev. A pre-final DDR5 white paper** through 2020–2023 public enablement/deployment material. The 2019 document grounds bank selection, target-idle/service-blocking, residual non-target timing, FGR cadence, and same-bank ordering at a manufacturer design-witness level; it is not treated as the final normative `JESD79-5` contract."
-          )
-
-          case_insert = r'''### November 2019 pre-final Micron white-paper deepening
-
-Micron's **“Micron® DDR5 SDRAM: New Features”**, by Randall Rooney and Neal Koyle, carries **©2019 Micron** and **Rev. A 11/19** in its document footer. That places this source before the July 2020 final-standard announcement used elsewhere in this case. It is therefore treated as a **contemporaneous manufacturer design/enablement witness**, not as the final normative wording of `JESD79-5`.
-
-Its refresh section makes the bank geometry and service relation substantially more precise than the later feature summaries:
-
-- `REFsb` targets the **same bank position in all bank groups**, selected by bank bits on the command/address interface;
-- the banks actually targeted for refresh must be idle/precharged before the command and remain unavailable for ordinary read/write work for the refresh lockout interval;
-- unlike `REFab`, which requires all banks idle in the white paper's comparison, `REFsb` requires only one bank in each bank group to be idle;
-- in the paper's 16Gb x4/x8 example, the other twelve banks need not be idle, but their availability is still subject to the `tREFSBRD` same-bank-refresh-to-activate timing fence;
-- the paper places `REFsb` in Fine Granularity Refresh (`FGR`) mode and states that each bank must receive refresh on a 1.95 µs average cadence in that described mode;
-- it gives a **16Gb example** of 130 ns `tRFCsb` versus 295 ns for the compared all-bank refresh, so the numeric values are product/density/example evidence rather than universal DDR5 constants;
-- each same-bank position must receive one `REFsb` before that position receives a second, while the order among bank positions may vary.
-
-This deepening closes the repository's bounded **bank-structured refresh relation decomposition** at the manufacturer-primary level: target geometry, bank-group correlation, target-entry eligibility, target lockout, conditional non-target service, and temporal refresh accounting are now separately evidenced. It does **not** close final `JESD79-5` revision archaeology, later density-specific timing, controller compliance, or LPDDR/per-bank-refresh genealogy.
-
-'''
-          replace_once(
-              'cases/33-micron-ddr5-same-bank-refresh-localization.md',
-              '## Retained state and control state\n',
-              case_insert + '## Retained state and control state\n'
-          )
-
-          case_engineering = r'''### Target-bank eligibility is not whole-rank quiescence
-
-The 2019 white paper makes an entry-condition distinction that the later feature summaries only imply. For `REFab`, all banks are described as needing to be idle before the command. For `REFsb`, only the corresponding bank in each bank group must be idle.
-
-Therefore:
-
-> **target-bank idle eligibility ≠ whole-rank idle eligibility**.
-
-This is stronger than the generic statement that other banks remain available: the maintenance command has a target-relative precondition as well as a target-relative service lockout.
-
-### Non-target availability is not timing independence
-
-The same source explicitly gives a residual timing relation to the non-refreshed banks: `tREFSBRD`.
-
-Therefore:
-
-> **non-target-bank availability ≠ timing-unconstrained concurrency**.
-
-A bank can remain serviceable relative to the active refresh target without becoming independent of every refresh-related timing fence. `Available` here means **admissible under the documented timing relation**, not `unaffected`.
-
-### Bank-order flexibility is not refresh-schedule freedom
-
-The white paper allows the `REFsb` commands to visit bank positions in any order, but also requires every same-bank position to receive one refresh before that position is refreshed a second time. It additionally places `REFsb` inside FGR and gives an average per-bank cadence for the described mode.
-
-Therefore:
-
-> **bank-order flexibility ≠ freedom from refresh accounting or cadence**.
-
-This also sharpens the cross-case boundary with Case 69. Case 33 concerns spatial target/interference geometry plus its local accounting constraints; Case 69 concerns DDR4 temporal postponement, pull-in, FGR grouping, and schedule-history rules. Spatial localization and temporal elasticity remain separate axes even when one command regime contains constraints on both.
-
-### Shorter target lockout is not zero maintenance interference
-
-The 2019 16Gb example gives a shorter `tRFCsb` than the compared all-bank `tRFC`, but the targeted banks are still unavailable during the same-bank refresh interval.
-
-Therefore:
-
-> **shorter target lockout ≠ no refresh lockout**.
-
-The relevant retention result is conditional concurrency: some bank resources can remain callable while another correlated bank set is temporarily unavailable for constitutive retention work.
-
-'''
-          replace_once(
-              'cases/33-micron-ddr5-same-bank-refresh-localization.md',
-              '### Non-refreshed-bank availability is not refreshed-bank availability\n',
-              case_engineering + '### Non-refreshed-bank availability is not refreshed-bank availability\n'
-          )
-
-          replace_once(
-              'cases/33-micron-ddr5-same-bank-refresh-localization.md',
-              '| The bounded manufacturer pages establish every normative DDR5 timing requirement | X | outside source scope; normative timing archaeology remains open |',
-              '| The 2019 Micron white paper establishes the complete final `JESD79-5` timing contract | X | it is a Rev. A 11/19 manufacturer design/enablement document; final-standard revision archaeology remains open |\n| In the 2019 Micron white paper, `REFsb` requires only the corresponding bank in each bank group to be idle, while non-target banks can remain serviceable subject to `tREFSBRD` | H/P | Micron Rev. A 11/19 refresh section |\n| In that same bounded 16Gb example, `REFsb` is FGR-only, uses a 1.95 µs average per-bank cadence, and has 130 ns target lockout | H/P | manufacturer example; not generalized to every DDR5 density/revision |\n| Arbitrary bank visitation order removes the need to account for which same-bank positions have already been serviced | X | contradicted by the white paper requirement that each same-bank position receive one `REFsb` before any position is serviced a second time |'
-          )
-
-          replace_once(
-              'cases/33-micron-ddr5-same-bank-refresh-localization.md',
-              '5. Micron Technology, Inc., **“Micron Accelerates DDR5 Adoption With Technology Enablement Program,”** 14 July 2020, institutional release tying the TEP launch to JEDEC approval of DDR5: <https://investors.micron.com/node/41136>.\n\nA richer Micron DDR5 white paper was discoverable during this round, but its current asset URL could not be directly inspected through the research interface. Its detailed timing claims are therefore **not** used to ground this case.',
-              '5. Micron Technology, Inc., **“Micron Accelerates DDR5 Adoption With Technology Enablement Program,”** 14 July 2020, institutional release tying the TEP launch to JEDEC approval of DDR5: <https://investors.micron.com/node/41136>.\n6. Randall Rooney and Neal Koyle, Micron Technology, Inc., **“Micron® DDR5 SDRAM: New Features,”** Rev. A 11/19, manufacturer white paper. Official Micron asset: <https://assets.micron.com/adobe/assets/urn%3Aaaid%3Aaem%3A5ea148c8-e3fe-489e-8489-99b1b9cdcd3c/original/as/ddr5-new-features-white-paper.pdf>. Preserved full-document text/facsimile mirror used to inspect the refresh section and revision footer: <https://device.report/m/3d08f1032327cf5fbb74a044017258d62a01653aef88d208c3eef3c4f40754a2>.\n\nThe current official Micron asset is text-indexed with the same title/authors/refresh content but rejects direct binary rendering in this research interface. The preserved mirror is therefore used for inspectable document text and the revision footer, while the official Micron URL anchors provenance. The white paper\'s 16Gb timing values remain bounded manufacturer examples, not final `JESD79-5` constants.'
-          )
-
-          # Evidence 33: update provenance and close only the manufacturer-primary timing/sequence gap.
-          replace_once(
-              'evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md',
-              '> Public Micron manufacturer documentation after the July 2020 DDR5 standard announcement consistently identifies `Same Bank Refresh` / `REFsb` as a DDR5 refresh mode that targets a bank position across bank groups rather than forcing an all-bank refresh scope, and later Micron platform material explicitly connects that localization to keeping other banks/groups available for ordinary access.\n\nThat is enough to ground the retention-specific comparison **refresh obligation ≠ service-blocking scope**, while leaving exact JEDEC timing, controller compliance, LPDDR/per-bank genealogy, temperature-compensated refresh, and retention-aware policies open.',
-              '> Micron manufacturer documentation from a **November 2019 Rev. A pre-final DDR5 white paper** through 2020–2023 public enablement material consistently identifies `Same Bank Refresh` / `REFsb` as a bank-correlated refresh mode, and the 2019 source additionally records target-idle rules, conditional non-target availability, `tREFSBRD`, FGR cadence, `tRFCsb`, and same-bank ordering for its bounded DDR5 example.\n\nThat is enough to ground the retention-specific comparison **refresh obligation ≠ target geometry ≠ service-blocking scope ≠ conditional non-target service ≠ schedule authority**, while leaving final `JESD79-5` revision archaeology, controller compliance, LPDDR/per-bank genealogy, temperature-compensated refresh, and retention-aware policies open.'
-          )
-
-          old_boundary = '''This record uses publicly inspectable Micron HTML sources as the primary/manufacturer evidence layer.\n\nA Micron DDR5 white paper with more detailed `REFsb` timing and bank-mapping discussion was discoverable during research, but its current asset URL rejected direct inspection through the research interface. Because the repository requires exact evidence control, those richer PDF-only timing details are **not** imported into the case.\n\nNo claim here should be read as a direct inspection of `JESD79-5` or as a complete normative statement of DDR5 command timing.'''
-          new_boundary = '''This record uses public Micron manufacturer sources as the primary evidence layer. The source set now includes Micron's **Rev. A 11/19** white paper **“Micron® DDR5 SDRAM: New Features”** by Randall Rooney and Neal Koyle. The current Micron asset endpoint exposes matching indexed text but rejects direct binary rendering in this research interface; a preserved full-document mirror was therefore inspected for the contiguous refresh section and the revision footer. The official Micron asset URL is retained as the provenance anchor, and the mirror is explicitly identified as a mirror rather than silently treated as Micron hosting.\n\nThe 2019 white paper predates the July 2020 final-standard announcement. Its exact `tREFI` / `tRFCsb` / `tREFSBRD` / FGR statements are therefore used only as **manufacturer design/enablement evidence for the bounded 16Gb-era relation**, not as a substitute for a directly inspected final `JESD79-5` revision.\n\nNo claim here should be read as a complete normative statement of final DDR5 command legality, all density/revision timing values, or controller compliance.'''
-          replace_once('evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md', old_boundary, new_boundary)
-
-          source_f = r'''### F. Micron Rev. A 11/19 DDR5 new-features white paper
-
-Randall Rooney and Neal Koyle, Micron Technology, Inc., **“Micron® DDR5 SDRAM: New Features,”** Rev. A 11/19, document code `CCM004-676576390-11390`.
-
-Official Micron asset:
-
-<https://assets.micron.com/adobe/assets/urn%3Aaaid%3Aaem%3A5ea148c8-e3fe-489e-8489-99b1b9cdcd3c/original/as/ddr5-new-features-white-paper.pdf>
-
-Preserved full-document mirror used for contiguous text/revision inspection:
-
-<https://device.report/m/3d08f1032327cf5fbb74a044017258d62a01653aef88d208c3eef3c4f40754a2>
-
-Inspected refresh-section evidence:
-
-- the document names `ALL-BANK REFRESH (REFab)` and `SAME-BANK REFRESH (REFsb)`;
-- `REFsb` targets the same bank in **all bank groups**, selected by bank bits on the command/address interface;
-- targeted banks must be idle/precharged before the refresh and cannot resume ordinary reads/writes for the refresh duration;
-- in the comparison, `REFab` requires all banks idle, while `REFsb` requires only one bank per bank group idle;
-- for the described 16Gb x4/x8 organization, the remaining twelve banks need not be idle, but their access remains subject to `tREFSBRD`;
-- `REFsb` is described as FGR-only, with each bank receiving refresh every 1.95 µs on average in that mode;
-- the bounded 16Gb example gives `tRFCsb = 130 ns`, compared with 295 ns for the discussed all-bank refresh;
-- every same-bank position must receive one `REFsb` before the same position receives a second, while the visit order among bank positions may vary;
-- the footer records **©2019 Micron Technology, Inc.** and **Rev. A 11/19**, and warns that products/programs/specifications are subject to change without notice.
-
-Evidence classification: **H/P**, with a hosting/provenance caveat. The content is manufacturer-authored and is independently indexed at the official Micron asset; the inspectable full-document copy is a third-party preservation mirror. This is adequate for the bounded manufacturer design relation, not for final-standard priority or normative-compliance claims.
-
-'''
-          replace_once(
-              'evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md',
-              '## Claim-by-claim grounding\n',
-              source_f + '## Claim-by-claim grounding\n'
-          )
-
-          old_claim8 = '''### Claim 8 — exact DDR5 `REFsb` timing, scheduling restrictions, and controller compliance\n\n**Status: deliberately open.**\n\nSearch discovery exposed a Micron white paper with detailed `REFsb` material, but the PDF asset could not be directly opened in this run. The repository's evidence discipline therefore blocks import of those detailed timing claims from search snippets alone.\n\nA future slice may ground:\n\n- exact `tRFCsb` / `tREFI` relations;\n- fine-granularity-refresh restrictions;\n- required sequencing across bank positions;\n- normative command legality;\n- standard revision changes;\n- measured controller compliance or performance.\n\nNone is needed for the bounded retention result here.'''
-          new_claim8 = '''### Claim 8 — 2019 manufacturer `REFsb` timing and sequencing relation\n\n**Status: grounded for the bounded Rev. A 11/19 manufacturer design witness (`H/P`).**\n\nSource F now supports the specific relation that `REFsb` is FGR-only in the described regime, leaves non-target banks available subject to `tREFSBRD`, gives a 1.95 µs average per-bank refresh cadence, gives a 130 ns `tRFCsb` for its 16Gb example, and requires every same-bank position to be serviced before any same-bank position is repeated.\n\nThe timing numbers are **not** generalized to every DDR5 density/product/revision.\n\n### Claim 9 — final normative DDR5 `REFsb` contract and controller compliance\n\n**Status: deliberately open.**\n\nThe Rev. A 11/19 white paper predates the July 2020 final-standard announcement and explicitly says specifications are subject to change. A future slice must directly inspect relevant final/later `JESD79-5` revisions and, separately, named-controller behavior before making normative or compliance claims. The present deepening therefore closes the bank-structured relation decomposition without converting a manufacturer white paper into the standard itself.'''
-          replace_once('evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md', old_claim8, new_claim8)
-
-          replace_once(
-              'evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md',
-              'On 2026-09-03, GitHub code searches in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for:\n\n- `DDR4 refresh`;\n- `DDR5 refresh`;\n- `per-bank refresh`;\n\nreturned no dedicated case to reuse.',
-              'On 2026-09-06, GitHub code searches in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `DDR5`, `refresh`, `Same Bank Refresh`, and `REFsb` returned no dedicated case to reuse.'
-          )
-
-          old_residual = '''1. directly inspected `JESD79-5` revision chronology and exact normative `REFsb` semantics;\n2. LPDDR/per-bank refresh genealogy and terminology;\n3. fine-granularity-refresh timing and controller scheduling;\n4. temperature-controlled / temperature-compensated refresh;\n5. retention-aware scheduling based on measured cell retention time;\n6. controller implementation and empirical compliance;\n7. interactions with self refresh and low-power modes in a specific DDR5 product.'''
-          new_residual = '''1. directly inspected final/later `JESD79-5` revision chronology and exact normative `REFsb` semantics;\n2. density/product/revision-specific evolution of `tRFCsb`, `tREFSBRD`, FGR, and command legality beyond the bounded 2019 example;\n3. LPDDR/per-bank refresh genealogy and terminology;\n4. temperature-controlled / temperature-compensated refresh;\n5. retention-aware scheduling based on measured cell retention time;\n6. named-controller implementation, failure behavior, and empirical compliance;\n7. interactions with self refresh and low-power modes in a specific DDR5 product.'''
-          replace_once('evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md', old_residual, new_residual)
-
-          # README navigation: keep one concise line, but expose the now-grounded 2019 timing fence/sequence layer.
-          replace_once(
-              'README.md',
-              '- [`cases/33-micron-ddr5-same-bank-refresh-localization.md`](cases/33-micron-ddr5-same-bank-refresh-localization.md) — grounded DDR5 refresh-localization bridge: Micron `Same Bank Refresh` / `REFsb` targets a bank in each bank group, keeping other banks/groups available and separating the continuing refresh obligation from the spatial scope of maintenance-induced service blocking.',
-              '- [`cases/33-micron-ddr5-same-bank-refresh-localization.md`](cases/33-micron-ddr5-same-bank-refresh-localization.md) — grounded DDR5 refresh-localization bridge: Micron `Same Bank Refresh` / `REFsb` now includes a Rev. A 11/19 pre-final manufacturer witness for same-bank selection across bank groups, target-bank idle/lockout, conditional non-target service under `tREFSBRD`, FGR cadence, and same-bank ordering, while final `JESD79-5` normative chronology remains separate.'
-          )
-
-          # ROADMAP: close only the bounded relation-decomposition question.
-          replace_once(
-              'ROADMAP.md',
-              '- [ ] In bank-structured DRAM refresh, how should `refresh target geometry`, `bank-group correlation`, `maintenance-induced service blocking`, and `non-target-bank service availability` be separated from the continuing refresh obligation and from refresh-schedule authority?',
-              '- [x] In bank-structured DRAM refresh, separate `refresh target geometry`, `bank-group correlation`, `target-bank entry eligibility`, `maintenance-induced service blocking`, `conditional non-target-bank service`, and `refresh-schedule/accounting authority` — closed at the bounded manufacturer-primary relation level by deepened [`cases/33-micron-ddr5-same-bank-refresh-localization.md`](cases/33-micron-ddr5-same-bank-refresh-localization.md). Micron Rev. A 11/19 now grounds same-bank selection across all bank groups, target-only idle/lockout, residual `tREFSBRD` fencing, FGR cadence, and bank-position sequencing. Final/later `JESD79-5` revision archaeology, named-controller compliance, and LPDDR/per-bank genealogy remain open; Case 69 remains the separate temporal scheduling-elasticity axis.'
-          )
-
-          # CASE_INDEX case row and comparison row.
-          replace_once(
-              'CASE_INDEX.md',
-              '| [Micron DDR5 Same-Bank Refresh: Localizing Maintenance Interference Without Removing the Refresh Obligation](cases/33-micron-ddr5-same-bank-refresh-localization.md) | **grounded** | volatile dynamic payload + DDR5 bank/bank-group organization + all-bank versus `Same Bank Refresh` / `REFsb` maintenance scope | separate the continuing refresh obligation from refresh target geometry and service-blocking scope; show non-target-bank availability can coexist with constitutive maintenance elsewhere; preserve `REFsb` rather than normalizing it into generic per-bank-refresh terminology | [2020–2023 Micron DDR5 same-bank-refresh grounding](evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md); temperature-conditioned cadence is now handled separately in Case 34, while exact JEDEC timing/revision chronology, LPDDR/per-bank genealogy, standardized temperature-compensated self-refresh, and retention-aware scheduling remain separate work |',
-              '| [Micron DDR5 Same-Bank Refresh: Localizing Maintenance Interference Without Removing the Refresh Obligation](cases/33-micron-ddr5-same-bank-refresh-localization.md) | **grounded** | volatile dynamic payload + DDR5 bank/bank-group organization + all-bank versus `Same Bank Refresh` / `REFsb` maintenance scope + target-idle/lockout and residual timing fences | separate the continuing refresh obligation from target geometry, bank-group correlation, target eligibility, service-blocking scope, conditional non-target service, and schedule/accounting authority; preserve `REFsb` rather than normalizing it into generic per-bank-refresh terminology | [2019–2023 Micron DDR5 same-bank-refresh grounding](evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md); Rev. A 11/19 now grounds the manufacturer design-level `tREFSBRD`/FGR/ordering relation, while final `JESD79-5` revision chronology, named-controller compliance, LPDDR/per-bank genealogy, standardized temperature-compensated self-refresh, and retention-aware scheduling remain separate work |'
-          )
-
-          replace_once(
-              'CASE_INDEX.md',
-              '| Micron DDR5 Same Bank Refresh / 2020–2023 bounded regime | volatile dynamic-cell payload + bank/bank-group organization + `REFsb` target relation | periodic refresh remains constitutive; Same Bank Refresh localizes the selected maintenance scope to a bank position across bank groups while non-target banks/groups remain serviceable | ordinary access remains available to non-target banks/groups during the bounded refresh relation; refresh is therefore not one device-wide Boolean availability state | DDR5 bank/bank-group command geometry; Micron describes `REFsb` as refreshing a bank in each BG | fixed dynamic-cell locations; the changed relation is maintenance/interference scope, not logical-address relocation | no; current payload plus refresh-control relations only |',
-              '| Micron DDR5 Same Bank Refresh / 2019–2023 bounded regime | volatile dynamic-cell payload + bank/bank-group organization + `REFsb` target relation + target-idle/lockout and timing/accounting constraints | periodic refresh remains constitutive; `REFsb` selects the same bank position across bank groups while preserving conditional service to non-target banks | targeted banks require idle/precharged entry and remain locked for `tRFCsb`; non-target banks can remain serviceable but are not timing-independent because `tREFSBRD` still constrains them | DDR5 bank/bank-group command geometry; the Rev. A 11/19 witness says bank bits select the corresponding bank in all BGs | fixed dynamic-cell locations; the changed relation is maintenance/interference scope, not logical-address relocation | no; current payload plus refresh target, timing, and sequencing relations only |'
-          )
-
-          replace_once(
-              'CASE_INDEX.md',
-              'Case 33 is the grounded DDR5 refresh-localization continuation; [`evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md`](evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md) uses public Micron manufacturer material to anchor `Same Bank Refresh` / `REFsb`, one-bank-per-bank-group targeting, and continued availability of non-target bank resources. It adds maintenance target/interference geometry to the earlier DRAM refresh decomposition without renaming the feature as generic `per-bank refresh` or pretending public feature pages are a complete JEDEC timing specification.',
-              'Case 33 is the grounded DDR5 refresh-localization continuation; [`evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md`](evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md) now combines a Micron Rev. A 11/19 pre-final white-paper witness with later public manufacturer material to anchor same-bank selection across bank groups, target-only idle/lockout, conditional non-target service under `tREFSBRD`, FGR cadence, and bank-position sequencing. It adds maintenance target/interference geometry to the earlier DRAM refresh decomposition without renaming the feature as generic `per-bank refresh` or pretending a pre-final manufacturer white paper is the final `JESD79-5` normative contract.'
-          )
-
-          new_findings = '''1407. **mutable coded currentness ≠ immutable coded-repair pipeline or historical genealogy** — f4/WAS can illuminate service/repair/handoff distinctions, but coexistence of overwrite generations adds an independent version-admissibility axis and does not make the systems one lineage.\n\n1408. **target-bank idle eligibility ≠ all-bank idle eligibility** — Micron Rev. A 11/19 contrasts `REFab`, which requires all banks idle in its comparison, with `REFsb`, which requires only the corresponding bank in each bank group idle before the command.\n1409. **non-target-bank availability ≠ timing-unconstrained concurrency** — the same white paper leaves non-refreshed banks serviceable but still subjects them to the `tREFSBRD` same-bank-refresh-to-activate fence.\n1410. **spatial refresh localization ≠ temporal refresh relaxation** — the 2019 witness places `REFsb` in FGR and retains an average per-bank refresh cadence; narrowing the target set does not erase the refresh deadline/accounting relation.\n1411. **bank-order freedom ≠ duplicate-target freedom** — bank positions may be visited in any order, but every same-bank position must receive one `REFsb` before the same position is serviced a second time.\n1412. **shorter target lockout ≠ zero maintenance interference** — the bounded 16Gb example reduces target lockout to `tRFCsb = 130 ns`, yet the actively refreshed banks remain unavailable during that interval.\n1413. **manufacturer pre-final timing example ≠ final-standard universal constant** — the source is Rev. A 11/19 and explicitly subject to change, so its 16Gb `tRFC`/`tRFCsb` and cadence values are not projected onto every final/later DDR5 density or revision.\n1414. **partial service availability can coexist with an active retention timing fence** — Case 33 now gives a concrete DRAM instance where non-target resources remain callable while constitutive maintenance blocks target banks and still constrains neighboring access timing.'''
-          replace_once(
-              'CASE_INDEX.md',
-              '1407. **mutable coded currentness ≠ immutable coded-repair pipeline or historical genealogy** — f4/WAS can illuminate service/repair/handoff distinctions, but coexistence of overwrite generations adds an independent version-admissibility axis and does not make the systems one lineage.',
-              new_findings
-          )
-
-          # Final assertions: we should have closed only the intended roadmap item and
-          # removed the obsolete evidence caveat.
-          checks = {
-              'ROADMAP.md': ['- [x] In bank-structured DRAM refresh', 'Micron Rev. A 11/19'],
-              'CASE_INDEX.md': ['1414. **partial service availability can coexist', '2019–2023 Micron DDR5 same-bank-refresh grounding'],
-              'cases/33-micron-ddr5-same-bank-refresh-localization.md': ['### November 2019 pre-final Micron white-paper deepening', 'non-target-bank availability ≠ timing-unconstrained concurrency'],
-              'evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md': ['### F. Micron Rev. A 11/19 DDR5 new-features white paper', '### Claim 9 — final normative DDR5 `REFsb` contract and controller compliance'],
-              'README.md': ['Rev. A 11/19 pre-final manufacturer witness'],
-          }
-          for path, needles in checks.items():
-              text = Path(path).read_text(encoding='utf-8')
-              for needle in needles:
-                  if needle not in text:
-                      raise SystemExit(f'validation failed: {needle!r} missing in {path}')
-
-          PY
-      - name: Validate and commit research slice
-        shell: bash
-        run: |
-          set -euo pipefail
-          rm -f .github/workflows/case33-refresh-deepening.yml
+          python3 scripts/oneoff_case33_deepening.py
           git diff --check
-          test "$(git status --short | grep -v '^$' | wc -l)" -eq 5
-          git status --short
-          git diff --stat
+      - name: Remove one-shot files and commit
+        shell: bash
+        run: |
+          set -euxo pipefail
+          rm .github/workflows/case33-refresh-deepening.yml
+          rm scripts/oneoff_case33_deepening.py
+          git diff --check
+          test "$(git status --short | grep -v '^$' | wc -l)" -eq 7
           git config user.name 'technical-retention automation'
           git config user.email 'actions@users.noreply.github.com'
-          git add README.md ROADMAP.md CASE_INDEX.md cases/33-micron-ddr5-same-bank-refresh-localization.md evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md .github/workflows/case33-refresh-deepening.yml
+          git add -A
           git commit -m 'case33: deepen same-bank refresh geometry boundary'
           git push origin HEAD:main
