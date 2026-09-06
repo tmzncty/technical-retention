@@ -2150,3 +2150,20 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 1502. **replica equality ≠ universal integrity verdict** — GFS explicitly permits legal byte divergence under some mutation semantics, so distributed integrity qualification cannot be reduced to simple equality voting across replicas.
 1503. **distributed integrity maintenance ≠ anti-entropy/version reconciliation** — background work can target local corruption, causal/version divergence, or both, but those functions must not be collapsed merely because each compares or repairs distributed state.
 1504. **distributed replica-integrity lifecycle synthesis ≠ implementation genealogy** — GFS, HDFS, Ceph, and ZFS are compared at the relation level only; shared functions do not establish direct descent, identical algorithms, or one historical vocabulary.
+
+## Case 101 — SCSI Background Medium Scan findings
+
+1505. **physical sector presence ≠ readability qualification** — a logical/physical block can remain present while a later proactive read discovers that the embodiment is difficult or impossible to read;
+1506. **background scan access ≠ application demand read** — BMS deliberately exercises medium state during maintenance/idle time so latent readability problems can be found before ordinary workload happens to touch the block;
+1507. **scan discovery time ≠ defect creation time** — the scan dates the observation of a problem, not necessarily the earlier physical event that produced it;
+1508. **recoverable read difficulty ≠ unrecoverable medium error** — T10 separates blocks that require retries/correction from blocks that cannot be read, so one generic `bad sector` state is too coarse;
+1509. **defect detection ≠ completed repair/reallocation** — identifying or logging a problematic block can create a repair obligation without establishing that a replacement embodiment now exists;
+1510. **ARRE repair permission ≠ AWRE write-time reallocation permission** — the T10 model exposes different controls for automatic action on recoverable read errors and relocation during later writes;
+1511. **suspected-bad-block log entry ≠ device-completed remediation** — `REASSIGN STATUS` exists precisely because a logged result can still require host/application action;
+1512. **scan progress/count ≠ permanent integrity certificate** — coverage state reports maintenance work performed or in progress, not timeless future readability of every sector;
+1513. **background maintenance suspension ≠ maintenance abandonment** — foreground commands can suspend BMS and later allow it to resume, so service priority and eventual coverage are separate scheduling relations;
+1514. **power-on pre-scan ≠ periodic BMS** — pre-scan is a distinct startup coverage regime with its own enable/timeout and interaction with writes;
+1515. **pre-scan write-and-verify ≠ ordinary post-coverage write semantics** — a write to an unscanned region may carry an extra verification obligation that disappears once that region has been covered;
+1516. **whole-medium logical coverage ≠ fixed LBA-order physical traversal** — 2006 T10 clarification explicitly permits device-chosen scan order, including physical-layout-oriented scheduling;
+1517. **device-local readability verification ≠ filesystem/distributed checksum integrity** — BMS, ZFS scrub, and HDFS/GFS background checking share a proactive-verification function but qualify different layers and failure relations;
+1518. **BMS standardization ≠ invention of background scanning or proof of a patrol-read genealogy** — `04-198r5` itself acknowledges earlier proprietary drive and OS methods; the bounded case establishes T10 interface standardization and one Seagate product witness, not the complete history of disk scrubbing or RAID-controller Patrol Read.
