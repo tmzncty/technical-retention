@@ -286,7 +286,7 @@ Build a mechanism-sensitive map of:
 - [ ] garbage collection / reclamation — **partially advanced by grounded Case 73 at the distributed-filesystem layer**: GFS 2003 separates logged deletion, hidden-name grace, namespace/chunk reference retirement, HeartBeat-driven replica cleanup, and stale-replica deauthorization; broader filesystem, database, Flash/controller, and media-reclamation genealogies remain open;
 - [ ] loss of index or mapping metadata;
 - [ ] loss of currentness/version metadata;
-- [ ] defect growth, failed reassignment, or spare exhaustion;
+- [ ] defect growth, failed reassignment, or spare exhaustion — **partially advanced by grounded Cases 14, 55, and 78**: Case 14 grounds finite SCSI replacement locations and explicit no-spare failure; Case 78 grounds NAND factory/lifetime bad-block exclusion plus reserved replacement blocks; the latest Case-55 deepening adds the 2011 NVMe host-interface bridge from remaining `Available Spare` and `Spare Below Threshold` warning to a `Write Fault` that may result from lack of spare locations. This does not yet ground named-controller automatic reassignment, empirical spare-exhaustion behavior, post-threshold fault progression, or a full HDD/NAND/SSD defect-management genealogy;
 - [ ] loss of volatile controller/buffer state before a durability handoff;
 - [ ] failed flush, shutdown transfer, or power-loss emergency transfer;
 - [ ] FUA/Flush misuse, missing host-enforced ordering, or power-fail atomicity assumptions that exceed the interface contract;

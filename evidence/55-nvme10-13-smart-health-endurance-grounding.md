@@ -8,7 +8,57 @@ Companion to [`../cases/55-nvme-smart-health-endurance-telemetry.md`](../cases/5
 
 Can the project establish, from primary interface documentation and a named product witness, that an SSD retains non-payload history/health state across power cycles, while keeping cumulative history, current warning state, host workload counters, spare reserve, and model-derived endurance estimates technically distinct?
 
-The answer is yes for the bounded NVMe 1.0e–1.3 record.
+The answer is yes for the bounded NVMe 1.0–1.3 record. The original 2011 Gold revision additionally grounds the boundary between spare-threshold warning, lack of spare locations, and command failure.
+
+## Source 0 — official NVM Express Revision 1.0 Gold
+
+**Document:** `NVM Express Revision 1.0`, ratified **1 March 2011**.
+
+Official PDF: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_0-Gold.pdf>
+
+The official PDF was directly inspected in this slice, including facsimile inspection of the structured SMART/Health table.
+
+### 0.1. The original 1.0 log already retains lifetime health information
+
+**§5.10.1.2, printed p. 64; Figure 59, printed p. 65.**
+
+Revision 1.0 says SMART/general health information is provided over the life of the controller and retained across power cycles. Figure 59 already defines `Available Spare`, `Available Spare Threshold`, `Percentage Used`, and the separate critical-warning bits for spare threshold, reliability degradation, and read-only media.
+
+`Percentage Used` already carries the explicit boundary that 100 means estimated endurance consumed but **may not indicate device failure** and may exceed 100.
+
+This prevents a false chronology in which those relations first appear in 1.0e or 1.3.
+
+### 0.2. Spare-threshold notification is not spare exhaustion
+
+**Asynchronous Event Request status table, printed p. 55.**
+
+Revision 1.0 defines a `Spare Below Threshold` condition: available spare space has fallen below the threshold. The condition describes a threshold crossing, not zero remaining reserve.
+
+Therefore the primary source itself supports keeping:
+
+`spare below threshold ≠ spare exhausted`.
+
+### 0.3. Lack of spare locations is a possible cause of Write Fault
+
+**Generic Command Status, printed p. 49.**
+
+Status `80h Write Fault` says the write data could not be committed to the media and that this **may** be due to lack of available spare locations reported as an asynchronous event. Status `81h Unrecovered Read Error` is separately defined as read data that could not be recovered from the media.
+
+This grounds a bounded failure bridge:
+
+```text
+remaining reserve / threshold evidence
+        ≠
+actual inability to commit a write
+        ≠
+unrecovered read failure
+```
+
+The word `may` is important. It allows `lack of spare locations -> possible Write Fault cause`; it does **not** allow the converse claim `every Write Fault -> proven spare exhaustion`.
+
+### 0.4. Interface evidence does not expose the internal replacement mechanism
+
+Revision 1.0 reports reserve and failure semantics but does not, in these clauses, define a particular NAND bad-block table, FTL allocation algorithm, physical replacement-pool geometry, or automatic reassignment sequence. Those mechanisms must be grounded from lower-layer/product evidence such as Case 78 rather than inferred from host telemetry.
 
 ## Source A — official NVM Express 1.0e
 
@@ -153,6 +203,11 @@ It describes `Percentage Used` as the main endurance-monitoring quantity and Ava
 
 | Claim | Type | Evidence | Status |
 | --- | --- | --- | --- |
+| Original NVMe 1.0 already exposes Available Spare and Spare Below Threshold | `H/P` | NVMe 1.0 Fig. 59 + asynchronous-event status | strong official 2011 primary |
+| Lack of spare locations is one possible cause of `Write Fault` | `H/P` | NVMe 1.0 Generic Command Status 80h | strong official 2011 primary |
+| `Write Fault` and `Unrecovered Read Error` are separate statuses | `H/P/E` | NVMe 1.0 status 80h vs 81h | strong official primary; relation-level reconstruction |
+| A spare-threshold event proves reserve exhaustion or current payload loss | `X` | threshold wording does not say this | rejected |
+| Every `Write Fault` proves spare exhaustion | `X` | contradicted by normative `may be due` wording | rejected |
 | SMART/Health includes information retained across power cycles | `H/P` | NVMe 1.0e §5.10.1.2; NVMe 1.3 §5.14.1.2 | strong official primary |
 | Percentage Used is vendor-specific and 100 need not mean failure | `H/P` | NVMe 1.0e Fig. 60; NVMe 1.3 Fig. 93 | strong official primary |
 | Data Units Written measures host-to-controller data, not normatively internal NAND work | `H/P/E` | NVMe 1.0e/1.3 field definition | strong bounded reconstruction |
@@ -166,6 +221,9 @@ It describes `Percentage Used` as the main endurance-monitoring quantity and Ava
 
 ## Cross-case boundary
 
+- **Case 14:** SCSI grown-defect reassignment directly grounds finite spare-location consumption and a `NO DEFECT SPARE LOCATION AVAILABLE` failure; NVMe 1.0 is compared only as a later host-interface reserve/failure relation, not as genealogy.
+- **Case 78:** Micron NAND bad-block management directly grounds reserved replacement blocks and BBT-controlled exclusion. NVMe `Available Spare` does not prove that a conforming SSD uses that exact internal mechanism.
+- **Case 76:** JEDEC workload-qualified endurance and NVMe `Percentage Used` concern life/endurance qualification; they must not be collapsed into the separate `Available Spare` reserve relation.
 - **Case 36:** physical NAND error/refresh mechanism ≠ host-visible health estimate.
 - **Case 38:** product-specific PLI readiness/self-test state ≠ generic NVMe SMART/endurance telemetry.
 - **Case 45:** correctable ECC/ECS work ≠ unrecovered-error counter.

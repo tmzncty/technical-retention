@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to the NVMe 1.0e/1.3 SMART / Health Information interface and a 2014 Intel DC P3700 product witness. The case establishes that an SSD can retain cumulative health/endurance evidence across power cycles and expose it to host software without that evidence being the user payload or a complete physical wear history.
+**`grounded`** — bounded to the NVMe 1.0/1.0e/1.3 SMART / Health Information interface and a 2014 Intel DC P3700 product witness. The latest deepening uses the original 2011 Gold specification to separate spare-threshold warning, reserve exhaustion, and actual command failure without inferring a hidden SSD remapping algorithm. The case establishes that an SSD can retain cumulative health/endurance evidence across power cycles and expose it to host software without that evidence being the user payload or a complete physical wear history.
 
 Grounding record: [`../evidence/55-nvme10-13-smart-health-endurance-grounding.md`](../evidence/55-nvme10-13-smart-health-endurance-grounding.md).
 
@@ -24,6 +24,26 @@ The object is the NVMe `SMART / Health Information` log, especially:
 This is not a general history of SMART, NAND endurance, wear leveling, SSD failure prediction, or enterprise fleet management. It also does not claim that the standardized host-visible counters expose the controller's complete internal P/E-cycle distribution, write amplification, bad-block map, ECC history, or physical degradation model.
 
 ## Historical record
+
+### NVMe 1.0 already separates spare threshold, spare exhaustion, and command failure
+
+The original **NVM Express Revision 1.0 Gold**, ratified **1 March 2011**, already contains the spare-capacity and failure boundary needed for this case; 1.0e is therefore not treated as the first appearance of the mechanism.
+
+In §5.10.1.2 and Figure 59, Revision 1.0 says SMART / Health information is provided over the life of the controller and retained across power cycles. `Available Spare` is a normalized 0–100% measure of remaining spare capacity, while `Available Spare Threshold` may generate an asynchronous event once that reserve falls below the configured threshold. The asynchronous-event table separately names `Spare Below Threshold`.
+
+A different table, the generic command-status definitions, gives `Write Fault` a stronger service consequence: the write data could not be committed to the media, and the specification says this **may** be due to lack of available spare locations. The immediately following `Unrecovered Read Error` is defined separately as read data that could not be recovered from the media.
+
+The historical interface therefore does **not** expose one binary `healthy/dead` transition. It exposes at least three different relations:
+
+```text
+remaining spare capacity
+        -> threshold crossing / warning
+        -> possible exhaustion-related write failure
+```
+
+The arrows are an engineering ordering of interface relations, not a claim that every device must traverse a deterministic state machine. In particular, the specification says spare exhaustion **may** cause a Write Fault; it does not say every Write Fault proves spare exhaustion, nor that crossing the warning threshold means the reserve is already exhausted.
+
+This direct 2011 evidence sharpens the ROADMAP failure slice while keeping the implementation boundary intact: NVMe exposes reserve and failure semantics to the host, but does not thereby specify a particular controller's bad-block table, FTL, replacement-pool allocator, NAND defect-growth process, or automatic reassignment algorithm.
 
 ### NVMe 1.0e already defines retained health history
 
@@ -136,6 +156,26 @@ Therefore:
 
 This matters when comparing the host-visible usage history with the wear mechanisms in Cases 36 and 52. A host counter can be a useful workload witness without being the substrate's complete stress ledger.
 
+### Spare threshold, reserve exhaustion, and service failure are different states
+
+The 2011 command-status wording makes the spare-reserve distinction operational rather than merely descriptive. A controller can report remaining spare capacity; the remaining capacity can fall below a warning threshold; and lack of spare locations can become severe enough that a write cannot be committed. These are different claims.
+
+Therefore:
+
+> **spare below threshold ≠ spare exhausted**.
+
+and:
+
+> **spare exhaustion as a possible Write Fault cause ≠ proof that every Write Fault is a spare-exhaustion event**.
+
+and:
+
+> **Write Fault ≠ Unrecovered Read Error**.
+
+The retention consequence is that **present payload correctness and future repair/continuation margin can diverge**. A device may still serve current data while its hidden reserve for replacing or bypassing future failed locations is shrinking. Conversely, a low-spare warning is not itself evidence that current user payload has already been lost.
+
+This is where Cases 14 and 78 become useful functional comparisons. SCSI grown-defect reassignment and Micron NAND bad-block management directly ground finite replacement pools at lower layers; NVMe 1.0 shows a later host-visible interface that reports remaining spare capacity and can surface a write failure when spare locations are unavailable. The comparison is **not** genealogy, and the NVMe source cannot be used to infer that an SSD implements either earlier mechanism internally.
+
 ### Spare capacity is maintenance reserve, not ordinary free user space
 
 The NVMe `Available Spare` field refers to remaining spare capacity. Intel's P3700 separately documents physical capacity reserved for NAND management/maintenance while keeping the logical LBA count stable.
@@ -244,6 +284,9 @@ That is a project-level interpretation. It is not terminology attributed to NVM 
 
 | Claim | Label | Status |
 | --- | --- | --- |
+| NVMe 1.0 Gold already exposes Available Spare, a spare threshold, and a Spare Below Threshold asynchronous-event condition | `H/P` | strong, official 2011 specification |
+| NVMe 1.0 `Write Fault` says data could not be committed and lack of spare locations is one possible cause | `H/P` | strong, official 2011 specification |
+| `Spare Below Threshold` is not equivalent to reserve exhaustion, and `Write Fault` is not equivalent to `Unrecovered Read Error` | `H/P/E` | strong bounded reconstruction from distinct normative fields/status codes |
 | NVMe 1.0e SMART/Health information is described as lifetime information retained across power cycles | `H/P` | strong, official specification |
 | NVMe 1.0e defines Available Spare, Percentage Used, host data-unit counters, power/unsafe-shutdown counters, and media-error history | `H/P` | strong, official specification |
 | `Percentage Used = 100` may occur without device failure | `H/P` | explicit normative wording |
@@ -257,11 +300,12 @@ That is a project-level interpretation. It is not terminology attributed to NVM 
 
 ## Sources
 
-1. NVM Express, **NVM Express 1.0e**, official specification PDF, especially §5.10.1.2 and Figure 60, printed pp. 67–69: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_0e.pdf>
-2. NVM Express, **NVM Express Revision 1.3**, official specification PDF, especially §5.14.1.2 and Figure 93, printed pp. 98–100: <https://nvmexpress.org/wp-content/uploads/NVM_Express_Revision_1.3.pdf>
-3. NVM Express, **Specification Archives**, historical revision index: <https://nvmexpress.org/nvm-express-specification-archives/>
-4. Intel, **Intel Solid-State Drive DC P3700 Series Product Specification**, Order Number 330566-002US, July 2014; surviving transcript/mirror used for product-specific tables: <https://manualzilla.com/doc/7195133/intel-dcp3700-1.6tb>
-5. NVM Express, **Features for Error Reporting, SMART, Log Pages, Failures and management capabilities in NVMe Architectures**, later institutional explanation used only as operational corroboration, not historical priority evidence: <https://nvmexpress.org/resource/features-for-error-reporting-smart-log-pages-failures-and-management-capabilities-in-nvme-architectures/>
+1. NVM Express, **NVM Express Revision 1.0 Gold**, ratified 1 March 2011, especially the generic command-status definitions, asynchronous-event status table, §5.10.1.2, and Figure 59: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_0-Gold.pdf>
+2. NVM Express, **NVM Express 1.0e**, official specification PDF, especially §5.10.1.2 and Figure 60, printed pp. 67–69: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_0e.pdf>
+3. NVM Express, **NVM Express Revision 1.3**, official specification PDF, especially §5.14.1.2 and Figure 93, printed pp. 98–100: <https://nvmexpress.org/wp-content/uploads/NVM_Express_Revision_1.3.pdf>
+4. NVM Express, **Specification Archives**, historical revision index: <https://nvmexpress.org/nvm-express-specification-archives/>
+5. Intel, **Intel Solid-State Drive DC P3700 Series Product Specification**, Order Number 330566-002US, July 2014; surviving transcript/mirror used for product-specific tables: <https://manualzilla.com/doc/7195133/intel-dcp3700-1.6tb>
+6. NVM Express, **Features for Error Reporting, SMART, Log Pages, Failures and management capabilities in NVMe Architectures**, later institutional explanation used only as operational corroboration, not historical priority evidence: <https://nvmexpress.org/resource/features-for-error-reporting-smart-log-pages-failures-and-management-capabilities-in-nvme-architectures/>
 
 ## Related repositories
 
