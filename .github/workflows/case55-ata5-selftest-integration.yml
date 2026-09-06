@@ -27,6 +27,9 @@ jobs:
       - name: Apply bounded research slice
         run: python3 .github/scripts/integrate_case55_ata5_selftest.py
 
+      - name: Normalize generated markdown
+        run: sed -i 's/[[:space:]]\+$//' evidence/55-nvme10-13-smart-health-endurance-grounding.md
+
       - name: Validate research tree
         run: |
           git diff --check
