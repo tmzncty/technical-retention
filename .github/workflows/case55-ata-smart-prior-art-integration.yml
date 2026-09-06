@@ -25,7 +25,9 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
 
       - name: Apply bounded research slice
-        run: python3 .github/scripts/integrate_case55_ata_smart.py
+        run: |
+          python3 .github/scripts/integrate_case55_ata_smart.py
+          sed -i 's/[[:space:]]\+$//' evidence/55-nvme10-13-smart-health-endurance-grounding.md
 
       - name: Validate research tree
         run: |
