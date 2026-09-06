@@ -1,0 +1,27 @@
+name: retention-s13-one-shot
+on:
+  push:
+    paths:
+      - '.github/workflows/_retention_s13.yml'
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply navigation/status patch
+        run: python3 .automation/s13_patch.py
+      - name: Validate
+        run: |
+          git diff --check
+          git status --short
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md ROADMAP.md CASE_INDEX.md
+          git commit -m 'synthesis: integrate durability handoff boundaries'
+          git push origin HEAD:main
