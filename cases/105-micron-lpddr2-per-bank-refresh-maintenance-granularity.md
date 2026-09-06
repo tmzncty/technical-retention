@@ -167,7 +167,7 @@ This is a functional decomposition, not a proof of direct genealogy.
 
 ## Related repositories
 
-A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated LPDDR2 REFpb / per-bank-refresh case. Full JEDEC chronology, earlier per-bank-refresh prior art, controller scheduling history, and cross-vendor implementation should be developed there if pursued broadly. This repository keeps the bounded retention relation between maintenance-event scope, full-bank coverage, and service concurrency.
+A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated LPDDR2 REFpb or DDR5 REFsb case. [`Case 106`](106-ddr5-same-bank-refresh-parallel-target-set.md) now handles the bounded later DDR5 same-bank target-set / coverage-accounting relation while preserving Case 105's one-bank LPDDR2 boundary. Full JEDEC genealogy beyond these bounded source floors, earlier prior art, controller scheduling history, and cross-vendor implementation should be developed there if pursued broadly.
 
 [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) remains the anti-anachronism guard: `maintenance transaction scope`, `refresh debt`, and `retained set` are present analytical terms, not vocabulary attributed to Micron engineers.
 
