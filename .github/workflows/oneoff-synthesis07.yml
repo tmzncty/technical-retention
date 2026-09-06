@@ -1,0 +1,37 @@
+name: oneoff synthesis 07 coded recovery
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.event.head_commit.message == 'chore: stage synthesis 07 coded recovery'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply bounded synthesis
+        run: python .github/oneoff_synthesis07.py
+      - name: Remove one-shot automation
+        run: rm .github/oneoff_synthesis07.py .github/workflows/oneoff-synthesis07.yml
+      - name: Validate diff
+        run: |
+          git diff --check
+          test -f docs/SYNTHESIS_07_CODED_RECOVERABILITY_REPAIR_MARGIN.md
+          grep -Fq 'SYNTHESIS_07_CODED_RECOVERABILITY_REPAIR_MARGIN.md' README.md
+          grep -Fq 'SYNTHESIS_07_CODED_RECOVERABILITY_REPAIR_MARGIN.md' ROADMAP.md
+          grep -Fq '1372. **cross-case recovery pipeline' CASE_INDEX.md
+          test ! -e .github/oneoff_synthesis07.py
+          test ! -e .github/workflows/oneoff-synthesis07.yml
+      - name: Commit research slice
+        run: |
+          git config user.name 'technical-retention automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git commit -m 'synthesis: separate coded recoverability from repair margin'
+          git push origin HEAD:main
