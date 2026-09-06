@@ -12,6 +12,8 @@ The source hierarchy is:
 4. **Renesas Technology 2006 reliability handbook** — manufacturer-retrospective standards inventory establishing that JESD22-A117 was already listed as established in 2000;
 5. **JEDEC JESD22-A117E (November 2018), Annex A** — later standards-body revision ledger used narrowly to recover A117B's March 2009 date and revision-level terminology changes;
 6. **Belgal et al., IEEE IRPS 2002** — period technical evidence for program/erase-cycling-conditioned Flash retention physics.
+7. **JEDEC JESD219 (September 2010)** — normative companion-workload primary text, inspected to bound the original enterprise-only workload coverage and the still-developing client workload;
+8. **Alvin Cox / JEDEC JC-64.8 presentation (August 2011)** — contemporaneous committee-chair evidence for the evolving JESD218A/JESD219 client-workload state, kept below normative standards text in authority.
 
 No source in this record is used to establish an invention-priority claim. The later A117E ledger is explicitly treated as revision-history evidence rather than proof of first discovery.
 
@@ -182,6 +184,85 @@ This paper does not define JESD218's SSD-level service contract and is not used 
 
 ---
 
+## Source 7 — JEDEC JESD219, September 2010
+
+**Document:** JEDEC, _Solid-State Drive (SSD) Endurance Workloads_, JESD219, September 2010.
+
+**Public text-preserving inspection copy:** <https://studylib.net/doc/18339575/jesd219>
+
+**Contemporaneous publication cross-check:** JEDEC's September 2010 publication announcement was reproduced by period trade press as announcing JESD218 and JESD219 together; the historical direct JEDEC URL was `jedec.org/sites/default/files/docs/JESD219.pdf`.
+
+### Exact locations inspected
+
+- cover: `JESD219`, September 2010;
+- printed p. 1, §1 Scope: workloads are for endurance rating/verification and are to be used with JESD218;
+- printed p. 1, scope note: client workloads were still under development and were to be added when available;
+- printed p. 1 onward, §3: the body supplies an `Enterprise endurance workload` with transfer-size, LBA-distribution, and randomized-data requirements.
+
+### What this source adds
+
+The September 2010 standards pair is historically **asymmetric**:
+
+- JESD218 already defines client and enterprise class endurance/retention requirements;
+- the same-month JESD219 supplies the enterprise workload but not yet the client workload it says is still under development.
+
+This grounds `class requirement published ≠ every referenced companion workload simultaneously complete`.
+
+### Evidence limit
+
+The public inspection copy is a text-preserving third-party mirror of the JEDEC document rather than an official-host facsimile currently served by JEDEC. Its cover/scope/body are cross-checked against contemporaneous publication records, but this source is not used for figure-level claims, cryptographic provenance, or invention priority. Direct archival facsimile recovery remains desirable.
+
+---
+
+## Source 8 — Alvin Cox, JEDEC JC-64.8 / Flash Memory Summit, August 10, 2011
+
+**Document:** Alvin Cox, _JEDEC SSD Endurance Workloads_, Flash Memory Summit 2011. Cox is identified on the presentation as Seagate and Chairman, JC-64.8.
+
+**Inspected PDF:** <https://old.flashmemorysummit.com/English/Collaterals/Proceedings/2011/20110810_T1B_Cox.pdf>
+
+### Exact locations inspected
+
+- slide 3: names `JESD218A` and JESD219 as the active JEDEC SSD standards pair;
+- slides 4–7: repeats TBW as a user-interface/application-class rating tied to capacity, UBER, FFR, and power-off retention;
+- slide 12: describes a client workload based on a real trace, including TRIM commands, and separately describes the enterprise workload;
+- slide 13: labels the client workload `JESD219`, describes preconditioning and trace replay, and says testing at 100% full was still under discussion.
+
+### What this source adds
+
+By August 2011 the committee chair was publicly presenting JESD218A and a client-workload design associated with JESD219. This is a useful dated bridge between the September 2010 enterprise-only JESD219 and later revised workload standards.
+
+### Evidence limit
+
+A conference presentation by the standards subcommittee chair is **contemporary committee evidence**, not the normative text of JESD218A or JESD219A. The phrase `still under discussion` is especially important: it blocks silently treating every slide detail as a finalized standard requirement.
+
+---
+
+## Qualification-semantics deepening from the original JESD218 facsimile
+
+Additional directly inspected locations in the September 2010 JESD218 facsimile sharpen the existing case:
+
+- printed p. 7, §6.3: Table 1 temperatures are use-period case temperatures for endurance/retention estimation, not absolute datasheet max/min values;
+- printed p. 8, §7: direct and extrapolation methods both perform endurance verification followed by retention verification;
+- printed p. 8, §7.1.1: the qualification sample is sized to establish FFR and UBER requirements at **60% confidence**;
+- printed p. 24, Annex C: the same qualified SSD can have a different expected retention duration under different active-use/power-off temperatures; the client example gives 52 weeks at 40 °C active / 30 °C off and at least 105 weeks at 40 °C active / 25 °C off under the stated model;
+- printed p. 25, Annex D: retention-time/p-e-cycle RBER extrapolation must remain below the SSD controller's ECC capability; the standard warns that random-error assumptions are imperfect and requires margin for device/location variation.
+
+These passages support the bounded reconstruction:
+
+```text
+raw NVM error population
+    !=
+controller-correctable population
+    !=
+host-visible data error
+    !=
+class-level UBER/FFR qualification result
+```
+
+They also make the test epistemology explicit: **qualification evidence is sampled, statistical, controller-inclusive, and conditioned on a declared use/model envelope**. None of those adjectives means the standard is weak; they specify what kind of claim it actually establishes.
+
+---
+
 ## Prior art boundary
 
 The 2010 JESD218 standard itself references **JESD22-A117, _Electrically Erasable Programmable ROM (EEPROM) Program/Erase Endurance and Data Retention Stress Test_**. The deeper evidence now shows more than citation precedence:
@@ -194,7 +275,7 @@ This blocks false statements that JESD218 invented cycling-plus-retention qualif
 
 > JESD218 makes an SSD-level, host-interface endurance rating depend on application-class workload and on meeting a later power-off retention requirement along with capacity, FFR, and UBER conditions, above an already-existing device-level endurance/retention qualification tradition.
 
-A pre-2000 qualification genealogy, direct original A117/A117B facsimile archaeology, JESD219 history, and revision-by-revision JESD218A/B history belong in future standards-history work or `computing-archaeology`, not in this bounded case.
+A pre-2000 qualification genealogy and direct original A117/A117B facsimile archaeology remain open. The September-2010 JESD218/JESD219 coverage mismatch and an August-2011 committee bridge are now grounded here, while direct normative facsimiles of JESD218A/JESD219A, later JESD218 B/C revision history, and the full workload-standard genealogy remain future standards-history work best coordinated with `computing-archaeology`.
 
 ---
 
@@ -222,6 +303,12 @@ A pre-2000 qualification genealogy, direct original A117/A117B facsimile archaeo
 | A117B predates JESD218 and added UBER/read-disturb terminology inside A117 | H/P | JEDEC A117E Annex A.2–A.3 | standards-body retrospective revision ledger; not invention-priority proof |
 | Post-P/E-cycle retention degradation was a period Flash reliability problem by 2002 | H/P | Belgal et al. IEEE IRPS 2002 | direct peer-reviewed engineering evidence; technology-bounded |
 | A117 device/cell qualification ≠ JESD218 SSD host-TBW qualification | E | A117E scope/definitions + JESD218 §§3.6/6.2 | strong interface-level reconstruction |
+| September 2010 JESD218 defines both client and enterprise classes while same-month JESD219 supplies only the enterprise workload | H/P | JESD218 §6.3 Table 1 + JESD219 §1/§3 | direct release-bounded standards comparison; JESD219 inspection copy is a public mirror |
+| Client workload was explicitly still under development in the September 2010 JESD219 | H/P | JESD219 §1 note | direct document statement; does not erase JESD218's already-published client retention requirement |
+| By August 2011 JC-64.8 chair Cox publicly presents JESD218A and a JESD219 client-workload design | H/P | Cox FMS 2011 slides 3, 12–13 | contemporary committee evidence; not normative facsimile |
+| JESD218 qualification is sample/confidence based rather than a deterministic per-drive countdown | H/P/E | JESD218 §7.1.1 | direct 60% confidence requirement + bounded reconstruction |
+| Retention qualification can allow raw bit errors that remain inside guarded controller-ECC capability | H/P/E | JESD218 Annex D | direct standard mechanism; does not imply unlimited retention |
+| Table 1 retention duration is condition-specific rather than a universal shelf-life constant | H/P/E | JESD218 §6.3 + Annex C | direct standard/example + bounded interpretation |
 
 ---
 
@@ -239,6 +326,9 @@ Do **not** write:
 - `JESD218 invented endurance and data-retention testing.`
 - `JESD218 introduced UBER or read-disturb terminology into JEDEC NVM qualification.`
 - `A117 device-level cycling/retention qualification is the same contract as JESD218 SSD TBW.`
+- `The September 2010 JESD219 already contained a finalized client workload merely because JESD218 Table 1 referenced a client workload.`
+- `A JEDEC client one-year retention requirement means every individual client SSD has a deterministic one-year physical countdown.`
+- `Passing JESD218 retention requires zero raw NAND bit errors.`
 - `The later A117E revision ledger proves who first invented read disturb, UBER, or endurance qualification.`
 - `Endurance exhaustion is sanitization.`
 

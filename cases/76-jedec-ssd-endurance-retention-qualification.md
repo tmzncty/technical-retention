@@ -115,6 +115,61 @@ Its 2010 Table 1 defines two standard classes:
 
 The table values are **class qualification conditions**, not universal physical constants. JESD218 explicitly says the active-use and retention-use columns refer to different periods and that retention-use time is the period over which data must remain with power off.[^jesd218]
 
+### The September 2010 standards pair was not workload-complete for both classes
+
+The original JESD218 and JESD219 were published as a pair in September 2010, but their coverage was not yet symmetrical. JESD218 Table 1 already defines both `Client` and `Enterprise` application classes and points the workload column to JESD219.[^jesd218] The September 2010 JESD219, however, contains only an `Enterprise endurance workload` section and explicitly says that the client workloads were still under development and would be added when available.[^jesd219-2010]
+
+That creates a release-bounded historical distinction that the earlier Case 76 text did not make explicit:
+
+> **application-class requirement specified ≠ complete companion workload available in the same publication moment**.
+
+This does not mean that JESD218 lacked a client retention requirement. The one-year, 30 °C power-off condition and the client UBER/FFR requirements are already present in the September 2010 JESD218. It means more narrowly that the referenced workload standard did not yet supply a normative client workload alongside its enterprise workload in that original issue.
+
+A contemporaneous August 2011 presentation by Alvin Cox, chairman of JEDEC JC-64.8, names `JESD218A`, describes both client and enterprise workload work under JESD219, and labels the client workload as based on a real trace including TRIM. The same presentation says one client-test detail — testing at 100% full — was still under discussion.[^cox2011] This is useful committee-chair evidence that the standards pair was evolving, but it is not silently substituted for a directly inspected normative JESD219 revision.
+
+The bounded chronology therefore remains:
+
+```text
+September 2010 JESD218
+    defines Client + Enterprise endurance/retention classes
+
+September 2010 JESD219
+    supplies Enterprise endurance workload
+    + explicitly says Client workload is still under development
+
+by August 2011
+    JC-64.8 chair presents JESD218A
+    + an evolving JESD219 Client workload
+```
+
+Direct facsimile archaeology of JESD218A and the later normative JESD219A client-workload text remains open. The purpose of this deepening is to prevent later revisions from being silently projected backward into September 2010.
+
+### Retention qualification is controller-inclusive and statistically bounded
+
+The original 2010 JESD218 also gives a stronger boundary than a simple `one year` or `three months` slogan.
+
+First, clause 7.1.1 makes endurance/retention verification a **sample-based qualification exercise**: the sample must be large enough to establish the FFR and UBER requirements at 60% confidence.[^jesd218] This does not turn the standard into a deterministic countdown for every individual drive.
+
+Second, Annex D treats useful retention as an SSD-level recoverability relation rather than a requirement for physically error-free NAND. It permits raw bit error rate (`RBER`) to grow with cycling and retention time, then requires the extrapolated RBER to remain below the SSD controller's ECC capability. It also warns that the ECC calculation assumes randomly distributed errors more perfectly than real devices provide, so a safety margin is required for device-to-device and location-to-location variation.[^jesd218]
+
+This supports two engineering reconstructions:
+
+> **raw-media bit errors ≠ host-visible data loss**
+
+and
+
+> **retention qualification ≠ zero raw errors in the NVM**.
+
+ECC is part of the qualified recovery relation. This does not imply that ECC creates unlimited retention: the extrapolated raw-error population still has to remain inside a guarded correction envelope.
+
+Third, the Table 1 temperatures are explicitly use-period temperatures for endurance/retention estimation, not datasheet absolute maxima/minima. Informative Annex C then shows that the expected retention duration changes when active-use or power-off temperature changes; its example maps the standard client condition (40 °C active, 30 °C power off) to 52 weeks, but a 25 °C power-off condition to at least 105 weeks under the stated model.[^jesd218]
+
+So the historically defensible claim is not `client SSDs retain for one year` as a substrate constant. It is:
+
+> **the September 2010 client qualification relation requires one year of power-off retention at its specified class conditions, under the standard's test/model/error criteria**.
+
+The model-dependent Annex C extrapolation is not generalized here to every later NAND generation, charge-trap implementation, TLC/QLC device, controller ECC design, or storage environment.
+
 ### Verification may be accelerated without changing the target use condition
 
 Clause 7 says endurance verification is followed by retention verification. In the direct method drives are stressed to stated TBW using specified workloads and then retention-tested; because the use-time retention requirements are long, extrapolation or acceleration is used to validate the requirement.[^jesd218]
@@ -327,3 +382,6 @@ The mechanisms should not be collapsed simply because all of them can be describ
 [^renesas2006]: Renesas Technology, **_Semiconductor Reliability Handbook_**, REJ27L0001-0100, Rev. 1.00, August 31, 2006, Section 7 JEDEC-standards table, pp. 335–336 of the handbook pagination; the table lists `JESD22-A117` and `2000` under `Established`: <https://studylib.net/doc/28351596/semiconductor-reliability>. This is manufacturer-retrospective standards inventory evidence, not a substitute for an original 2000 JEDEC facsimile.
 [^a117e]: JEDEC, **JESD22-A117E, _Electrically Erasable Programmable ROM (EEPROM) Program / Erase Endurance and Data Retention Stress Test_**, November 2018, especially Annex A.2–A.3. Publicly indexed inspection copy: <https://www.scribd.com/document/837818477/22A117E>. Annex A.2 identifies A117B as March 2009; Annex A.3 records the A117A→A117B additions of read-disturb wording, UBER definition/calculation, bad-block-aware endurance-failure wording, and transient-error handling. This later JEDEC ledger is used as revision evidence, not invention-priority evidence.
 [^belgal2002]: Hanmant P. Belgal et al., **“A New Reliability Model for Post-Cycling Charge Retention of Flash Memories,”** _2002 IEEE International Reliability Physics Symposium_, 7–11 April 2002, DOI 10.1109/RELPHY.2002.996604: <https://doi.org/10.1109/RELPHY.2002.996604>. The abstract directly describes stress-induced leakage after P/E cycling, multi-generation/multi-year-bake data, and cycle-count dependence.
+
+[^jesd219-2010]: JEDEC, **JESD219, _Solid-State Drive (SSD) Endurance Workloads_**, September 2010. Public text-preserving inspection copy: <https://studylib.net/doc/18339575/jesd219>. Cover/scope identify the September 2010 issue; printed p. 1 states that the client workloads were still under development and were to be added when available, while §3 is the enterprise endurance workload. This mirror is used for document inspection and cross-checked against contemporaneous September 2010 publication notices; it is not used for invention priority.
+[^cox2011]: Alvin Cox (Seagate; Chairman, JEDEC JC-64.8), **_JEDEC SSD Endurance Workloads_**, Flash Memory Summit, 10 August 2011: <https://old.flashmemorysummit.com/English/Collaterals/Proceedings/2011/20110810_T1B_Cox.pdf>. Slides 3–7 identify JESD218A and the class requirements; slides 12–13 describe the client workload as based on a real trace including TRIM and note that testing at 100% full was still under discussion. This is contemporaneous committee-chair presentation evidence, not a substitute for a normative standards facsimile.
