@@ -25,7 +25,13 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
 
       - name: Apply bounded research slice
-        run: python3 .github/scripts/integrate_case101.py
+        run: |
+          python3 .github/scripts/integrate_case101.py
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('CASE_INDEX.md')
+          p.write_text(p.read_text(encoding='utf-8').rstrip('\n') + '\n', encoding='utf-8')
+          PY
 
       - name: Validate research tree
         run: |
