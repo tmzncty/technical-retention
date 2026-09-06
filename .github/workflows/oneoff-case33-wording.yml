@@ -1,0 +1,54 @@
+name: case33-wording-cleanup
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/oneoff-case33-wording.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Align residual scope wording
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('cases/33-micron-ddr5-same-bank-refresh-localization.md')
+          text = p.read_text(encoding='utf-8')
+          changes = [
+              (
+                  'The public manufacturer evidence is strong enough to ground the bounded command/availability relation, but exact normative timing, fine-granularity-refresh interactions, later DDR5 revisions, and LPDDR/per-bank genealogies remain separate work.',
+                  'The public manufacturer evidence is strong enough to ground the bounded command/availability relation and the Rev. A 11/19 manufacturer timing/sequence example, while final normative timing/command legality, later FGR/revision evolution, and LPDDR/per-bank genealogies remain separate work.'
+              ),
+              (
+                  'Exact refresh intervals, command ordering, fine-granularity mode restrictions, timing windows, and controller failure behavior require a directly inspected normative specification or product datasheet before they can be claimed here.',
+                  'The Rev. A 11/19 white paper now supports its bounded 16Gb timing/ordering example; exact final/later command legality, density-specific timing, revision evolution, and controller failure behavior still require directly inspected normative specifications, product datasheets, or empirical controller evidence.'
+              ),
+          ]
+          for old, new in changes:
+              assert text.count(old) == 1, (old, text.count(old))
+              text = text.replace(old, new, 1)
+          p.write_text(text, encoding='utf-8')
+          PY
+          git diff --check
+      - name: Remove one-shot workflow and commit
+        shell: bash
+        run: |
+          set -euxo pipefail
+          rm .github/workflows/oneoff-case33-wording.yml
+          git diff --check
+          git config user.name 'technical-retention automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git commit -m 'case33: align residual normative boundary wording'
+          git push origin HEAD:main
