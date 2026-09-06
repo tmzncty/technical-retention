@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to the NVMe 1.0/1.0e/1.3 SMART / Health Information interface and a 2014 Intel DC P3700 product witness. The latest deepening uses the original 2011 Gold specification to separate spare-threshold warning, reserve exhaustion, and actual command failure without inferring a hidden SSD remapping algorithm. The case establishes that an SSD can retain cumulative health/endurance evidence across power cycles and expose it to host software without that evidence being the user payload or a complete physical wear history.
+**`grounded`** — bounded to the NVMe 1.0/1.0e/1.3 SMART / Health Information interface and a 2014 Intel DC P3700 product witness. The spare-exhaustion deepening uses the original 2011 Gold specification to separate spare-threshold warning, reserve exhaustion, and actual command failure without inferring a hidden SSD remapping algorithm. A new prior-art pass adds a bounded 1995–1997 ATA SMART floor for retained drive-health state, while explicitly refusing to equate ATA vendor-specific attributes with the later NVMe SMART / Health schema or to claim a direct ATA→NVMe genealogy. The case establishes that an SSD can retain cumulative health/endurance evidence across power cycles and expose it to host software without that evidence being the user payload or a complete physical wear history.
 
 Grounding record: [`../evidence/55-nvme10-13-smart-health-endurance-grounding.md`](../evidence/55-nvme10-13-smart-health-endurance-grounding.md).
 
@@ -24,6 +24,51 @@ The object is the NVMe `SMART / Health Information` log, especially:
 This is not a general history of SMART, NAND endurance, wear leveling, SSD failure prediction, or enterprise fleet management. It also does not claim that the standardized host-visible counters expose the controller's complete internal P/E-cycle distribution, write amplification, bad-block map, ECC history, or physical degradation model.
 
 ## Historical record
+
+### 1995–1997 ATA SMART supplies an older drive-health-state floor without supplying the NVMe schema
+
+The NVMe interface is not the beginning of drive-health state retention. An official **July 1995 X3T10 SFF Liaison Report (`95-292r0`)** states that a copy of `SMART (Self Monitoring Analysis and Reporting Technology)` submitted by Quantum had been approved for publication as **SFF-8035i**. The document is useful as a standards-history floor, but it does **not** prove that Quantum invented SMART or that the inspected copy contains every semantic detail later carried into ATA.
+
+The later **ATA-3 Working Draft X3T13/2008D Revision 7b, 27 January 1997** provides the needed interface semantics. Its revision history records that Revision 3, dated **26 July 1995**, `Added SFF8035i S.M.A.R.T. into the standard`. Clause 6.6 then describes SMART as monitoring and **storing** performance/calibration parameters to predict near-term degradation or fault conditions. The draft is explicit that the set and identity of attributes are selected by the device manufacturer and are vendor-specific/proprietary, while thresholds are manufacturer-determined from design/reliability testing.
+
+That distinction matters for this case. ATA-3 does not present one fixed cross-vendor health schema equivalent to the later NVMe log. It presents a host interface around a manufacturer-selected attribute/threshold model.
+
+The same draft also gives direct retention semantics for the monitoring machinery itself:
+
+- `SMART DISABLE OPERATIONS` says the enabled/disabled SMART state is preserved across power cycles;
+- `SMART ENABLE/DISABLE ATTRIBUTE AUTOSAVE` allows updated attribute values to be saved to **nonvolatile memory** after vendor-specified events, and preserves the autosave enabled/disabled state across power cycles;
+- `SMART READ ATTRIBUTE VALUES` saves updated values to nonvolatile memory before returning the attribute-value structure;
+- `SMART RETURN STATUS` saves updated values to nonvolatile memory before comparing them with the thresholds;
+- `SMART SAVE ATTRIBUTE VALUES` explicitly forces updated values into nonvolatile memory regardless of the autosave timer.
+
+The bounded historical result is therefore stronger than the generic statement `SMART existed before NVMe`:
+
+```text
+manufacturer-selected monitored attribute
+        -> retained/updated attribute value
+        -> manufacturer-set threshold
+        -> threshold comparison / reliability status
+        -> host-visible warning relation
+```
+
+with a separate policy/control path:
+
+```text
+SMART enabled state
+attribute-autosave enabled state
+        -> preserved across power cycles
+```
+
+and a separate materialization step:
+
+```text
+updated attribute value
+        -> optional/event- or command-triggered save to nonvolatile memory
+```
+
+These arrows are an **engineering reconstruction of the documented interface relations**, not period terminology and not a claim that every ATA device implemented the same internal sensors, media, firmware, or persistence mechanism.
+
+The source boundary is also explicit. The ATA-3 text inspected here is a period **working draft** preserved through a third-party transcription/mirror. Its document identity, revision/date, clause structure, and wording are strong enough for this bounded standards-history comparison, but the project does not silently upgrade the mirror into a directly inspected original SFF-8035i facsimile or use it to settle SMART invention priority.
 
 ### NVMe 1.0 already separates spare threshold, spare exhaustion, and command failure
 
@@ -121,6 +166,34 @@ This is reserve/maintenance state, not filesystem free space and not application
 By NVMe 1.3, `Critical Warning` is explicitly current and nonpersistent. A device can therefore expose a present warning that differs categorically from its cumulative counters and endurance estimate even though they share one log page.
 
 ## Engineering reconstruction
+
+### Same `SMART` label does not imply the same retained schema
+
+ATA-3 and NVMe both expose device-health state to a host, but the inspected contracts are not interchangeable. ATA-3 says the active attribute set and attribute identities are manufacturer-selected and proprietary; NVMe instead standardizes named fields such as `Available Spare`, `Percentage Used`, `Data Units Written`, power-cycle counts, and media/data-integrity error counts.
+
+Therefore:
+
+> **ATA SMART attribute state ≠ NVMe SMART / Health field schema**.
+
+and:
+
+> **shared `SMART` terminology ≠ unchanged semantics or proven implementation genealogy**.
+
+The earlier ATA source is prior art for **retained drive-health state and host-visible reliability qualification**, not evidence that NVMe copied a particular ATA attribute representation or that the two interfaces share one internal health model.
+
+### Monitoring policy state, observed health state, and nonvolatile save are separate relations
+
+ATA-3 preserves SMART enable/disable state and autosave policy across power cycles, while separately describing when updated attribute values are monitored and when they are saved to nonvolatile memory. An enabled autosave policy is therefore not itself a stored attribute value, and enabling SMART is not equivalent to saying that every possible health observation has already been materialized persistently.
+
+Therefore:
+
+> **SMART enabled state ≠ attribute value**,
+
+> **attribute-autosave policy ≠ autosave event ≠ nonvolatile attribute embodiment**.
+
+The command descriptions add a useful counterexample to a passive-observation model: `READ ATTRIBUTE VALUES` and `RETURN STATUS` can cause updated health values to be saved before the host receives data/status. In this bounded ATA contract, observation/reporting can be coupled to **maintenance of the telemetry state itself**.
+
+This still does not mean the attribute records are a complete event history. They compress device-specific conditions into normalized values/status, just as later NVMe counters/estimates compress other aspects of use and degradation.
 
 ### The device can retain evidence about its own retention margin
 
@@ -266,7 +339,9 @@ Accordingly:
 
 The bounded value of comparing 1.0e and 1.3 is semantic, not priority-seeking: 1.3 makes the persistence boundary of `Critical Warning` explicit while preserving cumulative and estimated health fields.
 
-This case does not attempt a full ATA SMART genealogy or claim that NVMe invented drive-health monitoring. That history belongs in a separate bounded standards/genealogy slice if needed.
+The prior-art boundary is now narrower. Official July 1995 T10/SFF evidence establishes publication approval for SFF-8035i, and the January 1997 ATA-3 Revision 7b working draft records the July 1995 incorporation of SFF8035i SMART and directly grounds manufacturer-selected attributes, thresholds, nonvolatile attribute saves, and power-cycle-persistent SMART/autosave policy state. This is enough to reject any NVMe-origin reading of drive-health retention.
+
+It is **not** a full ATA SMART genealogy. The original SFF-8035i facsimile/revision chain, pre-SFF vendor implementations, ATA-4/ATA-5 changes, offline data collection/self-test evolution, named-product attribute meanings, and any direct ATA→NVMe design genealogy remain separate work. `SFF publication approval`, `ATA-3 incorporation`, and `invention` are not treated as synonyms.
 
 ## Philosophical interpretation — bounded
 
@@ -284,6 +359,12 @@ That is a project-level interpretation. It is not terminology attributed to NVM 
 
 | Claim | Label | Status |
 | --- | --- | --- |
+| July 1995 X3T10/SFF liaison evidence says a Quantum-submitted SMART copy was approved for publication as SFF-8035i | `H/P` | strong official committee liaison witness; publication floor, not invention proof |
+| ATA-3 Revision 7b records that its 26 July 1995 Revision 3 added SFF8035i SMART | `H/P` | strong period working-draft revision history, mirror provenance retained |
+| ATA-3 SMART attributes/identities are manufacturer-selected and proprietary, while thresholds are manufacturer-set | `H/P` | strong period working-draft semantics |
+| ATA-3 preserves SMART enable state and attribute-autosave policy across power cycles and can save updated attribute values to nonvolatile memory | `H/P` | strong period working-draft command semantics |
+| ATA SMART attribute state is historically/technically identical to the later fixed NVMe SMART / Health field schema | `X` | rejected; shared label does not erase interface/schema differences |
+| SFF-8035i publication approval or ATA-3 incorporation proves invention priority or direct ATA→NVMe genealogy | `X` | rejected; standards-history floor only |
 | NVMe 1.0 Gold already exposes Available Spare, a spare threshold, and a Spare Below Threshold asynchronous-event condition | `H/P` | strong, official 2011 specification |
 | NVMe 1.0 `Write Fault` says data could not be committed and lack of spare locations is one possible cause | `H/P` | strong, official 2011 specification |
 | `Spare Below Threshold` is not equivalent to reserve exhaustion, and `Write Fault` is not equivalent to `Unrecovered Read Error` | `H/P/E` | strong bounded reconstruction from distinct normative fields/status codes |
@@ -307,6 +388,9 @@ That is a project-level interpretation. It is not terminology attributed to NVM 
 5. Intel, **Intel Solid-State Drive DC P3700 Series Product Specification**, Order Number 330566-002US, July 2014; surviving transcript/mirror used for product-specific tables: <https://manualzilla.com/doc/7195133/intel-dcp3700-1.6tb>
 6. NVM Express, **Features for Error Reporting, SMART, Log Pages, Failures and management capabilities in NVMe Architectures**, later institutional explanation used only as operational corroboration, not historical priority evidence: <https://nvmexpress.org/resource/features-for-error-reporting-smart-log-pages-failures-and-management-capabilities-in-nvme-architectures/>
 
+7. X3T10, **Liaison Report from SFF**, `X3T10/95-292r0`, July 1995; official T10 archive, directly inspected facsimile p. 1: <https://www.t10.org/ftp/t10/document.95/95-292r0.pdf>
+8. X3T13, **AT Attachment-3 Interface (ATA-3), Working Draft X3T13/2008D Revision 7b**, 27 January 1997; period draft text/transcription used for §6.6 and §7.31 semantics and revision history: <https://paperzz.com/doc/7545036/at-attachment-3-interface--ata-3--working-draft>
+
 ## Related repositories
 
-A repository search found no dedicated NVMe SMART/endurance case in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology). Broader SSD/NAND engineering chronology should remain there if developed; this case keeps only the retention-specific interface/history distinction.
+A fresh repository search found no dedicated NVMe SMART/endurance or ATA SMART/SFF-8035i case in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology). Broader SMART/ATA/NVMe health-monitoring genealogy and disk/SSD engineering chronology should remain there if developed; this case keeps only the retention-specific state/history and interface-boundary distinctions.
