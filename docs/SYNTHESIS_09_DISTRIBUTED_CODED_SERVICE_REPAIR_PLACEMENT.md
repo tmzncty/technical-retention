@@ -67,7 +67,7 @@ Thus the production source itself blocks the shortcut:
 
 ```text
 successful on-demand reconstruction
-    ==
+    ≠
 durable fragment replacement
 ```
 
