@@ -1,0 +1,617 @@
+name: one-shot Case 100 ZFS DTL integration
+
+on:
+  push:
+    paths:
+      - '.github/workflows/case100-zfs-dtl-integration.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Integrate bounded DTL research slice
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          case = r'''# ZFS Dirty Time Log: Retained Failure Intervals and Selective Resilver
+
+**Status:** `grounded`
+
+## Scope
+
+This case asks one bounded retention question:
+
+> How can a storage system retain enough evidence about *when* one redundant device failed to receive state so that later repair can select only blocks exposed during that interval, rather than treating the whole device as equally suspect?
+
+The historical core is bounded to the Sun ZFS dirty-time-log / resilver patent family with a **2005-11-04 priority floor** and **2007-05-10 publication witnesses**. Oracle Solaris operational documentation is used as a product-level witness that ZFS can resilver only the minimum necessary data after a short outage. OpenZFS 2.1.11 source is used only as a later implementation-continuity witness for DTL classes and persistence/derivation boundaries.
+
+This case is not:
+
+- a generic ZFS history;
+- a second scrub case (Case 18 already covers proactive verification and checksum-qualified healing);
+- a second RAID-Z write-hole case (Case 95);
+- a second dRAID sequential-rebuild case (Case 96);
+- proof that Sun/ZFS invented dirty logging or selective mirror recovery;
+- proof that every ZFS release implements every patent-family embodiment exactly as written;
+- a claim that a DTL proves stored payload is corrupt.
+
+A repository search found no dedicated DTL/resilver case in `tmzncty/computing-archaeology`; broader dirty-log, mirror-recovery, and ZFS implementation genealogy belongs there rather than being duplicated here.
+
+## Historical vocabulary
+
+Historical / source vocabulary retained here:
+
+- `dirty region logging` / `DRL`;
+- `dirty time log` / `DTL`;
+- `birth time`;
+- `transaction group`;
+- `resilver` / `resilvering`;
+- `pruned resilvering`;
+- `minimum amount of necessary data`.
+
+Project engineering vocabulary:
+
+- **failure-exposure history** — retained evidence of intervals during which a redundant target had less than the required replication relation;
+- **repair-scope witness** — metadata sufficient to decide that a block or subtree can be excluded from a later catch-up pass;
+- **repair debt** — a still-retained obligation to restore redundancy after the device becomes available again.
+
+The project terms are analytical reconstructions, not Sun/Oracle historical terminology.
+
+## Historical record
+
+### H/P — dirty-region logging already provided selective recovery before ZFS DTL
+
+Sun Cluster 2.2 documentation describes `Dirty Region Logging (DRL)` as tracking regions changed by writes to a mirrored volume. A status bit represents each logical region; a newly dirty region is synchronously logged before the data write, and after restart only regions marked dirty need recovery.
+
+That is an explicit pre-ZFS functional prior-art floor for **bounded recovery instead of full-copy recovery**.
+
+It does not make DRL and ZFS DTL identical. DRL is region-oriented and incurs logging work when regions transition dirty. The later ZFS DTL family instead exploits block birth time / transaction-group relations to record intervals of unsuccessful storage and decide whether specific blocks need resilvering.
+
+### H/P — the ZFS patent family has a 2005-11-04 priority floor
+
+Sun's later patent-family records claim benefit of provisional application 60/734,023, filed **2005-11-04**, titled `Dirty Time Logging and Resilvering`, naming William H. Moore and Jeffrey S. Bonwick. Related applications published on **2007-05-10** include:
+
+- `Method and system for dirty time logging` (`US20070106869A1`, later `US7925827B2`);
+- `Method and system for dirty time log directed resilvering` (`US20070106867A1`, later `US7930495B2`);
+- `Method and system for pruned resilvering using a dirty time log` (`US20070106677A1`, later `US8635190B2`);
+- `Method and system for metadata-based resilvering` (`US20070106866A1`, later `US8938594B2`).
+
+This is a date-bounded documentary floor, not an invention-priority claim and not by itself proof of the first shipping implementation.
+
+### H/P — DTL records failed-replication time / transaction-group state
+
+The patent-family description associates a DTL with storage devices and says it tracks times during which I/O requests were not successfully completed on a device. It explicitly allows transaction-group numbers to stand for those times, and explains `birth time` as either time or transaction-group number in the described embodiments.
+
+The important historical relation is therefore not simply `block is dirty` but:
+
+```text
+block birth txg
+    compared with
+interval(s) in which one target did not receive required writes
+```
+
+### H/P — birth time plus DTL can bound block-level repair
+
+The dirty-time-logging application describes updating the DTL with a block's birth time when a storage attempt is unsuccessful. The directed/pruned resilver family then uses those birth times to decide which blocks require resilvering.
+
+The pruned-resilver application states that a child block is resilvered when its birth time is in the DTL and that a branch need not be traversed when parent/descendant birth-time ordering makes intersection with the DTL impossible. Its worked example uses DTL birth times / transaction groups 32–37 for an offline disk and treats blocks outside that interval as not requiring resilvering under the described conditions.
+
+Thus retained time/txg metadata can reduce future traversal as well as future write work.
+
+### H/P — product documentation exposes the selective-repair outcome
+
+Oracle's Solaris ZFS administration documentation states that ZFS resilvers only the minimum amount of necessary data. It contrasts a short outage, where catch-up can finish quickly, with full device replacement, where work is proportional to used data.
+
+This operational documentation is useful because the patent family alone would only establish a described design. It still does not prove a universal performance ratio, exact internal algorithm for every release, or that every short outage produces little work.
+
+### H/P — later OpenZFS source retains DTL as replication-history state
+
+OpenZFS 2.1.11 `module/zfs/vdev.c` describes a vdev DTL as the set of transaction groups for which the vdev has `less than perfect replication`. It distinguishes `DTL_MISSING`, `DTL_PARTIAL`, `DTL_SCRUB`, and on-demand `DTL_OUTAGE`.
+
+The same source says that leaf `DTL_MISSING` maps are sufficient to derive the aggregate DTL/outage state and therefore are what the implementation keeps on disk; other DTL forms are regenerated after pool load/configuration changes.
+
+This is **later source-level continuity only**. It must not be projected backward as proof that every 2005–2007 Solaris/ZFS implementation had precisely these four classes or identical persistence rules.
+
+## Retained state
+
+In the bounded DTL-directed repair model, later selective catch-up requires at least:
+
+1. payload / metadata blocks that remain valid on surviving redundant members;
+2. block pointers carrying birth-time / transaction-group information in the described ZFS tree;
+3. retained DTL interval information identifying when a target did not receive required state;
+4. current vdev/topology information identifying which redundancy relation must be restored;
+5. traversal/recovery logic that compares block birth state with the retained DTL;
+6. enough surviving redundancy to source the missing contribution.
+
+The DTL is not user payload. It is also not a complete write history. It is a compressed witness to a **repair-relevant interval**.
+
+## Retention mechanism
+
+### A failure event can end while its repair obligation remains
+
+A device may return online, but blocks born while it was unavailable can still be missing there. If the system forgot the relevant exposure interval immediately when the device returned, it would lose information useful for bounded repair.
+
+Engineering reconstruction:
+
+```text
+device unavailable during txg interval
+    ->
+retain interval / missing-replication evidence
+    ->
+device returns
+    ->
+compare block birth txgs with retained interval
+    ->
+repair only potentially affected blocks
+    ->
+retire repair evidence when the required relation is restored
+```
+
+Therefore:
+
+> **failure over ≠ repair debt over.**
+
+### DTL is failure-exposure history, not mutation history
+
+A DTL does not need to enumerate every application write, file operation, or historical block value. It preserves the subset of temporal information needed to decide whether a block could have missed required replication on a particular target.
+
+Thus:
+
+> **repair-scope history ≠ complete mutation history.**
+
+### Time/txg selection is different from a dirty-region bitmap
+
+DRL marks spatial regions that need recovery. The described DTL method can instead log transaction-group/birth-time intervals and ask each block whether its birth belongs to those intervals.
+
+Both can reduce full-copy work, but their retained evidence has different geometry:
+
+```text
+DRL: spatial region -> dirty/clean recovery status
+DTL: transaction-time interval + block birth -> possible repair membership
+```
+
+No direct genealogy beyond documented chronology/function is asserted.
+
+## Addressing and access geometry
+
+DTL-directed resilver combines two coordinate systems:
+
+- **tree/location reachability** — block pointers identify and reach current blocks;
+- **transaction-time membership** — birth time / txg is compared with DTL intervals.
+
+Pruned resilver can avoid descending a subtree when its birth-time relation shows that no descendant could fall into the relevant dirty interval under the described tree ordering.
+
+So future repair work is shaped not only by where blocks are but by **when their current embodiments entered the tree**.
+
+## Read and verification semantics
+
+A DTL entry does not say that a surviving source block has failed a checksum. It says that the required replication relation was incomplete during specified transaction groups / conditions.
+
+Case 18 remains the checksum/scrub comparison. In modern OpenZFS source, `DTL_SCRUB` also shows that scrub outcome and replication-missing state can interact, but this does not collapse them into one state.
+
+Therefore:
+
+> **repair membership ≠ corruption diagnosis.**
+
+## Repair semantics
+
+### Short-outage catch-up is not full-device replacement
+
+Oracle documentation distinguishes short-outage resilvering from replacement. A returned device may need only the state it missed; a replacement has no trusted prior contents and therefore presents a much larger repair scope, bounded by allocated/used state and implementation details.
+
+### DTL-directed resilver is not dRAID sequential reconstruction
+
+Case 96's dRAID reconstruction uses fixed-width redundancy geometry and device/space-map order to restore redundancy quickly across distributed spare capacity. Case 100 instead focuses on **temporal pruning of repair scope** using DTL/birth relations.
+
+One can optimize *which blocks need repair* and *how repair I/O is laid out* independently.
+
+### DTL-directed resilver is not RAID-Z write-hole avoidance
+
+Case 95 addresses how a new coded block is committed without leaving a fixed partial-stripe update as the standing authoritative state. Case 100 starts after a redundancy gap exists and asks how much state must later be repaired.
+
+## Persistence and derivation boundary
+
+The OpenZFS 2.1.11 comment gives a useful later counterexample to the assumption that every useful maintenance classification must itself be independently durable. Leaf `DTL_MISSING` state is retained on disk, while aggregate/other DTL state can be derived after load or topology change.
+
+Engineering reconstruction:
+
+> **retention infrastructure can preserve a minimal sufficient basis and regenerate higher-level maintenance state.**
+
+This is implementation-specific, not a universal ZFS law.
+
+## Failure boundaries
+
+### Losing DTL / repair-scope evidence
+
+If repair-relevant interval state is unavailable or invalid, selective catch-up may no longer be justified even if payload remains on surviving members. A conservative system may have to enlarge repair/verification scope.
+
+> **payload survival ≠ preservation of the evidence needed for efficient repair.**
+
+### DTL presence mistaken for corruption
+
+A transaction group can be in a missing/partial replication interval without proving that every corresponding source block is corrupt. The DTL bounds where a replica may be incomplete; checksum/integrity evidence answers another question.
+
+### DTL absence mistaken for universal integrity
+
+Conversely, absence from this repair log is not a proof against latent media corruption, controller bugs, or every other failure class. Scrub/checksum verification remains a separate relation.
+
+### Patent embodiment mistaken for release guarantee
+
+The patent family establishes described methods and chronology. Oracle operational docs establish user-visible selective-resilver behavior. Neither source alone licenses projection of every algorithmic detail onto every Solaris/OpenZFS release.
+
+## Prior art and genealogy boundary
+
+### Dirty-region logging is an explicit earlier functional floor
+
+Sun Cluster 2.2 documentation already describes DRL-driven partial recovery of mirrored volumes. The 2007 DTL patent description itself also discusses conventional DRL as an existing recovery scheme.
+
+Therefore this case explicitly rejects:
+
+> `ZFS DTL invented selective mirror resynchronization`.
+
+### Difference retained instead of erased
+
+The prior art matters precisely because the mechanisms are not identical. DRL pays for a spatial dirty map around writes; the ZFS DTL family exploits temporal/transaction-group exposure plus block birth metadata already carried in the tree.
+
+Chronology and functional resemblance do not establish direct descent, and this case makes no universal `first` claim for either technique.
+
+## Cross-case comparison
+
+### Case 18 — ZFS scrub
+
+- Case 18: proactively read/verify current storage and use checksum-qualified redundancy for healing.
+- Case 100: retain exposure history so a later resilver can avoid treating unaffected state as repair work.
+
+`verification scope ≠ catch-up scope`.
+
+### Case 48 — Cassandra incremental repair state
+
+Both cases retain maintenance history that can reduce future repair work. Cassandra retains repaired/unrepaired classification over SSTable populations; ZFS DTL retains txg exposure intervals for a redundancy target. This is a functional comparison only, not genealogy.
+
+### Case 95 — RAID-Z write-hole avoidance
+
+Write-hole avoidance governs admissible update construction. DTL governs later repair after incomplete replication. `update consistency ≠ recovery-scope selection`.
+
+### Case 96 — dRAID
+
+DTL/pruned resilver reduces the **set** of blocks that require catch-up. dRAID sequential reconstruction changes **reconstruction geometry/bandwidth** and restores coded redundancy before later checksum scrub. `less work selected ≠ same work scheduled faster`.
+
+## Functional analogy
+
+A bounded analogy is a maintenance exception journal: instead of remembering all successful events, the system retains only intervals where a required relation was not satisfied and later uses that summary to focus repair.
+
+The analogy is functional. It must not replace the historical terms `DTL`, `birth time`, `transaction group`, and `resilver`.
+
+## Philosophical / media-theoretical interpretation
+
+`I` — Case 100 shows that technical retention can preserve not only a payload or an old version but a **debt toward a relation**: the system remembers that one embodiment missed part of the current state and therefore still requires repair.
+
+`I` — It also shows a form of selective forgetting. Complete write history can disappear while a small temporal summary survives because that summary is sufficient for a future maintenance decision.
+
+`I` — The past matters operationally only to the degree that it can still constrain present repair. Once redundancy is restored and the relevant evidence can safely be retired, the system need not become a permanent archive of the outage.
+
+These are project interpretations, not claims that Sun/Oracle/OpenZFS authors formulated a philosophy of memory.
+
+## Counterexamples and limits
+
+This case does not establish:
+
+- that DTL is the first dirty-log technique;
+- that DRL and DTL are the same mechanism;
+- that the 2005 provisional date equals first deployment;
+- that every patent claim shipped unchanged;
+- that DTL membership proves checksum failure or user-visible corruption;
+- that selective resilver is always fast;
+- that every short outage has a small repair set;
+- that pruned tree traversal and modern dRAID sequential rebuild are interchangeable;
+- that modern OpenZFS DTL class/persistence semantics can be backdated unchanged to 2005;
+- that clearing repair-state metadata securely erases payload.
+
+## Related repositories
+
+- [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) — search found no dedicated DTL/resilver case in this slice. Broad dirty-log, mirror-recovery, ZFS source-history, and controller genealogy should live there if developed.
+- [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) — useful for a future question about when `dirty`, `resync`, `resilver`, and transaction-time repair became actors' own problem vocabulary.
+
+## Claim ledger
+
+| Claim | Label | Evidence | Limit |
+| --- | --- | --- | --- |
+| Sun Cluster 2.2 DRL tracks changed mirror regions and recovers only dirty regions | `H/P` | Sun Cluster 2.2 Cluster Volume Manager Guide | prior-art floor; not DTL identity |
+| Sun DTL/resilver family claims 2005-11-04 provisional priority | `H/P` | US patent family | documentary chronology, not first deployment |
+| DTL can store failed-write/offline time as transaction-group / birth-time evidence | `H/P` | US7925827 / related family description | bounded to described embodiments |
+| pruned resilver can use parent/child birth-time relations to skip unaffected tree branches | `H/P` | US8635190 / US20070106677 | patent/design witness; not universal release guarantee |
+| ZFS product docs say short-outage repair can resilver only minimum necessary data | `H/P` | Oracle Solaris ZFS Administration Guide | qualitative product behavior; no universal performance factor |
+| later OpenZFS source defines DTL as txgs with less-than-perfect replication | `H/P` | OpenZFS 2.1.11 `vdev.c` | later continuity only |
+| later OpenZFS persists a sufficient leaf missing-state basis and derives other DTL state | `H/P/E` | OpenZFS 2.1.11 `vdev.c` | implementation/version-specific |
+| DTL is a complete write-history archive | `X` | mechanism/source comparison | rejected |
+| DTL membership proves payload corruption | `X` | mechanism/source comparison | rejected |
+| ZFS invented selective mirror recovery | `X` | earlier DRL + patent's own prior-art discussion | rejected |
+| DRL chronology proves direct genealogy into DTL | `X` | none | unsupported |
+
+## Sources
+
+- Sun Cluster 2.2, `Dirty Region Logging and CVM`: <https://docs.oracle.com/cd/E19957-01/806-2329/ch2admin-39382/index.html>
+- Sun/Oracle patent family overview, `Method and system for metadata-based resilvering`: <https://patents.google.com/patent/US8938594B2/en>
+- `Method and system for dirty time logging`: <https://patents.google.com/patent/US7925827B2/en>
+- `Method and system for dirty time log directed resilvering`: <https://patents.google.com/patent/US7930495B2/en>
+- `Method and system for pruned resilvering using a dirty time log`: <https://patents.google.com/patent/US8635190B2/en>
+- Oracle Solaris ZFS resilvering status: <https://docs.oracle.com/cd/E26505_01/html/E37384/gbbba.html>
+- OpenZFS 2.1.11 source as packaged by Debian, `module/zfs/vdev.c`: <https://sources.debian.org/src/zfs-linux/2.1.11-1%2Bdeb12u1/module/zfs/vdev.c>
+'''
+
+          evidence = r'''# Case 100 Grounding — Dirty-Region Prior Art, ZFS DTL Patent Family, and Selective Resilver
+
+**Case:** [`../cases/100-zfs-dirty-time-log-selective-resilver.md`](../cases/100-zfs-dirty-time-log-selective-resilver.md)
+
+**Status:** `grounded`
+
+## Purpose
+
+This record grounds a narrow retention relation:
+
+> a ZFS dirty time log can preserve transaction-time / birth-time evidence about incomplete replication, allowing later resilver logic to focus on blocks exposed during those intervals instead of treating all surviving state as equally in need of repair.
+
+It also preserves an explicit prior-art boundary: spatial dirty-region logs provided selective mirrored-volume recovery before the ZFS DTL family. The record does not claim invention priority, universal release behavior, or integrity proof from DTL membership.
+
+---
+
+## Source A — Sun Cluster 2.2 Dirty Region Logging
+
+Oracle-preserved Sun documentation:
+
+<https://docs.oracle.com/cd/E19957-01/806-2329/ch2admin-39382/index.html>
+
+Title: **Sun Cluster 2.2 Cluster Volume Manager Guide**, §2.1.4 `Dirty Region Logging and CVM`.
+
+### A1. Historical record
+
+The guide describes DRL as an optional mirrored-volume feature for faster recovery after system failure. It says DRL:
+
+- divides a volume into consecutive regions;
+- keeps a status bit for each region;
+- marks regions dirty before the corresponding data write proceeds;
+- synchronously writes a newly dirty log entry before the data write;
+- on restart recovers only regions marked dirty rather than the entire mirror.
+
+### A2. Grounded use
+
+This is a manufacturer/platform-primary prior-art witness for selective recovery via retained **spatial dirty-state metadata**.
+
+### A3. Limit
+
+Do not rename DRL as DTL. Do not infer direct genealogy merely because both reduce resynchronization work. Exact DRL product genealogy belongs in `computing-archaeology`.
+
+---
+
+## Source B — Sun/Oracle ZFS DTL patent family chronology
+
+Family overview / related applications:
+
+<https://patents.google.com/patent/US8938594B2/en>
+
+The application records benefit of provisional application **60/734,023**, filed **2005-11-04**, titled `Dirty Time Logging and Resilvering`, in the names of William H. Moore and Jeffrey S. Bonwick. It identifies related applications for dirty time logging, DTL-directed resilvering, and pruned resilvering. The corresponding U.S. application publications appeared **2007-05-10**.
+
+### B1. Grounded use
+
+Use **2005-11-04** as a bounded priority/documentary floor for this Sun design family and **2007-05-10** as the public application witness.
+
+### B2. Limit
+
+Patent priority is not a `first shipping` date and does not establish that every described embodiment appeared in the same product release.
+
+---
+
+## Source C — `Method and system for dirty time logging`
+
+<https://patents.google.com/patent/US7925827B2/en>
+
+Publication lineage includes application `US20070106869A1`, published **2007-05-10**.
+
+### C1. Historical record
+
+The application describes attempting to store a data/indirect block associated with a birth time and updating a DTL with that birth time if storage on a disk is unsuccessful.
+
+Related family description explains that DTL entries can represent time with transaction-group numbers and can retain the interval during which a disk was offline / did not successfully receive I/O.
+
+### C2. Grounded use
+
+DTL is evidence of **incomplete replication over transaction time**, not simply a region bitmap and not a complete operation log.
+
+### C3. Limit
+
+The patent describes embodiments and claimed methods. It is not independent product-compliance evidence.
+
+---
+
+## Source D — DTL-directed and pruned resilver
+
+- DTL-directed resilver: <https://patents.google.com/patent/US7930495B2/en>
+- pruned resilver: <https://patents.google.com/patent/US8635190B2/en>
+
+### D1. Historical record
+
+The pruned-resilver application describes a hierarchical block tree in which block pointers contain birth time. It traverses a branch only when the parent birth-time relation means descendants could still intersect the DTL and resilvers a child when the DTL contains that child's birth time.
+
+The worked example assigns DTL transaction groups / birth times 32–37 to an offline interval and treats blocks outside that interval as not requiring resilvering in the described model.
+
+### D2. Grounded use
+
+This directly supports:
+
+- temporal repair selection;
+- block birth time as repair-membership metadata;
+- subtree pruning as a consequence of retained temporal bounds;
+- `repair scope history ≠ complete write history`.
+
+### D3. Prior-art language inside the patent
+
+The pruned-resilver description explicitly discusses conventional dirty region logging, including the tradeoff between fine regions/logging overhead and coarse regions/excess recovery work.
+
+Therefore the source itself blocks a naïve `DTL invented selective recovery` story.
+
+---
+
+## Source E — Oracle Solaris ZFS Administration Guide: operational resilver witness
+
+Oracle documentation:
+
+<https://docs.oracle.com/cd/E26505_01/html/E37384/gbbba.html>
+
+### E1. Historical / product record
+
+The guide states that ZFS resilvers only the minimum amount of necessary data. It contrasts a short outage with full device replacement and says the latter takes time proportional to used data.
+
+### E2. Grounded use
+
+This supplies a product-level behavioral witness that selective catch-up is not confined to patent prose.
+
+### E3. Limits
+
+The guide does not expose every internal DTL data structure and does not license a universal performance multiplier. `minutes or seconds` is an example/context statement, not a service guarantee for arbitrary pools.
+
+---
+
+## Source F — OpenZFS 2.1.11 `vdev.c`: later implementation continuity
+
+Debian source view of OpenZFS 2.1.11:
+
+<https://sources.debian.org/src/zfs-linux/2.1.11-1%2Bdeb12u1/module/zfs/vdev.c>
+
+Around the DTL comment in `vdev.c`, the source says:
+
+- a vdev DTL is the set of transaction groups for which it has less than perfect replication;
+- `DTL_MISSING`: no valid copies on the vdev for those txgs;
+- `DTL_PARTIAL`: data available but not fully replicated;
+- `DTL_SCRUB`: txgs the last scrub could not repair;
+- `DTL_OUTAGE`: txgs that cannot currently be read and generally computed only when needed;
+- leaf `DTL_MISSING` maps are sufficient to derive parent/other DTL state;
+- only that sufficient leaf missing-state basis is kept on disk, with other DTLs regenerated after load/configuration changes.
+
+### F1. Grounded use
+
+This later implementation witness sharpens two distinctions:
+
+1. **repair-history state has types** — missing, partial, scrub and current outage are not one boolean;
+2. **persistent basis ≠ every derived maintenance classification** — a smaller durable basis can regenerate higher-level state.
+
+### F2. Limit
+
+This is release/source-specific continuity. It must not be used to assert that the 2005 provisional or every Solaris release had the exact 2.1.11 class set and persistence implementation.
+
+---
+
+## Related-repository duplication check
+
+A GitHub code search during this slice found no dedicated `DTL` / `resilver` match in `tmzncty/computing-archaeology`.
+
+Use that narrowly. It is not proof that no adjacent mirror/RAID history exists there.
+
+Division of labor:
+
+- broad DRL → dirty-log → ZFS implementation genealogy, controller history, and rebuild algorithms: `computing-archaeology`;
+- bounded retention relation among transaction-time exposure evidence, block birth time, repair selection, and later metadata retirement: Case 100 here.
+
+---
+
+## Claim ledger
+
+| Claim | Type | Evidence | Status / limit |
+| --- | --- | --- | --- |
+| pre-ZFS Sun DRL records dirty spatial regions and limits mirror recovery to them | `H/P` | Source A | grounded prior-art floor |
+| Sun ZFS DTL/resilver family claims 2005-11-04 provisional priority | `H/P` | Source B | chronology only; not first deployment |
+| a block birth time can be retained in DTL when storage on one disk is unsuccessful | `H/P` | Source C | patent/design witness |
+| DTL time may be represented by transaction-group number | `H/P` | Sources C–D | bounded to described embodiments |
+| pruned resilver uses DTL/birth relations to select blocks and skip irrelevant branches | `H/P` | Source D | grounded design relation; not universal release implementation |
+| Solaris ZFS product docs expose minimum-necessary-data resilver after short outage | `H/P` | Source E | qualitative product witness |
+| modern OpenZFS 2.1.11 calls DTL txgs of less-than-perfect replication | `H/P` | Source F | later continuity only |
+| modern OpenZFS persists only a sufficient leaf missing-state basis and derives other DTL state | `H/P/E` | Source F | implementation/version-specific |
+| DTL is a complete write-history archive | `X` | mechanism/source boundary | rejected |
+| DTL membership is checksum/corruption proof | `X` | Sources D, F + Case 18 comparison | rejected |
+| ZFS invented selective mirror resynchronization | `X` | Source A + D prior-art discussion | rejected |
+| DRL chronology proves direct DRL→DTL genealogy | `X` | none | unsupported |
+
+---
+
+## Controlled conclusions
+
+1. **repair-scope history can remain after the failure event itself has ended**;
+2. **failure-exposure history ≠ complete payload/mutation history**;
+3. **spatial dirty-region evidence ≠ transaction-time DTL evidence**;
+4. **block birth metadata + retained DTL interval can authorize exclusion from repair work**;
+5. **selective resilver ≠ scrub/integrity verification**;
+6. **temporary-outage catch-up ≠ blank replacement-device reconstruction**;
+7. **temporal pruning of repair scope ≠ dRAID sequential reconstruction geometry**;
+8. **small retained maintenance metadata can eliminate large amounts of unnecessary future I/O**;
+9. **payload survival ≠ survival of the evidence required for efficient repair**;
+10. **a persistent minimal basis may regenerate derived maintenance state** in the bounded later OpenZFS implementation;
+11. **earlier DRL blocks an invention claim without proving direct genealogy**.
+'''
+
+          readme_line = "- [`cases/99-zfs-snapshot-reference-pinned-retention.md`](cases/99-zfs-snapshot-reference-pinned-retention.md) — grounded ZFS snapshot / deferred-reclamation case: 2010 Solaris documentation shows a snapshot preserving an old point-in-time tree by continuing to reference blocks that the live dataset no longer needs, so supersession, reference retirement, allocator reclamation, and secure erasure remain separate; holds/deferred destroy make `destroy request ≠ immediate forgetting`; WAFL 1994 supplies an explicit earlier COW-snapshot prior-art floor. See [`evidence/99-zfs-1994-2010-snapshot-reference-grounding.md`](evidence/99-zfs-1994-2010-snapshot-reference-grounding.md)."
+          readme_add = readme_line + "\n- [`cases/100-zfs-dirty-time-log-selective-resilver.md`](cases/100-zfs-dirty-time-log-selective-resilver.md) — grounded ZFS DTL / selective-resilver case: Sun's 2005-priority/2007-publication DTL family retains transaction-group/birth-time evidence for periods of incomplete replication so later repair can select or prune unaffected blocks instead of treating the whole device as equally suspect; pre-ZFS Sun DRL is retained as a spatial dirty-map prior-art floor, while modern OpenZFS source supplies only a later persistence/derivation witness. See [`evidence/100-zfs-2005-2023-dtl-resilver-grounding.md`](evidence/100-zfs-2005-2023-dtl-resilver-grounding.md)."
+
+          roadmap_line = "- [x] ZFS snapshot reference-pinning / deferred reclamation boundary — [`cases/99-zfs-snapshot-reference-pinned-retention.md`](cases/99-zfs-snapshot-reference-pinned-retention.md), grounded by [`evidence/99-zfs-1994-2010-snapshot-reference-grounding.md`](evidence/99-zfs-1994-2010-snapshot-reference-grounding.md): a 2010 Solaris ZFS snapshot keeps an older point-in-time tree admissible by retaining references to old blocks, separating live-dataset supersession from reclamation eligibility; `hold`, clone dependencies, and `defer_destroy` further separate destroy intent from permission/completion. WAFL 1994 is retained only as an earlier COW-snapshot prior-art floor, not as proven direct genealogy. Broader filesystem snapshot/COW lineage, ZFS send/receive retention policy, clone genealogy, field space-exhaustion behavior, and secure media erasure remain open."
+          roadmap_add = roadmap_line + "\n- [x] ZFS dirty-time-log / selective-resilver repair-scope boundary — [`cases/100-zfs-dirty-time-log-selective-resilver.md`](cases/100-zfs-dirty-time-log-selective-resilver.md), grounded by [`evidence/100-zfs-2005-2023-dtl-resilver-grounding.md`](evidence/100-zfs-2005-2023-dtl-resilver-grounding.md): the 2005-priority/2007-publication Sun DTL family retains failed-replication transaction-group/birth-time evidence and uses it to bound later resilver/tree traversal, separating outage history from payload history, catch-up scope from checksum verification, and temporal pruning from dRAID sequential reconstruction geometry. Pre-ZFS Sun DRL remains an explicit spatial dirty-map prior-art floor rather than a claimed genealogy; OpenZFS 2.1.11 is used only for later DTL-class/persistence continuity. Broader RAID/controller genealogy, URE-aware rebuild policy, production fault injection, and ZFS implementation chronology remain open."
+
+          case99_row = "| [ZFS Snapshots: Reference-Pinned Old Blocks, Rollback, and Deferred Reclamation](cases/99-zfs-snapshot-reference-pinned-retention.md) | **grounded** | copy-on-write old tree + snapshot/root references + shared/unique block accounting + clone/hold destruction constraints + rollback | separate live supersession from historical reachability; logical retained extent from unique physical charge; destroy request from reclamation; reference retirement from secure erase | [WAFL 1994 / Solaris ZFS 2010 grounding](evidence/99-zfs-1994-2010-snapshot-reference-grounding.md); broader COW/snapshot genealogy, send/receive policy, clones, pool-space field evidence, and secure-erasure validation remain separate work |"
+          case100_row = "| [ZFS Dirty Time Log: Retained Failure Intervals and Selective Resilver](cases/100-zfs-dirty-time-log-selective-resilver.md) | **grounded** | redundant block tree + block birth txg + DTL failed-replication intervals + selective/pruned resilver + later derived DTL state | separate repair-scope history from payload history; spatial dirty maps from transaction-time exposure; device return from completed repair; selective catch-up from scrub verification and dRAID reconstruction geometry | [2005–2023 DTL/resilver grounding](evidence/100-zfs-2005-2023-dtl-resilver-grounding.md); broad dirty-log/ZFS implementation genealogy, controller rebuild semantics, URE policy, performance field data, and fault injection remain separate work |"
+
+          draid_row = "| OpenZFS dRAID / 2017–2021 bounded recovery regime | surviving data/parity + fixed-width redundancy-group geometry + deterministic permutation mapping + distributed spare regions + space-map/rebuild progress + later block-pointer/checksum authority | after device loss, reconstruct allocated ranges sequentially in LBA order across many children into distributed spare capacity; restore coded redundancy first; run later scrub/healing verification | sequential reconstruction reads surviving coded contributions without per-block checksum verification in the first phase; later scrub re-enters block-pointer/checksum space | logical blocks map through fixed-width dRAID groups and deterministic permutations; recovery traversal can use space-map/device-address order rather than full block-tree traversal | distributed spare regions become recovery destinations; replacement/rebalancing can later move state again while restoring spare availability | does not preserve a complete mutation history; preserves layout/rebuild state sufficient to restore missing contributions, then separately revalidates integrity |"
+          dtl_matrix = "| ZFS DTL / 2005–2007 selective-resilver regime | surviving redundant blocks + per-block birth txg + per-target failed-replication DTL intervals + tree/topology state | retain exposure interval while a target misses writes; after return, compare current block birth txgs with DTL; resilver matching blocks and prune branches that cannot intersect the interval; retire repair evidence after recovery conditions permit | ordinary source reads/checksums remain separate; DTL membership identifies possible replica incompleteness, not corruption proof | block tree supplies location/reachability while birth txg supplies temporal membership in repair scope | same logical target/device can return and be caught up without full replacement; replacement presents a larger trust/repair boundary | retains a bounded failure-exposure summary rather than a complete mutation history; later OpenZFS can persist a sufficient leaf-missing basis and derive higher-level DTL state |"
+
+          findings_anchor = "1330. **prior-art chronology ≠ direct genealogy** — GFS 2003 `scan and verify`, 2004 disk-scrubbing research, and Ceph 2012 deep scrub provide earlier functional/terminological floors; chronology alone does not prove direct descent."
+          findings = findings_anchor + r'''
+1331. **repair-scope history ≠ payload history** — DTL can retain transaction-group exposure evidence sufficient for catch-up without retaining every historical payload value or operation.
+1332. **failed-replication interval ≠ dirty physical-region bitmap** — pre-ZFS DRL preserves spatial dirty regions; the bounded ZFS DTL family uses transaction-time/birth relations, so functional similarity does not erase mechanism geometry.
+1333. **birth time ≠ necessarily wall-clock time** — the DTL family explicitly permits transaction-group number as the relevant birth/time coordinate in the described embodiments.
+1334. **block birth metadata + DTL interval can authorize repair exclusion** — a current block outside the relevant failed-replication interval need not be treated as missing merely because the device was once offline.
+1335. **repair membership ≠ corruption diagnosis** — DTL says a redundancy relation may be incomplete for a txg; it does not by itself establish checksum failure of the surviving source.
+1336. **device returned ≠ redundancy restored** — an outage can end while retained DTL state continues to encode repair debt toward state missed during the outage.
+1337. **failure event lifetime ≠ repair-evidence lifetime** — maintenance metadata can deliberately outlive the fault that caused it because future recovery still depends on that past relation.
+1338. **minimum necessary resilver ≠ zero work after a short outage** — selective repair bounds work by exposed/current state; the documentation's short-outage examples are not universal performance guarantees.
+1339. **temporary-outage catch-up ≠ replacement-device reconstruction** — a returned device can preserve trusted pre-outage embodiment while a blank/new target requires a broader reconstruction relation.
+1340. **temporal pruning ≠ sequential reconstruction** — Case 100 reduces which block-tree state needs catch-up; Case 96 dRAID changes fixed-geometry reconstruction order/bandwidth. The two optimizations answer different repair questions.
+1341. **DTL-directed resilver ≠ scrub** — selective catch-up restores an incomplete redundancy relation; Case 18 scrub proactively verifies integrity and may heal checksum-qualified defects.
+1342. **DTL-directed resilver ≠ RAID-Z write-hole closure** — Case 95 constrains construction/commit of a new coded block; DTL retains evidence for later recovery after incomplete replication has occurred.
+1343. **small history summary can be constitutive maintenance infrastructure** — retaining only exception/exposure intervals can eliminate large amounts of unnecessary later traversal and I/O without becoming a complete archive.
+1344. **persistent maintenance basis ≠ every derived maintenance state** — OpenZFS 2.1.11 keeps the sufficient leaf `DTL_MISSING` basis on disk and derives other/aggregate DTL state, showing a version-bounded split between durable evidence and regenerated classification.
+'''
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              s = p.read_text()
+              if s.count(old) != 1:
+                  raise SystemExit(f"marker count for {path}: {s.count(old)}")
+              p.write_text(s.replace(old, new, 1))
+
+          Path('cases/100-zfs-dirty-time-log-selective-resilver.md').write_text(case)
+          Path('evidence/100-zfs-2005-2023-dtl-resilver-grounding.md').write_text(evidence)
+
+          replace_once('README.md', readme_line, readme_add)
+          replace_once('ROADMAP.md', roadmap_line, roadmap_add)
+          replace_once('CASE_INDEX.md', case99_row, case99_row + "\n" + case100_row)
+          replace_once('CASE_INDEX.md', draid_row, draid_row + "\n" + dtl_matrix)
+          replace_once('CASE_INDEX.md', "After ninety-three bounded cases, **all ninety-three cases are now `grounded`.**", "After ninety-four bounded cases, **all ninety-four cases are now `grounded`.**")
+          replace_once('CASE_INDEX.md', "currently ninety-three active canonical bounded cases (with intentional numbering gaps after duplicate consolidation);", "currently ninety-four active canonical bounded cases (with intentional numbering gaps after duplicate consolidation);")
+          replace_once('CASE_INDEX.md', findings_anchor, findings.rstrip())
+          PY
+          git rm .github/workflows/case100-zfs-dtl-integration.yml
+          git diff --check
+          test -f cases/100-zfs-dirty-time-log-selective-resilver.md
+          test -f evidence/100-zfs-2005-2023-dtl-resilver-grounding.md
+          grep -q 'Case 100' CASE_INDEX.md
+          grep -q 'ninety-four active canonical bounded cases' CASE_INDEX.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md ROADMAP.md CASE_INDEX.md cases/100-zfs-dirty-time-log-selective-resilver.md evidence/100-zfs-2005-2023-dtl-resilver-grounding.md
+          git commit -m 'case100: integrate ZFS DTL selective resilver boundary'
+          git push origin HEAD:main
