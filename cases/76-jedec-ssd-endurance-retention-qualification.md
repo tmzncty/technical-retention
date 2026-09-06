@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to the September 2010 JESD218 SSD-level endurance/retention qualification relation, with Intel's June 2012 retention application note used to expose the difference between standardized TBW and actual media wear, and Intel's September 2015 DC P3608 specification used as a named commercial product witness. Prior-art deepening now also separates the earlier JESD22-A117 device-level program/erase-endurance-and-retention test family from JESD218's later SSD-level host-TBW service contract, using a 2006 Renesas standards inventory, JEDEC's own later revision ledger, and a 2002 IEEE post-cycling retention paper. The 2010→2012 workload chronology is now further bounded by July 2012 JESD219A publication metadata and its separately distributed Master/Test Trace artifacts; this does not substitute for direct inspection of the normative JESD219A body. A January 2026 HPE QuickSpecs/product witness now adds a named QLC P5430 SKU to the commercial-product layer, while keeping its QLC media label, workload label, write-endurance rating, and post-endurance power-off retention statement separate from raw-cell physics or an independently audited JESD218 compliance claim.
+**`grounded`** — bounded to the September 2010 JESD218 SSD-level endurance/retention qualification relation, with Intel's June 2012 retention application note used to expose the difference between standardized TBW and actual media wear, and Intel's September 2015 DC P3608 specification used as a named commercial product witness. Prior-art deepening now also separates the earlier JESD22-A117 device-level program/erase-endurance-and-retention test family from JESD218's later SSD-level host-TBW service contract, using a 2006 Renesas standards inventory, JEDEC's own later revision ledger, and a 2002 IEEE post-cycling retention paper. The 2010→2012 workload chronology is now further bounded by July 2012 JESD219A publication metadata and its separately distributed Master/Test Trace artifacts; this does not substitute for direct inspection of the normative JESD219A body. A January 2026 HPE QuickSpecs/product witness now adds a named QLC P5430 SKU to the commercial-product layer, while keeping its QLC media label, workload label, write-endurance rating, and post-endurance power-off retention statement separate from raw-cell physics or an independently audited JESD218 compliance claim. The same QuickSpecs now also supplies a bounded 7.68 TB TLC CM7 cross-check, used only to compare product-level endurance/retention contracts rather than to infer a universal TLC-versus-QLC media law.
 
 Grounding record: [`../evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md`](../evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md).
 
@@ -274,6 +274,37 @@ raw NAND-cell retention law
 
 In particular, the fact that HPE's product-family statement also uses a three-month interval does not prove that the P5430 reached that number through the identical test path, temperature condition, controller margin, or standards revision used by the September 2010 JESD218 enterprise row.
 
+
+### HPE 2026 CM7: a same-capacity TLC cross-check, not a media-only experiment
+
+The same **5 January 2026** HPE QuickSpecs provides a useful control against overreading the P5430's QLC label. The exact **P61183-B21** CM7 SKU is also **7.68 TB** and E3.S/NVMe, but HPE classifies it as **Read Intensive (`RI`)**, **Gen5 High Performance**, and **`TLC`**. Its corresponding speeds/endurance row gives **14,016 TB lifetime writes** and **1 DWPD**.[^hpe-qspec]
+
+Because the QuickSpecs' `Data Retention` clause applies the same **three-month, no-power, post-maximum-rated-write-endurance** statement to the listed SSD family, the document supplies a bounded commercial comparison in which two equal-capacity products carry different media labels and different rated-write envelopes while remaining under the same family-level post-endurance retention clause.[^hpe-qspec]
+
+That is useful precisely because it does **not** isolate NAND density as a causal variable. The products also differ in workload class (`RI` versus `VRO`), product/controller generation, performance positioning, and likely implementation details that the QuickSpecs does not disclose. Therefore:
+
+```text
+same nominal capacity (7.68 TB)
+    !=
+same workload class
+    !=
+same media label
+    !=
+same lifetime-write / DWPD rating
+    !=
+same controller or product generation
+
+and
+
+same product-family retention clause
+    !=
+same prior endurance history
+    !=
+same raw-cell retention law
+```
+
+The historically supportable product statement is narrow: **HPE documented a 7.68 TB TLC CM7 at 14,016 TB / 1 DWPD and a 7.68 TB QLC P5430 at 8,040 TB / 0.57 DWPD in the same QuickSpecs family, whose general data-retention clause states three months unpowered after maximum rated write endurance.** It is not evidence that TLC intrinsically has a particular multiple of QLC endurance, that the two drives use the same controller/ECC margin, or that equal capacity makes the pair a controlled media-physics experiment.
+
 ---
 
 ## Engineering reconstruction
@@ -389,7 +420,7 @@ The bounded historical contribution used here remains more specific:
 
 > by September 2010, JESD218 standardized an **SSD-level**, application-class-specific endurance rating expressed as host TBW and tied it to workload, capacity, UBER/FFR, and a subsequent power-off retention requirement, above an already-existing device-level endurance/retention qualification tradition.
 
-A full pre-2000 EEPROM/Flash qualification genealogy, direct facsimile archaeology of original A117/A117B, the complete JESD219 workload history, later JESD218 revision history, TLC named-product comparison, and cross-vendor QLC qualification/fault evidence remain separate work best coordinated with `computing-archaeology`. Fresh repository searches for `JESD219A`, `SSD endurance workload`, `P5430`, and `QLC retention JESD218 SSD` found no dedicated `computing-archaeology` case to reuse; this repository therefore keeps only the bounded retention-specific standard/product relation while leaving broad standards and NAND-generation genealogy to that companion project.
+A full pre-2000 EEPROM/Flash qualification genealogy, direct facsimile archaeology of original A117/A117B, the complete JESD219 workload history, later JESD218 revision history, and broader cross-vendor TLC/QLC qualification/fault evidence remain separate work best coordinated with `computing-archaeology`. The bounded HPE same-capacity TLC/QLC product cross-check is now grounded above; it is not a substitute for controlled media experiments or independent qualification evidence. Fresh repository searches for `JESD219A`, `SSD endurance workload`, `P5430`, `CM7`, and `TLC QLC SSD retention` found no dedicated `computing-archaeology` case to reuse; this repository therefore keeps only the bounded retention-specific standard/product relation while leaving broad standards and NAND-generation genealogy to that companion project.
 
 ---
 
@@ -428,6 +459,8 @@ actual instant of future unreadability
 ```
 
 The HPE P5430 witness adds a second orthogonal warning: **NAND density label (for example QLC) ≠ the SSD-level endurance/retention contract**. Product-class media, host-workload assumptions, controller correction margin, rated writes, and the later unpowered interval remain separate relations even when a vendor documents them in one QuickSpecs family.
+
+The CM7 cross-check sharpens that warning: **same nominal capacity and the same family-level post-endurance retention interval ≠ a controlled TLC/QLC comparison**. The documented endurance ratings differ, but workload class, product generation, controller design, ECC margin, and other implementation variables are not held constant. The comparison therefore constrains product-contract interpretation without ranking the intrinsic retention physics of TLC and QLC.
 
 It complements:
 

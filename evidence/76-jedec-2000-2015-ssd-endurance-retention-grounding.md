@@ -295,7 +295,7 @@ These are publisher/distributor catalog records carrying JEDEC document metadata
 
 ---
 
-## Source 10 — HPE P5430 QLC product witness, QuickSpecs Version 72, January 2026
+## Source 10 — HPE QLC/TLC commercial-product pair, QuickSpecs Version 72, January 2026
 
 **Documents:**
 
@@ -310,6 +310,8 @@ QuickSpecs Version 72:
 - `Standard Features` → `Data Retention`: HPE defines data retention as retaining NAND data once the maximum rated endurance level has occurred and states that the listed SSDs are rated for **3 months if no power is applied once maximum rated write endurance is reached**;
 - `PCIe/NVMe EDSFF E3.S – SKUs`: `P63934-B21` is the HPE 7.68 TB Gen4 Mainstream Performance Very-read-optimized P5430 SSD and its `Flash Type` is **QLC**;
 - corresponding `Speeds and Feeds` table: `P63934-B21` is listed at **8,040 TB Lifetime Writes** and **0.57 Endurance DWPD**.
+- the same E3.S capacity/workload table lists **`P61183-B21`**, a **7.68 TB** Gen5 High Performance Read Intensive CM7 SSD, with `Flash Type` **TLC**;
+- its corresponding `Speeds and Feeds` row gives **14,016 TB Lifetime Writes** and **1 Endurance DWPD**.
 
 HPE product page:
 
@@ -326,6 +328,8 @@ The retention clause was also checked on the rendered QuickSpecs page rather tha
 - the same QuickSpecs family documented an 8,040 TB / 0.57 DWPD host-level endurance rating for that SKU;
 - HPE stated a three-month no-power data-retention interval after maximum rated write endurance for the SSDs covered by the QuickSpecs;
 - HPE independently described the P5430 product family as QLC 3D NAND.
+- within the same Version 72 document, HPE also documented the equal-capacity `P61183-B21` CM7 as TLC/RI with a 14,016 TB / 1 DWPD product endurance rating;
+- the document-level `Data Retention` clause therefore supplies one common post-endurance retention statement above two differently labeled/rated products.
 
 **Engineering reconstruction:**
 
@@ -345,11 +349,25 @@ raw NAND-cell retention law
 
 The source set is especially useful because the media-density label and the SSD-level service envelope coexist in one manufacturer product family without becoming the same variable.
 
+The TLC/QLC pair adds a second bounded relation:
+
+```text
+P61183-B21: 7.68 TB / RI / TLC / 14,016 TB / 1 DWPD
+    !=
+P63934-B21: 7.68 TB / VRO / QLC / 8,040 TB / 0.57 DWPD
+
+while both remain under the same QuickSpecs family-level
+three-month post-maximum-endurance no-power retention statement.
+```
+
+This is **product-contract comparison**, not a controlled experiment. Equal user capacity does not hold workload class, interface/product generation, controller design, ECC margin, over-provisioning, NAND process, firmware, or qualification method constant.
+
+
 ### Evidence limit
 
 The HPE documents are **manufacturer/OEM product documentation**, not an independent qualification laboratory report. The P5430 table rows do not expose raw-cell threshold-voltage distributions, controller ECC margin, over-provisioning, wear-leveling distribution, refresh/rewrite policy, or retention-test raw data. The cited P5430 row also does not explicitly state `JESD218`, so this record does **not** infer a particular JEDEC revision, temperature profile, or compliance path merely because HPE's three-month interval resembles the 2010 enterprise-class figure.
 
-This source therefore closes only a **named QLC product / post-endurance unpowered-retention witness**. It does not establish that all QLC SSDs have three-month retention, that QLC cells intrinsically retain for three months, or that TLC/QLC density alone determines an SSD's endurance/retention contract.
+This source now closes only a **bounded named HPE TLC/QLC commercial-product cross-check** above the already-grounded QLC witness. It does not establish that all TLC or QLC SSDs have three-month retention, that either cell type intrinsically retains for three months, that the higher rated writes of the cited TLC CM7 are caused by TLC rather than the many other differing product variables, or that TLC/QLC density alone determines an SSD's endurance/retention contract.
 
 ---
 
@@ -432,6 +450,13 @@ A pre-2000 qualification genealogy and direct original A117/A117B facsimile arch
 | QLC label ≠ SSD-level retention contract or raw-cell retention constant | E | HPE media-type + endurance + retention fields | strong bounded reconstruction; controller/media internals remain undisclosed |
 | same three-month interval ≠ proof of identical JESD218 qualification path | E/X | HPE 2026 + JESD218 2010 | explicit anti-overreach boundary; HPE P5430 row does not name JESD218 |
 
+
+| HPE QuickSpecs Version 72 lists exact CM7 `P61183-B21` as 7.68 TB RI/TLC | H/P | HPE 2026 E3.S capacity/workload table | direct named-product/OEM witness |
+| HPE documents 14,016 TB lifetime writes / 1 DWPD for P61183-B21 | H/P | HPE 2026 speeds/endurance table | direct product rating; host-level metric, not raw P/E count |
+| Equal 7.68 TB capacity ≠ controlled TLC/QLC media experiment | E/X | HPE P61183 + P63934 rows | strong anti-overreach boundary: workload class, generation, controller/media internals are not controlled |
+| Same family-level three-month retention clause ≠ same prior endurance history | E | HPE retention clause + product endurance rows | bounded product-contract reconstruction; each rating defines a different maximum-rated-endurance precondition |
+| Higher TLC product TBW in this pair ≠ proof that TLC intrinsically causes higher endurance | E/X | HPE product rows only | causal mechanism not identified by the source |
+| Same post-endurance interval across the pair ≠ same raw-cell retention law | E/X | HPE family clause + TLC/QLC labels | controller/media qualification remains undisclosed |
 ---
 
 ## Rejected shortcuts
@@ -456,10 +481,13 @@ Do **not** write:
 - `HPE's P5430 row proves an independently audited JESD218 qualification or the exact JESD218 revision/test path.`
 - `HPE's VRO workload label is interchangeable with JEDEC's Client or Enterprise application class.`
 - `The same three-month number in HPE and JESD218 proves identical controller margin, temperature conditions, or qualification chronology.`
+- `Matching 7.68 TB capacity makes P61183-B21 and P63934-B21 a controlled TLC-versus-QLC media experiment.`
+- `Because the cited TLC CM7 has a higher HPE lifetime-write rating, TLC intrinsically has higher endurance by that ratio.`
+- `Because both products sit under the same three-month HPE retention clause, TLC and QLC raw cells have the same retention law.`
 - `Endurance exhaustion is sanitization.`
 
 ---
 
 ## Related-repository check
 
-Before this deepening, searches in `tmzncty/computing-archaeology` for `JESD218`, `JESD22-A117`, `P5430`, and `QLC retention JESD218 SSD` did not find a dedicated case. The full JEDEC/NAND-generation qualification genealogy therefore was **not** recreated here. If a standards-history or QLC-controller slice is later built there, Case 76 should link to it and keep only this retention-specific decomposition between lower-level media type, host-rated endurance, and the SSD-level post-endurance service contract.
+Before this deepening, searches in `tmzncty/computing-archaeology` for `JESD218`, `JESD22-A117`, `P5430`, `CM7`, and `TLC QLC SSD retention` did not find a dedicated case. The full JEDEC/NAND-generation qualification genealogy therefore was **not** recreated here. If a standards-history or QLC-controller slice is later built there, Case 76 should link to it and keep only this retention-specific decomposition between lower-level media type, host-rated endurance, and the SSD-level post-endurance service contract.
