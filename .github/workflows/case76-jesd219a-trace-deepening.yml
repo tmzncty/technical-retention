@@ -18,7 +18,30 @@ jobs:
       - name: Apply bounded Case 76 research slice
         shell: bash
         run: |
-          python .github/case76_jesd219a_patch.py
+          set +e
+          python .github/case76_jesd219a_patch.py > /tmp/case76-patch.log 2>&1
+          rc=$?
+          set -e
+          cat /tmp/case76-patch.log
+          if [ "$rc" -ne 0 ]; then
+            grep -Fq 'evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md: missing final newline' /tmp/case76-patch.log || exit "$rc"
+          fi
+          python - <<'PY'
+          from pathlib import Path
+          paths = [
+              'cases/76-jedec-ssd-endurance-retention-qualification.md',
+              'evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md',
+              'ROADMAP.md',
+              'CASE_INDEX.md',
+          ]
+          for path in paths:
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              p.write_text(text.rstrip() + '\n', encoding='utf-8')
+          assert 'JESD219A_MT' in Path(paths[0]).read_text(encoding='utf-8')
+          assert '## Source 9 — JESD219A publication and supporting trace artifacts, July 2012' in Path(paths[1]).read_text(encoding='utf-8')
+          assert '1454. **July 2012 catalog/artifact closure ≠ full normative facsimile inspection or invention priority**' in Path(paths[3]).read_text(encoding='utf-8')
+          PY
           rm .github/case76_jesd219a_patch.py
           rm .github/workflows/case76-jesd219a-trace-deepening.yml
           git config user.name 'github-actions[bot]'
