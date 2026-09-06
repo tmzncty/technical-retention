@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** for the bounded retention claim in Case 34: a DRAM refresh cadence can be selected from measured temperature rather than held at one worst-case cadence, while the underlying dynamic-cell refresh obligation remains intact.
+**`grounded`** for the bounded retention claim in Case 34: a DRAM refresh cadence can be selected from measured temperature rather than held at one worst-case cadence, while the underlying dynamic-cell refresh obligation remains intact. A later Micron 2Gb DDR3 Rev. S 02/16 product witness now additionally grounds a manual-declared `SRT` versus automatic `ASR` self-refresh-policy split and separates that internal policy from the still-external 2x refresh obligation above 85 °C.
 
 Case: [`../cases/34-micron-temperature-dependent-dram-refresh.md`](../cases/34-micron-temperature-dependent-dram-refresh.md).
 
@@ -11,6 +11,8 @@ This record deliberately separates three historical layers:
 1. **earlier prior art** — a 1987-priority CardioData patent family already describes ambient-temperature-controlled DRAM refresh using a thermistor, processor A/D conversion, and a table;
 2. **bounded Micron mechanism** — US5278796A, filed 12 April 1991, gives a particularly explicit sensor → comparator bands → encoder → oscillator → refresh-sequence design and discusses guardband/granularity/power tradeoffs;
 3. **later comparison only** — US7035157B2, priority 2004, integrates temperature measurement and sampled/latching control into an explicitly named DRAM self-refresh circuit. It is not used to project later self-refresh semantics backward into the 1991 Micron design.
+
+A fourth, later evidence layer is now retained explicitly: Micron's Rev. S 02/16 2Gb DDR3 product datasheet exposes mutually exclusive manual `SRT` and automatic `ASR` self-refresh policies plus a separate externally managed 2x refresh obligation above 85 °C. It is later implementation/interface continuity only, not proof of direct descent from the 1991 patent.
 
 ## Primary source A — Micron US5278796A
 
@@ -153,6 +155,34 @@ It also cites US5278796A among prior circuits that adjusted refresh using ambien
 
 This source is **not** used to claim that Micron's 1991 circuit had the same self-refresh locus. Its role is to show that `temperature-conditioned cadence` and `self-refresh authority` are historically separable dimensions that could later be combined explicitly.
 
+## Primary source D — Micron 2Gb DDR3 Rev. S 02/16 SRT / ASR product interface
+
+### Identity and bounded use
+
+- **Title:** `2Gb: x4, x8, x16 DDR3 SDRAM`
+- **Document ID:** `09005aef826aaadc`
+- **Revision marker:** `2Gb_DDR3_SDRAM.pdf - Rev. S 02/16 EN`
+- **Manufacturer:** Micron Technology, Inc.
+- **Preserved manufacturer PDF inspected:** <https://file.hstatic.net/1000180878/file/mt41j128m16_2gb_ddr3_sdram.pdf>
+
+Relevant locations are Mode Register 2, printed pp. 146–147, and `Extended Temperature Usage`, printed pp. 182–183.
+
+### SRT / ASR policy split
+
+`MR2[7]` controls Self Refresh Temperature (`SRT`). When SRT is enabled, the DRAM changes internal self refresh from 1x to 2x **regardless of case temperature**. This is a conservative fixed policy for the extended temperature range, not a temperature reading.
+
+`MR2[6]` controls Auto Self Refresh (`ASR`). When ASR is enabled, the DRAM automatically changes internal self-refresh rate between 1x and 2x over the supported temperature range. The datasheet explicitly says the transition is not guaranteed to occur at exactly 85 °C and may occur lower while data integrity remains supported. SRT and ASR cannot be enabled simultaneously.
+
+### External refresh remains a separate responsibility
+
+For the optional 0–95 °C range, the datasheet separately requires **externally managed refresh** to run at 2x whenever case temperature is above 85 °C, implemented by reducing the refresh period from 64 ms to 32 ms. Self refresh instead requires SRT or ASR for the extended range.
+
+This gives direct product evidence for `extended-temperature support ≠ automatic temperature adaptation`, `declared operating envelope ≠ measured environmental condition`, `external refresh-rate responsibility ≠ internal self-refresh cadence selection`, and `specified temperature boundary ≠ exact automatic transition point`.
+
+### Evidence boundary
+
+The datasheet is a later manufacturer product/interface witness. It is **not** used to claim that Micron invented SRT or ASR, that Rev. S 02/16 first introduced them, that the product implements US5278796A, that 85 °C is a per-cell retention cliff, or that one product document supplies the complete JEDEC DDR3 revision history.
+
 ## Claim-to-source matrix
 
 | Claim | Source | Strength / limit |
@@ -167,6 +197,12 @@ This source is **not** used to claim that Micron's 1991 circuit had the same sel
 | Temperature sensing directly measures every row/cell's actual retention time | none | **unsupported / rejected** |
 | The 8/16/32/64/128 ms schedule applies universally to later DDR/DDR5 | none; Micron explicitly says technology may change the values | **rejected** |
 | Later temperature-dependent self-refresh can sample/latch temperature and change oscillator timing | US7035157B2 | direct later primary record; comparison only |
+
+| Micron's Rev. S 02/16 2Gb DDR3 exposes mutually exclusive SRT and ASR controls | Micron 2Gb DDR3 datasheet pp. 146–147 | direct later manufacturer product/interface record |
+| SRT forces 2x internal self refresh independent of actual case temperature | Micron 2Gb DDR3 datasheet p. 147 | direct product semantics |
+| ASR automatically changes internal self-refresh rate between 1x and 2x, with a transition that need not occur at exactly 85 °C | Micron 2Gb DDR3 datasheet p. 147 | direct product boundary |
+| External refresh above 85 °C still requires 2x cadence, 64 ms → 32 ms | Micron 2Gb DDR3 datasheet p. 183 | direct external-maintenance contract |
+| The DDR3 product proves direct implementation genealogy from US5278796A | none | **unsupported / rejected** |
 
 ## Engineering reconstruction enabled by the evidence
 
@@ -193,6 +229,14 @@ The patent's comparator-count tradeoff makes the energy cost of retention infras
 ### 5. Environmental conditioning versus self-refresh locus
 
 The 1991 Micron design and 2004–2006 self-refresh patent support a controlled comparison: the condition that modulates cadence and the place where recurring maintenance authority resides can evolve independently.
+
+### 6. Declared envelope versus automatic policy
+
+The 2016 DDR3 product interface adds a policy distinction that is not visible in the 1991 comparator example: SRT can conservatively force the high self-refresh rate without claiming a current temperature measurement, while ASR automatically changes rate over the supported range. A retained configuration bit and an environmental observation are therefore different evidence classes even when both influence the same maintenance cadence.
+
+### 7. Mode-dependent authority
+
+The same product requires the controller/user to double externally managed refresh above 85 °C, while SRT/ASR govern the internal self-refresh path. The physical retention constraint can therefore stay temperature-conditioned while recurrence authority and policy representation move with operating mode.
 
 ## Anti-anachronism and rejected claims
 
@@ -259,7 +303,7 @@ This record does **not** close:
 
 - commercial-product use of the exact Micron circuit;
 - a JEDEC standards genealogy for temperature-compensated self refresh;
-- exact modern DDR/LPDDR temperature-band/timing semantics;
+- complete JEDEC DDR3/DDR4/LPDDR revision chronology and cross-vendor temperature-band/timing semantics beyond the bounded Micron DDR3 witness;
 - sensor calibration or fault-injection evidence;
 - row-to-row retention-time variation;
 - modern per-row retention-aware refresh;

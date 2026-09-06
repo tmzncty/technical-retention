@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to Micron Technology's 1991-filed US5278796A temperature-dependent DRAM refresh circuit, with an earlier 1987-priority CardioData patent family used to control invention-priority claims and a 2004–2006 temperature-dependent self-refresh patent used only as a later locus/authority comparison.
+**`grounded`** — bounded to Micron Technology's 1991-filed US5278796A temperature-dependent DRAM refresh circuit, with an earlier 1987-priority CardioData patent family used to control invention-priority claims. A later Micron 2Gb DDR3 product datasheet (Rev. S 02/16) now supplies a product-interface witness for distinct manual `SRT` and automatic `ASR` self-refresh policies; the 2004–2006 temperature-dependent self-refresh patent remains a separate later locus/authority comparison. The later sources deepen policy/authority boundaries but are not treated as proof of direct implementation genealogy from the 1991 patent.
 
 Grounding record: [`../evidence/34-micron-1991-temperature-dependent-refresh-grounding.md`](../evidence/34-micron-1991-temperature-dependent-refresh-grounding.md).
 
@@ -75,6 +75,20 @@ Micron's preferred embodiment places a solid-state temperature sensor in proximi
 The patent gives an illustrative five-band schedule: above 56 °C, 8 ms; 42–56 °C, 16 ms; 28–42 °C, 32 ms; 14–28 °C, 64 ms; below 14 °C, 128 ms. Those numbers are **not** treated here as a timeless DRAM rule: the patent itself explicitly says the temperature ranges, number of bands, and refresh rates may change with technology.
 
 The patent also states that adding more comparators can improve refresh-rate granularity, but at some point the control circuit's own power consumption exceeds the refresh-power savings. This makes the sensing/control apparatus part of the retention cost rather than a free optimization layer.
+
+### Later product-interface witness — Micron 2Gb DDR3 `SRT` / `ASR` (Rev. S 02/16)
+
+Micron's later **2Gb x4/x8/x16 DDR3 SDRAM** datasheet, document `09005aef826aaadc`, Rev. S 02/16, exposes a useful product-level policy split in Mode Register 2. This source is more than a generic statement that hotter DRAM needs more refresh: it separately documents **manual temperature-range declaration**, **automatic self-refresh rate selection**, and the still-external refresh requirement outside self refresh.
+
+The bounded interface says:
+
+- `MR2[7]` selects **Self Refresh Temperature (`SRT`)** when ASR is disabled. Enabling SRT forces the internal self-refresh rate from 1x to 2x **regardless of actual case temperature** so the extended 0–95 °C operating range can be supported during self refresh.
+- `MR2[6]` selects **Auto Self Refresh (`ASR`)**. With ASR enabled, the DRAM automatically changes its internal self-refresh rate between 1x and 2x over the supported temperature range.
+- the datasheet explicitly says the automatic transition need not occur at exactly 85 °C; it may occur at a lower temperature while still maintaining data integrity.
+- if case temperature exceeds 85 °C during **externally managed refresh**, the user/controller must provide 2x refresh by reducing the refresh period from 64 ms to 32 ms. SRT/ASR govern the self-refresh side of the contract rather than eliminating that external obligation.
+- SRT and ASR are mutually exclusive in this interface.
+
+This later product witness adds two control forms that the 1991 patent did not expose as a mode-register pair: a **declared conservative operating envelope** (`SRT`) and an **automatic temperature-conditioned self-refresh policy** (`ASR`). It does not establish that the product implements US5278796A, that Micron invented these interface semantics, or that this one datasheet is a complete JEDEC DDR3 chronology.
 
 ## Prior art before the Micron filing
 
@@ -176,6 +190,46 @@ A later 2004-filed temperature-dependent self-refresh patent explicitly integrat
 
 Temperature adaptation can be external/system-level, on-chip, or combined with self-refresh. The shared function does not prove historical mechanism identity.
 
+### Extended-temperature support is not automatic temperature adaptation
+
+The DDR3 product interface gives a direct counterexample to treating `supports hotter operation` and `measures/adapts to temperature` as synonyms. `SRT` can support the extended range by forcing 2x self refresh even when the device is cooler; `ASR` instead changes internal self-refresh rate automatically over the supported range.
+
+Therefore:
+
+> **extended-temperature support ≠ automatic temperature adaptation**.
+
+A conservative fixed maintenance policy and an adaptive maintenance policy can protect the same bounded retention envelope while requiring different evidence and control relations.
+
+### SRT declaration is not a temperature measurement
+
+When ASR is disabled, the user programs `SRT` to indicate the operating-temperature range to be protected during self refresh. That bit is policy/configuration state. It does not, by itself, report a measured temperature.
+
+Therefore:
+
+> **declared operating envelope ≠ measured environmental condition**.
+
+This sharpens the 1991 sensor/comparator case: environment, measurement, classification, and chosen cadence can be represented by different mechanisms, and a product may expose only some of them to software.
+
+### External refresh responsibility is not internal self-refresh policy
+
+Above 85 °C, the same DDR3 datasheet requires externally managed refresh to move from the 64 ms to 32 ms period, while self refresh must use either SRT or ASR.
+
+Therefore:
+
+> **external refresh-rate responsibility ≠ internal self-refresh cadence selection**.
+
+The physical temperature constraint can be shared while the locus and representation of maintenance authority change with mode. This is a product-level continuation of the Case-21 responsibility distinction, not evidence that the controller and DRAM use one scheduler.
+
+### Contract boundary is not an exact physical switching point
+
+The datasheet says ASR may switch from 1x to 2x below exactly 85 °C while preserving data integrity. The contractual 85 °C boundary therefore must not be reconstructed as a measured cell-level retention cliff or an exact sensor trip point.
+
+Therefore:
+
+> **specified temperature boundary ≠ exact automatic transition point ≠ per-cell retention limit**.
+
+This is also a concrete guard against reading a mode table as a direct map of semiconductor physics.
+
 ### Temperature-conditioned refresh is not per-row retention-aware refresh
 
 The bounded Micron design selects a refresh cadence for the DRAM array from a small set of temperature bands. It does not characterize individual rows and then refresh weak and strong rows at different rates.
@@ -262,6 +316,12 @@ Cases 03, 09, 10, 21, and 33 established the other dimensions. Case 34 adds the 
 | The patent's numerical temperature/refresh table is a universal modern DDR timing rule | X | patent explicitly says ranges/rates may change with technology |
 | Environment-conditioned refresh cadence can be separated from refresh-row enumeration, target geometry, and self-refresh authority | E | bounded cross-case reconstruction |
 
+| Micron's Rev. S 02/16 2Gb DDR3 datasheet exposes mutually exclusive SRT and ASR controls in MR2 | H/P | direct later manufacturer product/interface record |
+| SRT forces 2x internal self refresh regardless of case temperature, while ASR automatically adjusts between 1x and 2x over the supported range | H/P | direct later product semantics |
+| Above 85 °C, externally managed refresh still requires 2x cadence (64 ms → 32 ms) even though self refresh can use SRT or ASR | H/P | direct extended-temperature contract |
+| ASR's automatic transition is guaranteed for data integrity but need not occur at exactly 85 °C | H/P | direct product boundary; not a per-cell retention measurement |
+| The 2016 product interface proves direct implementation descent from Micron's 1991 patent | X | chronology and shared assignee are insufficient for genealogy |
+
 ## Related repositories
 
 Current searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `temperature compensated refresh DRAM`, `temperature-dependent DRAM`, and `adaptive DRAM refresh` found no dedicated case to reuse. A comprehensive history of DRAM temperature dependence, device leakage physics, JEDEC temperature-compensated self refresh, mobile-memory standards, and modern retention-aware scheduling would belong there if pursued broadly.
@@ -273,3 +333,4 @@ Current searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty
 1. Charles W. Tillinghast, Michael S. Cohen, and Thomas W. Voshell, Micron Technology, Inc., **US5278796A, “Temperature-dependent DRAM refresh circuit,”** filed 12 April 1991, published/granted 11 January 1994: <https://patents.google.com/patent/US5278796A/en>.
 2. Mark Hubelbank and David Shadmon, CardioData Corp., **DE3827808A1 / U.S. Patent 4,920,489 family, “Apparatus and method for solid state storage of episodic signals,”** priority 14 August 1987; the detailed storage embodiment uses a thermistor, processor A/D conversion, and a lookup table to vary DRAM refresh with ambient temperature: <https://patents.google.com/patent/DE3827808A1/en>.
 3. Chien-Yi Chang, Elite Semiconductor Memory Technology, Inc., **US7035157B2, “Temperature-dependent DRAM self-refresh circuit,”** priority 27 August 2004, filed 14 September 2004, granted 25 April 2006 — used only as a later comparison showing temperature-conditioned cadence integrated with self-refresh sensing/latching/oscillator control: <https://patents.google.com/patent/US7035157B2/en>.
+4. Micron Technology, Inc., **2Gb: x4, x8, x16 DDR3 SDRAM**, PDF `09005aef826aaadc`, `2Gb_DDR3_SDRAM.pdf - Rev. S 02/16 EN`, especially Mode Register 2 pp. 146–147 and Extended Temperature Usage pp. 182–183 — later manufacturer product/interface witness for SRT, ASR, external 2x refresh above 85 °C, and the non-exact automatic transition boundary. Public preserved copy inspected: <https://file.hstatic.net/1000180878/file/mt41j128m16_2gb_ddr3_sdram.pdf>.
