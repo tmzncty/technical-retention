@@ -22,8 +22,20 @@ jobs:
       - name: Apply bounded research integration
         run: python .github/integration/case76_qlc_product_witness.py
 
-      - name: Validate Markdown changes
-        run: git diff --check
+      - name: Normalize EOFs and validate Markdown changes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for name in [
+              'cases/76-jedec-ssd-endurance-retention-qualification.md',
+              'evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md',
+              'ROADMAP.md',
+              'CASE_INDEX.md',
+          ]:
+              p = Path(name)
+              p.write_text(p.read_text(encoding='utf-8').rstrip('\n') + '\n', encoding='utf-8', newline='\n')
+          PY
+          git diff --check
 
       - name: Commit research slice and remove integration helpers
         run: |
