@@ -20,6 +20,21 @@ jobs:
       - name: Apply bounded research patch
         run: python3 tools/automation_synthesis12.py
 
+      - name: Normalize research EOF
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in [
+              "README.md",
+              "ROADMAP.md",
+              "CASE_INDEX.md",
+              "docs/SYNTHESIS_12_INTEGRITY_QUALIFIED_CODED_RECOVERY.md",
+          ]:
+              p = Path(name)
+              p.write_text(p.read_text(encoding="utf-8").rstrip() + "\n", encoding="utf-8")
+          PY
+
       - name: Validate and commit final tree
         shell: bash
         run: |
