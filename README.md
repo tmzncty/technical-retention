@@ -99,6 +99,8 @@ A bounded coded-storage recovery comparison is now available in [`docs/SYNTHESIS
 
 A bounded proactive-integrity comparison is now available in [`docs/SYNTHESIS_08_PROACTIVE_INTEGRITY_REPAIR_MARGIN.md`](docs/SYNTHESIS_08_PROACTIVE_INTEGRITY_REPAIR_MARGIN.md). Across grounded GFS, ZFS, HDFS, Ceph, and OpenZFS cases it separates physical presence, currentness/admissibility, integrity evidence, verification coverage, defect discovery, repair-source qualification, repairability, fallback service, restored redundancy, and later revalidation.
 
+A bounded distributed-coded-service comparison is now available in [`docs/SYNTHESIS_09_DISTRIBUTED_CODED_SERVICE_REPAIR_PLACEMENT.md`](docs/SYNTHESIS_09_DISTRIBUTED_CODED_SERVICE_REPAIR_PLACEMENT.md). Across grounded f4 and Windows Azure Storage LRC cases, with Swift EC as a mutable-currentness counterexample, it separates algebraic recoverability, reconstruction read-set/cost, foreground recovery, durable fragment repair, failure-domain placement restoration, redundancy-regime handoff completion, and later retirement/convergence.
+
 This chain is a **research heuristic**, not a claim that all of these mechanisms are historically or philosophically identical.
 
 For example, describing an abacus as `register-like` may be a useful **functional reconstruction**, but it would be anachronistic to claim that historical abacus users possessed the modern computer-architecture concept of a register.

@@ -2003,3 +2003,18 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 1381. **verification-progress state ≠ verification result** — an HDFS scanner cursor can preserve maintenance coverage progress across restart without certifying blocks that have not yet been checked.
 1382. **physical replica count ≠ integrity-qualified repair margin** — version/currentness filters, checksum validity, read errors, and operational authority can make only a subset of surviving embodiments admissible as future repair sources.
 1383. **proactive checking ≠ timeless certainty or one historical lineage** — scan/scrub shifts hidden-defect discovery into scheduled maintenance work, but it neither proves every fault class nor makes GFS, ZFS, HDFS, Ceph, and OpenZFS one mechanism or genealogy.
+
+### Cross-case distributed-coded service synthesis — read recovery, durable repair, placement, and handoff
+
+1384. **coded recoverability ≠ request-time read availability** — a sufficient algebraic fragment set still has to be selected, reached, read, and decoded through a live service path before a current request can succeed.
+1385. **request-time reconstruction ≠ durable fragment repair** — f4 and WAS both allow foreground reconstruction to satisfy demand while the missing durable block/fragment is still awaiting background replacement.
+1386. **durable fragment repair ≠ restored failure-domain placement** — f4 can rebuild missing content yet still require a placement balancer because reconstruction/replacement may leave stripe members concentrated in one correlated failure domain.
+1387. **reconstruction read-set/cost ≠ code strength** — WAS LRC changes the common dependency/I/O set used to recover one missing fragment without making that property identical to the code's full tolerated failure-pattern set.
+1388. **coding locality ≠ physical locality** — a smaller coding dependency group does not imply co-located fragments; WAS separately places fragments across fault and upgrade domains.
+1389. **similar storage overhead ≠ similar repair work** — coded layouts with comparable normalized capacity overhead can impose different distributed reads, network traffic, and recovery work.
+1390. **transition-progress state ≠ target payload fragments** — WAS persists coding progress so interrupted representation conversion can resume; that progress is retention infrastructure rather than client payload or a finished coded representation.
+1391. **target fragments present ≠ redundancy-regime handoff complete** — validation and completion/admissibility metadata can still gate retirement of the old full replicas after new coded bytes have been produced.
+1392. **handoff completion ≠ physical cleanup completion** — authorization to retire an older representation and actual deletion/reclamation of all old embodiments are distinct convergence milestones.
+1393. **service recovery ≠ topology convergence** — a system may already answer reads, and may even have rebuilt missing content, while placement balancing or other convergence work still owes restoration of the intended correlated-failure geometry.
+1394. **immutable coded-repair synthesis ≠ mutable coded-currentness rule or historical genealogy** — Swift supplies a counterexample in which same-timestamp/distinct-index/durability qualification precedes usable decoding; this does not make f4, WAS, and Swift one pipeline or lineage.
+
