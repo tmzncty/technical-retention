@@ -1,6 +1,4 @@
-from pathlib import Path
-
-SYNTHESIS = r'''# Access-Disturbance Synthesis — Target Scope, Restore Obligation, and Workload-Conditioned Maintenance
+# Access-Disturbance Synthesis — Target Scope, Restore Obligation, and Workload-Conditioned Maintenance
 
 **Status:** `grounded cross-case synthesis`
 
@@ -309,55 +307,3 @@ This synthesis introduces no new historical evidence beyond the grounded case re
 5. SK hynix 2017-priority adaptive read-reclaim filing and its earlier Samsung prior-art controls in [Case 67](../cases/67-sk-hynix-3d-nand-read-disturb-adaptive-reclaim.md).
 
 Exact source locations, evidence grades, and caveats remain in those cases' grounding records and should be cited there rather than being silently flattened into this synthesis.
-'''
-
-
-def insert_once(path: str, marker: str, addition: str, presence: str) -> None:
-    p = Path(path)
-    text = p.read_text(encoding='utf-8')
-    if presence in text:
-        return
-    if marker not in text:
-        raise RuntimeError(f'{path}: anchor missing')
-    p.write_text(text.replace(marker, addition + marker, 1), encoding='utf-8')
-
-
-Path('docs/SYNTHESIS_11_ACCESS_DISTURBANCE_MAINTENANCE.md').write_text(SYNTHESIS, encoding='utf-8')
-
-insert_once(
-    'README.md',
-    'This chain is a **research heuristic**, not a claim that all of these mechanisms are historically or philosophically identical.',
-    'A bounded access-disturbance comparison is now available in [`docs/SYNTHESIS_11_ACCESS_DISTURBANCE_MAINTENANCE.md`](docs/SYNTHESIS_11_ACCESS_DISTURBANCE_MAINTENANCE.md). Across grounded magnetic-core, DRAM, RowHammer, and NAND cases it separates the logical request target, physical effect scope, immediate restore obligation, cumulative disturbance exposure, present service correctness, remaining retention/error margin, maintenance clocks/evidence, and later refresh/rewrite/reclaim response; the comparison is explicitly functional and does not assert a shared physical mechanism or genealogy.\n\n',
-    'SYNTHESIS_11_ACCESS_DISTURBANCE_MAINTENANCE.md',
-)
-
-insert_once(
-    'ROADMAP.md',
-    '- [ ] How should `returned/visible`, `crash-admissible`, `explicitly durable`, and `reclaimed/converged` be separated in filesystem regimes?',
-    '- [x] In access-disturbing memory/storage, separate `logical request target`, `physical excitation/effect scope`, `selected-state post-access condition`, `neighbor/coupled disturbance exposure`, `present service correctness`, `remaining retention/error margin`, `maintenance trigger evidence/clock`, and later `restore/refresh/rewrite/reclaim` response — closed at the bounded cross-case relation level by [`docs/SYNTHESIS_11_ACCESS_DISTURBANCE_MAINTENANCE.md`](docs/SYNTHESIS_11_ACCESS_DISTURBANCE_MAINTENANCE.md), synthesizing grounded Cases 02, 03, 52, 53, 67, and 70. This is a functional/mechanism comparison, not a genealogy; broader destructive-read terminology history, modern RowHammer/TRR/RFM evolution, cross-vendor 3-D NAND disturb policy, and quantitative fault injection remain separate work.\n',
-    'SYNTHESIS_11_ACCESS_DISTURBANCE_MAINTENANCE.md',
-)
-
-index = Path('CASE_INDEX.md')
-text = index.read_text(encoding='utf-8')
-if '1436. **logical request target ≠ physical effect scope**' not in text:
-    if '1435. **manufacturer product semantics ≠ complete JEDEC chronology**' not in text:
-        raise RuntimeError('CASE_INDEX tail anchor missing')
-    appendix = r'''
-
-### Cross-case access-disturbance synthesis — target scope, maintenance clocks, and preservation response
-
-1436. **logical request target ≠ physical effect scope** — core half selection, NAND pass-through bias, and RowHammer all show that servicing one address can electrically or materially affect retained state outside the requested target.
-1437. **selected-state restoration ≠ neighbor-state preservation** — an accessed core/DRAM row can be correctly restored while half-selected or physically adjacent state still carries a separate disturbance/margin obligation.
-1438. **logical nondestructiveness ≠ material nondisturbance** — a NAND selected-page read can return the intended value without directly destroying that page while cumulative pass-voltage stress changes unselected cells' future margin.
-1439. **successful current access ≠ unchanged future recoverability margin** — ECC-correctable NAND reads and disturbance-free current service can coexist with a smaller margin against later errors.
-1440. **access-triggered restore ≠ access-conditioned maintenance** — classic destructive-read restore can be constitutive of completing one access, whereas NAND read reclaim or RowHammer mitigation may accumulate evidence/debt across many accesses before acting.
-1441. **access-count clock ≠ elapsed-time retention deadline** — read/activation history can create workload-conditioned urgency, while ordinary leakage can create a separate deadline even during quiet periods.
-1442. **maintenance proxy ≠ physical disturbance state** — a read counter, threshold, or policy summary represents exposure under one controller model; it is not the cells' magnetization, charge, threshold-voltage distribution, or direct proof of corruption.
-1443. **maintenance-proxy lifetime ≠ hazard lifetime** — Case 67 allows a read-count proxy to be cleared after power-off while the medium condition persists, provided conservative requalification policy compensates for lost history.
-1444. **disturbance evidence ≠ logical corruption** — half-select output, elevated raw errors, or threshold-crossing exposure can create maintenance/diagnostic work before the requested payload becomes wrong or uncorrectable.
-1445. **targeted refresh / reclaim ≠ ordinary periodic refresh** — both can preserve a logical value, but their trigger, target geometry, timing, control state, and physical operation remain distinct.
-1446. **read recovery ≠ representation renewal** — present ECC/read-path success can recover a value from a stressed embodiment, while rewrite/reclaim creates a different future physical support and restores a different kind of margin.
-1447. **cross-case access-disturbance decomposition ≠ historical genealogy** — magnetic-core destructive read/half-select, Dennard dynamic-cell restore, NAND read disturb, RowHammer, and later controller reclaim are compared only at the relation level; chronological order does not prove descent or one shared mechanism.
-'''
-    index.write_text(text.rstrip() + appendix + '\n', encoding='utf-8')

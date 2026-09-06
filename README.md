@@ -103,6 +103,8 @@ A bounded distributed-coded-service comparison is now available in [`docs/SYNTHE
 
 A bounded mutable-EC-currentness comparison is now available in [`docs/SYNTHESIS_10_MUTABLE_EC_CURRENTNESS_RETIREMENT_REPAIR.md`](docs/SYNTHESIS_10_MUTABLE_EC_CURRENTNESS_RETIREMENT_REPAIR.md). Centered on grounded Swift EC Case 25, it separates fragment presence and validity, timestamp/version coherence, distinct-index algebraic reconstructability, commit/durability qualification, service admissibility, old-version retirement authority, repair convergence, and lower-layer cleanup; Swift 2.11.0 additionally shows that the durability relation can survive a change from separate `.durable` files to filename-embedded durable state.
 
+A bounded access-disturbance comparison is now available in [`docs/SYNTHESIS_11_ACCESS_DISTURBANCE_MAINTENANCE.md`](docs/SYNTHESIS_11_ACCESS_DISTURBANCE_MAINTENANCE.md). Across grounded magnetic-core, DRAM, RowHammer, and NAND cases it separates the logical request target, physical effect scope, immediate restore obligation, cumulative disturbance exposure, present service correctness, remaining retention/error margin, maintenance clocks/evidence, and later refresh/rewrite/reclaim response; the comparison is explicitly functional and does not assert a shared physical mechanism or genealogy.
+
 This chain is a **research heuristic**, not a claim that all of these mechanisms are historically or philosophically identical.
 
 For example, describing an abacus as `register-like` may be a useful **functional reconstruction**, but it would be anachronistic to claim that historical abacus users possessed the modern computer-architecture concept of a register.

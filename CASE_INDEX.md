@@ -2068,3 +2068,18 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 1433. **automatic cadence selection ≠ removal of refresh obligation** — ASR changes the rate at which constitutive restoration recurs; it does not make the dynamic array nonvolatile or maintenance-free.
 1434. **shared manufacturer chronology ≠ implementation genealogy** — the later Micron DDR3 SRT/ASR interface deepens the 1991 Micron case but does not prove that the product implements US5278796A or descends directly from that circuit.
 1435. **manufacturer product semantics ≠ complete JEDEC chronology** — the Rev. S 02/16 witness closes a bounded relation decomposition, while standards revision history and cross-vendor compliance remain separate research.
+
+### Cross-case access-disturbance synthesis — target scope, maintenance clocks, and preservation response
+
+1436. **logical request target ≠ physical effect scope** — core half selection, NAND pass-through bias, and RowHammer all show that servicing one address can electrically or materially affect retained state outside the requested target.
+1437. **selected-state restoration ≠ neighbor-state preservation** — an accessed core/DRAM row can be correctly restored while half-selected or physically adjacent state still carries a separate disturbance/margin obligation.
+1438. **logical nondestructiveness ≠ material nondisturbance** — a NAND selected-page read can return the intended value without directly destroying that page while cumulative pass-voltage stress changes unselected cells' future margin.
+1439. **successful current access ≠ unchanged future recoverability margin** — ECC-correctable NAND reads and disturbance-free current service can coexist with a smaller margin against later errors.
+1440. **access-triggered restore ≠ access-conditioned maintenance** — classic destructive-read restore can be constitutive of completing one access, whereas NAND read reclaim or RowHammer mitigation may accumulate evidence/debt across many accesses before acting.
+1441. **access-count clock ≠ elapsed-time retention deadline** — read/activation history can create workload-conditioned urgency, while ordinary leakage can create a separate deadline even during quiet periods.
+1442. **maintenance proxy ≠ physical disturbance state** — a read counter, threshold, or policy summary represents exposure under one controller model; it is not the cells' magnetization, charge, threshold-voltage distribution, or direct proof of corruption.
+1443. **maintenance-proxy lifetime ≠ hazard lifetime** — Case 67 allows a read-count proxy to be cleared after power-off while the medium condition persists, provided conservative requalification policy compensates for lost history.
+1444. **disturbance evidence ≠ logical corruption** — half-select output, elevated raw errors, or threshold-crossing exposure can create maintenance/diagnostic work before the requested payload becomes wrong or uncorrectable.
+1445. **targeted refresh / reclaim ≠ ordinary periodic refresh** — both can preserve a logical value, but their trigger, target geometry, timing, control state, and physical operation remain distinct.
+1446. **read recovery ≠ representation renewal** — present ECC/read-path success can recover a value from a stressed embodiment, while rewrite/reclaim creates a different future physical support and restores a different kind of margin.
+1447. **cross-case access-disturbance decomposition ≠ historical genealogy** — magnetic-core destructive read/half-select, Dennard dynamic-cell restore, NAND read disturb, RowHammer, and later controller reclaim are compared only at the relation level; chronological order does not prove descent or one shared mechanism.
