@@ -1,53 +1,4 @@
-from pathlib import Path
-
-
-def replace_once(path: str, old: str, new: str) -> None:
-    p = Path(path)
-    text = p.read_text(encoding="utf-8")
-    count = text.count(old)
-    if count != 1:
-        raise SystemExit(f"{path}: expected exactly one anchor, found {count}: {old[:120]!r}")
-    p.write_text(text.replace(old, new, 1), encoding="utf-8")
-
-
-README = "README.md"
-ROADMAP = "ROADMAP.md"
-INDEX = "CASE_INDEX.md"
-DOC = Path("docs/SYNTHESIS_12_INTEGRITY_QUALIFIED_CODED_RECOVERY.md")
-
-s11 = "A bounded access-disturbance comparison is now available in [`docs/SYNTHESIS_11_ACCESS_DISTURBANCE_MAINTENANCE.md`](docs/SYNTHESIS_11_ACCESS_DISTURBANCE_MAINTENANCE.md). Across grounded magnetic-core, DRAM, RowHammer, and NAND cases it separates the logical request target, physical effect scope, immediate restore obligation, cumulative disturbance exposure, present service correctness, remaining retention/error margin, maintenance clocks/evidence, and later refresh/rewrite/reclaim response; the comparison is explicitly functional and does not assert a shared physical mechanism or genealogy."
-s12 = "A bounded integrity-qualified-coded-recovery comparison is now available in [`docs/SYNTHESIS_12_INTEGRITY_QUALIFIED_CODED_RECOVERY.md`](docs/SYNTHESIS_12_INTEGRITY_QUALIFIED_CODED_RECOVERY.md). Across grounded RAID-6, Swift EC, Ceph EC, and OpenZFS dRAID cases it separates coded contribution presence, version/currentness qualification, checksum/integrity evidence, integrity-metadata authority, verification coverage, diagnostic fault-location evidence, repair-source admissibility, algebraic decode sufficiency, repaired redundancy margin, and later revalidation. It also fixes the counterexamples `more parity ≠ stronger corruption diagnosis`, `checksum mismatch ≠ fault localization`, and `restored coded margin ≠ restored integrity confidence`."
-replace_once(README, s11, s11 + "\n\n" + s12)
-
-roadmap_old = "- [ ] In integrity-qualified coded storage, how should `coded recoverability`, `local checksum validity`, `checksum-metadata authority`, `scrub coverage`, `diagnostic mismatch`, and `restored repair confidence` be separated?"
-roadmap_new = "- [x] In integrity-qualified coded storage, separate `coded contribution presence`, `version/currentness qualification`, `local checksum/integrity evidence`, `checksum-metadata authority`, `verification coverage`, `diagnostic mismatch/fault-location evidence`, `repair-source admissibility`, `algebraic decode sufficiency`, `restored coded margin`, and later `integrity revalidation` — closed at the bounded cross-case level by [`docs/SYNTHESIS_12_INTEGRITY_QUALIFIED_CODED_RECOVERY.md`](docs/SYNTHESIS_12_INTEGRITY_QUALIFIED_CODED_RECOVERY.md), using grounded Cases 25, 27, 29, 94, and 96. Adversarial authenticity, stronger end-to-end integrity proofs, cross-node scrub coordination, correlated corruption, controller patrol-read genealogy, and production fault injection remain separate work."
-replace_once(ROADMAP, roadmap_old, roadmap_new)
-
-anchor = "1454. **July 2012 catalog/artifact closure ≠ full normative facsimile inspection or invention priority** — the new evidence closes a publication/supporting-artifact gap after the unfinished September 2010 client-workload state, but clause-level JESD219A archaeology and broader trace-workload priority remain separate work."
-findings = r'''
-
-### Cross-case integrity-qualified coded-recovery synthesis — authority, diagnosis, decode, and revalidation
-
-1455. **coded contribution presence ≠ integrity-qualified contribution** — a parity block or EC shard can physically exist at the expected index while read/checksum/metadata evidence makes it inadmissible as a reconstruction input.
-1456. **version/currentness qualification ≠ integrity qualification** — Swift's timestamp/durability gate and Ceph's checksum/scrub gate answer different questions; a contribution can be current but corrupt, or locally valid yet belong to the wrong coded version.
-1457. **checksum presence ≠ checksum-metadata authority** — Ceph Luminous 12.2.6–12.2.8 shows that retained digest metadata can itself become stale or inconsistent and can be explicitly distrusted before requalification.
-1458. **checksum mismatch ≠ fault localization** — a mismatch proves that an expected relation failed, not which side is wrong; payload bytes, integrity metadata, or another compared embodiment can be the suspect state.
-1459. **fault-location evidence ≠ algebraic decode sufficiency** — diagnosis/source filtering decides which contributions may count, while the codec separately determines whether the remaining indexes are sufficient to reconstruct the target.
-1460. **operational repair authority ≠ objective correctness** — Ceph's source-level `authoritative` candidate is selected under implementation rules and can remain epistemically uncertain; repair authority is a procedural admissibility relation, not a proof of truth.
-1461. **nominal parity/EC margin ≠ integrity-qualified repair margin** — a code can nominally tolerate a stated erasure pattern while hidden corruption or untrusted verification metadata has already reduced the set of survivors that can safely participate in repair.
-1462. **verification coverage ≠ timeless integrity guarantee** — a completed scrub/deep-scrub pass is time-bounded evidence that the checked relation held when exercised; it does not certify all future states or all unvisited fault classes.
-1463. **repair-source admissibility ≠ stable source set** — Ceph recovery can discover read failures after planning begins, remove newly failing shards, and recompute a minimum decode set; qualified repair membership can change during the repair itself.
-1464. **reconstruction completion ≠ integrity revalidation** — OpenZFS dRAID can restore coded redundancy through sequential reconstruction before the later checksum scrub restores the stronger verification claim.
-1465. **more parity equations ≠ stronger corruption diagnosis** — RAID-6 P+Q expands known-erasure reconstructability but does not in general identify and repair arbitrary dual silent corruption; code distance and epistemic fault location are different resources.
-1466. **mutable-currentness gate ≠ integrity-authority gate** — committed/timestamp-coherent fragments can still fail integrity qualification, while checksum-valid fragments from another version can remain inadmissible; the two axes must compose rather than substitute for one another.
-1467. **integrity-qualified coded-recovery synthesis ≠ one universal pipeline or historical genealogy** — RAID-6, Swift, Ceph, and OpenZFS are compared only at the relation level; differences in fault model, versioning, checksum authority, code geometry, and repair policy remain historically and technically distinct.
-'''
-replace_once(INDEX, anchor, anchor + findings)
-
-if DOC.exists():
-    raise SystemExit(f"{DOC} already exists; refusing to overwrite")
-
-DOC.write_text(r'''# Synthesis 12 — Integrity-Qualified Coded Recovery: Authority, Diagnosis, Decode, and Revalidation
+# Synthesis 12 — Integrity-Qualified Coded Recovery: Authority, Diagnosis, Decode, and Revalidation
 
 ## Scope
 
@@ -410,17 +361,3 @@ Still-open work includes:
 - broader checksum / erasure-coding / RAID history in `computing-archaeology` if that project develops the track.
 
 Those are additional research slices, not blockers for the bounded relation decomposition closed here.
-''', encoding="utf-8")
-
-# Lightweight validation before the integration workflow commits.
-for path in [README, ROADMAP, INDEX, str(DOC)]:
-    text = Path(path).read_text(encoding="utf-8")
-    if not text.endswith("\n"):
-        Path(path).write_text(text + "\n", encoding="utf-8")
-
-if "SYNTHESIS_12_INTEGRITY_QUALIFIED_CODED_RECOVERY.md" not in Path(README).read_text(encoding="utf-8"):
-    raise SystemExit("README navigation insertion failed")
-if roadmap_new not in Path(ROADMAP).read_text(encoding="utf-8"):
-    raise SystemExit("ROADMAP closure insertion failed")
-if "1467. **integrity-qualified coded-recovery synthesis ≠ one universal pipeline or historical genealogy**" not in Path(INDEX).read_text(encoding="utf-8"):
-    raise SystemExit("CASE_INDEX findings insertion failed")
