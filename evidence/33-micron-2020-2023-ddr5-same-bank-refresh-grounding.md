@@ -6,17 +6,17 @@
 
 The bounded claim is not a complete DDR5 refresh specification. It is narrower:
 
-> Public Micron manufacturer documentation after the July 2020 DDR5 standard announcement consistently identifies `Same Bank Refresh` / `REFsb` as a DDR5 refresh mode that targets a bank position across bank groups rather than forcing an all-bank refresh scope, and later Micron platform material explicitly connects that localization to keeping other banks/groups available for ordinary access.
+> Micron manufacturer documentation from a **November 2019 Rev. A pre-final DDR5 white paper** through 2020–2023 public enablement material consistently identifies `Same Bank Refresh` / `REFsb` as a bank-correlated refresh mode, and the 2019 source additionally records target-idle rules, conditional non-target availability, `tREFSBRD`, FGR cadence, `tRFCsb`, and same-bank ordering for its bounded DDR5 example.
 
-That is enough to ground the retention-specific comparison **refresh obligation ≠ service-blocking scope**, while leaving exact JEDEC timing, controller compliance, LPDDR/per-bank genealogy, temperature-compensated refresh, and retention-aware policies open.
+That is enough to ground the retention-specific comparison **refresh obligation ≠ target geometry ≠ service-blocking scope ≠ conditional non-target service ≠ schedule authority**, while leaving final `JESD79-5` revision archaeology, controller compliance, LPDDR/per-bank genealogy, temperature-compensated refresh, and retention-aware policies open.
 
 ## Evidence boundary
 
-This record uses publicly inspectable Micron HTML sources as the primary/manufacturer evidence layer.
+This record uses public Micron manufacturer sources as the primary evidence layer. The source set now includes Micron's **Rev. A 11/19** white paper **“Micron® DDR5 SDRAM: New Features”** by Randall Rooney and Neal Koyle. The current Micron asset endpoint exposes matching indexed text but rejects direct binary rendering in this research interface; a preserved full-document mirror was therefore inspected for the contiguous refresh section and the revision footer. The official Micron asset URL is retained as the provenance anchor, and the mirror is explicitly identified as a mirror rather than silently treated as Micron hosting.
 
-A Micron DDR5 white paper with more detailed `REFsb` timing and bank-mapping discussion was discoverable during research, but its current asset URL rejected direct inspection through the research interface. Because the repository requires exact evidence control, those richer PDF-only timing details are **not** imported into the case.
+The 2019 white paper predates the July 2020 final-standard announcement. Its exact `tREFI` / `tRFCsb` / `tREFSBRD` / FGR statements are therefore used only as **manufacturer design/enablement evidence for the bounded 16Gb-era relation**, not as a substitute for a directly inspected final `JESD79-5` revision.
 
-No claim here should be read as a direct inspection of `JESD79-5` or as a complete normative statement of DDR5 command timing.
+No claim here should be read as a complete normative statement of final DDR5 command legality, all density/revision timing values, or controller compliance.
 
 ## Source ledger
 
@@ -90,6 +90,32 @@ Institutional archive entry inspected through Micron Investor Relations:
 <https://investors.micron.com/node/41136>
 
 The release states that the DDR5 TEP announcement accompanied JEDEC approval of the DDR5 standard. It is used only to anchor standardization context and Micron participation, not Same Bank Refresh mechanism details.
+
+### F. Micron Rev. A 11/19 DDR5 new-features white paper
+
+Randall Rooney and Neal Koyle, Micron Technology, Inc., **“Micron® DDR5 SDRAM: New Features,”** Rev. A 11/19, document code `CCM004-676576390-11390`.
+
+Official Micron asset:
+
+<https://assets.micron.com/adobe/assets/urn%3Aaaid%3Aaem%3A5ea148c8-e3fe-489e-8489-99b1b9cdcd3c/original/as/ddr5-new-features-white-paper.pdf>
+
+Preserved full-document mirror used for contiguous text/revision inspection:
+
+<https://device.report/m/3d08f1032327cf5fbb74a044017258d62a01653aef88d208c3eef3c4f40754a2>
+
+Inspected refresh-section evidence:
+
+- the document names `ALL-BANK REFRESH (REFab)` and `SAME-BANK REFRESH (REFsb)`;
+- `REFsb` targets the same bank in **all bank groups**, selected by bank bits on the command/address interface;
+- targeted banks must be idle/precharged before the refresh and cannot resume ordinary reads/writes for the refresh duration;
+- in the comparison, `REFab` requires all banks idle, while `REFsb` requires only one bank per bank group idle;
+- for the described 16Gb x4/x8 organization, the remaining twelve banks need not be idle, but their access remains subject to `tREFSBRD`;
+- `REFsb` is described as FGR-only, with each bank receiving refresh every 1.95 µs on average in that mode;
+- the bounded 16Gb example gives `tRFCsb = 130 ns`, compared with 295 ns for the discussed all-bank refresh;
+- every same-bank position must receive one `REFsb` before the same position receives a second, while the visit order among bank positions may vary;
+- the footer records **©2019 Micron Technology, Inc.** and **Rev. A 11/19**, and warns that products/programs/specifications are subject to change without notice.
+
+Evidence classification: **H/P**, with a hosting/provenance caveat. The content is manufacturer-authored and is independently indexed at the official Micron asset; the inspectable full-document copy is a third-party preservation mirror. This is adequate for the bounded manufacturer design relation, not for final-standard priority or normative-compliance claims.
 
 ## Claim-by-claim grounding
 
@@ -172,22 +198,19 @@ Sources A/E place Micron inside JEDEC DDR5 specification work and standardizatio
 
 The case uses Micron as a strong first-party witness to a standardized feature, not as a priority claim.
 
-### Claim 8 — exact DDR5 `REFsb` timing, scheduling restrictions, and controller compliance
+### Claim 8 — 2019 manufacturer `REFsb` timing and sequencing relation
+
+**Status: grounded for the bounded Rev. A 11/19 manufacturer design witness (`H/P`).**
+
+Source F now supports the specific relation that `REFsb` is FGR-only in the described regime, leaves non-target banks available subject to `tREFSBRD`, gives a 1.95 µs average per-bank refresh cadence, gives a 130 ns `tRFCsb` for its 16Gb example, and requires every same-bank position to be serviced before any same-bank position is repeated.
+
+The timing numbers are **not** generalized to every DDR5 density/product/revision.
+
+### Claim 9 — final normative DDR5 `REFsb` contract and controller compliance
 
 **Status: deliberately open.**
 
-Search discovery exposed a Micron white paper with detailed `REFsb` material, but the PDF asset could not be directly opened in this run. The repository's evidence discipline therefore blocks import of those detailed timing claims from search snippets alone.
-
-A future slice may ground:
-
-- exact `tRFCsb` / `tREFI` relations;
-- fine-granularity-refresh restrictions;
-- required sequencing across bank positions;
-- normative command legality;
-- standard revision changes;
-- measured controller compliance or performance.
-
-None is needed for the bounded retention result here.
+The Rev. A 11/19 white paper predates the July 2020 final-standard announcement and explicitly says specifications are subject to change. A future slice must directly inspect relevant final/later `JESD79-5` revisions and, separately, named-controller behavior before making normative or compliance claims. The present deepening therefore closes the bank-structured relation decomposition without converting a manufacturer white paper into the standard itself.
 
 ## Terminology control
 
@@ -221,13 +244,7 @@ The observation that localized refresh resembles other technologies that reduce 
 
 ## Related-repository check
 
-On 2026-09-03, GitHub code searches in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for:
-
-- `DDR4 refresh`;
-- `DDR5 refresh`;
-- `per-bank refresh`;
-
-returned no dedicated case to reuse.
+On 2026-09-06, GitHub code searches in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `DDR5`, `refresh`, `Same Bank Refresh`, and `REFsb` returned no dedicated case to reuse.
 
 Therefore the bounded retention-specific analysis belongs here. A broader DDR4→DDR5/JEDEC/controller history should still be routed to `computing-archaeology` rather than expanded inside Case 33.
 
@@ -258,12 +275,12 @@ This is a real addition to the project's retention model because it shows that m
 
 The case should remain bounded. Future work may separately address:
 
-1. directly inspected `JESD79-5` revision chronology and exact normative `REFsb` semantics;
-2. LPDDR/per-bank refresh genealogy and terminology;
-3. fine-granularity-refresh timing and controller scheduling;
+1. directly inspected final/later `JESD79-5` revision chronology and exact normative `REFsb` semantics;
+2. density/product/revision-specific evolution of `tRFCsb`, `tREFSBRD`, FGR, and command legality beyond the bounded 2019 example;
+3. LPDDR/per-bank refresh genealogy and terminology;
 4. temperature-controlled / temperature-compensated refresh;
 5. retention-aware scheduling based on measured cell retention time;
-6. controller implementation and empirical compliance;
+6. named-controller implementation, failure behavior, and empirical compliance;
 7. interactions with self refresh and low-power modes in a specific DDR5 product.
 
 None of those gaps invalidates the present finding; they define the point at which this case stops.

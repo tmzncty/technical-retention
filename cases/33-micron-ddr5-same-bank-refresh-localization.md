@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to public Micron manufacturer documentation describing DDR5 `Same Bank Refresh` / `REFsb` after the July 2020 JEDEC DDR5 standard announcement and in 2021–2023 DDR5 enablement/deployment material.
+**`grounded`** — bounded to Micron manufacturer documentation spanning a **November 2019 Rev. A pre-final DDR5 white paper** through 2020–2023 public enablement/deployment material. The 2019 document grounds bank selection, target-idle/service-blocking, residual non-target timing, FGR cadence, and same-bank ordering at a manufacturer design-witness level; it is not treated as the final normative `JESD79-5` contract.
 
 Grounding record: [`../evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md`](../evidence/33-micron-2020-2023-ddr5-same-bank-refresh-grounding.md).
 
@@ -70,6 +70,22 @@ Micron's 2023 article on DDR5 with 4th Gen Intel Xeon Scalable processors descri
 
 The 2023 phrase `refreshing a single bank at a time` is therefore treated as an availability-oriented summary, not as authority to erase the more precise manufacturer wording `one bank per bank group` / `a bank in each BG` found in Micron's other DDR5 material.
 
+### November 2019 pre-final Micron white-paper deepening
+
+Micron's **“Micron® DDR5 SDRAM: New Features”**, by Randall Rooney and Neal Koyle, carries **©2019 Micron** and **Rev. A 11/19** in its document footer. That places this source before the July 2020 final-standard announcement used elsewhere in this case. It is therefore treated as a **contemporaneous manufacturer design/enablement witness**, not as the final normative wording of `JESD79-5`.
+
+Its refresh section makes the bank geometry and service relation substantially more precise than the later feature summaries:
+
+- `REFsb` targets the **same bank position in all bank groups**, selected by bank bits on the command/address interface;
+- the banks actually targeted for refresh must be idle/precharged before the command and remain unavailable for ordinary read/write work for the refresh lockout interval;
+- unlike `REFab`, which requires all banks idle in the white paper's comparison, `REFsb` requires only one bank in each bank group to be idle;
+- in the paper's 16Gb x4/x8 example, the other twelve banks need not be idle, but their availability is still subject to the `tREFSBRD` same-bank-refresh-to-activate timing fence;
+- the paper places `REFsb` in Fine Granularity Refresh (`FGR`) mode and states that each bank must receive refresh on a 1.95 µs average cadence in that described mode;
+- it gives a **16Gb example** of 130 ns `tRFCsb` versus 295 ns for the compared all-bank refresh, so the numeric values are product/density/example evidence rather than universal DDR5 constants;
+- each same-bank position must receive one `REFsb` before that position receives a second, while the order among bank positions may vary.
+
+This deepening closes the repository's bounded **bank-structured refresh relation decomposition** at the manufacturer-primary level: target geometry, bank-group correlation, target-entry eligibility, target lockout, conditional non-target service, and temporal refresh accounting are now separately evidenced. It does **not** close final `JESD79-5` revision archaeology, later density-specific timing, controller compliance, or LPDDR/per-bank-refresh genealogy.
+
 ## Retained state and control state
 
 The payload remains volatile dynamic-memory state. Case 33 does not change the physical reason DRAM must be restored.
@@ -134,6 +150,46 @@ Therefore:
 One question asks **which banks** a maintenance command affects; another asks **who generates or owns the recurring maintenance sequence**.
 
 These relations can change independently.
+
+### Target-bank eligibility is not whole-rank quiescence
+
+The 2019 white paper makes an entry-condition distinction that the later feature summaries only imply. For `REFab`, all banks are described as needing to be idle before the command. For `REFsb`, only the corresponding bank in each bank group must be idle.
+
+Therefore:
+
+> **target-bank idle eligibility ≠ whole-rank idle eligibility**.
+
+This is stronger than the generic statement that other banks remain available: the maintenance command has a target-relative precondition as well as a target-relative service lockout.
+
+### Non-target availability is not timing independence
+
+The same source explicitly gives a residual timing relation to the non-refreshed banks: `tREFSBRD`.
+
+Therefore:
+
+> **non-target-bank availability ≠ timing-unconstrained concurrency**.
+
+A bank can remain serviceable relative to the active refresh target without becoming independent of every refresh-related timing fence. `Available` here means **admissible under the documented timing relation**, not `unaffected`.
+
+### Bank-order flexibility is not refresh-schedule freedom
+
+The white paper allows the `REFsb` commands to visit bank positions in any order, but also requires every same-bank position to receive one refresh before that position is refreshed a second time. It additionally places `REFsb` inside FGR and gives an average per-bank cadence for the described mode.
+
+Therefore:
+
+> **bank-order flexibility ≠ freedom from refresh accounting or cadence**.
+
+This also sharpens the cross-case boundary with Case 69. Case 33 concerns spatial target/interference geometry plus its local accounting constraints; Case 69 concerns DDR4 temporal postponement, pull-in, FGR grouping, and schedule-history rules. Spatial localization and temporal elasticity remain separate axes even when one command regime contains constraints on both.
+
+### Shorter target lockout is not zero maintenance interference
+
+The 2019 16Gb example gives a shorter `tRFCsb` than the compared all-bank `tRFC`, but the targeted banks are still unavailable during the same-bank refresh interval.
+
+Therefore:
+
+> **shorter target lockout ≠ no refresh lockout**.
+
+The relevant retention result is conditional concurrency: some bank resources can remain callable while another correlated bank set is temporarily unavailable for constitutive retention work.
 
 ### Non-refreshed-bank availability is not refreshed-bank availability
 
@@ -232,7 +288,10 @@ Cases 03, 09, 10, and 21 established the earlier distinctions. Case 33 adds the 
 | `REFsb` is historically just another name for every `per-bank refresh` regime | X | terminology/generalization not established by the bounded sources |
 | `REFsb` transfers refresh scheduling into the DRAM exactly like `SELF REFRESH` | X | not established; conflates target geometry with recurrence authority |
 | Micron invented Same Bank Refresh | X | not claimed; source set is not an invention-priority study |
-| The bounded manufacturer pages establish every normative DDR5 timing requirement | X | outside source scope; normative timing archaeology remains open |
+| The 2019 Micron white paper establishes the complete final `JESD79-5` timing contract | X | it is a Rev. A 11/19 manufacturer design/enablement document; final-standard revision archaeology remains open |
+| In the 2019 Micron white paper, `REFsb` requires only the corresponding bank in each bank group to be idle, while non-target banks can remain serviceable subject to `tREFSBRD` | H/P | Micron Rev. A 11/19 refresh section |
+| In that same bounded 16Gb example, `REFsb` is FGR-only, uses a 1.95 µs average per-bank cadence, and has 130 ns target lockout | H/P | manufacturer example; not generalized to every DDR5 density/revision |
+| Arbitrary bank visitation order removes the need to account for which same-bank positions have already been serviced | X | contradicted by the white paper requirement that each same-bank position receive one `REFsb` before any position is serviced a second time |
 
 ## Related repositories
 
@@ -247,5 +306,6 @@ A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty
 3. Micron Technology, Inc., **DDR5 DRAM** product page, DDR4-versus-DDR5 feature table: `REFRESH commands — All bank` versus `All bank and same bank`, with `REFsb enables refreshing a bank in each BG`: <https://www.micron.com/products/memory/dram-components/ddr5-sdram>.
 4. Micron Technology, Inc., **“Redefining performance With DDR5 and 4th Gen Intel Xeon scalable processors,”** 2023 public manufacturer article, especially the `Same bank refresh` availability discussion: <https://www.micron.com/about/blog/company/partners/redefining-performance-with-ddr5-and-4th-gen-intel-xeon-scalable>.
 5. Micron Technology, Inc., **“Micron Accelerates DDR5 Adoption With Technology Enablement Program,”** 14 July 2020, institutional release tying the TEP launch to JEDEC approval of DDR5: <https://investors.micron.com/node/41136>.
+6. Randall Rooney and Neal Koyle, Micron Technology, Inc., **“Micron® DDR5 SDRAM: New Features,”** Rev. A 11/19, manufacturer white paper. Official Micron asset: <https://assets.micron.com/adobe/assets/urn%3Aaaid%3Aaem%3A5ea148c8-e3fe-489e-8489-99b1b9cdcd3c/original/as/ddr5-new-features-white-paper.pdf>. Preserved full-document text/facsimile mirror used to inspect the refresh section and revision footer: <https://device.report/m/3d08f1032327cf5fbb74a044017258d62a01653aef88d208c3eef3c4f40754a2>.
 
-A richer Micron DDR5 white paper was discoverable during this round, but its current asset URL could not be directly inspected through the research interface. Its detailed timing claims are therefore **not** used to ground this case.
+The current official Micron asset is text-indexed with the same title/authors/refresh content but rejects direct binary rendering in this research interface. The preserved mirror is therefore used for inspectable document text and the revision footer, while the official Micron URL anchors provenance. The white paper's 16Gb timing values remain bounded manufacturer examples, not final `JESD79-5` constants.
