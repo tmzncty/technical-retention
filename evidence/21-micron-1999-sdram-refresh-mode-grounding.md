@@ -1,4 +1,4 @@
-# Grounding Record — Micron 64Mb SDRAM AUTO REFRESH / SELF REFRESH Mode Handoff (1999)
+# Grounding Record — Micron 64Mb SDRAM Refresh-Mode Handoff (1999), with Controller Transition Witness (2016)
 
 ## Purpose
 
@@ -21,6 +21,7 @@ Why:
 4. a later Micron manufacturer PDF facsimile was visually inspected as a continuity/checking aid for the command semantics, but it is **not substituted for the 1999 date claim**;
 5. Cases 09 and 10 already provide independent earlier primary evidence controlling false novelty claims about internal refresh counters and autonomous self-refresh scheduling;
 6. `tmzncty/computing-archaeology` was searched for `SDRAM`, `SELF REFRESH`, `AUTO REFRESH`, and `CKE`; no dedicated overlapping retention case was found.
+7. the 2016 Infineon XMC4700/XMC4800 reference manual supplies an independent manufacturer-primary controller/system witness for entry/exit request-versus-status and admission gating; a later official XMCLib API is used only as continuity evidence.
 
 ## Source 1 — Micron 64Mb x4/x8/x16 SDRAM, Rev. 11/99
 
@@ -136,6 +137,40 @@ The PDF identifies itself as a later Micron revision (`Rev. Q 1/12 EN`). Printed
 
 **Boundary:** this later facsimile is corroborative only. It cannot substitute for the `Rev. 11/99` evidence when making a statement specifically about the 1999 artifact.
 
+## Source 4 — Infineon XMC4700/XMC4800 EBU reference manual, 2016
+
+**Source:** Infineon Technologies AG, _XMC4700 / XMC4800 XMC4000 Family Reference Manual_, External Bus Unit (EBU) V1.6, manual V1.3, 2016-07.
+
+**Official PDF:** <https://www.infineon.com/assets/row/public/documents/30/44/infineon-referencemanual-xmc4700-xmc4800-um-en.pdf>
+
+### Printed p. 14-82 — system-side self-refresh sequencing
+
+Section 14.12.18 states that SDRAM self refresh performs internal refresh sequences from an on-chip timer. For controller-managed entry, software writes `SELFREN`; the EBU precharges the banks and issues self refresh to all attached SDRAM devices. Read-only `SELFRENST` reflects the status of issuing/completing this command, and the manual explicitly makes successful completion the point after which power-down can be entered safely.
+
+For exit, software writes `SELFREX`; the EBU asserts CKE for the SDRAM devices; read-only `SELFREXST` reflects completion, after which SDRAM accesses may proceed. The section then describes optional `ARFSH` work and `SELFREX_DLY`, a programmed NOP interval before later access.
+
+This supports a controller-level distinction among **request**, **transition completion evidence**, **power-state admission**, and **ordinary access admission**. It does not directly measure cell-level retention margin.
+
+### Printed pp. 14-120–14-122 — request/status register split
+
+The SDRMREF register exposes separate fields for:
+
+- writable `SELFREN` — issue Self Refresh Entry;
+- read-only/status `SELFRENST` — entry command successfully issued;
+- writable `SELFREX` — issue Self Refresh Exit / Power Up;
+- read-only/status `SELFREXST` — exit command successfully issued;
+- `SELFREX_DLY` — NOP cycles after exit before another command is permitted;
+- `AUTOSELFR` — controller-managed automatic entry/exit around external-bus ownership.
+
+The exact wording varies between the operational section and field descriptions (`completion` versus `successfully issued`). The repository therefore uses the conservative phrase **controller-observed transition/command-completion evidence** rather than treating the bit as a direct electrical proof of DRAM-cell state.
+
+## Source 5 — later official Infineon XMCLib API continuity
+
+**Source:** Infineon Technologies AG, XMCLib EBU driver in the official `Infineon/mtb-xmclib-cat3` repository:
+<https://github.com/Infineon/mtb-xmclib-cat3/blob/c24888699c6c5cfd6e5475be90d9703e43540d04/XMCLib/inc/xmc_ebu.h>
+
+The driver preserves separate self-refresh-entry and self-refresh-exit status identifiers and exposes `XMC_EBU_SdramGetRefreshStatus()`. This is **later implementation/API continuity**, not evidence for 1999 Micron behavior and not an origin claim for this controller architecture.
+
 ## Prior-art control — Cases 09 and 10
 
 Case 09 already grounds Texas Instruments 1980s CBR refresh behavior in which row enumeration is internal while refresh-request cadence remains externally controlled.
@@ -166,6 +201,11 @@ The actual historical contribution of this case is a **named product/interface r
 | Recurring maintenance responsibility changes locus by interface mode | E | reconstruction from p. 11/p. 13 behavior | project vocabulary, not Micron phrase |
 | Retention availability can exist while ordinary service is suspended | E | reconstruction from `Don't Care` inputs + explicit exit protocol | bounded interface-level conclusion |
 | Self refresh means nonvolatile retention without device power | X | rejected | source only says without external clocking / rest-of-system power-down |
+| XMC EBU exposes separate self-refresh entry/exit request controls and read-only status fields | H/P | Infineon 2016 §14.12.18 and SDRMREF pp. 14-120–14-122 | direct controller-level primary evidence |
+| XMC EBU ties safe power-down to completed entry and SDRAM access to completed exit | H/P | Infineon 2016 printed p. 14-82 | direct for this controller contract; not a universal SDRAM rule |
+| Request, transition-completion evidence, and next-action admission are distinct relations | E | Micron 1999 + Infineon 2016 comparison | bounded engineering reconstruction; no direct genealogy |
+| Entry/exit status proves physical retention margin of every SDRAM cell | X | rejected | controller status is not direct cell-retention measurement |
+| Retained data in self refresh remain ordinarily serviceable without exiting the mode | X | contradicted by input/CKE and exit semantics |
 | Micron datasheet equals complete JEDEC standard history | X | rejected | one manufacturer product-family artifact |
 
 ## Failure / forgetting decomposition
@@ -183,6 +223,10 @@ SELF REFRESH mode-entry failure
     !=
 loss of the powered self-refresh regime
     !=
+self-refresh entry requested but not yet controller-qualified for power-down
+    !=
+exit requested but not yet controller-qualified for access
+    !=
 exit/recovery timing violation
     !=
 ordinary-service unavailability while payload remains retained
@@ -199,7 +243,9 @@ Case 21 changes the comparison in ways Cases 03/09/10 alone did not establish at
 - **maintenance responsibility can be mode-transferred and reversible**;
 - **retention availability ≠ ordinary service availability**;
 - **self-refresh autonomy ≠ nonvolatility**;
-- **mode-transition recovery timing can be constitutive infrastructure**.
+- **mode-transition recovery timing can be constitutive infrastructure**;
+- **self-refresh request ≠ controller-observed transition completion ≠ next-action admission**;
+- **small control/status state can gate the retention treatment of a much larger payload without being payload itself**.
 
 ## Related-repository check
 
@@ -216,6 +262,8 @@ The case is grounded without closing these separate questions:
 - DDR-generation refresh evolution;
 - per-bank refresh;
 - modern retention-aware refresh policy;
-- empirical failure behavior of named Micron parts.
+- empirical failure behavior of named Micron parts;
+- controller/device composition under aborted entry/exit, controller reset, and real power sequencing;
+- independent fault injection validating whether named systems actually honor entry/exit completion before power/access transitions.
 
 Those are follow-on regimes, not hidden requirements for the bounded 1999 command/interface claim.

@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to the refresh command/mode semantics documented for Micron's 64Mb x4/x8/x16 SDR SDRAM family in the November 1999 (`Rev. 11/99`) manufacturer datasheet.
+**`grounded`** — bounded primarily to the refresh command/mode semantics documented for Micron's 64Mb x4/x8/x16 SDR SDRAM family in the November 1999 (`Rev. 11/99`) manufacturer datasheet, with a later Infineon XMC4700/XMC4800 external-memory-controller witness (2016) used only to deepen the system-side distinction among self-refresh request, observed transition completion, power-down admission, and access readiness.
 
 Grounding record: [`../evidence/21-micron-1999-sdram-refresh-mode-grounding.md`](../evidence/21-micron-1999-sdram-refresh-mode-grounding.md).
 
@@ -58,6 +58,16 @@ For `SELF REFRESH`, Micron says the device can retain data even if the rest of t
 
 Exit is not instantaneous ordinary service. The external clock must first be stable; CKE is then returned HIGH; and NOP commands are required for `tXSR` because an internal refresh may still be in progress. After exit, externally issued `AUTO REFRESH` commands must resume at the required cadence. Micron explicitly notes that `SELF REFRESH` and `AUTO REFRESH` use the same row refresh counter.
 
+## Later system/controller witness — Infineon XMC4700/XMC4800 EBU (2016)
+
+Infineon's _XMC4700 / XMC4800 XMC4000 Family Reference Manual_, V1.3 (2016-07), adds a later controller-side composition that the 1999 Micron device document does not expose.[^infineon-ebu]
+
+In §14.12.18 (printed p. 14-82), software requests self-refresh entry by writing `SELFREN`. The EBU then precharges the banks and issues the self-refresh command to the attached SDRAM devices. A separate read-only `SELFRENST` bit reports the status of that operation; the manual states that power-down may be entered safely when the command has completed. Exit is similarly split: software writes `SELFREX`, the controller raises CKE, and read-only `SELFREXST` reports completion before SDRAM access resumes. The same section also describes an optional post-exit auto-refresh step and a programmable `SELFREX_DLY` NOP interval before later access.[^infineon-ebu]
+
+The register description on printed pp. 14-120–14-122 makes the request/status separation explicit: `SELFREN` and `SELFREX` are writable command controls, while `SELFRENST` and `SELFREXST` are read-only status fields. A later official Infineon XMCLib API preserves this distinction in software-facing form through entry/exit-status enums and `XMC_EBU_SdramGetRefreshStatus()`.[^infineon-xmclib]
+
+This is **not** evidence that the XMC controller was paired with the 1999 Micron part, that Micron used Infineon's internal logic, or that the 2016 register model defines the 1999 historical meaning of `SELF REFRESH`. It is a later primary system witness for a separate layer: the controller must decide when the device transition is sufficiently complete to admit a surrounding power-state change or ordinary access.
+
 ## Retained state and control state
 
 The payload remains volatile dynamic-memory state. The documented refresh counter is maintenance-control state: it helps determine which row receives the next refresh operation. The interface also has a mode/control relation defined by CKE and the command sequence.
@@ -112,6 +122,38 @@ A state may be actively preserved through a low-power retention mode while norma
 
 The payload can therefore remain retained while the interface is temporarily not yet ready for ordinary access. Retention and service recovery have different timing conditions.
 
+### Command request, observed transition completion, and system admission are separate
+
+The Micron device contract already separates mode entry/exit from ordinary service timing. The later Infineon controller makes a further system-level distinction visible:
+
+```text
+software requests entry
+    !=
+controller observes/records entry-command completion
+    !=
+system admits power-down
+
+software requests exit
+    !=
+controller observes/records exit-command completion
+    !=
+post-exit delay/refresh work completes
+    !=
+ordinary SDRAM access is admitted
+```
+
+This is a bounded engineering reconstruction from two historical interfaces separated by seventeen years. It does not assert a direct genealogy between the products.
+
+The status bits are also not physical proof that every DRAM cell is healthy. They are controller-level evidence that the documented command transition has been issued/completed sufficiently for the next system action under that controller's contract. Therefore:
+
+> **transition-completion evidence ≠ direct measurement of payload retention margin**.
+
+And:
+
+> **retention-mode admission ≠ power-down/access admission**.
+
+A small amount of non-payload control state can thus gate whether a much larger dynamic-memory payload is treated as safely maintainable across a system power-state transition.
+
 ### Self refresh is not nonvolatility
 
 The phrase `retain data ... even if the rest of the system is powered down` must not be shortened to `the SDRAM retains data without power`. The datasheet says the device supplies its **own internal clocking** and refresh cycles. The bounded claim is independence from **external clocking** and much of the surrounding system while the SDRAM itself remains in its powered self-refresh regime.
@@ -133,6 +175,13 @@ The interface decomposition exposes distinct failure classes without assigning u
 
 These are mechanism-level boundaries derived from the documented control partition, not measured Micron field-failure statistics.
 
+The later controller witness adds two failure boundaries without inventing measured failure rates:
+
+- software can request self-refresh entry yet violate the controller's documented sequencing if surrounding power-down is admitted before the entry transition is complete;
+- software can request self-refresh exit yet resume SDRAM access before exit status and the configured post-exit delay/refresh sequence permit access.
+
+Neither condition is automatically identical to immediate payload loss. It means the system has crossed outside the documented transition/admission contract; the actual physical outcome still depends on device timing, refresh continuity, power, and workload.
+
 ## Prior art and anti-anachronism
 
 This case makes **no claim that Micron invented self refresh or SDRAM refresh commands**.
@@ -140,6 +189,8 @@ This case makes **no claim that Micron invented self refresh or SDRAM refresh co
 Case 10 already grounds a Toshiba patent with 1984 priority that places autonomous refresh scheduling, an oscillator, and a refresh-address counter on-chip; that patent itself cites still-earlier Hitachi automatic refresh-frequency work. The historical contribution of Case 21 is therefore not an invention story. It is a manufacturer-primary, named-product-family account of a late-1990s SDRAM interface in which recurring refresh responsibility is explicitly different in normal `AUTO REFRESH` and `SELF REFRESH` operation.
 
 Likewise, the Micron datasheet is not silently promoted into a complete JEDEC standard history. Terms such as `responsibility handoff`, `maintenance authority`, `retention availability`, and `service availability` are modern analytical labels used to compare mechanisms. Period claims remain in Micron's own vocabulary.
+
+The 2016 Infineon controller is used only as a **later system-composition witness**. It is not projected backward as Micron's 1999 internal implementation, not treated as a JEDEC normative chronology, and not used to infer a direct Micron→Infineon lineage. Its value here is relational: a system controller can retain explicit transition status and delay policy around an SDRAM self-refresh mode whose recurring maintenance work is performed inside the memory device.
 
 ## Functional analogy and philosophical limit
 
@@ -180,6 +231,10 @@ Cases 03, 09, and 10 established the first distinctions across different histori
 | Exit requires stable CLK, CKE HIGH, and a `tXSR` NOP interval before normal operation resumes | H/P | Micron Rev. 11/99 p. 13 |
 | External `AUTO REFRESH` cadence resumes after self-refresh exit | H/P | Micron Rev. 11/99 p. 13 |
 | Refresh responsibility can be transferred across the device boundary and later transferred back | E | bounded reconstruction from the two documented modes |
+| Infineon XMC4700/XMC4800 EBU exposes separate writable self-refresh entry/exit controls and read-only entry/exit status | H/P | 2016 Infineon reference manual §14.12.18 and SDRMREF register description |
+| Infineon gates safe power-down/access on completion of the corresponding self-refresh transition | H/P | 2016 Infineon reference manual printed p. 14-82 |
+| Self-refresh request, transition-completion evidence, and system admission are separate retention-control relations | E | bounded reconstruction from Micron 1999 + Infineon 2016; no direct genealogy claim |
+| Controller transition status proves every DRAM cell has sufficient physical retention margin | X | status is command/controller evidence, not a direct cell-retention measurement |
 | Retained data in self refresh remain ordinarily serviceable without exiting the mode | X | contradicted by input/CKE and exit semantics |
 | Self refresh makes the SDRAM nonvolatile or independent of device power | X | datasheet describes internal clocking/refresh, not unpowered retention |
 | Micron invented self refresh or these semantics define the complete JEDEC history | X | outside source scope and blocked by earlier primary evidence |
@@ -195,3 +250,5 @@ A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty
 1. Micron Technology, Inc., _64Mb: x4, x8, x16 SDRAM_, `64MSDRAM.p65 – Rev. 11/99`, November 1999, especially printed pp. 1, 4–6, 11, and 13. Preserved manufacturer-datasheet transcription: <https://pdf.elecfans.com/MICRON/MT48LC4M16A2.html>.
 2. Micron Technology, current SDRAM obsolete-part catalog, confirming the `MT48LC4M16A2` 64Mb x16 family identity and manufacturer provenance: <https://www.micron.com/products/obsolete/obsolete-sdram/part-catalog>.
 3. For earlier self-refresh prior-art control rather than Micron product semantics: Takayasu Sakurai and Tetsuya Iizuka, Toshiba Corp., US4682306A, _Self-refresh control circuit for dynamic semiconductor memory device_, Japanese priority 20 August 1984: <https://patents.google.com/patent/US4682306A/en>.
+4. [^infineon-ebu]: Infineon Technologies AG, _XMC4700 / XMC4800 XMC4000 Family Reference Manual_, EBU V1.6, manual V1.3, 2016-07, especially §14.12.18 printed p. 14-82 and SDRMREF register description pp. 14-120–14-122: <https://www.infineon.com/assets/row/public/documents/30/44/infineon-referencemanual-xmc4700-xmc4800-um-en.pdf>.
+5. [^infineon-xmclib]: Infineon Technologies AG, XMCLib EBU driver, official `Infineon/mtb-xmclib-cat3` repository, `XMC_EBU_SdramGetRefreshStatus` and self-refresh entry/exit status enums: <https://github.com/Infineon/mtb-xmclib-cat3/blob/c24888699c6c5cfd6e5475be90d9703e43540d04/XMCLib/inc/xmc_ebu.h>.
