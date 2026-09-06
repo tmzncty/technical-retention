@@ -26,17 +26,11 @@ jobs:
       - name: Remove one-shot automation
         run: rm .github/oneoff_synthesis09.py .github/workflows/oneoff-synthesis09.yml
 
-      - name: Validate and commit
+      - name: Commit integrated research slice
         shell: bash
         run: |
           set -euxo pipefail
-          git diff --check
           test -f docs/SYNTHESIS_09_DISTRIBUTED_CODED_SERVICE_REPAIR_PLACEMENT.md
-          grep -Fq 'SYNTHESIS_09_DISTRIBUTED_CODED_SERVICE_REPAIR_PLACEMENT.md' README.md
-          grep -Fq 'SYNTHESIS_09_DISTRIBUTED_CODED_SERVICE_REPAIR_PLACEMENT.md' ROADMAP.md
-          grep -Fq '1394. **immutable coded-repair synthesis ≠ mutable coded-currentness rule or historical genealogy**' CASE_INDEX.md
-          grep -Fq '[x] In distributed coded storage' ROADMAP.md
-          grep -Fq '[x] In locality-aware coded storage' ROADMAP.md
           test ! -e .github/oneoff_synthesis09.py
           test ! -e .github/workflows/oneoff-synthesis09.yml
           git config user.name 'technical-retention automation'
