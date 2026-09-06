@@ -1,0 +1,41 @@
+name: Integrate Synthesis 12
+
+on:
+  push:
+    paths:
+      - '.github/workflows/automation-synthesis12.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply bounded research patch
+        run: python3 tools/automation_synthesis12.py
+
+      - name: Validate and commit final tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f tools/automation_synthesis12.py .github/workflows/automation-synthesis12.yml
+          git add -A
+          git diff --cached --check
+          test -f docs/SYNTHESIS_12_INTEGRITY_QUALIFIED_CODED_RECOVERY.md
+          grep -Fq 'SYNTHESIS_12_INTEGRITY_QUALIFIED_CODED_RECOVERY.md' README.md
+          grep -Fq -- '- [x] In integrity-qualified coded storage' ROADMAP.md
+          grep -Fq '1467. **integrity-qualified coded-recovery synthesis ≠ one universal pipeline or historical genealogy**' CASE_INDEX.md
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+            exit 0
+          fi
+          git commit -m 'synthesis: qualify coded recovery by integrity authority'
+          git push origin HEAD:main
