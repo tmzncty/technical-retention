@@ -1989,3 +1989,17 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 1370. **integrity confidence can lag redundancy restoration** — sequential reconstruction can restore the configured redundancy relation before a later checksum scrub completes stronger verification.
 1371. **redundancy margin has algebraic and temporal dimensions** — code distance bounds tolerated failure combinations, while repair design controls how long a system remains at reduced margin after a failure consumes part of that tolerance; neither dimension substitutes for the other.
 1372. **cross-case recovery pipeline ≠ historical genealogy** — failure evidence → reconstructability → degraded service → repair selection/execution → restored margin → verification is an analytical decomposition, not a claim that Berkeley RAID, ZFS, Linux RAID-6, and OpenZFS share one implementation lineage.
+
+### Cross-case proactive-integrity synthesis — presence, verification, discovery, and repair margin
+
+1373. **physical presence ≠ verified integrity** — a replica or block can be positively inventoried yet fail a later checksum/read verification; presence is not an integrity certificate.
+1374. **successful verification at `t1` ≠ integrity at `t2`** — a scan records a bounded observation under one failure model, while later media, metadata, or software faults can invalidate that relation; verification confidence therefore has age.
+1375. **defect discovery ≠ fault localization** — a checksum or structural mismatch establishes inconsistency but need not identify whether payload, integrity metadata, or another maintained relation is the defective side.
+1376. **defect discovery ≠ repairability** — a bad embodiment can be discovered after all good sources are gone, while repair capacity can conversely exist before a latent defect has been exercised by verification.
+1377. **repairability ≠ restored redundancy** — an admissible source replica or sufficient decode set makes replacement possible; configured replica/parity margin returns only after replacement state is materialized.
+1378. **fallback service availability ≠ repair completion** — another replica or on-demand reconstruction can satisfy present reads while repair remains pending and future-failure margin is still reduced.
+1379. **restored redundancy ≠ full integrity revalidation** — OpenZFS dRAID can restore coded redundancy through sequential reconstruction before a later checksum scrub supplies stronger verification coverage.
+1380. **checksum mismatch ≠ universal proof of payload corruption** — Ceph Luminous supplies a concrete counterexample in which retained digest metadata became inconsistent and its authority had to be temporarily withdrawn and repaired.
+1381. **verification-progress state ≠ verification result** — an HDFS scanner cursor can preserve maintenance coverage progress across restart without certifying blocks that have not yet been checked.
+1382. **physical replica count ≠ integrity-qualified repair margin** — version/currentness filters, checksum validity, read errors, and operational authority can make only a subset of surviving embodiments admissible as future repair sources.
+1383. **proactive checking ≠ timeless certainty or one historical lineage** — scan/scrub shifts hidden-defect discovery into scheduled maintenance work, but it neither proves every fault class nor makes GFS, ZFS, HDFS, Ceph, and OpenZFS one mechanism or genealogy.

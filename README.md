@@ -97,6 +97,8 @@ A focused Flash/SSD comparison is now available in [`docs/SYNTHESIS_06_FLASH_REA
 
 A bounded coded-storage recovery comparison is now available in [`docs/SYNTHESIS_07_CODED_RECOVERABILITY_REPAIR_MARGIN.md`](docs/SYNTHESIS_07_CODED_RECOVERABILITY_REPAIR_MARGIN.md). Across grounded RAID/ZFS cases it separates failure/currentness evidence, mathematical reconstructability, degraded request service, repair-scope selection, reconstruction geometry, restored redundancy margin, and later integrity verification.
 
+A bounded proactive-integrity comparison is now available in [`docs/SYNTHESIS_08_PROACTIVE_INTEGRITY_REPAIR_MARGIN.md`](docs/SYNTHESIS_08_PROACTIVE_INTEGRITY_REPAIR_MARGIN.md). Across grounded GFS, ZFS, HDFS, Ceph, and OpenZFS cases it separates physical presence, currentness/admissibility, integrity evidence, verification coverage, defect discovery, repair-source qualification, repairability, fallback service, restored redundancy, and later revalidation.
+
 This chain is a **research heuristic**, not a claim that all of these mechanisms are historically or philosophically identical.
 
 For example, describing an abacus as `register-like` may be a useful **functional reconstruction**, but it would be anachronistic to claim that historical abacus users possessed the modern computer-architecture concept of a register.
