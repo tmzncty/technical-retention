@@ -1,0 +1,44 @@
+name: synthesis10-index-spacing-cleanup
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/oneoff-synthesis10-format.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Restore section spacing
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('CASE_INDEX.md')
+          text = p.read_text(encoding='utf-8')
+          old = '1394. **immutable coded-repair synthesis ≠ mutable coded-currentness rule or historical genealogy** — Swift supplies a counterexample in which same-timestamp/distinct-index/durability qualification precedes usable decoding; this does not make f4, WAS, and Swift one pipeline or lineage.\n### Cross-case mutable-EC currentness synthesis'
+          new = old.replace('\n###', '\n\n###')
+          assert text.count(old) == 1, text.count(old)
+          p.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+          git diff --check
+      - name: Remove one-shot workflow and commit
+        shell: bash
+        run: |
+          set -euxo pipefail
+          rm .github/workflows/oneoff-synthesis10-format.yml
+          git diff --check
+          git config user.name 'technical-retention automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git commit -m 'synthesis10: restore findings section spacing'
+          git push origin HEAD:main
