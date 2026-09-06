@@ -84,6 +84,15 @@ The refresh-command section repeats the controller-tracking requirement: the con
 
 Use of Source B is conservative. It is a same-manufacturer product-family continuity check, not an independent lab validation and not evidence of invention priority.
 
+## Source C — Micron 512Mb Automotive Mobile LPDDR2, Rev. A 07/15
+
+Micron Technology, Inc., _512Mb: x32 Automotive Mobile LPDDR2 SDRAM_, PDF ID `09005aef86573be0`, filename `512mb_mobile_lpddr2_u97m_ait_aat_aut.pdf`, Rev. A, July 2015.
+
+Text-preserving mirror:
+<https://dtsheet.com/doc/1384686/512mb--x32-automotive-mobile-lpddr2-sdram>
+
+This later manufacturer document again requires the controller to track the bank being refreshed by REFpb, repeats the bank-idle precondition, and preserves distinct `tRFCpb`/`tRFCab` timing constraints. It is used only as a 2015 continuity witness for the bounded interface relation, not as independent validation and not as an origin claim.
+
 ## Relation to Case 104
 
 Case 104 grounds PASR in a later Micron LPDDR family as a **retention coverage** policy: in self refresh, excluded regions are not refreshed and their data are not promised survival.
@@ -109,7 +118,7 @@ The words `partial` and `per-bank` are not interchangeable descriptions of one r
 | --- | --- | --- | --- |
 | Micron markets per-bank refresh as supporting concurrent operation | H/P | Source A, printed p. 1 | strong manufacturer-primary |
 | REFpb follows a fixed eight-bank round-robin target sequence | H/P | Source A, printed p. 81 | strong manufacturer-primary |
-| controller tracks the bank being refreshed | H/P | Source A, p. 81; Source B, p. 55 | strong manufacturer-primary, same-vendor corroboration |
+| controller tracks the bank being refreshed | H/P | Source A, p. 81; Sources B/C continuity | strong manufacturer-primary, same-vendor corroboration |
 | target bank unavailable while other banks may be READ/WRITE-accessed | H/P | Source A, printed p. 82 | strong manufacturer-primary |
 | REFab refreshes all banks and resynchronizes bank count | H/P | Source A, printed p. 82 | strong manufacturer-primary |
 | one REFab can be replaced by a full cycle of eight REFpb commands | H/P | Source A, printed p. 83 | strong manufacturer-primary |
@@ -120,6 +129,7 @@ The words `partial` and `per-bank` are not interchangeable descriptions of one r
 ## Historical cautions
 
 - The main source is a genuine Micron manufacturer PDF preserved by Mouser; the mirror is not independent validation.
+- Sources B and C are same-vendor continuity witnesses, not independent corroboration.
 - A precise July 2014 product-document witness is not an origin date.
 - No complete JEDEC revision chronology is reconstructed here.
 - `REFpb cycle completion` must be scoped to one maintenance transaction, not promoted to a whole-array correctness certificate.
