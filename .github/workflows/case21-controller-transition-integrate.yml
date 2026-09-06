@@ -19,6 +19,20 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+      - name: Normalize stale Evidence 21 ledger anchor
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('evidence/21-micron-1999-sdram-refresh-mode-grounding.md')
+          text = p.read_text(encoding='utf-8')
+          row = '| Retained data in self refresh remain ordinarily serviceable without exiting the mode | X | contradicted by input/CKE and exit semantics |'
+          anchor = '| Micron datasheet equals complete JEDEC standard history | X | rejected | one manufacturer product-family artifact |'
+          if row not in text:
+              assert text.count(anchor) == 1
+              text = text.replace(anchor, row + '\n' + anchor, 1)
+              p.write_text(text, encoding='utf-8')
+          PY
       - name: Integrate Case 21 controller-transition deepening
         run: python3 .github/scripts/case21_controller_transition_integrate.py
       - name: Validate and commit
