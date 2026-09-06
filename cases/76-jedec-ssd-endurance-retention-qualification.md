@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to the September 2010 JESD218 SSD-level endurance/retention qualification relation, with Intel's June 2012 retention application note used to expose the difference between standardized TBW and actual media wear, and Intel's September 2015 DC P3608 specification used as a named commercial product witness. Prior-art deepening now also separates the earlier JESD22-A117 device-level program/erase-endurance-and-retention test family from JESD218's later SSD-level host-TBW service contract, using a 2006 Renesas standards inventory, JEDEC's own later revision ledger, and a 2002 IEEE post-cycling retention paper.
+**`grounded`** — bounded to the September 2010 JESD218 SSD-level endurance/retention qualification relation, with Intel's June 2012 retention application note used to expose the difference between standardized TBW and actual media wear, and Intel's September 2015 DC P3608 specification used as a named commercial product witness. Prior-art deepening now also separates the earlier JESD22-A117 device-level program/erase-endurance-and-retention test family from JESD218's later SSD-level host-TBW service contract, using a 2006 Renesas standards inventory, JEDEC's own later revision ledger, and a 2002 IEEE post-cycling retention paper. The 2010→2012 workload chronology is now further bounded by July 2012 JESD219A publication metadata and its separately distributed Master/Test Trace artifacts; this does not substitute for direct inspection of the normative JESD219A body.
 
 Grounding record: [`../evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md`](../evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md).
 
@@ -143,6 +143,46 @@ by August 2011
 ```
 
 Direct facsimile archaeology of JESD218A and the later normative JESD219A client-workload text remains open. The purpose of this deepening is to prevent later revisions from being silently projected backward into September 2010.
+
+### By July 2012 the client workload had become a standard-plus-trace artifact set
+
+A later publication boundary can now be grounded without pretending that a standards-catalog record is a substitute for the full normative text. Accuris's JEDEC catalog records **JESD219A, _Solid-State Drive (SSD) Endurance Workloads_**, as a 26-page standard published **1 July 2012**. Its description says that the workloads are used with JESD218 and explicitly points to separate `JESD219A_MT` and `JESD219A_TT` **supporting trace files**.[^jesd219a-catalog]
+
+The companion catalog records make the client-workload embodiment more concrete. `JESD219A_MT`, **Master Trace for 128 GB SSD**, is described as a supporting file for implementing the endurance-verification client workload. The record says that it represents actual SSD activity over **seven months**, applies to client endurance verification for user capacities of at least 64 GB, can serve directly as the test trace for 128–256 GB devices with its existing LBA range, and can be compressed or expanded for other capacities under the stated maximum-LBA relation.[^jesd219a-mt]
+
+`JESD219A_TT`, **Test Trace for 64 GB–128 GB SSD**, is separately described as a trace **derived from the 128 GB Master Trace** using the compression method in JESD219, with the same workload characteristics except that its maximum LBA represents 64 GB of user capacity.[^jesd219a-tt]
+
+This closes a narrower gap than direct normative facsimile archaeology. It establishes that, by July 2012, the client workload was no longer merely a committee presentation or an unfinished promise in the September 2010 issue: JEDEC's cataloged revision had named supporting workload artifacts, including a captured Master Trace and a derived Test Trace. It does **not** establish every clause, preconditioning rule, trace transformation algorithm, or later revision change inside the full JESD219A text.
+
+The retention-specific point is also narrower than a generic workload-history claim. The trace files are not the SSD payload being protected. They are retained **workload history/control input** used to reproduce a qualification stress relation later. That gives a useful engineering decomposition:
+
+```text
+application-class requirement
+    !=
+workload-standard prose
+    !=
+captured Master Trace history
+    !=
+capacity-adapted Test Trace
+    !=
+endurance-stress execution
+    !=
+JESD218 qualification verdict
+    !=
+later power-off retention interval
+```
+
+From the artifact descriptions alone, several boundaries follow:
+
+> **workload-standard text ≠ supporting trace artifact**;
+
+> **Master Trace ≠ derived Test Trace**;
+
+> **workload role continuity ≠ one fixed LBA geometry**;
+
+> **seven months represented by the source trace ≠ the later JESD218 power-off retention interval**.
+
+The first three are historical-record-plus-engineering boundaries around the July 2012 artifact set. The last is a cross-document engineering reconstruction: one interval characterizes the history represented by the workload source, while JESD218's retention-use interval is a separate post-endurance service requirement. Neither should be silently substituted for the other.
 
 ### Retention qualification is controller-inclusive and statistically bounded
 
@@ -324,7 +364,7 @@ The bounded historical contribution used here remains more specific:
 
 > by September 2010, JESD218 standardized an **SSD-level**, application-class-specific endurance rating expressed as host TBW and tied it to workload, capacity, UBER/FFR, and a subsequent power-off retention requirement, above an already-existing device-level endurance/retention qualification tradition.
 
-A full pre-2000 EEPROM/Flash qualification genealogy, direct facsimile archaeology of original A117/A117B, the complete JESD219 workload history, and later JESD218 revision history remain separate work best coordinated with `computing-archaeology`.
+A full pre-2000 EEPROM/Flash qualification genealogy, direct facsimile archaeology of original A117/A117B, the complete JESD219 workload history, and later JESD218 revision history remain separate work best coordinated with `computing-archaeology`. A fresh repository search for `JESD219A`, `SSD endurance workload`, and the trace-artifact names found no dedicated `computing-archaeology` case to reuse; this repository therefore keeps only the bounded retention-specific standard/trace relation while leaving any broad standards genealogy to that companion project.
 
 ---
 
@@ -385,3 +425,7 @@ The mechanisms should not be collapsed simply because all of them can be describ
 
 [^jesd219-2010]: JEDEC, **JESD219, _Solid-State Drive (SSD) Endurance Workloads_**, September 2010. Public text-preserving inspection copy: <https://studylib.net/doc/18339575/jesd219>. Cover/scope identify the September 2010 issue; printed p. 1 states that the client workloads were still under development and were to be added when available, while §3 is the enterprise endurance workload. This mirror is used for document inspection and cross-checked against contemporaneous September 2010 publication notices; it is not used for invention priority.
 [^cox2011]: Alvin Cox (Seagate; Chairman, JEDEC JC-64.8), **_JEDEC SSD Endurance Workloads_**, Flash Memory Summit, 10 August 2011: <https://old.flashmemorysummit.com/English/Collaterals/Proceedings/2011/20110810_T1B_Cox.pdf>. Slides 3–7 identify JESD218A and the class requirements; slides 12–13 describe the client workload as based on a real trace including TRIM and note that testing at 100% full was still under discussion. This is contemporaneous committee-chair presentation evidence, not a substitute for a normative standards facsimile.
+
+[^jesd219a-catalog]: Accuris / JEDEC catalog, **JESD219A, _Solid-State Drive (SSD) Endurance Workloads_**, published 1 July 2012, 26 pages. The catalog description says the workloads are used with JESD218 and points to `JESD219A_MT` and `JESD219A_TT` as supporting trace files: <https://store.accuristech.com/asa/standards/jedec-jesd219a?product_id=1837609>. Accuris's JEDEC browse page also lists the September 2010 `JESD 219` and July 2012 `JESD219A` as separate catalog entries: <https://store.accuristech.com/products?page=23&per_page=10&publisher_id=110&sort_direction=asc&sort_order=doc_no>. This is publication/catalog evidence, not direct inspection of the full secured normative standard.
+[^jesd219a-mt]: Accuris / JEDEC catalog, **JESD219A_MT, _Master Trace for 128 GB SSD_**, published 1 July 2012. The description identifies it as a supporting file for the endurance-verification client workload, says it represents seven months of actual SSD activity, and documents its direct/scaled capacity use: <https://store.accuristech.com/standards/jedec-jesd219a_mt?product_id=1838012>.
+[^jesd219a-tt]: Accuris / JEDEC catalog, **JESD219A_TT, _Test Trace for 64 GB - 128 GB SSD_**, published 1 July 2012. The description says it is derived from the 128 GB Master Trace using the JESD219 compression method and preserves the Master Trace characteristics except for maximum LBA: <https://store.accuristech.com/standards/jedec-jesd219a_tt?product_id=1837608>.

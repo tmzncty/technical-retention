@@ -14,6 +14,7 @@ The source hierarchy is:
 6. **Belgal et al., IEEE IRPS 2002** — period technical evidence for program/erase-cycling-conditioned Flash retention physics.
 7. **JEDEC JESD219 (September 2010)** — normative companion-workload primary text, inspected to bound the original enterprise-only workload coverage and the still-developing client workload;
 8. **Alvin Cox / JEDEC JC-64.8 presentation (August 2011)** — contemporaneous committee-chair evidence for the evolving JESD218A/JESD219 client-workload state, kept below normative standards text in authority.
+9. **JEDEC/Accuris JESD219A + MT/TT catalog records (July 2012)** — publication and supporting-artifact evidence that the client workload had become a standard-plus-trace artifact set; used below the authority of directly inspected normative text.
 
 No source in this record is used to establish an invention-priority claim. The later A117E ledger is explicitly treated as revision-history evidence rather than proof of first discovery.
 
@@ -234,6 +235,61 @@ By August 2011 the committee chair was publicly presenting JESD218A and a client
 ### Evidence limit
 
 A conference presentation by the standards subcommittee chair is **contemporary committee evidence**, not the normative text of JESD218A or JESD219A. The phrase `still under discussion` is especially important: it blocks silently treating every slide detail as a finalized standard requirement.
+
+---
+
+## Source 9 — JESD219A publication and supporting trace artifacts, July 2012
+
+**Cataloged standard:** JEDEC, _Solid-State Drive (SSD) Endurance Workloads_, JESD219A, publication date 1 July 2012.
+
+**Inspected catalog record:** Accuris / JEDEC:
+<https://store.accuristech.com/asa/standards/jedec-jesd219a?product_id=1837609>
+
+**Supporting artifacts:**
+
+- `JESD219A_MT`, _Master Trace for 128 GB SSD_: <https://store.accuristech.com/standards/jedec-jesd219a_mt?product_id=1838012>;
+- `JESD219A_TT`, _Test Trace for 64 GB - 128 GB SSD_: <https://store.accuristech.com/standards/jedec-jesd219a_tt?product_id=1837608>.
+
+### Exact metadata inspected
+
+- JESD219A is cataloged as a 26-page JEDEC standard published **07/01/2012**;
+- its catalog description says that it defines workloads for SSD endurance rating/verification in conjunction with JESD218 and explicitly names `JESD219A_MT` and `JESD219A_TT` as supporting trace files;
+- `JESD219A_MT` is cataloged on the same date as a supporting file for implementation of the endurance-verification **client workload**;
+- the Master Trace description says it represents **seven months of actual SSD activity**, is used for client endurance verification under JESD218 for user capacities ≥64 GB, can be used directly for 128–256 GB with its existing LBA range, and can be compressed/expanded for other capacities under a stated maximum-LBA constraint;
+- `JESD219A_TT` is cataloged on the same date as a supporting client-workload file for 64–128 GB devices;
+- the Test Trace description says it is **derived from the 128 GB Master Trace** using the compression method described in JESD219 and that its characteristics are identical except for a maximum LBA representing 64 GB user capacity;
+- Accuris's JEDEC browse page lists the September 2010 `JESD 219` and July 2012 `JESD219A` as distinct catalog entries, providing a publication-level revision cross-check: <https://store.accuristech.com/products?page=23&per_page=10&publisher_id=110&sort_direction=asc&sort_order=doc_no>.
+
+### What this source set directly grounds
+
+**Historical record:**
+
+- by July 2012, JESD219A and separately named MT/TT supporting artifacts were cataloged as the client-workload implementation set;
+- the Master Trace was represented as captured real SSD activity over seven months rather than an invented synthetic command list;
+- the 64–128 GB Test Trace was derived from the 128 GB Master Trace rather than recorded as an independent source history;
+- capacity adaptation was part of the documented workload-artifact relation.
+
+**Engineering reconstruction:**
+
+```text
+workload standard
+    !=
+supporting trace artifact
+    !=
+source Master Trace history
+    !=
+derived capacity-adapted Test Trace
+    !=
+test execution
+    !=
+qualification result
+```
+
+This also creates a retention-specific control-state observation: the trace is a retained **history used to reproduce future stress**, not the user payload whose endurance/retention is being qualified.
+
+### Evidence limit
+
+These are publisher/distributor catalog records carrying JEDEC document metadata and descriptions. They are adequate for publication date, artifact identity, and the quoted high-level artifact relation, but they are **not a directly inspected full normative JESD219A facsimile**. They therefore do not close clause-level preconditioning, trace-transformation, or later revision archaeology. Nor do they establish invention priority for trace-based SSD workload qualification.
 
 ---
 
