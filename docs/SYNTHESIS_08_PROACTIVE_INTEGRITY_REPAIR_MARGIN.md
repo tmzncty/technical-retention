@@ -219,6 +219,109 @@ Scrubbing/scanning spends I/O, time, energy, scheduling capacity, and control st
 
 ---
 
+## Distributed replica-integrity lifecycle addendum
+
+The roadmap also asked a narrower distributed-storage question:
+
+> How should `version currentness`, `checksum validity`, `demand-time versus idle-time discovery`, `fallback read availability`, `valid-replica count`, `clone repair`, and `restored replication goal` be separated?
+
+The already-grounded GFS and HDFS cases supply a direct answer, while Ceph supplies the counterexample that prevents checksum metadata from being treated as unquestionable truth. This subsection therefore **deepens this existing synthesis instead of creating another near-duplicate synthesis document**.
+
+### Version/currentness is not checksum validity
+
+GFS Case 26 gives the cleanest historical split. Chunk version numbers exclude stale replicas from ordinary service; per-replica checksums separately qualify the contents of a replica that belongs to the expected version. HDFS Case 83 similarly separates Blockreport/inventory presence from later checksum verification. A physical copy can therefore be present yet inadmissible because it is stale, or current yet later rejected because its local integrity relation fails.
+
+This yields a qualified-count rule:
+
+```text
+physical replica count
+    != current-version replica count
+    != integrity-qualified replica count
+```
+
+The last count is the one relevant to immediate repair opportunity under the bounded accidental-corruption model.
+
+### Demand-time discovery is not idle/periodic discovery
+
+GFS verifies checksum blocks before returning requested data and can also `scan and verify` inactive chunks during idle periods. HDFS documentation describes client-side checksum checking on retrieval, while the DataNode `BlockScanner` / `VolumeScanner` path deliberately reads replicas without an application request, under a rate-limited periodic/suspect-triggered maintenance regime.
+
+The integrity relation may be the same kind of checksum relation, but the **trigger and timing of discovery differ**:
+
+```text
+demand-time verification
+    -> defect is discovered because current service touched the replica
+
+idle / periodic verification
+    -> defect may be discovered before current service needs the replica
+```
+
+Background verification therefore changes the interval during which a latent defect can silently consume future repair margin. It does not prove that corruption happened during the scan, nor does a successful scan create permanent future validity.
+
+### Fallback read availability is not repair completion
+
+In GFS, a checksum mismatch can cause the requester to use another replica while the master separately arranges cloning from a valid source. HDFS likewise allows checksum failure on one replica to be bypassed by retrieving another copy while distributed control later handles re-replication.
+
+So a successful request can occur in a degraded-but-serviceable state:
+
+```text
+one replica rejected
+    -> another valid replica serves the read
+    -> configured replication goal may still be unmet
+    -> clone / re-replication remains pending
+```
+
+`read succeeded` therefore says less than `repair completed`, and both say less than `all intended replicas are again present and qualified`.
+
+### Valid-replica count is a qualified count, not an inventory count
+
+GFS explicitly warns that an inactive corrupted replica can make the master believe enough valid replicas exist until the defect is discovered. HDFS Case 79/83 provides the complementary inventory counterexample: a Blockreport can positively re-observe a block location without establishing that a later full checksum verification will succeed.
+
+The system can consequently move through several different counts:
+
+```text
+inventoried / physically present replicas
+        ↓ currentness filter
+current-version replicas
+        ↓ integrity qualification
+currently acceptable repair/service sources
+        ↓ clone / re-replication
+restored configured replication goal
+```
+
+These counts can coincide in a healthy steady state, but they are not the same retained relation.
+
+### Clone repair is not discovery, and restored goal is not revalidation of everything
+
+GFS makes the ordering particularly explicit: after corruption is detected, another **valid replica** is used to create a replacement; only after the replacement exists does the master tell the server holding the corrupted copy to delete it. The clone consumes network/disk bandwidth and is throttled separately from ordinary service. HDFS's DataNode scanner similarly stops at verification/reporting; NameNode-directed re-replication is a later distributed action.
+
+This gives a bounded lifecycle:
+
+```text
+currentness + integrity qualification
+        ↓
+defect discovery
+        ↓
+repair-source admissibility
+        ↓
+(optional) fallback service
+        ↓
+clone / re-replication
+        ↓
+configured replication goal restored
+        ↓
+future periodic verification remains necessary
+```
+
+The final line matters. Restoring the replica goal recreates multiplicity; it does not turn every embodiment into timelessly verified state. Later scans can still discover new corruption, and Ceph Case 27 shows that integrity metadata itself can require requalification.
+
+### What this distributed addendum does not establish
+
+This relation map does **not** establish that GFS, HDFS, Ceph, and ZFS share one repair implementation or historical lineage. It does not equate GFS `scan and verify` with the later historical term `scrub`, does not treat HDFS BlockScanner as the origin of distributed integrity maintenance, and does not turn checksum equality into a Byzantine-authenticity proof. It also does not collapse anti-entropy/version reconciliation into corruption detection: GFS itself explicitly notes that legal replicas can diverge, so bytewise equality is not its universal corruption criterion.
+
+The bounded result is narrower: in distributed replicated storage, **currentness, integrity qualification, discovery timing, request fallback, qualified replica count, repair execution, and restored replication goal are separate retention relations even when a healthy system often makes them appear to move together**.
+
+---
+
 ## Relationship to Synthesis 07
 
 [Synthesis 07](SYNTHESIS_07_CODED_RECOVERABILITY_REPAIR_MARGIN.md) asks what happens **after a failure/exposure relation is known** in coded storage: reconstructability, degraded service, repair scope, reconstruction geometry, restored redundancy, and later integrity validation.
