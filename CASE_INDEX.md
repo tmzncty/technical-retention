@@ -2249,7 +2249,7 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 1580. **same three-month interval ≠ same qualification conditions** — HPE's three-month product statement and the September 2010 JESD218 enterprise row cannot be equated without evidence for temperature, workload, revision, test method, and controller-margin equivalence.
 1581. **2026 commercial witness ≠ 2010 historical adoption evidence** — the modern P5430 demonstrates that the end-of-endurance → unpowered-retention relation remains product-visible in a QLC-era offering; it does not prove when HPE, Micron, or the industry first adopted that relation.
 1582. **NAND density/generation label ≠ host-visible endurance contract** — QLC identifies cell encoding density, while the SSD's host-rated write budget and later retention obligation emerge through media, controller, workload, and qualification relations above that label.
-1583. **one named QLC product witness ≠ universal TLC/QLC comparison** — Case 76 now has a bounded QLC-era product witness, while TLC cross-checks, cross-vendor QLC evidence, direct qualification reports, and post-rating fault tests remain open.
+1583. **one named QLC product witness ≠ universal TLC/QLC comparison** — the original P5430-only witness was insufficient for a TLC/QLC comparison; the named TLC cross-check below advances that gap while still leaving cross-vendor evidence, controlled media comparisons, direct qualification reports, and post-rating fault tests open.
 
 ### Case 76 HPE TLC/QLC commercial cross-check — same capacity, different rated-write envelopes, shared retention clause
 

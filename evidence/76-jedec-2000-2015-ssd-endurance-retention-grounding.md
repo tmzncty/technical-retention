@@ -15,7 +15,7 @@ The source hierarchy is:
 7. **JEDEC JESD219 (September 2010)** — normative companion-workload primary text, inspected to bound the original enterprise-only workload coverage and the still-developing client workload;
 8. **Alvin Cox / JEDEC JC-64.8 presentation (August 2011)** — contemporaneous committee-chair evidence for the evolving JESD218A/JESD219 client-workload state, kept below normative standards text in authority.
 9. **JEDEC/Accuris JESD219A + MT/TT catalog records (July 2012)** — publication and supporting-artifact evidence that the client workload had become a standard-plus-trace artifact set; used below the authority of directly inspected normative text.
-10. **HPE Solid State Disk Drives QuickSpecs Version 72 + P5430 product page (January 2026)** — manufacturer/OEM primary evidence for a named QLC P5430 SKU, its host-level endurance rating, and HPE's three-month unpowered post-endurance data-retention statement; used as a product witness, not an independent JEDEC compliance audit or raw-cell retention measurement.
+10. **HPE Solid State Disk Drives QuickSpecs Version 72 + P5430 product page (January 2026)** — manufacturer/OEM primary evidence for the named QLC P5430 `P63934-B21` witness and the same-document TLC CM7 `P61183-B21` cross-check, their host-level endurance ratings, and HPE's three-month unpowered post-endurance data-retention statement; used as a bounded product-contract comparison, not an independent JEDEC compliance audit, controlled TLC/QLC experiment, or raw-cell retention measurement.
 
 No source in this record is used to establish an invention-priority claim. The later A117E ledger is explicitly treated as revision-history evidence rather than proof of first discovery.
 
