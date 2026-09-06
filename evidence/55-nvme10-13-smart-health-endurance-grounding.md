@@ -8,7 +8,7 @@ Companion to [`../cases/55-nvme-smart-health-endurance-telemetry.md`](../cases/5
 
 Can the project establish, from primary interface documentation and a named product witness, that an SSD retains non-payload history/health state across power cycles, while keeping cumulative history, current warning state, host workload counters, spare reserve, and model-derived endurance estimates technically distinct?
 
-The answer is yes for the bounded NVMe 1.0–1.3 record. The original 2011 Gold revision additionally grounds the boundary between spare-threshold warning, lack of spare locations, and command failure. A new bounded prior-art pass adds an official July 1995 T10/SFF publication witness and a January 1997 ATA-3 working-draft semantics witness, establishing that retained drive-health state, threshold qualification, nonvolatile attribute saving, and power-cycle-persistent monitoring policy predate NVMe without claiming a complete SMART genealogy.
+The answer is yes for the bounded NVMe 1.0–1.3 record. The original 2011 Gold revision additionally grounds the boundary between spare-threshold warning, lack of spare locations, and command failure. A bounded prior-art pass adds an official July 1995 T10/SFF publication witness and a January 1997 ATA-3 working-draft semantics witness, establishing that retained drive-health state, threshold qualification, nonvolatile attribute saving, and power-cycle-persistent monitoring policy predate NVMe. A further 1999 ATA/ATAPI-5 pass grounds a different relation: device-initiated diagnostic work can be host-triggered yet asynchronous, expose separate capability/progress/result state, and leave a finite retained self-test history without becoming a complete device archive.
 
 ## Source 0 — official NVM Express Revision 1.0 Gold
 
@@ -370,3 +370,107 @@ The bounded case is ready for `grounded` status because it has:
 - cross-case boundaries to physical refresh, ECC, PLI validation, read disturb, and maintenance-state cases.
 
 Future work should be separate slices: direct SFF-8035i facsimile/revision archaeology; pre-SFF vendor SMART implementations; ATA-4/ATA-5 offline collection and self-test evolution; named-product SMART attribute meanings; JEDEC JESD218 methodology; independent calibration of `Percentage Used` against named-device physical wear/failure; modern NVMe telemetry/endurance-group extensions; and fleet-level replacement policy.
+
+## Source H — T13 1999 SMART/self-test proposal metadata
+
+**Archive:** Technical Committee T13, 1999 document index.
+Official index: <https://t13.org/documents?created%5Bmax%5D=1999-12-31&created%5Bmin%5D=1999-01-01&order=field_document_number&page=1&sort=desc>
+
+The official T13 index records, among other 1999 work items:
+
+- `d99105r0`, **WD self-test log modification**, Hanmann, submitted **10 February 1999**;
+- `d99108r0`, **Optional pointer for self-test log**, Evans, submitted **22 February 1999**;
+- `d99104r0/r1/r2`, **Seagate SMART proposal**, with February–April 1999 submissions.
+
+The proposal PDF bodies were **not directly inspected in this slice**. The archive metadata is therefore used only to establish that named self-test-log/SMART proposal artifacts existed at those dates. It does not support attributing detailed normative semantics to the proposals or claiming invention priority.
+
+The ATA/ATAPI-5 Revision 2 history independently records that Revision `0c` on **5 March 1999** incorporated `D99105R0 Self-test log modification` and `D99108R0 Optional pointer on self-test log`. This is a standards-editing bridge, not an origin claim.
+
+## Source I — ATA/ATAPI-5 T13/1321D Revision 2, 13 December 1999
+
+**Document:** *Information Technology — AT Attachment with Packet Interface - 5 (ATA/ATAPI-5)*, Working Draft **T13/1321D Revision 2**, **13 December 1999**.
+Inspected transcription/mirror: <https://studylib.net/doc/25730948/ata-atapi-5>
+Official T13 project/date corroboration: <https://www.t13.org/standards-expired>
+
+The draft identifies itself as an **internal working document** rather than a completed standard. T13's official expired-standards page independently identifies project `1321D` as ATA/ATAPI-5 and gives **28 February 2000** as its standards-submission date. Accordingly, the detailed clause semantics below are cited to the December 1999 working draft, not misdescribed as final-publication wording.
+
+### I1. Off-line data collection and self-test are distinct subcommands
+
+**§8.41.4.8, Table 34, printed p. 194.**
+
+`SMART EXECUTE OFF-LINE IMMEDIATE` is described as either initiating activities that collect SMART data in off-line mode and save it to device nonvolatile memory, **or** executing a self-diagnostic routine. Table 34 separately enumerates:
+
+- SMART off-line routine in off-line mode;
+- Short self-test in off-line mode;
+- Extended self-test in off-line mode;
+- abort off-line self-test;
+- Short self-test in captive mode;
+- Extended self-test in captive mode.
+
+Directly supported boundary:
+
+`SMART off-line data collection ≠ SMART Short/Extended self-test`.
+
+### I2. Off-line command completion precedes diagnostic completion
+
+**§8.41.4.8.1, printed pp. 194–195.**
+
+In off-line mode the device completes the command **before** executing the subcommand routine, keeps BSY clear/DRDY set, and may suspend or abort the routine to service a new host command within two seconds. Depending on capability/policy it may later re-initiate or resume the routine without another host request.
+
+Directly supported boundaries:
+
+`command completion ≠ diagnostic completion`;
+
+`off-line execution ≠ host-visible device unavailability`;
+
+`host command arrival ≠ necessarily permanent diagnostic abandonment`.
+
+### I3. Captive/off-line is an execution-mode distinction, not a separate Short/Extended objective
+
+**§§8.41.4.8.2–8.41.4.8.5, printed p. 195.**
+
+Captive mode holds BSY during the self-test and performs command completion after placing the result in the self-test execution-status byte. Short and Extended self-tests can instead be selected in either captive or off-line mode.
+
+Therefore:
+
+`self-test routine/objective ≠ execution mode`.
+
+### I4. Capability, progress, interruption, and failure classification are separate fields
+
+**§§8.41.5.8.2–8.41.5.8.6, printed pp. 198–199.**
+
+The self-test execution-status byte contains approximate percent remaining in ten-percent increments and separately classifies states including completed/no previous test, host-aborted, reset-interrupted, fatal/unknown error, failed electrical element, failed servo/seek element, failed read element, and in-progress.
+
+The off-line capability byte separately distinguishes implementation of EXECUTE OFF-LINE IMMEDIATE, off-line read scanning, and Short/Extended self-test, while bit 2 defines abort-versus-suspend/resume behavior on an interrupting host command.
+
+The recommended polling time is explicitly only the minimum recommended interval before the host should first poll; actual test time may be several times longer, and early polling can itself alter execution depending on bit 2.
+
+Directly supported boundaries:
+
+`capability ≠ progress ≠ result`;
+
+`host abort/reset interruption ≠ device-detected self-test failure`;
+
+`recommended polling interval ≠ completion deadline`.
+
+### I5. The retained self-test history is finite and overwriting
+
+**§8.41.6.8.3, Tables 45–46, printed pp. 205–206.**
+
+The SMART self-test log contains **21 descriptor entries** and is defined as a circular buffer: entry 22 replaces entry 1, entry 23 replaces entry 2, and so on.
+
+Each descriptor records the issued self-test subcommand, completion execution status, a `Life timestamp`, failure checkpoint, failing LBA, and vendor-specific bytes. The `Life timestamp` is the **device power-on lifetime in hours when that self-test completed**.
+
+The failing-LBA field is only defined when an uncorrectable sector caused the test to fail; it records the first such LBA. If the test passed, or failed for another reason, the field is undefined.
+
+Directly supported boundaries:
+
+`retained self-test log ≠ complete lifetime event archive`;
+
+`power-on-life timestamp ≠ wall-clock timestamp`;
+
+`self-test failure ≠ universally localized media-sector failure`.
+
+### Provenance and priority limit
+
+The 1999 T13 document index is an official committee archive for proposal metadata. The detailed ATA/ATAPI-5 clauses used here come from a period draft transcription/mirror whose document identity, revision/date, page structure, and revision history are internally explicit and independently consistent with T13 project metadata. This slice does **not** claim direct visual inspection of the original proposal PDFs or a final ATA/ATAPI-5 facsimile, does not establish the first implementation of SMART self-test, and does not infer a direct implementation genealogy from ATA into NVMe or SCSI.
