@@ -172,7 +172,7 @@ This is a functional comparison. It is not a claim of one linear invention genea
 
 ## Related repositories
 
-A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated PASR/TCSR case. A full LPDDR/JEDEC refresh-feature genealogy, controller implementation history, per-bank refresh, modern retention-aware scheduling, and RowHammer-era refresh policy should be developed there if pursued broadly. This repository keeps only the bounded retention-scope/rate argument.
+A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated PASR/TCSR or LPDDR2 REFpb case. [`Case 105`](105-micron-lpddr2-per-bank-refresh-maintenance-granularity.md) now handles the bounded per-bank-refresh transaction-granularity boundary, which is deliberately distinct from Case 104's retained-coverage policy. A full LPDDR/JEDEC refresh-feature genealogy, controller implementation history, modern retention-aware scheduling, and RowHammer-era refresh policy should be developed there if pursued broadly.
 
 [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) remains the anti-anachronism guard: `retention-scope policy`, `maintenance-rate control`, and `selective forgetting` are present analytical terms, not vocabulary attributed to Micron engineers.
 
