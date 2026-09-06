@@ -2017,6 +2017,7 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 1392. **handoff completion ≠ physical cleanup completion** — authorization to retire an older representation and actual deletion/reclamation of all old embodiments are distinct convergence milestones.
 1393. **service recovery ≠ topology convergence** — a system may already answer reads, and may even have rebuilt missing content, while placement balancing or other convergence work still owes restoration of the intended correlated-failure geometry.
 1394. **immutable coded-repair synthesis ≠ mutable coded-currentness rule or historical genealogy** — Swift supplies a counterexample in which same-timestamp/distinct-index/durability qualification precedes usable decoding; this does not make f4, WAS, and Swift one pipeline or lineage.
+
 ### Cross-case mutable-EC currentness synthesis — presence, commit, retirement, and convergence
 
 1395. **fragment presence ≠ fragment validity** — an EC archive can physically survive yet fail fragment-length/metadata checks or be quarantined, so embodiment alone does not make it a usable coded contribution.
