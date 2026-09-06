@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to the September 2010 JESD218 SSD-level endurance/retention qualification relation, with Intel's June 2012 retention application note used to expose the difference between standardized TBW and actual media wear, and Intel's September 2015 DC P3608 specification used as a named commercial product witness. Prior-art deepening now also separates the earlier JESD22-A117 device-level program/erase-endurance-and-retention test family from JESD218's later SSD-level host-TBW service contract, using a 2006 Renesas standards inventory, JEDEC's own later revision ledger, and a 2002 IEEE post-cycling retention paper. The 2010→2012 workload chronology is now further bounded by July 2012 JESD219A publication metadata and its separately distributed Master/Test Trace artifacts; this does not substitute for direct inspection of the normative JESD219A body.
+**`grounded`** — bounded to the September 2010 JESD218 SSD-level endurance/retention qualification relation, with Intel's June 2012 retention application note used to expose the difference between standardized TBW and actual media wear, and Intel's September 2015 DC P3608 specification used as a named commercial product witness. Prior-art deepening now also separates the earlier JESD22-A117 device-level program/erase-endurance-and-retention test family from JESD218's later SSD-level host-TBW service contract, using a 2006 Renesas standards inventory, JEDEC's own later revision ledger, and a 2002 IEEE post-cycling retention paper. The 2010→2012 workload chronology is now further bounded by July 2012 JESD219A publication metadata and its separately distributed Master/Test Trace artifacts; this does not substitute for direct inspection of the normative JESD219A body. A January 2026 HPE QuickSpecs/product witness now adds a named QLC P5430 SKU to the commercial-product layer, while keeping its QLC media label, workload label, write-endurance rating, and post-endurance power-off retention statement separate from raw-cell physics or an independently audited JESD218 compliance claim.
 
 Grounding record: [`../evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md`](../evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md).
 
@@ -249,6 +249,31 @@ Intel's September 2015 DC P3608 product specification states that the series mee
 
 This is a named commercial witness for the enterprise-class relation. It is not evidence that every SSD implements the same hidden wear-management mechanism.
 
+
+### HPE 2026 P5430: a named QLC product witness without a substrate shortcut
+
+HPE's **5 January 2026** _HPE Solid State Disk Drives_ QuickSpecs Version 72 lists the P5430 family under `NVMe Main Performance Very-read-optimized EDSFF E3.S SSDs`. The exact **P63934-B21** 7.68 TB SKU is labeled `VRO`, `NVMe`, `E3.S`, and **`QLC`**; the corresponding speeds/endurance table gives **8,040 TB lifetime writes** and **0.57 DWPD**.[^hpe-qspec] HPE's product page independently describes the P5430 family as using **Next Gen QLC 3D NAND**.[^hpe-p5430]
+
+The same QuickSpecs defines `Data Retention` as retaining NAND data after the **maximum rated endurance level** has been reached, and states that these SSDs are rated for **three months with no power applied once maximum rated write endurance is reached**.[^hpe-qspec]
+
+This gives a named modern QLC commercial witness for the same broad end-of-endurance → unpowered-retention relation that Case 76 studies, but it must not be overread. The cited HPE rows do **not** disclose the P5430's raw-cell retention curve, ECC/retry budget, over-provisioning, wear distribution, refresh policy, or qualification raw data. Nor does the cited P5430 row itself say `JESD218`; the HPE statement is therefore retained here as a manufacturer/OEM product-family contract, **not** silently promoted into an independent JEDEC-compliance certificate.
+
+The bounded decomposition is:
+
+```text
+QLC media label
+    !=
+product workload label (VRO)
+    !=
+lifetime-write / DWPD endurance rating
+    !=
+post-endurance unpowered retention requirement
+    !=
+raw NAND-cell retention law
+```
+
+In particular, the fact that HPE's product-family statement also uses a three-month interval does not prove that the P5430 reached that number through the identical test path, temperature condition, controller margin, or standards revision used by the September 2010 JESD218 enterprise row.
+
 ---
 
 ## Engineering reconstruction
@@ -364,7 +389,7 @@ The bounded historical contribution used here remains more specific:
 
 > by September 2010, JESD218 standardized an **SSD-level**, application-class-specific endurance rating expressed as host TBW and tied it to workload, capacity, UBER/FFR, and a subsequent power-off retention requirement, above an already-existing device-level endurance/retention qualification tradition.
 
-A full pre-2000 EEPROM/Flash qualification genealogy, direct facsimile archaeology of original A117/A117B, the complete JESD219 workload history, and later JESD218 revision history remain separate work best coordinated with `computing-archaeology`. A fresh repository search for `JESD219A`, `SSD endurance workload`, and the trace-artifact names found no dedicated `computing-archaeology` case to reuse; this repository therefore keeps only the bounded retention-specific standard/trace relation while leaving any broad standards genealogy to that companion project.
+A full pre-2000 EEPROM/Flash qualification genealogy, direct facsimile archaeology of original A117/A117B, the complete JESD219 workload history, later JESD218 revision history, TLC named-product comparison, and cross-vendor QLC qualification/fault evidence remain separate work best coordinated with `computing-archaeology`. Fresh repository searches for `JESD219A`, `SSD endurance workload`, `P5430`, and `QLC retention JESD218 SSD` found no dedicated `computing-archaeology` case to reuse; this repository therefore keeps only the bounded retention-specific standard/product relation while leaving broad standards and NAND-generation genealogy to that companion project.
 
 ---
 
@@ -402,6 +427,8 @@ power-off retention interval after that boundary
 actual instant of future unreadability
 ```
 
+The HPE P5430 witness adds a second orthogonal warning: **NAND density label (for example QLC) ≠ the SSD-level endurance/retention contract**. Product-class media, host-workload assumptions, controller correction margin, rated writes, and the later unpowered interval remain separate relations even when a vendor documents them in one QuickSpecs family.
+
 It complements:
 
 - **Cases 11–13** — floating-gate/EEPROM/early-Flash substrate, program, erase, and cycling constraints below the SSD qualification layer;
@@ -419,6 +446,9 @@ The mechanisms should not be collapsed simply because all of them can be describ
 [^jesd218]: JEDEC, **JESD218, _Solid-State Drive (SSD) Requirements and Endurance Test Method_**, September 2010. Public copy preserved as USPTO PTAB Exhibit 1009: <https://ptacts.uspto.gov/ptacts/public-informations/petitions/1557329/download-documents?artifactId=2_lC_lThPTFMDbmibT3Hg39BJ0KyMU5imHIj-TvKQIl7pYfwt1_SX4I>. Key locations: pp. 1–5 definitions and references; p. 7 §§6.2–6.3 / Table 1; p. 8 §7.
 [^intel-ret]: Intel, **_Data Retention in Intel Solid-State Drives_**, Application Note 325999-002US, June 2012. Preserved by Solidigm: <https://community.solidigm.com/hzhwu46669/attachments/hzhwu46669/Solid_State_Drives/3096/1/App_note_SSD_Data_retention.pdf>. Key locations: pp. 4–7 for powered refresh and wear/temperature mechanisms; pp. 12–18 for JESD218A qualification and Intel SSD wear/retention examples.
 [^p3608]: Intel, **_Intel Solid-State Drive DC P3608 Series Product Specification_**, 333055-001US, September 2015, especially §2.6 / Table 14: <https://www.intel.com/content/dam/www/public/us/en/documents/product-specifications/ssd-dc-p3608-spec.pdf>.
+
+[^hpe-qspec]: Hewlett Packard Enterprise, **_HPE Solid State Disk Drives_**, QuickSpecs Version 72, dated **5 January 2026**. Versioned PDF: <https://www.hpe.com/psnow/downloadDoc/HPE%20Solid%20State%20Disk%20Drives%20QuickSpecs-a00001288enw.pdf?contentDisposition=attachment&deepLink=&form=false&hf=regular&id=a00001288enw.pdf&isFutureVersion=true&isLinearized=false&originalObjectName=&prelaunchSection=&preview=false&print=&r=&section=&softrollSection=&ver=72>. Relevant locations: `Data Retention` under Standard Features; the E3.S SKU table identifying `P63934-B21` / P5430 as `QLC`; its `Lifetime Writes (TB)` / `Endurance DWPD` table; and the Summary of Changes identifying Version 72 as 05-Jan-2026.
+[^hpe-p5430]: Hewlett Packard Enterprise, **HPE 7.68TB NVMe Gen4 Mainstream Performance Very Read Optimized E3S EC1 EDSFF P5430 SSD**, SKU `P63934-B21`, product page: <https://buy.hpe.com/us/en/options/drives-storage/server-solid-state-drives/hpe-7-68tb-nvme-gen4-mainstream-performance-very-read-optimized-e3s-ec1-edsff-p5430-ssd/p/p63934-b21>. The page identifies the family as `Next Gen QLC 3D NAND`; the QuickSpecs remains the stronger source for the retention and rated-write relation.
 [^renesas2006]: Renesas Technology, **_Semiconductor Reliability Handbook_**, REJ27L0001-0100, Rev. 1.00, August 31, 2006, Section 7 JEDEC-standards table, pp. 335–336 of the handbook pagination; the table lists `JESD22-A117` and `2000` under `Established`: <https://studylib.net/doc/28351596/semiconductor-reliability>. This is manufacturer-retrospective standards inventory evidence, not a substitute for an original 2000 JEDEC facsimile.
 [^a117e]: JEDEC, **JESD22-A117E, _Electrically Erasable Programmable ROM (EEPROM) Program / Erase Endurance and Data Retention Stress Test_**, November 2018, especially Annex A.2–A.3. Publicly indexed inspection copy: <https://www.scribd.com/document/837818477/22A117E>. Annex A.2 identifies A117B as March 2009; Annex A.3 records the A117A→A117B additions of read-disturb wording, UBER definition/calculation, bad-block-aware endurance-failure wording, and transient-error handling. This later JEDEC ledger is used as revision evidence, not invention-priority evidence.
 [^belgal2002]: Hanmant P. Belgal et al., **“A New Reliability Model for Post-Cycling Charge Retention of Flash Memories,”** _2002 IEEE International Reliability Physics Symposium_, 7–11 April 2002, DOI 10.1109/RELPHY.2002.996604: <https://doi.org/10.1109/RELPHY.2002.996604>. The abstract directly describes stress-induced leakage after P/E cycling, multi-generation/multi-year-bake data, and cycle-count dependence.
