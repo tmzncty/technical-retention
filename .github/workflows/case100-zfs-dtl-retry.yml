@@ -1,0 +1,36 @@
+name: integrate Case 100 ZFS DTL
+
+on:
+  push:
+    paths:
+      - '.github/workflows/case100-zfs-dtl-retry.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Recover staged research and integrate
+        shell: bash
+        run: |
+          git show 1a9e02c671281dde80e25a38a59814319d65ea9a:.github/workflows/case100-zfs-dtl-integration.yml > /tmp/case100-old.yml
+          sed -n "/python - <<'PY'/,/^          PY$/p" /tmp/case100-old.yml | sed '1d;$d' | sed 's/^          //' > /tmp/case100-integrate.py
+          python -m py_compile /tmp/case100-integrate.py
+          python /tmp/case100-integrate.py
+          git rm .github/workflows/case100-zfs-dtl-integration.yml .github/workflows/case100-zfs-dtl-retry.yml
+          git diff --check
+          test -f cases/100-zfs-dirty-time-log-selective-resilver.md
+          test -f evidence/100-zfs-2005-2023-dtl-resilver-grounding.md
+          grep -q 'Case 100' CASE_INDEX.md
+          grep -q 'ninety-four active canonical bounded cases' CASE_INDEX.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md ROADMAP.md CASE_INDEX.md cases/100-zfs-dirty-time-log-selective-resilver.md evidence/100-zfs-2005-2023-dtl-resilver-grounding.md
+          git commit -m 'case100: integrate ZFS DTL selective resilver boundary'
+          git push origin HEAD:main
