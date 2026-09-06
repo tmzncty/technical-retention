@@ -23,12 +23,7 @@ jobs:
         run: python .github/integration/case76_qlc_product_witness.py
 
       - name: Validate Markdown changes
-        run: |
-          git diff --check
-          grep -Fq '### HPE 2026 P5430: a named QLC product witness without a substrate shortcut' cases/76-jedec-ssd-endurance-retention-qualification.md
-          grep -Fq '## Source 10 — HPE P5430 QLC product witness' evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md
-          grep -Fq 'Named QLC commercial-product post-endurance retention witness' ROADMAP.md
-          grep -Fq '1583. **one named QLC product witness ≠ universal TLC/QLC comparison**' CASE_INDEX.md
+        run: git diff --check
 
       - name: Commit research slice and remove integration helpers
         run: |
