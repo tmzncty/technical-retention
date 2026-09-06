@@ -220,6 +220,8 @@ exit/recovery timing
 
 Cases 03, 09, and 10 established the first distinctions across different historical designs. Case 21 adds a named SDRAM family in which **one device crosses between external recurring-command responsibility and internal recurring self-refresh work, then crosses back on exit**.
 
+Case 104 now continues this decomposition for a later Micron LPDDR family by separating **self-refresh maintenance rate** (temperature-compensated internal cadence) from **self-refresh maintenance coverage** (PASR-selected array regions). That continuation is functional and source-bounded; it does not establish a direct product genealogy.
+
 ## Claim ledger
 
 | Claim | Label | Evidence status |
