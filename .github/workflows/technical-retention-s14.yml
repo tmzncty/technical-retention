@@ -30,6 +30,13 @@ jobs:
           p.write_text(s.replace(old, new), encoding='utf-8')
           PY
       - run: python .github/integration/technical_retention_s14.py
+      - name: Normalize generated EOF
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('CASE_INDEX.md')
+          p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
       - run: |
           git diff --check
           grep -Fq 'SYNTHESIS_14_DISTRIBUTED_ACK_VISIBILITY_DURABILITY.md' README.md
