@@ -277,7 +277,7 @@ This supports the bounded decomposition:
 
 ### G5. Reading/reporting can itself materialize updated health state nonvolatily
 
-**§7.31.5, SMART READ ATTRIBUTE VALUES, printed p. 93; §7.31.6, SMART RETURN STATUS, printed p. 95; §7.31.7, SMART SAVE ATTRIBUTE VALUES, printed pp. 95–96.**
+**§7.31.5, SMART READ ATTRIBUTE VALUES, printed pp. 91–93 (save-before-return description on p. 92); §7.31.6, SMART RETURN STATUS, printed pp. 94–95; §7.31.7, SMART SAVE ATTRIBUTE VALUES, printed pp. 95–96.**
 
 The draft says:
 
