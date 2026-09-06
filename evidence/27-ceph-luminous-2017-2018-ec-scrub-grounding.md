@@ -1,4 +1,4 @@
-# Case 27 Grounding Record — Ceph Luminous EC Overwrites, BlueStore Checksums, and Deep Scrub (2017–2018)
+# Case 27 Grounding Record — Ceph Deep-Scrub Prior Art and Luminous EC Integrity Authority (2012–2018)
 
 ## Promotion target
 
@@ -13,6 +13,16 @@ Status target: **`grounded`**.
 ---
 
 ## Evidence classes
+
+### P0 — Ceph 2012 deep-scrub implementation, command semantics, and release record
+
+Three project-primary records establish the pre-Luminous floor:
+
+- `9013efd3a3cf92d1ec8e2a39639214792067d0d2` (5 September 2012): content reads, per-object `crc32`, primary-side replica digest comparison, `inconsistent` marking, `last_deep_scrub` state, weekly default interval, and mixed-capability fallback;
+- `3fd5914cf35829c3f2e9e5c0a548fae0862732aa` (5 September 2012): explicit separation of `scrub`, `deep-scrub`, and `repair`;
+- official `v0.53 released` (16 October 2012): new deep scrub compares object content across replicas, weekly by default.
+
+This is an internal Ceph prior-art floor for the mechanism/term. It does not back-project BlueStore, mutable EC overwrites, or Luminous digest semantics into 2012.
 
 ### P1 — official Luminous release record
 
@@ -45,6 +55,20 @@ URL: <https://ceph.io/en/news/blog/2018/v12-2-8-released/>
 ---
 
 ## Direct source ledger
+
+### 0. September–October 2012 — replicated deep scrub before Luminous
+
+Directly established:
+
+- ordinary `scrub` compares replica object metadata; `deep-scrub` adds content comparison;
+- the initial deep path reads object/file content and computes `crc32`;
+- the primary compares replica digests and marks a PG `inconsistent` on mismatch;
+- `repair` is a separate operation and, in this bounded replicated path, copies from the primary;
+- `last_deep_scrub` / `last_deep_scrub_stamp` retain verification recency separately from payload;
+- `osd_deep_scrub_interval` defaults to one week in the introduced configuration;
+- unsupported OSDs can fall back to ordinary chunky scrub while supporting members' content digests are compared.
+
+Evidence use: this prevents a false Luminous-origin claim; separates replica multiplicity from verified agreement and detection from repair; and establishes a mixed-capability boundary where requested maintenance level and achieved verification coverage can differ.
 
 ### 1. `v12.2.0` release notice — BlueStore + EC overwrite boundary
 
@@ -148,7 +172,7 @@ Evidence use:
 
 ## Source-inspection boundary
 
-The tag-matched Ceph source documentation was read directly from GitHub at `v12.2.0`. These are text/source files, so no PDF facsimile or screenshot claim is involved.
+The September 2012 implementation/documentation commits were inspected at their exact Git SHAs, including commit messages and patches. The tag-matched Luminous source documentation was read directly from GitHub at `v12.2.0`. These are text/source files, so no PDF facsimile or screenshot claim is involved.
 
 The official Ceph release notices were read as maintained project release records. This grounding record does **not** claim to have reconstructed the exact code path responsible for the `12.2.6` regression or the complete per-shard repair algorithm after every EC scrub inconsistency. Those implementation details remain outside the bounded claim.
 
@@ -166,6 +190,7 @@ No invention-priority claim is made:
 
 - Case 26 already records GFS 2003 `scan and verify` as a proactive background-integrity precedent;
 - Case 18 records 2004 `disk scrubbing` terminology/prior art;
+- Ceph's own 2012 source/release record establishes replicated `deep scrub` before the 2017–2018 Luminous regime, so Luminous is not treated as the origin of Ceph scrub semantics;
 - Cases 19 and 24 already control Reed–Solomon/LRC coding-priority boundaries;
 - Case 05 covers earlier Ceph/RADOS replicated currentness without implying that later BlueStore semantics were present in 2006–2007.
 

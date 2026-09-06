@@ -5,6 +5,7 @@
 - **Bounded system:** Ceph Luminous `v12.2.x`, primarily the 2017 `v12.2.0` release documentation plus the 2018 `v12.2.7`/`v12.2.8` correction record.
 - **Bounded mechanism:** erasure-coded pools with overwrites on BlueStore; per-device data checksums; periodic light/deep PG scrubbing; and the later Luminous incident in which checksum metadata itself became inconsistent and had to be distrusted/repaired.
 - **Research question:** when an erasure-coded object is mutable, what additional retained integrity state is required to decide whether a surviving fragment is trustworthy, and what happens when that integrity state itself is wrong?
+- **Historical prior-art boundary:** Ceph's own replicated-PG `deep scrub` implementation is anchored separately to September–October 2012. That earlier mechanism prevents a false Luminous-origin claim; it is not treated as if 2012 replicated scrub already had 2017 BlueStore/EC semantics.
 
 This is **not** a general history of Ceph, BlueStore, erasure coding, RBD, CephFS, CRC algorithms, or scrubbing. It does not claim that Ceph invented checksums, erasure coding, bit-rot detection, or background scrub. Early RADOS replication/currentness is already handled in Case 05; the present case is a later, release-specific integrity regime.
 
@@ -39,6 +40,20 @@ The project terms above should not be substituted into historical quotations as 
 ---
 
 ## Historical record
+
+### H/P — Ceph `deep scrub` predates Luminous and began as replicated-PG comparison
+
+Ceph commit [`9013efd3a3cf92d1ec8e2a39639214792067d0d2`](https://github.com/ceph/ceph/commit/9013efd3a3cf92d1ec8e2a39639214792067d0d2), dated 5 September 2012, introduced the bounded deep-scrub witness used here. Its commit message says deep scrub reads every file's contents from the store, computes a `crc32` digest, and has the primary compare digests across replicas; a mismatch marks the PG `inconsistent`. The patch also adds `last_deep_scrub` / `last_deep_scrub_stamp` and a default `osd_deep_scrub_interval` of one week.
+
+The same source preserves an important compatibility boundary. OSDs without deep-scrub support perform ordinary chunky scrub, while the subset that supports deep scrub has its content digests compared. During such a mixed-capability rollout, requesting deep scrub therefore did **not** itself prove equivalent content-level verification of every replica.
+
+A companion documentation commit, [`3fd5914cf35829c3f2e9e5c0a548fae0862732aa`](https://github.com/ceph/ceph/commit/3fd5914cf35829c3f2e9e5c0a548fae0862732aa), explicitly distinguishes three September-2012 operations: `scrub` compares replica object metadata, `deep-scrub` additionally compares object contents, and `repair` fixes an inconsistent replicated PG by replacing inconsistent objects with the primary's copy. Ceph's official `v0.53` release notice of 16 October 2012 likewise announces the new deep scrub as comparing object content across replicas, once per week by default.
+
+This changes the historical boundary without changing the bounded Luminous question: **Luminous did not introduce Ceph's concept of deep scrub.** The 2017–2018 contribution studied below is the later composition of mutable EC overwrites, BlueStore-retained checksums, scheduled deep scrub, and a release incident in which integrity metadata itself lost authority.
+
+The 2012 `repair` wording is retained as historical policy, not promoted into a claim that the primary is objectively correct. Case 29's 2018 source-level analysis later shows a more qualified `authoritative` candidate path and explicitly preserves uncertainty about correctness.
+
+**Primary anchors:** Ceph commits `9013efd3...` and `3fd5914c...`; Ceph `v0.53 released`, 16 October 2012.
 
 ### H/P — Luminous ties EC overwrites to BlueStore integrity support
 
@@ -260,7 +275,9 @@ Both belong to Ceph/RADOS history, but Case 05 is bounded to 2006–2007 replica
 
 ## Prior-art and terminology boundary
 
-Case 26 already documents a 2003 GFS functional precedent for proactive background integrity verification under the phrase `scan and verify`; Case 18 records a 2004 direct `disk scrubbing` terminology anchor. Reed–Solomon and distributed EC prior art are already controlled in Cases 19 and 24.
+Case 26 already documents a 2003 GFS functional precedent for proactive background integrity verification under the phrase `scan and verify`; Case 18 records a 2004 direct `disk scrubbing` terminology anchor. Within Ceph itself, the September–October 2012 source/release record now establishes replicated `deep scrub` years before Luminous. Reed–Solomon and distributed EC prior art remain controlled in Cases 19 and 24.
+
+The resulting historical ladder is deliberately non-genealogical: **GFS 2003 distributed verification ≠ 2004 disk-scrubbing prior art ≠ Ceph 2012 replicated deep scrub ≠ Luminous 2017–2018 BlueStore/EC integrity authority.** Chronology and functional resemblance alone do not prove direct inheritance.
 
 Therefore this case makes **no invention-priority claim** for Ceph. Its contribution is narrower:
 
@@ -281,6 +298,8 @@ This sharpens one repository-wide claim: persistence is not only `bytes continue
 This case does **not** establish that checksums are cryptographic authentication; that CRC32C detects every corruption; that every deep scrub repairs every EC error; that a checksum mismatch always means payload corruption; that a checksum mismatch never means payload corruption; that the 12.2.6 regression affected every object; that `osd distrust data digest` is a timeless Ceph concept; that later Ceph repair semantics are identical to Luminous; or that Ceph invented EC overwrites, checksums, or scrubbing.
 
 Most importantly, the present source set does **not** fully ground the exact per-shard reconstruction/authoritative-source algorithm used after every deep-scrub-detected EC corruption. That remains a separate implementation-archeology slice.
+
+The 2012 compatibility path adds another limit: **`deep-scrub requested ≠ every replica content-qualified`** when some OSDs do not support deep scrub. This is a rolling-capability boundary for that implementation, not a claim about modern homogeneous clusters. Likewise, matching `crc32` values are error-detection evidence inside the comparison protocol, not cryptographic authentication or proof that every physical failure mode has been excluded.
 
 ---
 
@@ -306,6 +325,12 @@ Most importantly, the present source set does **not** fully ground the exact per
 ## Sources
 
 ### Primary / system-primary
+
+Ceph Project primary source history, **deep scrub introduction**, 5 September–16 October 2012.
+
+- implementation commit: <https://github.com/ceph/ceph/commit/9013efd3a3cf92d1ec8e2a39639214792067d0d2>
+- command/documentation commit: <https://github.com/ceph/ceph/commit/3fd5914cf35829c3f2e9e5c0a548fae0862732aa>
+- `v0.53 released`: <https://www.ceph.io/en/news/blog/2012/v0-53-released/>
 
 Ceph Project, **`v12.2.0 Luminous Released`**, 29 August 2017.
 
