@@ -23,7 +23,7 @@ This is **not**:
 - a study of temperature-compensated refresh or retention-aware refresh scheduling;
 - a claim that `Same Bank Refresh` is historically synonymous with every earlier/later use of `per-bank refresh`.
 
-The public manufacturer evidence is strong enough to ground the bounded command/availability relation, but exact normative timing, fine-granularity-refresh interactions, later DDR5 revisions, and LPDDR/per-bank genealogies remain separate work.
+The public manufacturer evidence is strong enough to ground the bounded command/availability relation and the Rev. A 11/19 manufacturer timing/sequence example, while final normative timing/command legality, later FGR/revision evolution, and LPDDR/per-bank genealogies remain separate work.
 
 ## Relation to Cases 03, 09, 10, and 21
 
@@ -223,7 +223,7 @@ The bounded evidence exposes several failure or misuse boundaries without invent
 - assuming a manufacturer feature summary supplies every normative timing/deadline rule overstates the evidence;
 - successful service of another bank while refresh is occurring does not by itself prove that the refresh schedule remains retention-safe over time.
 
-Exact refresh intervals, command ordering, fine-granularity mode restrictions, timing windows, and controller failure behavior require a directly inspected normative specification or product datasheet before they can be claimed here.
+The Rev. A 11/19 white paper now supports its bounded 16Gb timing/ordering example; exact final/later command legality, density-specific timing, revision evolution, and controller failure behavior still require directly inspected normative specifications, product datasheets, or empirical controller evidence.
 
 ## Prior art and anti-anachronism
 
