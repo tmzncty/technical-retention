@@ -101,6 +101,8 @@ A bounded proactive-integrity comparison is now available in [`docs/SYNTHESIS_08
 
 A bounded distributed-coded-service comparison is now available in [`docs/SYNTHESIS_09_DISTRIBUTED_CODED_SERVICE_REPAIR_PLACEMENT.md`](docs/SYNTHESIS_09_DISTRIBUTED_CODED_SERVICE_REPAIR_PLACEMENT.md). Across grounded f4 and Windows Azure Storage LRC cases, with Swift EC as a mutable-currentness counterexample, it separates algebraic recoverability, reconstruction read-set/cost, foreground recovery, durable fragment repair, failure-domain placement restoration, redundancy-regime handoff completion, and later retirement/convergence.
 
+A bounded mutable-EC-currentness comparison is now available in [`docs/SYNTHESIS_10_MUTABLE_EC_CURRENTNESS_RETIREMENT_REPAIR.md`](docs/SYNTHESIS_10_MUTABLE_EC_CURRENTNESS_RETIREMENT_REPAIR.md). Centered on grounded Swift EC Case 25, it separates fragment presence and validity, timestamp/version coherence, distinct-index algebraic reconstructability, commit/durability qualification, service admissibility, old-version retirement authority, repair convergence, and lower-layer cleanup; Swift 2.11.0 additionally shows that the durability relation can survive a change from separate `.durable` files to filename-embedded durable state.
+
 This chain is a **research heuristic**, not a claim that all of these mechanisms are historically or philosophically identical.
 
 For example, describing an abacus as `register-like` may be a useful **functional reconstruction**, but it would be anachronistic to claim that historical abacus users possessed the modern computer-architecture concept of a register.

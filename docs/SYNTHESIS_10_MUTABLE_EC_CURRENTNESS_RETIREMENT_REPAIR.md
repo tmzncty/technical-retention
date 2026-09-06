@@ -1,6 +1,4 @@
-from pathlib import Path
-
-SYNTHESIS = r'''# Synthesis 10 — Mutable EC Currentness: Fragment Presence, Commit Authority, Retirement, and Repair Convergence
+# Synthesis 10 — Mutable EC Currentness: Fragment Presence, Commit Authority, Retirement, and Repair Convergence
 
 ## Scope
 
@@ -305,50 +303,3 @@ The answer can depend on relations among:
 Retention is therefore not exhausted by asking whether enough bytes remain to decode something. In this bounded case, the system must also retain enough **qualification and transition state** to decide which decodable state counts, when a replacement is trusted, and when the predecessor may legitimately be forgotten.
 
 That conclusion is an **engineering synthesis**. It does not turn Swift's protocol into a universal philosophy of storage.
-'''
-
-
-def replace_once(path: str, old: str, new: str) -> None:
-    p = Path(path)
-    text = p.read_text(encoding='utf-8')
-    count = text.count(old)
-    assert count == 1, f'{path}: expected one anchor, found {count}'
-    p.write_text(text.replace(old, new, 1), encoding='utf-8')
-
-
-Path('docs/SYNTHESIS_10_MUTABLE_EC_CURRENTNESS_RETIREMENT_REPAIR.md').write_text(SYNTHESIS, encoding='utf-8')
-
-readme_anchor = '''A bounded distributed-coded-service comparison is now available in [`docs/SYNTHESIS_09_DISTRIBUTED_CODED_SERVICE_REPAIR_PLACEMENT.md`](docs/SYNTHESIS_09_DISTRIBUTED_CODED_SERVICE_REPAIR_PLACEMENT.md). Across grounded f4 and Windows Azure Storage LRC cases, with Swift EC as a mutable-currentness counterexample, it separates algebraic recoverability, reconstruction read-set/cost, foreground recovery, durable fragment repair, failure-domain placement restoration, redundancy-regime handoff completion, and later retirement/convergence.\n'''
-readme_new = readme_anchor + '''\nA bounded mutable-EC-currentness comparison is now available in [`docs/SYNTHESIS_10_MUTABLE_EC_CURRENTNESS_RETIREMENT_REPAIR.md`](docs/SYNTHESIS_10_MUTABLE_EC_CURRENTNESS_RETIREMENT_REPAIR.md). Centered on grounded Swift EC Case 25, it separates fragment presence and validity, timestamp/version coherence, distinct-index algebraic reconstructability, commit/durability qualification, service admissibility, old-version retirement authority, repair convergence, and lower-layer cleanup; Swift 2.11.0 additionally shows that the durability relation can survive a change from separate `.durable` files to filename-embedded durable state.\n'''
-replace_once('README.md', readme_anchor, readme_new)
-
-roadmap_question = '- [ ] In mutable erasure-coded object storage, how should `fragment presence`, `version/timestamp coherence`, `coded reconstructability`, `commit/durability evidence`, `old-version retirement`, and `repair convergence` be separated?\n'
-roadmap_closed = '- [x] In mutable erasure-coded object storage, separate `fragment presence`, `fragment validity`, `version/timestamp coherence`, `distinct-index coded reconstructability`, `commit/durability evidence`, `service admissibility`, `old-version retirement authority`, `repair convergence`, and lower-layer cleanup — closed at the bounded relation-decomposition level by [`docs/SYNTHESIS_10_MUTABLE_EC_CURRENTNESS_RETIREMENT_REPAIR.md`](docs/SYNTHESIS_10_MUTABLE_EC_CURRENTNESS_RETIREMENT_REPAIR.md), centered on grounded Case 25 with Cases 19/24 as immutable controls. Broader object-store/commit genealogy, field fault injection, correlated fragment loss, modern Swift release evolution, and secure-erasure validation remain open.\n'
-replace_once('ROADMAP.md', roadmap_question, roadmap_closed)
-
-bridge_old = '''The grounded OpenStack Swift EC bridge adds the mutable coded-currentness relation that the f4 and WAS cases intentionally left open. In the bounded 2015–2016 implementation, fragment archives can exist before a PUT is committed; GET requires enough distinct fragment indexes at one timestamp plus same-timestamp durability evidence; and the previous timestamp is not deleted until the replacement crosses the multi-phase commit boundary. Later reconstruction can still propagate missing fragments and durability markers. Future coded-storage work should therefore distinguish **fragment existence**, **version coherence**, **algebraic reconstructability**, **commit/admissibility state**, **source-version retirement**, and **repair convergence**, while keeping release-specific quorum rules explicit rather than treating `Swift EC durability` as one timeless property.\n'''
-bridge_new = '''The grounded OpenStack Swift EC bridge adds the mutable coded-currentness relation that the f4 and WAS cases intentionally left open. In the bounded 2015–2016 implementation, fragment archives can exist before a PUT is committed; GET requires enough distinct fragment indexes at one timestamp plus same-timestamp durability evidence; and the previous timestamp is not deleted until the replacement crosses the multi-phase commit boundary. Later reconstruction can still propagate missing fragments and durability markers. [`docs/SYNTHESIS_10_MUTABLE_EC_CURRENTNESS_RETIREMENT_REPAIR.md`](docs/SYNTHESIS_10_MUTABLE_EC_CURRENTNESS_RETIREMENT_REPAIR.md) now closes that relation decomposition at the bounded cross-case level and adds the Swift 2.11.0 counterexample that durability/currentness semantics can survive a change in their on-disk metadata representation. Broader object-store/commit genealogy, field fault injection, correlated fragment loss, modern Swift evolution, and secure-erasure validation remain open.\n'''
-replace_once('ROADMAP.md', bridge_old, bridge_new)
-
-case_index = Path('CASE_INDEX.md')
-text = case_index.read_text(encoding='utf-8')
-assert text.rstrip().endswith('1394. **immutable coded-repair synthesis ≠ mutable coded-currentness rule or historical genealogy** — Swift supplies a counterexample in which same-timestamp/distinct-index/durability qualification precedes usable decoding; this does not make f4, WAS, and Swift one pipeline or lineage.'), 'CASE_INDEX tail changed; refuse to append blindly'
-append = r'''
-
-### Cross-case mutable-EC currentness synthesis — presence, commit, retirement, and convergence
-
-1395. **fragment presence ≠ fragment validity** — an EC archive can physically survive yet fail fragment-length/metadata checks or be quarantined, so embodiment alone does not make it a usable coded contribution.
-1396. **fragment validity ≠ same-version cohort membership** — a locally valid archive from another timestamp can still be the wrong input for reconstructing the service-admissible object version.
-1397. **same-version multiplicity ≠ distinct-index sufficiency** — several archives at one timestamp can duplicate the same fragment index; physical count is weaker than useful coding complementarity.
-1398. **algebraic reconstructability ≠ committed/current admissibility** — enough compatible fragments can satisfy the code while the replacement version has not crossed Swift's release-specific commit/durability boundary.
-1399. **durability evidence ≠ one local marker on every contributing fragment** — in the bounded 2.10.1 GET rule, same-timestamp durability evidence can qualify a distributed cohort containing fragments whose local nodes do not each carry a `.durable` marker.
-1400. **durability/currentness relation ≠ fixed metadata representation** — Swift 2.11.0 replaces the separate `.durable`-file encoding with filename-embedded durable state while continuing to accept existing `.durable` files; the relation outlives one implementation encoding.
-1401. **client-visible commit success ≠ repair convergence** — a version can become service-admissible while the reconstructor still owes propagation/reconstruction of missing fragment or durability state.
-1402. **repair convergence ≠ original commit event** — later background reconstruction restores intended steady state after a committed version already exists; it does not retroactively become the event that first authorized that version.
-1403. **newer timestamp / newer fragment bytes ≠ authority to retire the predecessor** — Swift protects older timestamped state until the replacement crosses the commit gate.
-1404. **old-version retirement authority ≠ completed physical cleanup** — permission to delete older object-store state does not prove that every stale, handoff, filesystem, or media embodiment has already been reclaimed.
-1405. **logical old-version retirement ≠ secure erasure** — object-store deletion/currentness transitions establish no overwrite, Flash erase, sanitize-command completion, or forensic absence at lower layers.
-1406. **protocol quorum threshold ≠ code-theoretic minimum** — Case 25's 2.3.0/2.10.1 comparison shows Swift commit thresholds changing across releases, so one release's safety/service contract is not a timeless property of erasure coding.
-1407. **mutable coded currentness ≠ immutable coded-repair pipeline or historical genealogy** — f4/WAS can illuminate service/repair/handoff distinctions, but coexistence of overwrite generations adds an independent version-admissibility axis and does not make the systems one lineage.
-'''
-case_index.write_text(text.rstrip() + '\n' + append.lstrip('\n'), encoding='utf-8')
