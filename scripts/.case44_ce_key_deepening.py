@@ -1,0 +1,255 @@
+from pathlib import Path
+
+
+def replace_once(path, old, new):
+    p = Path(path)
+    s = p.read_text(encoding="utf-8")
+    if old not in s:
+        raise SystemExit(f"anchor missing in {path}: {old[:140]!r}")
+    if s.count(old) != 1:
+        raise SystemExit(f"anchor not unique in {path}: {old[:140]!r}")
+    p.write_text(s.replace(old, new, 1), encoding="utf-8")
+
+
+case_section = r'''## NIST SP 800-88 Rev. 1 — Cryptographic Erase is a key-coverage relation, not a one-key verb
+
+NIST **SP 800-88 Rev. 1, Guidelines for Media Sanitization** (December 2014) is a later institutional guidance source than TCG Opal 1.0 and an earlier source than NVMe 1.2.1/1.3. It is used here for a different purpose from the Opal prior-art boundary: to make explicit the **conditions under which key destruction can or cannot count as Cryptographic Erase (CE)**.
+
+The source is now historical rather than current guidance: NIST withdrew Revision 1 on **September 26, 2025** and superseded it with Revision 2. The claims below are therefore release-bounded to the 2014 document and are not presented as current NIST policy.
+
+### Historical record — target-data coverage precedes key destruction
+
+Section 2.6.1 says CE should not be used to purge a device when sensitive data may have been stored there before encryption was enabled and was not first sanitized. Section 2.6.2 likewise says CE should be considered when **all data intended for CE, including virtualized copies, was encrypted before storage on the media**.
+
+This supplies a direct counterexample to the shortcut `destroy a key -> every historical embodiment is sanitized`:
+
+> **later key destruction ≠ sanitization of earlier plaintext embodiments that were never protected by that key relation**.
+
+The retained/forgotten target must first have been inside the encryption relation on which CE depends.
+
+### Historical record — every relevant key copy and wrapping level matters
+
+Section 2.6.2 says CE should be considered when the organization can know where the target-data encryption key, or an associated wrapping key, is stored and can sanitize those locations; when **all copies** of the encryption keys used for the target data are sanitized; and, where target-data keys are themselves encrypted, when the corresponding wrapping keys can be sanitized with confidence.
+
+Appendix D then makes the hierarchy explicit: the key sanitized by CE may be the **Media Encryption Key (MEK)** or instead a **Key Encryption Key (KEK)** that wraps the MEK or another key. It separately asks implementers to document the wrapping method and assurance level.
+
+Therefore the historical guidance itself blocks a one-object picture of cryptographic erase:
+
+> **one local MEK instance sanitized ≠ every decryptability path retired**.
+
+And:
+
+> **CE key level can be MEK or KEK; key-destruction semantics therefore depend on the retained wrapping relation, not only on physical ciphertext presence**.
+
+The second sentence is an engineering reconstruction of the NIST hierarchy, not NIST's own philosophical vocabulary.
+
+### Historical record — backup and escrow can preserve future recoverability
+
+Section 2.6.3 explicitly warns that a key existing **outside the storage device**, typically because of backup or escrow, may later be used to recover data from the encrypted media. It says CE should not be trusted on devices whose keys have been backed up or escrowed unless the organization has high confidence about how those external keys were stored and managed; backup/escrowed copies belong under a separate sanitization policy for the devices on which they actually reside.
+
+Appendix D therefore asks a vendor statement to identify whether key escrow or backup is supported and whether keys at or below the relevant level have ever been escrowed from or injected into the device.
+
+This grounds a sharper boundary than the earlier Opal case could establish alone:
+
+> **device-local Cryptographic Erase ≠ sanitization of externally retained key copies**.
+
+A storage device can correctly retire its local key relation while another retained key embodiment remains outside that device's sanitization scope.
+
+### Historical record — rewrapping history can create additional key-retention obligations
+
+Appendix D requires documentation of key lifecycle management across wrapping, unwrapping, and rewrapping. It specifically asks how a previous MEK instance was sanitized when the key was wrapped with a user's authentication credentials.
+
+Therefore:
+
+> **terminal CE event ≠ complete key-lifecycle sanitization history**.
+
+A later erase request can only justify the intended forgetting claim if earlier key instances created by lifecycle transitions did not leave an unretired recovery path.
+
+### Historical record — multi-key scope and partial sanitization are separate
+
+Appendix D also requires interface documentation to state what happens when a device supports multiple MEKs: which interface commands change which MEKs, and what additional actions are needed to ensure the intended set is changed. It explicitly notes that not every MEK must be cleared in a **partial sanitization** case.
+
+Therefore:
+
+> **a CE-capable interface ≠ whole-device key retirement by category alone**.
+
+The operation's target set remains part of the sanitization claim.
+
+### Historical record — key-storage failure and verification remain separate from command invocation
+
+NIST's guidance asks how error conditions are handled when a key-storage location cannot be sanitized, and whether the CE operation reports success or failure. Section 2.4/2.6 further warns that CE can be difficult to verify and recommends alternative or additional verifiable methods when sufficient verification cannot be performed.
+
+This keeps three layers apart:
+
+```text
+CE command / mechanism available
+    !=
+all relevant key paths actually retired
+    !=
+adequate evidence that the intended sanitization result was achieved
+```
+
+That decomposition complements, rather than replaces, Case 47's independent raw-Flash compliance evidence.
+
+### Engineering reconstruction — decryptability closure is relational
+
+The bounded sources support a project-level reconstruction:
+
+> **cryptographic forgetting is closure over a decryptability relation, not merely destruction of one named key object.**
+
+For the 2014 NIST model, that relation can include target ciphertext, one or more MEKs, wrapping/KEKs, previous key instances, externally backed-up or escrowed copies, the set of data areas actually encrypted, and the command scope that selects which keys are retired.
+
+This is **engineering reconstruction**, not historical NIST terminology and not a universal theorem about every encryption system. Application/file-level key hierarchies, KMS/HSM implementations, threshold/recovery keys, cloud key services, and named-product behavior remain outside this bounded storage-media case.
+
+'''
+replace_once(
+    "cases/44-nvme13-deallocate-sanitize-forgetting.md",
+    "## Broader prior art boundary\n",
+    case_section + "## Broader prior art boundary\n",
+)
+
+replace_once(
+    "cases/44-nvme13-deallocate-sanitize-forgetting.md",
+    "| `media-encryption-key eradication != physical ciphertext overwrite` | E | bounded reconstruction from encrypted-storage key dependence; not a forensic-unrecoverability claim |\n| `logical deallocation != physical/media erasure` | E | reconstruction from permitted deallocated-read semantics and sanitize scope |",
+    "| `media-encryption-key eradication != physical ciphertext overwrite` | E | bounded reconstruction from encrypted-storage key dependence; not a forensic-unrecoverability claim |\n| NIST SP 800-88 Rev. 1 requires CE reasoning to cover all relevant key copies, wrapping-key levels, encrypted target-data areas, lifecycle key instances, and backup/escrow conditions | H/S | NIST SP 800-88 Rev. 1 §§2.6.1–2.6.3 and Appendix D; institutional guidance, not an NVMe interface contract |\n| A device-local CE event automatically sanitizes backed-up or escrowed key copies outside the device | X | contradicted by SP 800-88 Rev. 1 §2.6.3 and Appendix D |\n| `one local MEK sanitized != every decryptability path retired` | E | reconstruction from NIST all-copies, wrapping-key, escrow/backup, and lifecycle conditions |\n| `logical deallocation != physical/media erasure` | E | reconstruction from permitted deallocated-read semantics and sanitize scope |",
+)
+
+replace_once(
+    "cases/44-nvme13-deallocate-sanitize-forgetting.md",
+    "- NIST, **SP 800-88 Rev. 1, Guidelines for Media Sanitization**, final December 17, 2014: <https://csrc.nist.gov/pubs/sp/800/88/r1/final>.",
+    "- NIST, **SP 800-88 Rev. 1, Guidelines for Media Sanitization**, final December 17, 2014; historical Revision 1 withdrawn September 26, 2025 and superseded by Revision 2. Inspected §§2.6.1–2.6.3 and Appendix D for CE coverage, key hierarchy/wrapping, lifecycle, escrow/backup, multi-MEK scope, and error handling: <https://csrc.nist.gov/pubs/sp/800/88/r1/final>; archived PDF: <https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-88r1.pdf>.",
+)
+
+replace_once(
+    "cases/44-nvme13-deallocate-sanitize-forgetting.md",
+    "`tmzncty/computing-archaeology` was searched before writing for `NVMe sanitize`, `secure erase`, `deallocate`, `TRIM`, and SSD sanitization. No dedicated retention/sanitization case was found. Generic SSD/Flash engineering history therefore remains routed there, while this case keeps the retention-specific distinction among logical deallocation, material embodiments, sanitization mechanisms, and sanitization-completion evidence.",
+    "`tmzncty/computing-archaeology` was searched before writing for `NVMe sanitize`, `secure erase`, `deallocate`, `TRIM`, SSD sanitization, and during this deepening for `cryptographic erase`, `Opal`, `key destruction`, `wrapping key`, and `key escrow`. No dedicated retention/sanitization or key-hierarchy case was found. Generic SSD/Flash/SED and cryptographic-storage implementation history therefore remains routed there, while this case keeps the retention-specific distinction among logical deallocation, material embodiments, key-mediated recoverability, sanitization mechanisms, and sanitization-completion evidence.",
+)
+
+replace_once(
+    "evidence/44-nvme12-13-deallocate-sanitize-grounding.md",
+    "This record grounds [`../cases/44-nvme13-deallocate-sanitize-forgetting.md`](../cases/44-nvme13-deallocate-sanitize-forgetting.md) in official TCG Opal 1.0 Revision 1.0 plus NVM Express Revision 1.3 and Revision 1.2.1 text.",
+    "This record grounds [`../cases/44-nvme13-deallocate-sanitize-forgetting.md`](../cases/44-nvme13-deallocate-sanitize-forgetting.md) in official TCG Opal 1.0 Revision 1.0 plus NVM Express Revision 1.3 / Revision 1.2.1 text, and uses NIST SP 800-88 Rev. 1 (December 2014) as an institutional historical source for the conditions under which cryptographic-key sanitization can support a Cryptographic Erase claim.",
+)
+
+nist_source = r'''### NIST SP 800-88 Rev. 1 — Guidelines for Media Sanitization
+
+National Institute of Standards and Technology, **SP 800-88 Rev. 1, Guidelines for Media Sanitization**, December 2014.
+
+Official historical record:
+
+- <https://csrc.nist.gov/pubs/sp/800/88/r1/final>
+- archived NIST PDF: <https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-88r1.pdf>
+
+Sections/pages inspected:
+
+- §§2.6.1–2.6.3, printed pp. 10–11 / PDF pages 18–19, for CE eligibility, all-copies/wrapping-key conditions, and backup/escrow caveats;
+- Appendix D, printed pp. 49–51 / PDF pages 57–59, for MEK-versus-KEK level, key lifecycle/rewrapping, escrow/backup, multi-MEK scope, error handling, and the example vendor statement.
+
+Historical-status boundary: NIST marks Revision 1 **withdrawn on September 26, 2025** and superseded in its entirety by SP 800-88 Rev. 2. Revision 1 is used here only as a dated 2014 institutional witness. It is not presented as current NIST guidance, as an NVMe normative interface contract, or as proof of any named product's compliance.
+
+Inspection level: **official NIST publication record + official archived PDF text + visual inspection of the relevant CE pages**.
+
+'''
+replace_once(
+    "evidence/44-nvme12-13-deallocate-sanitize-grounding.md",
+    "## Directly grounded historical claims\n",
+    nist_source + "## Directly grounded historical claims\n",
+)
+
+nist_claims = r'''### NIST SP 800-88 Rev. 1 §§2.6.1–2.6.3 / Appendix D — CE requires key and coverage closure
+
+The 2014 NIST guidance adds a storage-sanitization condition layer that is not supplied by the Opal `Revert` / `KeepGlobalRangeKey` pair alone.
+
+The inspected text establishes that:
+
+- CE is unsuitable when sensitive target data may have been stored on the medium before encryption was enabled and was not separately sanitized;
+- CE should be considered when all target data intended for CE, including virtualized copies, was encrypted before storage;
+- the organization should know where the relevant data-encryption key or associated wrapping key is stored and be able to sanitize those locations;
+- **all copies** of the encryption keys used for the target data should be sanitized;
+- if target-data keys are wrapped, the corresponding wrapping keys must themselves be within the trusted sanitization relation;
+- a key that survives outside the storage device through backup or escrow may later permit recovery of encrypted media data;
+- backed-up/escrowed copies require their own sanitization policy on the devices that actually retain those copies;
+- the CE key level may be a MEK or a KEK that wraps the MEK/another key;
+- key lifecycle management must account for previous key instances created during wrapping, unwrapping, and rewrapping;
+- devices supporting multiple MEKs must expose which MEKs are changed by the relevant interface command and any additional actions required for the intended scope;
+- a partial-sanitization case need not clear every MEK;
+- error handling must define what happens when the key-storage location itself cannot be sanitized.
+
+**Supported historical claim:** in this 2014 institutional guidance, Cryptographic Erase is conditional on target-data encryption coverage plus retirement of the relevant key copies/hierarchy and is explicitly weakened by surviving backup/escrow paths.
+
+**Engineering consequence:** `one local key instance destroyed` cannot be promoted to `all decryptability relations have been retired` without additional evidence about wrapping levels, copies, lifecycle, scope, and external recovery paths.
+
+**Scope boundary:** this does not establish application/file-level key hierarchies, HSM/KMS behavior, cloud key-service semantics, threshold recovery, or named-product implementation correctness.
+
+'''
+replace_once(
+    "evidence/44-nvme12-13-deallocate-sanitize-grounding.md",
+    "## Visual inspection note\n",
+    nist_claims + "## Visual inspection note\n",
+)
+
+replace_once(
+    "evidence/44-nvme12-13-deallocate-sanitize-grounding.md",
+    "- Revision 1.2.1 Format NVM secure-erase settings page showing User Data Erase / Cryptographic Erase and the scope across exposed/cache/deallocated locations.\n\nNo claim in the case depends solely on inferred layout or an unreadable figure.",
+    "- Revision 1.2.1 Format NVM secure-erase settings page showing User Data Erase / Cryptographic Erase and the scope across exposed/cache/deallocated locations;\n- NIST SP 800-88 Rev. 1 printed pp. 10–11 showing all-key-copy/wrapping-key conditions and the explicit backup/escrow caveat;\n- NIST Appendix D printed pp. 49 and 51 showing MEK/KEK wrapping level, key-lifecycle/escrow/interface reporting requirements, and the example CE feature statement.\n\nNo claim in the case depends solely on inferred layout or an unreadable figure.",
+)
+
+replace_once(
+    "evidence/44-nvme12-13-deallocate-sanitize-grounding.md",
+    "NIST **SP 800-88 Rev. 1**, finalized December 17, 2014, defines media sanitization as rendering access to target data infeasible for a given level of effort and includes `crypto erase` and `secure erase` in its keyword vocabulary.",
+    "NIST **SP 800-88 Rev. 1**, finalized December 17, 2014, defines media sanitization as rendering access to target data infeasible for a given level of effort and includes `crypto erase` and `secure erase` in its keyword vocabulary. Its inspected CE sections also make all-copy/wrapping-key coverage, lifecycle key handling, and backup/escrow survival explicit. Revision 1 was withdrawn on September 26, 2025 and is retained here strictly as a historical 2014 source.",
+)
+
+replace_once(
+    "evidence/44-nvme12-13-deallocate-sanitize-grounding.md",
+    "- `factory-state reset is not, by category alone, proof of data destruction`.",
+    "- `factory-state reset is not, by category alone, proof of data destruction`;\n- `one local MEK sanitized != every decryptability path retired`;\n- `device-local CE != sanitization of externally backed-up or escrowed key copies`;\n- `later key destruction != sanitization of historical plaintext embodiments that were never inside the encryption relation`;\n- `terminal CE event != complete key-lifecycle sanitization history`;\n- `CE mechanism availability != verified CE result`.",
+)
+
+replace_once(
+    "evidence/44-nvme12-13-deallocate-sanitize-grounding.md",
+    "- that eradicating one media key proves destruction of every possible external/wrapped/escrowed copy of key material;\n- that crypto erase, block erase, and overwrite are physically equivalent;",
+    "- that eradicating one media key proves destruction of every possible external/wrapped/escrowed copy of key material;\n- that NIST SP 800-88 Rev. 1 is still current guidance after September 26, 2025, or that its institutional recommendations are an NVMe/TCG normative interface contract;\n- that a CE-capable command necessarily changes every MEK on a multi-key device or sanitizes every externally retained recovery path;\n- that crypto erase, block erase, and overwrite are physically equivalent;",
+)
+
+replace_once(
+    "evidence/44-nvme12-13-deallocate-sanitize-grounding.md",
+    "`tmzncty/computing-archaeology` was searched before writing for `NVMe sanitize`, `secure erase`, `deallocate`, `TRIM`, SSD sanitization, and again during this deepening for `Opal`, `RevertSP`, and media-encryption-key destruction. No dedicated case was found.",
+    "`tmzncty/computing-archaeology` was searched before writing for `NVMe sanitize`, `secure erase`, `deallocate`, `TRIM`, SSD sanitization, and again during the two Case 44 deepenings for `Opal`, `RevertSP`, media-encryption-key destruction, `cryptographic erase`, wrapping keys, and key escrow. No dedicated case was found.",
+)
+
+replace_once(
+    "ROADMAP.md",
+    "- [ ] key destruction — **partially advanced by grounded Case 44 historical deepening**: TCG Opal 1.0 (January 2009) explicitly links media-encryption-key eradication to cryptographic erasure and, through `KeepGlobalRangeKey`, supplies the counterexample that a Locking-SP/factory-state transition can preserve the relevant key and avoid cryptographic erase. Application/file-level key hierarchies, wrapped/escrowed/backup keys, HSM/KMS failure, selective multi-key erasure, key-recovery policy, named-product compliance, and forensic validation remain open;",
+    "- [ ] key destruction — **further advanced by grounded Case 44 NIST key-coverage deepening**: TCG Opal 1.0 (January 2009) supplies the media-key-eradication / `KeepGlobalRangeKey` counterexample, while NIST SP 800-88 Rev. 1 (December 2014, now historical) separately requires CE reasoning to account for all relevant key copies, MEK/KEK wrapping levels, key lifecycle/rewrapping, backup or escrow outside the device, multi-MEK scope, and key-storage error handling. This closes the bounded **storage-device CE: one-key deletion ≠ decryptability closure** relation, but application/file-level key hierarchies, HSM/KMS and cloud-key-service failure, threshold/recovery keys, named-product compliance, and forensic validation remain open;",
+)
+
+replace_once(
+    "CASE_INDEX.md",
+    "| [NVM Express 1.3 Deallocate and Sanitize: Logical Forgetting, Media Sanitization, and Completion State](cases/44-nvme13-deallocate-sanitize-forgetting.md) | **grounded** | advisory logical-range deallocation + controller allocation/currentness state + subsystem-wide sanitize operation + Block/Crypto/Overwrite mechanisms + retained progress/result status + earlier media-key-eradication control state | separate logical deallocation from media erasure; sanitize scope from allocated-LBA scope; request completion from operation completion; forgotten payload from retained forgetting-status evidence; and security-provider reset from key destruction | [2009–2017 Opal/NVMe grounding](evidence/44-nvme12-13-deallocate-sanitize-grounding.md); TCG Opal 1.0 now supplies explicit media-key-eradication prior art plus the `KeepGlobalRangeKey` non-erasure counterexample; anonymized 2011 raw-flash compliance/forensic validation remains Case 47, while earlier crypto-erase genealogy, named-product/SED compliance, key hierarchy/escrow, ATA/SCSI genealogy, and application deletion composition remain separate work |",
+    "| [NVM Express 1.3 Deallocate and Sanitize: Logical Forgetting, Media Sanitization, and Completion State](cases/44-nvme13-deallocate-sanitize-forgetting.md) | **grounded** | advisory logical-range deallocation + controller allocation/currentness state + subsystem-wide sanitize operation + Block/Crypto/Overwrite mechanisms + retained progress/result status + media-key/wrapping-key recoverability relations | separate logical deallocation from media erasure; sanitize scope from allocated-LBA scope; request completion from operation completion; security-provider reset from key destruction; and local key retirement from decryptability closure across copies/wrapping/escrow | [2009–2017 Opal/NIST/NVMe grounding](evidence/44-nvme12-13-deallocate-sanitize-grounding.md); Opal 1.0 supplies media-key-eradication prior art plus the `KeepGlobalRangeKey` non-erasure counterexample; NIST SP 800-88 Rev. 1 now grounds all-key-copy, MEK/KEK wrapping, lifecycle, backup/escrow, multi-MEK-scope, and error-handling conditions for CE; Case 47 retains independent raw-Flash validation, while application/HSM/KMS key hierarchies and named-product compliance remain separate work |",
+)
+
+findings = r'''
+
+### Case 44 NIST CE deepening — key copies, wrapping, escrow, and decryptability closure
+
+1415. **CE eligibility ≠ one key-delete event** — NIST SP 800-88 Rev. 1 conditions CE on target-data encryption coverage plus the relevant key-copy/hierarchy and implementation-assurance relations.
+1416. **later key destruction ≠ sanitization of earlier plaintext embodiments** — Revision 1 explicitly rejects CE when sensitive data may have been stored before encryption without prior sanitization.
+1417. **one local MEK sanitized ≠ every decryptability path retired** — all relevant copies and, where applicable, wrapping-key relations have to be inside the sanitization claim.
+1418. **MEK destruction ≠ the only possible CE key level** — Appendix D allows the sanitized key to be a KEK wrapping the MEK/another key, subject to corresponding strength and assurance.
+1419. **device-local CE ≠ sanitization of external backup/escrow keys** — a key retained outside the device can preserve a future recovery path and belongs to a separate sanitization scope.
+1420. **key backup/escrow state ≠ mere administrative metadata** — under the bounded CE model, whether a recoverable key copy exists outside the device changes whether ciphertext remains potentially decryptable.
+1421. **terminal CE event ≠ complete key-lifecycle sanitization history** — wrapping, unwrapping, and rewrapping can create previous key instances whose retirement must be accounted for separately.
+1422. **CE-capable interface ≠ whole-device key retirement** — a multi-MEK device can require additional commands/actions, and partial sanitization can intentionally leave unrelated MEKs intact.
+1423. **key-storage error ≠ successful forgetting by intention alone** — inability to sanitize the location containing a relevant key is an error condition whose reporting/completion semantics matter to the sanitization claim.
+1424. **fast CE ≠ self-verifying CE** — Revision 1 treats CE as potentially very fast while separately warning that effective sanitization may be difficult to verify and may require alternative/additional methods.
+1425. **2014 NIST institutional guidance ≠ NVMe/TCG normative contract or named-product compliance** — the source constrains sanitization reasoning but does not define those command interfaces or prove an implementation obeys them; Revision 1 is also historical after its 2025 withdrawal.
+1426. **cryptographic forgetting can be modeled as decryptability closure ≠ NIST historical vocabulary** — the project may reconstruct a relation among ciphertext, MEKs, KEKs, key copies, lifecycle instances, scope, and external recovery paths, but that graph-like formulation is an analytical tool rather than a phrase attributed to the 2014 authors.
+'''
+replace_once(
+    "CASE_INDEX.md",
+    "1414. **partial service availability can coexist with an active retention timing fence** — Case 33 now gives a concrete DRAM instance where non-target resources remain callable while constitutive maintenance blocks target banks and still constrains neighboring access timing.",
+    "1414. **partial service availability can coexist with an active retention timing fence** — Case 33 now gives a concrete DRAM instance where non-target resources remain callable while constitutive maintenance blocks target banks and still constrains neighboring access timing." + findings,
+)
