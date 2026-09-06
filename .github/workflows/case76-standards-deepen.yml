@@ -16,7 +16,13 @@ jobs:
         with:
           fetch-depth: 0
       - name: Apply research update
-        run: python .github/case76_deepen.py
+        run: |
+          python .github/case76_deepen.py
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('CASE_INDEX.md')
+          p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
       - name: Validate
         run: |
           git diff --check
