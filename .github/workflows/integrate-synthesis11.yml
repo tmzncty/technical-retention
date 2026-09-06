@@ -22,6 +22,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          python3 -c "from pathlib import Path; p=Path('CASE_INDEX.md'); p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')"
           git diff --check
           test -f docs/SYNTHESIS_11_ACCESS_DISTURBANCE_MAINTENANCE.md
           grep -q 'SYNTHESIS_11_ACCESS_DISTURBANCE_MAINTENANCE.md' README.md
