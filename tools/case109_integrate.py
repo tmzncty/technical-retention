@@ -6,7 +6,8 @@ ROADMAP_PATH = Path("ROADMAP.md")
 INDEX_PATH = Path("CASE_INDEX.md")
 
 roadmap_bullet = '- [x] Amazon S3 Versioning delete-marker / noncurrent-version lifecycle boundary — [`cases/109-amazon-s3-versioning-delete-marker-lifecycle.md`](cases/109-amazon-s3-versioning-delete-marker-lifecycle.md), grounded by [`evidence/109-amazon-s3-2010-2014-versioning-lifecycle-grounding.md`](evidence/109-amazon-s3-2010-2014-versioning-lifecycle-grounding.md): AWS\'s 8 February / 16 March 2010 Versioning records establish version IDs and retained predecessor versions, while current service semantics make simple DELETE create a data-less current delete marker and keep older versions directly addressable; the 20 May 2014 lifecycle/versioning announcement plus current lifecycle contract separates current-version expiration, noncurrent-version permanent retirement, and expired-marker cleanup. This closes only the bounded `default-current visibility vs retained version history vs policy-driven reclamation` relation; internal S3 replication/consensus, physical erase/sanitization, Object Lock, cross-region replication, provider-independent comparison, and implementation fault validation remain open.'
-index_row = '| [Amazon S3 Versioning: Delete Markers, Noncurrent Versions, and Lifecycle Reclamation](cases/109-amazon-s3-versioning-delete-marker-lifecycle.md) | **grounded** | versioned object identity + current/noncurrent relation + data-less delete-marker currentness + policy-driven old-version retirement | separate default-key visibility from historical-version recoverability, delete marker from payload erasure, noncurrentness from corruption, and lifecycle eligibility from physical sanitization | [2010–2014 + current-contract grounding](evidence/109-amazon-s3-2010-2014-versioning-lifecycle-grounding.md); internal replication topology, Object Lock, physical deletion, and provider-independent validation remain separate |'
+case108_row = '| [Seagate Medalist 1080sl Zone-Bit Recording: Logical Blocks Across Nonuniform Physical Geometry](cases/108-seagate-medalist-zone-bit-recording-geometry.md) | **grounded** | fixed 512-byte logical sectors + nonuniform ZBR zone/notch geometry + notch-scoped control state | separate logical-block size from physical cylinder capacity; logical service from recording geometry; ZBR geometry from CHS translation and defect reassignment | [1989–1995 ZBR geometry grounding](evidence/108-seagate-1989-1995-zbr-geometry-grounding.md); complete genealogy, servo/read-channel implementation, BIOS/ATA history, and modern validation remain separate work |'
+case109_row = '| [Amazon S3 Versioning: Delete Markers, Noncurrent Versions, and Lifecycle Reclamation](cases/109-amazon-s3-versioning-delete-marker-lifecycle.md) | **grounded** | versioned object identity + current/noncurrent relation + data-less delete-marker currentness + policy-driven old-version retirement | separate default-key visibility from historical-version recoverability, delete marker from payload erasure, noncurrentness from corruption, and lifecycle eligibility from physical sanitization | [2010–2014 + current-contract grounding](evidence/109-amazon-s3-2010-2014-versioning-lifecycle-grounding.md); internal replication topology, Object Lock, physical deletion, and provider-independent validation remain separate |'
 findings = '''
 
 ## Case 109 — Amazon S3 Versioning findings
@@ -43,12 +44,20 @@ if "cases/109-amazon-s3-versioning-delete-marker-lifecycle.md" not in roadmap:
     ROADMAP_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 index = INDEX_PATH.read_text(encoding="utf-8")
+if "cases/108-seagate-medalist-zone-bit-recording-geometry.md" not in index:
+    lines = index.splitlines()
+    idx = next((i for i, line in enumerate(lines) if "(cases/107-atlas-one-level-store-paging-residency.md)" in line), None)
+    if idx is None:
+        raise SystemExit("CASE_INDEX Case 107 row anchor not found")
+    lines.insert(idx + 1, case108_row)
+    index = "\n".join(lines) + "\n"
+
 if "cases/109-amazon-s3-versioning-delete-marker-lifecycle.md" not in index:
     lines = index.splitlines()
     idx = next((i for i, line in enumerate(lines) if "(cases/108-seagate-medalist-zone-bit-recording-geometry.md)" in line), None)
     if idx is None:
-        raise SystemExit("CASE_INDEX Case 108 row anchor not found")
-    lines.insert(idx + 1, index_row)
+        raise SystemExit("CASE_INDEX repaired Case 108 row anchor not found")
+    lines.insert(idx + 1, case109_row)
     index = "\n".join(lines) + "\n"
 
 if "## Case 109 — Amazon S3 Versioning findings" not in index:
@@ -61,7 +70,7 @@ checks = {
     CASE_PATH: ["**`grounded`**", "current version ≠ only retained version", "delete marker ≠ payload erasure", "Case 28", "20 May 2014"],
     EVIDENCE_PATH: ["**`grounded`**", "8 February 2010", "20 May 2014", "service-level permanent delete ≠ physical sanitization"],
     ROADMAP_PATH: ["Amazon S3 Versioning delete-marker / noncurrent-version lifecycle boundary", "cases/109-amazon-s3-versioning-delete-marker-lifecycle.md"],
-    INDEX_PATH: ["Amazon S3 Versioning: Delete Markers, Noncurrent Versions, and Lifecycle Reclamation", "## Case 109 — Amazon S3 Versioning findings", "1681. **current key view ≠ only retained version**", "1696. **S3 delete marker ≠ Swift tombstone implementation**"],
+    INDEX_PATH: ["cases/108-seagate-medalist-zone-bit-recording-geometry.md", "Amazon S3 Versioning: Delete Markers, Noncurrent Versions, and Lifecycle Reclamation", "## Case 109 — Amazon S3 Versioning findings", "1681. **current key view ≠ only retained version**", "1696. **S3 delete marker ≠ Swift tombstone implementation**"],
 }
 for path, needles in checks.items():
     text = path.read_text(encoding="utf-8")
