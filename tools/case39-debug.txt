@@ -1,0 +1,7 @@
+CASE_INDEX.md:2461: new blank line at EOF.
+Traceback (most recent call last):
+  File "/home/runner/work/technical-retention/technical-retention/tools/integrate_case39_dcr_prior_art.py", line 227, in <module>
+    subprocess.run(["git", "diff", "--check"], cwd=ROOT, check=True)
+  File "/usr/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['git', 'diff', '--check']' returned non-zero exit status 2.
