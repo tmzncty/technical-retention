@@ -24,3 +24,5 @@ jobs:
 
       - name: Integrate Case 114 navigation and status
         run: python .case114_integrate.py
+
+# one-shot trigger
