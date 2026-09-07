@@ -38,22 +38,26 @@ jobs:
               roadmap.write_text(r)
 
           ci = Path('CASE_INDEX.md')
-          c = ci.read_text()
+          original = ci.read_text()
+          c = original
           if case_link not in c:
               lines = c.splitlines()
-              needle = 'cases/121-ddr5-prac-activation-counter-initialization.md'
-              idx = next(i for i, line in enumerate(lines) if needle in line)
+              cases_idx = next(i for i, line in enumerate(lines) if line.strip() == '## Cases')
+              sep_idx = next(i for i in range(cases_idx + 1, len(lines)) if lines[i].startswith('| ---'))
+              table_end = sep_idx + 1
+              while table_end < len(lines) and lines[table_end].startswith('|'):
+                  table_end += 1
               row = ('| [ATA/ATAPI-4 Host Protected Area: Retained Payload Beyond the Current User-Addressable Frontier]'
                      '(cases/122-ata4-host-protected-area-addressability-retention.md) | **grounded** | '
                      'native logical-sector population + host-set current maximum + volatile/non-volatile maximum-address policy + separate SET MAX control state | '
                      'separate payload survival, native designation, current ordinary reach, and authority/policy lifetime; show ordinary inaccessibility need not mean forgetting | '
                      '[1996–2001 HPA / SET MAX grounding](evidence/122-ata-1996-2001-hpa-set-max-grounding.md); final ATA/ATAPI-4 facsimile, DCO, PARTIES/BIOS history, and named-platform fault traces remain open |')
-              lines.insert(idx + 1, row)
-              c = '\n'.join(lines) + ('\n' if ci.read_text().endswith('\n') else '')
+              lines.insert(table_end, row)
+              c = '\n'.join(lines)
 
           if '## Case 122 — ATA HPA / SET MAX addressability findings' not in c:
               c = c.rstrip() + '''\n\n## Case 122 — ATA HPA / SET MAX addressability findings\n\n- **1964 — 24 April 1996 protected-area proposal record ≠ SET MAX proposal record:** T13 lists D96137r0 `ATA protected area proposal` before the separately tracked D97106 `SET MAX ADDRESS addition` series. (`H/P`, `X`)\n- **1965 — proposal submission ≠ invention date:** the T13 dates establish public standards-development floors, not private conception or absolute priority. (`H/P`, `X`)\n- **1966 — integrated working draft ≠ final approved standard:** ATA/ATAPI-4 Revision 18 explicitly identifies itself as an internal working document and not an approved standard. (`H/P`, `X`)\n- **1967 — native maximum address ≠ current user-accessible maximum:** READ NATIVE MAX reports the factory-default/native ceiling while SET MAX can establish a lower ordinary-service frontier. (`H/P`)\n- **1968 — current reported capacity ≠ native addressable population:** after SET MAX, IDENTIFY capacity-related fields follow the selected maximum even though the native maximum remains separately queryable. (`H/P`, `E`)\n- **1969 — ordinary read/write rejection ≠ demonstrated payload destruction:** the bounded SET MAX contract changes address admissibility; it does not specify erase, overwrite, encryption, or relocation of sectors above the frontier. (`H/P`, `E`, `X`)\n- **1970 — payload persistence ≠ reachability-policy persistence:** ATA/ATAPI-4 gives the maximum-address setting power/reset persistence semantics independent of the disk payload's retention mechanism. (`H/P`, `E`)\n- **1971 — volatile access boundary ≠ volatile payload:** a lower maximum can revert at a power/reset boundary without that transition itself implying loss of sectors above the old frontier. (`H/P`, `E`)\n- **1972 — loss/reversion of retained policy state can increase ordinary reach:** Case 122 is a counterexample to the intuition that losing metadata always reduces accessibility. (`E`)\n- **1973 — address restored ≠ payload validated:** re-admitting a high address says nothing by itself about magnetic integrity of the sector stored there. (`E`, `X`)\n- **1974 — HPA control state ≠ HPA payload:** Maxtor's SET MAX password/lock/freeze states govern authority to change the frontier and have their own lifecycle; they are not the hidden bytes. (`H/P`, `E`)\n- **1975 — HPA password/lock ≠ payload encryption:** the bounded sources establish command authority controls, not cryptographic confidentiality. (`H/P`, `X`)\n- **1976 — Case 89 representation change ≠ Case 122 reachability-frontier change:** CHS re-parameterization can change an address representation while SET MAX changes which range current service admits. (`A`)\n- **1977 — Case 113 encoding ceiling ≠ Case 122 policy ceiling:** 28-bit commands cannot encode high LBAs, whereas SET MAX can deliberately exclude addresses that remain within the device's native population. (`A`)\n- **1978 — Case 44 inaccessibility ≠ deallocation ≠ sanitization:** HPA supplies an explicit counterexample in which ordinary host inaccessibility is created without evidence that prior data has been forgotten. (`A`, `X`)\n- **1979 — Case 14 embodiment replacement ≠ SET MAX reachability change:** defect reassignment changes which physical sector serves an LBA; SET MAX does not establish physical remapping. (`A`)\n- **1980 — one device can support multiple non-contradictory capacity observations:** current IDENTIFY capacity and READ NATIVE MAX answer different qualified interface questions. (`H/P`, `E`)\n- **1981 — related-repository boundary:** current `tmzncty/computing-archaeology` searches found no dedicated HPA / SET MAX case; broad ATA/HPA/DCO/BIOS genealogy belongs there if developed, while Case 122 retains only the addressability/retention relation. (`H/P` project-state record)\n'''
-          ci.write_text(c)
+          ci.write_text(c.rstrip() + '\n')
 
           case113 = Path('cases/113-ata-atapi6-48bit-lba-reachability.md')
           s = case113.read_text()
