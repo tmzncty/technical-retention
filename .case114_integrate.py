@@ -4,11 +4,10 @@ import subprocess
 
 ROADMAP = Path('ROADMAP.md')
 INDEX = Path('CASE_INDEX.md')
-
 case_path = 'cases/114-nvme14-namespace-write-protection.md'
 evidence_path = 'evidence/114-nvme-1996-2019-namespace-write-protection-grounding.md'
-assert Path(case_path).exists(), case_path
-assert Path(evidence_path).exists(), evidence_path
+assert Path(case_path).exists()
+assert Path(evidence_path).exists()
 
 roadmap = ROADMAP.read_text(encoding='utf-8')
 roadmap_marker = '## Phase 2 — Build missing technical bridges\n\n'
@@ -21,7 +20,7 @@ roadmap_item = (
 if case_path not in roadmap:
     assert roadmap_marker in roadmap
     roadmap = roadmap.replace(roadmap_marker, roadmap_marker + roadmap_item, 1)
-ROADMAP.write_text(roadmap, encoding='utf-8')
+ROADMAP.write_text(roadmap.rstrip() + '\n', encoding='utf-8')
 
 index = INDEX.read_text(encoding='utf-8')
 row = (
@@ -37,40 +36,19 @@ if case_path not in index:
     lines.insert(matches[0] + 1, row)
     index = ''.join(lines)
 
-findings_heading = '## Case 114 — NVMe 1.4 Namespace Write Protection findings'
-findings = r'''
-
-## Case 114 — NVMe 1.4 Namespace Write Protection findings
-
-- **1781 — namespace write-protection state ≠ payload-retention physics:** NVMe 1.4 can prohibit host-visible mutation of an otherwise nonvolatile namespace without changing NAND charge-retention time, ECC margin, or proving physical immobility. (`H/P`, `E`)
-- **1782 — write protected ≠ unreadable:** the bounded command-interaction table allows Read and other nonmodifying operations while rejecting actions that modify the protected namespace medium. (`H/P`)
-- **1783 — write protection ≠ deletion or sanitization:** blocking Format/Sanitize-style modification authority does not itself deallocate, erase, cryptographically erase, or physically sanitize the namespace payload. (`H/P`, `E`)
-- **1784 — Feature Identifier `not saveable` ≠ protection state volatile:** Feature 84h is not saveable through the generic Feature-save mechanism, yet most namespace write-protection states persist across both power cycles and Controller Level Resets. (`H/P`)
-- **1785 — `Write Protect Until Power Cycle` ≠ reset-temporary protection:** the state survives an NVMe Controller Level Reset and clears only on the specified power-cycle transition. (`H/P`)
-- **1786 — ordinary `Write Protect` ≠ `Permanent Write Protect`:** both survive power cycles/resets in the bounded 1.4 state table, but they have different transition/changeability semantics. (`H/P`)
-- **1787 — `Permanent Write Protect` ≠ physically WORM medium:** protocol-level permanence constrains the defined host/controller mutation path; the specification does not establish physically write-once NAND, indefinite media retention, or immutable lower-layer embodiment. (`H/P`, `E`, `X`)
-- **1788 — shared namespace attachment ≠ independent per-controller protection authority:** if the subsystem supports Namespace Write Protection, the namespace state must be enforced by every controller to which that namespace is attached. (`H/P`)
-- **1789 — protection entry ≠ metadata-only bit flip:** a Set Features transition into a protected state requires all volatile write-cache data and metadata associated with that namespace to be committed to nonvolatile media as part of the transition. (`H/P`)
-- **1790 — transition durability closure ≠ future mutation prohibition:** the cache-to-NVM transfer closes outstanding volatile state; the protected state then constrains future modifying commands. NVMe 1.4 composes these operations without making them the same relation. (`H/P`, `E`)
-- **1791 — deliberate namespace read-only state ≠ media-health read-only warning:** §8.19.1 says the Critical Warning read-only condition is not set merely because namespace write protection made the namespace read-only. (`H/P`)
-- **1792 — capability existence ≠ transition authorization:** support for Namespace Write Protection and the current protection state are distinct from RPMB-based authentication control governing transitions into `Write Protect Until Power Cycle` and `Permanent Write Protect`. (`H/P`)
-- **1793 — 2019 NVMe feature ≠ invention of persistent/permanent software write protection:** X3T10/96-179r0 (10 May 1996) already proposes `Persistent Write Protect` and `Permanent Write Protect` for SSC volumes across mounts. (`H/P` prior-art floor)
-- **1794 — 1996 SSC prior art ≠ proven SCSI→NVMe genealogy:** the SSC proposal is tape-volume/device-server specific and proposes medium-recorded protection indication; NVMe 1.4 uses a namespace/controller feature with different state, attachment, authentication, and transition semantics. (`H/P`, `A`, `X`)
-- **1795 — Case 110 service-level WORM ≠ Case 114 namespace-level protocol write protection:** S3 Object Lock is version-scoped with retain-until/legal-hold/Governance/Compliance relations; NVMe 1.4 is namespace-scoped with reset/power-cycle/permanent state lifetimes. The comparison is functional only. (`A`)
-- **1796 — related-repository boundary:** `tmzncty/computing-archaeology` has no dedicated Namespace Write Protection case to reuse in this round; broader SCSI/ATA/NVMe write-protection genealogy and controller history should be developed there rather than duplicated here. (`H/P` project-state record)
-'''
-if findings_heading not in index:
+heading = '## Case 114 — NVMe 1.4 Namespace Write Protection findings'
+findings = '''\n\n## Case 114 — NVMe 1.4 Namespace Write Protection findings\n\n- **1781 — namespace write-protection state ≠ payload-retention physics:** NVMe 1.4 can prohibit host-visible mutation of an otherwise nonvolatile namespace without changing NAND charge-retention time, ECC margin, or proving physical immobility. (`H/P`, `E`)\n- **1782 — write protected ≠ unreadable:** the bounded command-interaction table allows Read and other nonmodifying operations while rejecting actions that modify the protected namespace medium. (`H/P`)\n- **1783 — write protection ≠ deletion or sanitization:** blocking Format/Sanitize-style modification authority does not itself deallocate, erase, cryptographically erase, or physically sanitize the namespace payload. (`H/P`, `E`)\n- **1784 — Feature Identifier `not saveable` ≠ protection state volatile:** Feature 84h is not saveable through the generic Feature-save mechanism, yet most namespace write-protection states persist across both power cycles and Controller Level Resets. (`H/P`)\n- **1785 — `Write Protect Until Power Cycle` ≠ reset-temporary protection:** the state survives an NVMe Controller Level Reset and clears only on the specified power-cycle transition. (`H/P`)\n- **1786 — ordinary `Write Protect` ≠ `Permanent Write Protect`:** both survive power cycles/resets in the bounded 1.4 state table, but they have different transition/changeability semantics. (`H/P`)\n- **1787 — `Permanent Write Protect` ≠ physically WORM medium:** protocol-level permanence constrains the defined host/controller mutation path; the specification does not establish physically write-once NAND, indefinite media retention, or immutable lower-layer embodiment. (`H/P`, `E`, `X`)\n- **1788 — shared namespace attachment ≠ independent per-controller protection authority:** if the subsystem supports Namespace Write Protection, the namespace state must be enforced by every controller to which that namespace is attached. (`H/P`)\n- **1789 — protection entry ≠ metadata-only bit flip:** a Set Features transition into a protected state requires all volatile write-cache data and metadata associated with that namespace to be committed to nonvolatile media as part of the transition. (`H/P`)\n- **1790 — transition durability closure ≠ future mutation prohibition:** the cache-to-NVM transfer closes outstanding volatile state; the protected state then constrains future modifying commands. NVMe 1.4 composes these operations without making them the same relation. (`H/P`, `E`)\n- **1791 — deliberate namespace read-only state ≠ media-health read-only warning:** §8.19.1 says the Critical Warning read-only condition is not set merely because namespace write protection made the namespace read-only. (`H/P`)\n- **1792 — capability existence ≠ transition authorization:** support for Namespace Write Protection and the current protection state are distinct from RPMB-based authentication control governing transitions into `Write Protect Until Power Cycle` and `Permanent Write Protect`. (`H/P`)\n- **1793 — 2019 NVMe feature ≠ invention of persistent/permanent software write protection:** X3T10/96-179r0 (10 May 1996) already proposes `Persistent Write Protect` and `Permanent Write Protect` for SSC volumes across mounts. (`H/P` prior-art floor)\n- **1794 — 1996 SSC prior art ≠ proven SCSI→NVMe genealogy:** the SSC proposal is tape-volume/device-server specific and proposes medium-recorded protection indication; NVMe 1.4 uses a namespace/controller feature with different state, attachment, authentication, and transition semantics. (`H/P`, `A`, `X`)\n- **1795 — Case 110 service-level WORM ≠ Case 114 namespace-level protocol write protection:** S3 Object Lock is version-scoped with retain-until/legal-hold/Governance/Compliance relations; NVMe 1.4 is namespace-scoped with reset/power-cycle/permanent state lifetimes. The comparison is functional only. (`A`)\n- **1796 — related-repository boundary:** `tmzncty/computing-archaeology` has no dedicated Namespace Write Protection case to reuse in this round; broader SCSI/ATA/NVMe write-protection genealogy and controller history should be developed there rather than duplicated here. (`H/P` project-state record)\n'''
+if heading not in index:
     nums = [int(x) for x in re.findall(r'\*\*(\d+)\s+—', index)]
     assert nums and max(nums) == 1780, max(nums) if nums else None
-    index = index.rstrip() + findings + '\n'
+    index = index.rstrip() + findings
+INDEX.write_text(index.rstrip() + '\n', encoding='utf-8')
 
-INDEX.write_text(index, encoding='utf-8')
-
-# Basic consistency checks.
 text = INDEX.read_text(encoding='utf-8')
 assert text.count(case_path) == 1
-assert text.count(findings_heading) == 1
-assert '**1796 — related-repository boundary:**' in text
+assert text.count(heading) == 1
+for n in range(1781, 1797):
+    assert text.count(f'**{n} —') == 1, n
 road = ROADMAP.read_text(encoding='utf-8')
 assert road.count('[`cases/114-nvme14-namespace-write-protection.md`]') == 1
 
