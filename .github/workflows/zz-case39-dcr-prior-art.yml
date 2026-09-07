@@ -37,3 +37,5 @@ jobs:
           git diff --cached --check
           git commit -m "case39: deepen FTL crash-recovery prior-art boundary"
           git push origin HEAD:main
+
+# rerun: anchor-safe helper
