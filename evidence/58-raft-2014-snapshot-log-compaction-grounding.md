@@ -68,17 +68,50 @@ The authors warn that taking snapshots too often wastes disk bandwidth and energ
 
 **Grounded relation:** `history-retention cost and materialization cost trade against each other`.
 
-### §7 — prior art
+### §7 — Raft's own prior-art statement
 
 The paper states that snapshotting is used in Chubby and ZooKeeper and names log cleaning and log-structured merge trees as incremental alternatives.
 
 **Rejected claim:** `Raft 2014 invented snapshotting/log compaction`.
+
+### Earlier mechanism floor — Birrell, Jones, and Wobber 1987
+
+The 1987 paper's publication record and report describe a small database that records updates incrementally on disk in a log, occasionally makes a checkpoint of the entire database, and recovers by restoring an older checkpoint and replaying the later log.
+
+**Grounded boundary:** `checkpoint + suffix replay predates Raft`; `generic database checkpoint/replay ≠ Raft consensus snapshot semantics`.
+
+### Earlier distributed-service floor — Chubby 2006
+
+Chubby §2.10 states that its rewritten database uses write-ahead logging and snapshotting similar to Birrell et al., while its database log is distributed among replicas using a distributed consensus protocol. §2.11 separately describes periodic GFS backup snapshots for disaster recovery and replacement-replica initialization.
+
+**Grounded boundaries:** `pre-Raft consensus-distributed log + snapshotting exists`; `Chubby WAL/snapshot design ≠ demonstrated Raft InstallSnapshot contract`; `database snapshotting ≠ off-cell backup role`.
+
+### Novelty/genealogy guardrail
+
+The direct evidence supports chronological and functional prior-art floors. It does **not** by itself prove source-code descent, exclusive intellectual influence, or an uninterrupted Birrell → Chubby → Raft implementation genealogy.
+
+**Grounded boundary:** `earlier analogous mechanism ≠ proven direct genealogy`.
 
 ## Source 2 — official Raft publication index
 
 **The Raft Consensus Algorithm**: <https://raft.github.io/>.
 
 Used only to verify the canonical author-maintained publication path and relationship of the 2014 paper to the broader Raft work. Mechanism claims remain anchored to the paper.
+
+## Source 3 — Birrell/Jones/Wobber 1987 checkpoint + log replay
+
+Andrew D. Birrell, Michael B. Jones, and Edward P. Wobber, **“A Simple and Efficient Implementation for Small Databases”**, SOSP 1987 / DEC SRC Research Report 24. Author-hosted report: <https://birrell.org/andrew/papers/024-DatabasesPaper.pdf>. Institutional publication record: <https://www.microsoft.com/en-us/research/publication/a-simple-and-efficient-implementation-for-small-databases/>.
+
+Used only for the earlier mechanism floor: incremental disk log, occasional whole-database checkpoint, and crash recovery by restoring a checkpoint then replaying the log. No Raft-style consensus metadata is inferred.
+
+## Source 4 — Chubby 2006 WAL/snapshot + consensus-distributed log
+
+Mike Burrows, **“The Chubby lock service for loosely-coupled distributed systems”**, OSDI 2006, USENIX HTML: <https://static.usenix.org/events/osdi06/tech/full_papers/burrows/burrows_html/>.
+
+- §2.10 grounds the rewritten Chubby database's write-ahead logging and snapshotting, its explicit similarity to Birrell et al., and consensus distribution of the database log.
+- §2.11 grounds the separate GFS backup-snapshot role.
+
+Used as a pre-Raft distributed-service floor, not as evidence that Chubby implemented Raft's later boundary metadata or `InstallSnapshot` receiver rules.
 
 ## Related-repository duplication check
 
