@@ -1,0 +1,45 @@
+name: case110-integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/case110-integration.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: technical-retention-case110
+  cancel-in-progress: false
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fast-forward to current main
+        run: git pull --ff-only origin main
+
+      - name: Integrate bounded Case 110 slice
+        run: python tools/case110_integrate.py
+
+      - name: Validate and commit research tree
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          test -f cases/110-amazon-s3-object-lock-version-worm-retention.md
+          test -f evidence/110-amazon-s3-2018-object-lock-grounding.md
+          grep -Fq "## Case 110 — Amazon S3 Object Lock findings" CASE_INDEX.md
+          grep -Fq "cases/110-amazon-s3-object-lock-version-worm-retention.md" ROADMAP.md
+          grep -Fq "Case 110 — Amazon S3 Object Lock" cases/109-amazon-s3-versioning-delete-marker-lifecycle.md
+          rm -f tools/case110_integrate.py .github/workflows/case110-integration.yml
+          git add -A
+          git diff --cached --check
+          git status --short
+          git commit -m "case110: ground S3 Object Lock WORM boundary"
+          git push origin HEAD:main
