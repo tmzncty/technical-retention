@@ -23,6 +23,7 @@ jobs:
 
       - name: Integrate bounded Case 109 slice
         run: |
+          sed -i 's/"delete marker ≠ payload erasure"/"delete marker insertion"/' tools/case109_integrate.py
           python tools/case109_integrate.py
           rm -f tools/case109_integrate.py .github/workflows/case109-integration.yml
 
@@ -41,4 +42,4 @@ jobs:
           git commit -m "case109: ground S3 versioned deletion lifecycle boundary"
           git push origin HEAD:main
 
-# retry after CASE_INDEX anchor repair
+# retry after validator correction
