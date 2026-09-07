@@ -2,12 +2,17 @@
 
 ## Scope
 
-- **Bounded historical/technical regime:** HDFS administrative decommissioning as documented in Hadoop 0.18-era architecture material, Hadoop 1.0.4 administration documentation, the Hadoop 2.7.0 decommission-manager refactor record, and exact Hadoop 2.7.3 source.
-- **Primary question:** what must remain, be copied, and be re-checked before an otherwise surviving storage node may stop counting as an ordinary in-service embodiment of replicated HDFS blocks?
-- **Retention-specific focus:** administrative exclusion, `DECOMMISSION_INPROGRESS`, replication work before retirement, final full-map verification, health qualification, and recommission cleanup.
-- **Excluded from this case:** a general HDFS history; generic cluster expansion; balancing; HDFS erasure coding; storage-media sanitization; node hardware replacement procedure; or invention priority for graceful node draining.
+- **Bounded historical/technical regime:** HDFS administrative decommissioning as documented in Hadoop 0.18-era architecture material, Hadoop 1.0.4 administration documentation, the Hadoop 2.7.0 decommission-manager refactor record, and exact Hadoop 2.7.3 source; the rack-placement deepening additionally inspects Hadoop 0.18 replica-placement documentation, Hadoop 2.7.3 `BlockPlacementPolicyDefault`, and GFS 2003 as an earlier prior-art floor.
+- **Primary question:** what must remain, be copied, be topologically qualified, and be re-checked before an otherwise surviving storage node may stop counting as an ordinary in-service embodiment of replicated HDFS blocks?
+- **Retention-specific focus:** administrative exclusion, `DECOMMISSION_INPROGRESS`, replication work before retirement, replica-count versus rack-placement sufficiency, final full-map verification, health qualification, and recommission cleanup.
+- **Excluded from this case:** a general HDFS history; generic cluster expansion; balancing; HDFS erasure coding; storage-media sanitization; node hardware replacement procedure; or invention priority for graceful node draining/rack-aware storage.
 
-This case is deliberately adjacent to Case 79 but asks the inverse operational question. Case 79 studies how a restarted NameNode **re-observes surviving replicas before acting on an incomplete inventory**. Case 80 studies how HDFS **intentionally withdraws one still-existing DataNode from service only after enough other embodiments satisfy a bounded replication condition**.
+Grounding records:
+
+- [`../evidence/80-hadoop-2008-2016-datanode-decommission-grounding.md`](../evidence/80-hadoop-2008-2016-datanode-decommission-grounding.md)
+- [`../evidence/80-hadoop-2003-2016-rack-placement-decommission-deepening.md`](../evidence/80-hadoop-2003-2016-rack-placement-decommission-deepening.md)
+
+This case is deliberately adjacent to Case 79 but asks the inverse operational question. Case 79 studies how a restarted NameNode **re-observes surviving replicas before acting on an incomplete inventory**. Case 80 studies how HDFS **intentionally withdraws one still-existing DataNode from service only after enough other embodiments satisfy a bounded replication and placement condition**.
 
 ---
 
@@ -27,7 +32,11 @@ The primary HDFS sources use terms including:
 - `replication`;
 - `Blockreport`;
 - `Heartbeat`;
-- `refreshNodes`.
+- `refreshNodes`;
+- `rack-aware replica placement policy`;
+- `BlockPlacementPolicyDefault`;
+- `verifyBlockPlacement`;
+- `network location` / rack location.
 
 The following are **project engineering terms**, not historical quotations from the sources:
 
@@ -35,7 +44,9 @@ The following are **project engineering terms**, not historical quotations from 
 - `replication drain`;
 - `withdrawal authority`;
 - `retirement admissibility`;
-- `planned embodiment withdrawal`.
+- `planned embodiment withdrawal`;
+- `failure-domain diversity`;
+- `topological qualification`.
 
 They are used only to expose retention relations across cases.
 
@@ -112,13 +123,65 @@ The summary accelerates progress checking; final retirement authority is gated b
 
 ### H/P — `under-replicated` and `blocks decommission` are not identical predicates in this bounded release
 
-`isSufficientlyReplicated` first accepts blocks whose live-replica count meets the expected replication factor and placement policy. But Hadoop 2.7.3 also has bounded exceptions: for the last block of an under-construction file, the code can permit decommission when at least `minReplication` live copies remain; for a non-under-construction block whose expected replication exceeds live replicas, the code can still regard it as sufficient for decommission once `defaultReplication` is met.
+`isSufficientlyReplicated` first accepts blocks whose live-replica count meets the expected replication factor **and** whose placement policy is satisfied. But Hadoop 2.7.3 also has bounded exceptions: for the last block of an under-construction file, the code can permit decommission when at least `minReplication` live copies remain; for a non-under-construction block whose expected replication exceeds live replicas, the code can still regard it as sufficient for decommission once `defaultReplication` is met.
 
 The correct historical claim is therefore release-specific:
 
 > `under-replicated` does not mechanically imply `must block decommission` under every 2.7.3 code path.
 
 This is not generalized into a timeless HDFS policy.
+
+### H/P — HDFS 0.18 explicitly separates replica count from rack distribution
+
+The 0.18 architecture document calls replica placement critical to reliability and performance and says rack-aware placement aims to improve reliability, availability, and network bandwidth utilization.
+
+It first describes putting replicas on unique racks as a `simple but non-optimal` policy: that protects against an entire rack failure and distributes read bandwidth, but increases cross-rack write traffic.
+
+For the common replication-factor-three case, the same document instead places two replicas on different nodes of the local rack and the third on a different rack. It explicitly notes that only two unique racks are used.
+
+Therefore, already in this bounded HDFS record:
+
+> **replication factor ≠ rack diversity**
+
+and:
+
+> **maximal rack spread ≠ automatically preferred placement**.
+
+**Primary source:** Apache Hadoop release-0.18.0 HDFS architecture, `Replica Placement: The First Baby Steps`: <https://github.com/apache/hadoop/blob/release-0.18.0/docs/hdfs_design.html>.
+
+### H/P — Hadoop 2.7.3 keeps placement qualification separate from replica count
+
+The exact `BlockPlacementPolicyDefault` source describes a factor-three target order that differs from the 0.18 documentation: first local when possible, second on a different rack, third on another node of the second replica's rack.
+
+More importantly for Case 80, `verifyBlockPlacement` counts distinct rack network locations and, once the cluster has been multi-rack, uses:
+
+```text
+minRacks = min(2, numberOfReplicas)
+```
+
+as the bounded default minimum. Thus three replicas do not imply a three-rack requirement.
+
+The same implementation constrains targets through a per-rack maximum and constructs rack-aware candidate groups when selecting excess replicas for deletion.
+
+**Primary source:** Apache Hadoop 2.7.3 source, `BlockPlacementPolicyDefault.java`: <https://github.com/apache/hadoop/blob/branch-2.7.3/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/blockmanagement/BlockPlacementPolicyDefault.java>.
+
+This gives three separate relations:
+
+> **live-replica count ≠ placement-policy satisfaction**;
+
+> **placement-policy satisfaction ≠ maximal rack spread**;
+
+> **over-replica deletion ≠ arbitrary copy deletion**.
+
+### H/P — the exact factor-three target order changed between the inspected 0.18 and 2.7.3 records
+
+The 0.18 architecture text describes `local rack + local rack + remote rack`; the 2.7.3 class comment/source describes `local + remote + same remote rack`.
+
+Both yield a two-rack factor-three placement, but they are not the same target sequence. This is a useful historiographic guardrail:
+
+> **same two-rack diversity objective ≠ same per-replica target order across releases**.
+
+The project therefore keeps the two release records distinct rather than merging their mechanics into a timeless “HDFS policy.”
 
 ### H/P — decommission-in-progress death is treated differently from starting decommission on an already-dead node
 
@@ -130,13 +193,13 @@ This apparently awkward distinction is important. `Administrative retirement com
 
 `stopDecommission` returns the node toward service through `HeartbeatManager`. If the node is alive, `processOverReplicatedBlocksOnReCommission(node)` is invoked. The manager also removes the node from pending/tracked decommission state.
 
-This means recommission is not `restore payload from backup`. The old DataNode may still possess its replicas. In fact, replicas created elsewhere during decommission can make the recommissioned cluster **over-replicated**, creating a separate cleanup obligation.
+This means recommission is not `restore payload from backup`. The old DataNode may still possess its replicas. In fact, replicas created elsewhere during decommission can make the recommissioned cluster **over-replicated**, creating a separate cleanup obligation whose candidate selection is itself topology-aware in the bounded placement-policy implementation.
 
 ---
 
 ## Retained state
 
-At least five state classes should remain distinct.
+At least seven state classes should remain distinct.
 
 ### 1. User payload blocks
 
@@ -146,15 +209,23 @@ The bytes that HDFS must continue serving despite changes in which DataNodes emb
 
 The NameNode's working block map identifies where replicas are observed and how many live/decommissioning/decommissioned copies exist for a block. This relation is not the payload itself.
 
-### 3. DataNode administrative state
+### 3. Rack / network-topology relation
+
+The placement policy uses DataNode network locations/racks to classify the topology of the surviving replicas. This failure-domain model is control state, not a second payload copy.
+
+### 4. Placement-policy satisfaction
+
+A block can have a live-replica count and separately have a placement result. The ordinary full-strength decommission success branch in 2.7.3 requires both enough live replicas and placement-policy satisfaction.
+
+### 5. DataNode administrative state
 
 `In Service`, `Decommission In Progress`, and `Decommissioned` qualify what the system is allowed to conclude or do about a node independently of simple liveness.
 
-### 4. Administrative configuration / intent
+### 6. Administrative configuration / intent
 
 The include/exclude configuration and `refreshNodes` path express operator-selected membership intent. They are distinct from heartbeat-derived reachability.
 
-### 5. Decommission progress state
+### 7. Decommission progress state
 
 The monitor's current list/counters of insufficiently replicated blocks are working control state. They help schedule and bound maintenance but are explicitly revalidated before final retirement.
 
@@ -169,6 +240,7 @@ in-service DataNode
     -> administrator marks node for decommission
     -> DECOMMISSION_INPROGRESS
     -> scan blocks on the node
+    -> inspect live replicas + placement policy
     -> schedule replication where required
     -> retain/refresh a bounded blocker set
     -> blocker set reaches zero
@@ -183,6 +255,7 @@ DECOMMISSION_INPROGRESS / DECOMMISSIONED
     -> stop decommission
     -> return node toward service
     -> detect/process any resulting over-replication
+    -> choose excess cleanup with topology-aware placement logic
 ```
 
 The first sequence is **not** claimed to describe every HDFS release or every modern maintenance mode. It is the documented 2.7.3 decommission path.
@@ -195,9 +268,13 @@ The first sequence is **not** claimed to describe every HDFS release or every mo
 
 This case does not attempt a complete client read-selection or write-placement audit for decommissioning nodes. The source-level claim is narrower: decommission state is a first-class administrative qualification consulted by HDFS block-management logic, and the node's blocks participate in sufficiency calculations during the transition.
 
+### Placement
+
+A live-copy count is not the complete ordinary full-strength preservation predicate in the bounded 2.7.3 path. Placement policy evaluates the topological spread of replicas separately. Conversely, placement satisfaction does not require each replica to inhabit a unique rack.
+
 ### Retirement
 
-`DECOMMISSIONED` is an administrative outcome, not evidence that the machine, disks, or block files have been physically destroyed. The inspected decommission manager reaches completion by state transition after replication/health checks; it does not establish secure media erasure.
+`DECOMMISSIONED` is an administrative outcome, not evidence that the machine, disks, or block files have been physically destroyed. The inspected decommission manager reaches completion by state transition after replication/placement/health checks; it does not establish secure media erasure.
 
 ### Forgetting
 
@@ -231,9 +308,21 @@ The tracked blocker list reduces repeated work, but its documented staleness req
 
 Whether a DataNode may finish decommissioning depends on the other replicas and placement/health conditions, not on an intrinsic property of the node alone.
 
+### E — replica multiplicity and failure-domain diversity are separate dimensions
+
+Three replicas can satisfy a factor-three copy count while inhabiting only two racks in the bounded default policies. The number of embodiments and their distribution across correlated-failure domains are distinct retained relations.
+
+### E — placement sufficiency is not maximal dispersion
+
+The bounded 2.7.3 default verifier requires at least two racks once that topology exists; it does not require every replica to occupy a unique rack. More dispersion is therefore not synonymous with the exact admission predicate.
+
 ### E — successful retirement is not the same as restored maximal redundancy under every intermediate predicate
 
 The release-specific `sufficiently replicated` test is not a single equation with file replication factor in all cases. Administrative progress can depend on bounded safety thresholds distinct from the simple label `under-replicated`.
+
+### E — topology-aware cleanup is a second retention decision
+
+When recommission or other events create excess copies, choosing which embodiment to retire can itself depend on rack distribution. Restoring the desired copy count and preserving an acceptable failure-domain geometry are separate but coupled tasks.
 
 ---
 
@@ -252,7 +341,21 @@ The direction differs:
 
 ### A — Case 05, RADOS repair
 
-Both can create replacement replicas and restore a desired distributed retention relation. Case 05's bounded trigger is failure/membership-driven repair; Case 80's bounded trigger is an administrator's planned retirement of an HDFS DataNode. This is a functional comparison, not a genealogy claim.
+Both can create replacement replicas and restore a desired distributed retention relation, and both make physical placement relevant to survival. Case 05's CRUSH/PG mechanism and failure/membership-triggered repair remain historically distinct from HDFS rack-aware placement and operator-driven decommission. This is a functional comparison, not a genealogy claim.
+
+### A — Cases 19 and 24, f4 / Windows Azure LRC
+
+The coded-storage cases already separate algebraic fragment count/reconstructability from failure-domain placement. Case 80 supplies the replicated-storage counterpart:
+
+> **copy count ≠ failure-domain placement**, just as **coded reconstructability ≠ failure-domain placement**.
+
+No coding genealogy is implied.
+
+### A — Case 83, HDFS block scanner
+
+Rack placement says where replica embodiments are distributed. It does not establish that those embodiments have recently passed checksum verification.
+
+`placement qualification ≠ integrity qualification`.
 
 ### A — Case 73, GFS garbage collection
 
@@ -276,7 +379,7 @@ This case complicates a picture in which retention is only the positive act of k
 
 The technically grounded point is modest:
 
-> **a system can make withdrawal from service conditional on prior preservation work and current evidence about the remaining embodiments.**
+> **a system can make withdrawal from service conditional on prior preservation work and current evidence about both the number and placement of the remaining embodiments.**
 
 That may inform later analysis of availability, replaceability, or technical forgetting. It does not by itself establish a Heideggerian `Bestand` claim, and `decommissioned` is not a philosophical synonym for forgotten.
 
@@ -285,27 +388,45 @@ That may inform later analysis of availability, replaceability, or technical for
 ## Counterexamples and limits
 
 - The sources do not establish that HDFS invented graceful storage-node decommissioning.
+- GFS 2003 is an earlier rack-placement mechanism floor, but chronology/function do not prove direct GFS→HDFS implementation genealogy.
 - The Hadoop 0.18 command proves an early named operation, not the exact later 2.7.3 state machine.
+- The Hadoop 0.18 factor-three rack order must not be projected onto 2.7.3; the inspected target sequences differ.
 - The 1.0.4 include/exclude semantics should not be projected unchanged onto every later release.
 - The 2.7.3 `sufficiently replicated` exceptions are release-specific and should not be normalized into a universal HDFS retirement rule.
+- Replication factor does not by itself state rack diversity; conversely, the bounded default placement verifier does not require one unique rack per replica.
+- Rack/network-location classification is an operational failure-domain model, not proof that every physical failure mode is independent across racks.
+- Placement qualification does not prove checksum integrity, replica currentness, or writer/NameNode authority.
 - The inspected code does not establish that decommission completion securely erases local block data.
 - Decommission is not equated with dead-node failure recovery, rack rebalancing, storage-volume removal, or modern HDFS maintenance state.
 - The blocker list is explicitly allowed to become stale; it is not treated as a durable audit history.
 - The case does not prove crash-persistence semantics for every transient `DecommissionManager` data structure.
 - Recommission processing of over-replication establishes cleanup behavior in this source path, not an invariant that every recommission always deletes a replica.
+- The topology-aware excess-copy source path is not claimed to be globally optimal under every workload/failure model.
 - No claim is made about exact throughput, completion time, network volume, or operator labor for a named production cluster.
 
 ---
 
 ## Prior-art boundary
 
-This case makes **no invention-priority claim** for planned storage-node retirement, graceful draining, replication before maintenance, or cluster membership administration.
+This case makes **no invention-priority claim** for planned storage-node retirement, graceful draining, replication before maintenance, cluster membership administration, or rack-aware replica placement.
 
-The defensible historical statement is narrower:
+For decommissioning, the defensible historical statement remains:
 
 > Hadoop 0.18-era documentation already exposed an explicit DataNode decommission operation; Hadoop 1.0.4 documentation tied later decommission/recommission intent to administrator-controlled host configuration; and Hadoop 2.7.3 source makes the retention relation inspectable as a monitored transition in which a live node remains `DECOMMISSION_INPROGRESS` while insufficient replicas are scheduled/checked, followed by a full-map and health revalidation before `DECOMMISSIONED`.
 
-The `computing-archaeology` repository was searched for a dedicated HDFS DataNode-decommission slice before writing this case; no directly reusable treatment was found. A broader history of cluster draining, storage-node maintenance, and membership protocols belongs there if developed later.
+For rack-placement prior art, Ghemawat, Gobioff, and Leung's GFS 2003 paper explicitly says machine-level spreading is insufficient for its goal and that chunk replicas must also be spread across racks. This is an earlier distributed-filesystem mechanism floor than the bounded HDFS 0.18 record.
+
+That permits the negative priority statement:
+
+> **HDFS 0.18 rack-aware placement ≠ invention priority for cross-rack replica placement.**
+
+But it does **not** establish:
+
+> GFS implementation → HDFS implementation.
+
+A real genealogy would require direct design/citation/code-history evidence rather than chronology plus functional similarity.
+
+The `computing-archaeology` repository was searched for dedicated `HDFS rack replica placement` / `rack awareness` material before this deepening; no directly reusable treatment was found. A broader history of cluster placement, failure-domain modeling, draining, and membership protocols belongs there if developed later.
 
 ---
 
@@ -317,15 +438,27 @@ The `computing-archaeology` repository was searched for a dedicated HDFS DataNod
 | Hadoop 1.0.4 `refreshNodes` re-read include/exclude configuration to drive decommission/recommission decisions | H/P | grounded in Apache user guide |
 | Hadoop 2.7.3 exposes `In Service`, `Decommission In Progress`, and `Decommissioned` administrative states | H/P | grounded in exact release source |
 | live-node decommission schedules/checks replication before final retirement | H/P | grounded in `DecommissionManager` |
+| ordinary full-strength `isSufficientlyReplicated` checks both live count and placement-policy satisfaction | H/P | grounded in exact 2.7.3 source |
+| Hadoop 0.18 factor-three placement intentionally uses two racks rather than three | H/P | grounded in release documentation |
+| Hadoop 2.7.3 default placement verification separately counts racks and requires at least two in the bounded multi-rack path | H/P | grounded in exact source |
+| HDFS 0.18 and 2.7.3 inspected factor-three target orders differ | H/P | grounded by release-bounded comparison |
+| 2.7.3 target admission and excess-replica cleanup consult rack topology | H/P | grounded in exact `BlockPlacementPolicyDefault` source |
 | the tracked blocker list may be stale and is rechecked against the actual block map before completion | H/P | grounded in source comment/control flow |
 | final completion also checks node health | H/P | grounded in source |
 | a decommission-in-progress node that becomes dead does not automatically finish retirement in the bounded source | H/P | grounded in class documentation |
 | recommission can trigger over-replication processing | H/P | grounded in `stopDecommission` |
+| GFS 2003 provides an earlier rack-aware distributed-filesystem placement floor | H/P | grounded in original SOSP paper |
+| replica multiplicity ≠ failure-domain diversity | E | bounded reconstruction |
+| live-replica count ≠ placement-policy satisfaction | E | bounded reconstruction |
+| placement sufficiency ≠ maximal rack spread | E | bounded reconstruction |
 | physical DataNode survival ≠ continued in-service authority | E | bounded reconstruction |
 | decommission request ≠ completed retirement | E | bounded reconstruction |
 | planned embodiment withdrawal can require proactive preservation work | E | bounded reconstruction |
 | progress summary ≠ final retirement authority | E | bounded reconstruction |
+| over-replica deletion ≠ arbitrary copy deletion | E | bounded reconstruction |
+| placement qualification ≠ integrity/currentness qualification | E/A | cross-case boundary only |
 | decommission ≠ secure sanitization | E | bounded negative claim |
+| GFS rack placement ≠ demonstrated GFS→HDFS implementation genealogy | X | chronology/function insufficient for descent |
 | HDFS decommission ≈ failure repair / media reassignment only functionally | A | explicitly non-genealogical comparison |
 
 ---
@@ -336,6 +469,8 @@ HDFS DataNode decommissioning adds a retention regime in which the object being 
 
 The bounded 2.7.3 implementation is especially revealing because it refuses a one-step equation `administrator excludes node -> node is gone`. A live DataNode first becomes `DECOMMISSION_INPROGRESS`; its blocks are scanned, replication work may be scheduled, a bounded blocker set is maintained, and even a zero blocker set is revalidated against the current full block map and node health before the node becomes `DECOMMISSIONED`.
 
+The rack-placement deepening sharpens what “enough elsewhere” means. In the ordinary full-strength path, enough live replicas and acceptable placement are separate predicates. Three copies need not mean three racks; placement satisfaction need not mean maximal dispersion; and later excess-copy cleanup can itself be topology-aware. The 0.18/2.7.3 comparison also shows why the repository must keep release mechanics dated rather than silently fusing them into one timeless HDFS algorithm.
+
 Therefore:
 
-> **planned embodiment withdrawal can itself be retention work: the system preserves enough elsewhere before it authorizes itself to stop depending on here.**
+> **planned embodiment withdrawal can itself be retention work: the system preserves enough, in an admissible topology, before it authorizes itself to stop depending on here.**
