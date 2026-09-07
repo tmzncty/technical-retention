@@ -168,6 +168,83 @@ Directly establishes:
 
 ---
 
+
+### Source D — Zhang et al., _Deterministic Crash Recovery for NAND Flash Based Storage Systems_, DAC 2014
+
+**Document:** Chi Zhang, Yi Wang, Tianzheng Wang, Renhai Chen, Duo Liu, and Zili Shao, _Deterministic Crash Recovery for NAND Flash Based Storage Systems_, 51st Design Automation Conference, June 2014, DOI `10.1109/DAC.2014.6881475`; ACM proceedings DOI `10.1145/2593069.2593124`.
+
+**Primary publication record:** IEEE Xplore: <https://ieeexplore.ieee.org/document/6881475>.
+
+**Institutional corroboration:** Hong Kong Polytechnic University Scholars Hub: <https://research.polyu.edu.hk/en/publications/deterministic-crash-recovery-for-nand-flash-based-storage-systems/>.
+
+**Evidence class:** `H/P` for the authors' contemporary problem formulation, mechanism summary, implementation class, and evaluation boundary; the institutional record is `H/S` bibliographic corroboration of the same publication.
+
+#### Source D — FTL crash recovery is explicitly a metadata-consistency problem by 2014
+
+The IEEE record states that because an FTL directly manages Flash using metadata, its crash-recovery problem is how to maintain and recover **FTL metadata consistency** after a system crash. This is explicit period vocabulary two years before GeckoFTL's SIGMOD publication.
+
+**Use:** blocks any Case-39 origin claim for the generic proposition that surviving NAND payload needs consistent/recoverable FTL management metadata.
+
+#### Source D — checkpoint-bounded replay/reconstruction predates GeckoFTL
+
+The paper describes DCR's basic idea as exploiting deterministic FTL behavior to reproduce events occurring **between the last checkpoint and the crash point** during recovery. It contrasts this with approaches that scan the whole Flash chip and says DCR can instead check a limited number of blocks selected from deterministic FTL operations.
+
+**Use:** grounds an earlier floor for `checkpoint boundary + reconstruction/replay + bounded recovery scope` as an FTL crash-recovery design family.
+
+**Boundary:** the inspected record does not license importing GeckoFTL's PVB, Logarithmic Gecko, LSM runs, postambles, pinned runs, or page-associative metadata organization into DCR.
+
+#### Source D — implementation/evaluation class remains bounded
+
+The publication record says DCR was implemented for a **block-level FTL** and evaluated against a version-based scheme on an ARM11-based embedded evaluation board. It reports improved recovery time and consistent recovered FTL metadata.
+
+**Use:** separates an evaluated 2014 research implementation from both universal SSD behavior and GeckoFTL's later page-associative / Flash-resident metadata design.
+
+---
+
+## Prior-art consequence for Case 39
+
+The combined chronology now supports:
+
+```text
+DCR / DAC 2014
+    explicit FTL metadata-consistency crash recovery
+    + last-checkpoint → crash-point event reconstruction
+    + bounded-block recovery scope
+        ↓ chronological floor only
+GeckoFTL / SIGMOD 2016
+    metadata-scale problem
+    + Flash-resident mapping/validity structures
+    + PVB / Logarithmic Gecko
+    + completion/admissibility witnesses
+    + pinned-run recovery dependencies
+```
+
+The arrow is **not** a demonstrated genealogy. It means only that Case 39 must describe its novelty more narrowly than `FTL metadata recovery` or `checkpoint-based crash recovery`.
+
+### G-39.11 — `2016 GeckoFTL ≠ origin of generic FTL crash recovery`
+
+**Evidence:** DCR in June 2014 already formulates FTL metadata consistency after crash as the problem and presents a concrete recovery mechanism.
+
+**Status:** grounded prior-art boundary.
+
+### G-39.12 — `checkpoint/reconstruction family predates GeckoFTL`
+
+**Evidence:** DCR explicitly reconstructs deterministic events between the last checkpoint and crash point and reduces the recovery search to a bounded block set.
+
+**Status:** grounded prior-art floor.
+
+### G-39.13 — `DCR ≠ GeckoFTL mechanism identity`
+
+**Evidence:** DCR's inspected record identifies a block-level deterministic-replay design; GeckoFTL's sources identify page-associative Flash-resident mapping/validity structures, PVB, LSM-like runs, and separate completion/reclamation dependencies.
+
+**Status:** grounded mechanism-separation rule.
+
+### G-39.14 — `earlier mechanism floor ≠ direct genealogy`
+
+**Evidence:** chronology establishes that DCR is earlier; no inspected source establishes code, architecture, or design descent from DCR into GeckoFTL.
+
+**Status:** explicit anti-genealogy guardrail.
+
 ## Related-repository duplication check
 
 At the start of this slice, code/content searches in `tmzncty/computing-archaeology` for:

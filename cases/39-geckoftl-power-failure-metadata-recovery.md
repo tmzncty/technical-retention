@@ -167,6 +167,28 @@ These figures are useful because they show that **recovery work, metadata footpr
 
 **Scholarly anchor:** SIGMOD 2016 publication record and abstract, University of Copenhagen / IT University of Copenhagen.
 
+### H/P — generic FTL checkpoint/crash-recovery work predates GeckoFTL
+
+A narrower prior-art check changes the novelty boundary of this case without changing its mechanism. Chi Zhang, Yi Wang, Tianzheng Wang, Renhai Chen, Duo Liu, and Zili Shao's paper _Deterministic Crash Recovery for NAND Flash Based Storage Systems_ was presented at DAC in June 2014, roughly two years before the SIGMOD GeckoFTL publication. The IEEE publication record states the problem in FTL terms: because the FTL manages Flash through metadata, crash recovery must efficiently and effectively maintain and recover **FTL metadata consistency** after a system crash.
+
+The paper's stated `DCR` mechanism already uses a checkpoint boundary. Its basic idea is to reproduce deterministic FTL events that occurred **between the last checkpoint and the crash point**, then inspect only a bounded set of blocks selected from those deterministic operations rather than scan the entire Flash chip. The authors report an implementation for a block-level FTL on an ARM11-based embedded evaluation board and compare it with a version-based recovery scheme.
+
+This supplies a chronological floor for several generic ideas that Case 39 must not attribute to GeckoFTL in 2016:
+
+- FTL crash recovery as a metadata-consistency problem;
+- an explicit `last checkpoint → crash point` recovery interval;
+- reconstruction/replay of post-checkpoint controller events;
+- recovery cost as a separate engineering objective from mere NAND byte survival;
+- reducing recovery scope below a whole-device scan.
+
+It does **not** erase GeckoFTL's distinct bounded contribution. DCR is described as a deterministic recovery method for a block-level FTL. GeckoFTL instead makes metadata **scale** central to a page-associative / Flash-resident mapping regime, isolates PVB as a major RAM component in its evaluated design, moves validity state into Logarithmic Gecko's LSM-like Flash structures, and gives run-completion / pinned-run mechanisms for reconstructing volatile mapping and invalidity state. The safe comparison is therefore:
+
+> **2014 DCR proves that FTL checkpoint/reconstruction and recovery-time optimization already existed as explicit research problems; 2016 GeckoFTL supplies a different metadata-scaling and Flash-resident-structure solution.**
+
+No inspected source establishes a direct implementation genealogy from DCR into GeckoFTL, and chronological prior art must not be rewritten as such.
+
+**Primary anchor:** Chi Zhang et al., _Deterministic Crash Recovery for NAND Flash Based Storage Systems_, DAC 2014, DOI `10.1109/DAC.2014.6881475` / ACM proceedings DOI `10.1145/2593069.2593124`; IEEE Xplore publication record and abstract, with the Hong Kong Polytechnic University institutional publication record as bibliographic corroboration.
+
 ---
 
 ## Retained state
@@ -387,6 +409,14 @@ Partially written or obsolete runs can remain physically present but be rejected
 
 An obsolete run may still need to remain physically available until volatile invalidity information is durably closed.
 
+### `GeckoFTL recovery ≠ invention of generic FTL checkpoint/replay`
+
+The 2014 DCR paper already formulates FTL metadata consistency after crash, a last-checkpoint-to-crash recovery interval, deterministic event reproduction, bounded recovery scanning, and recovery-time evaluation. GeckoFTL's defensible novelty boundary in this repository is therefore narrower: scaling Flash-resident mapping/validity metadata and reconstructing the specific PVB/LSM/run-directory relations described by its sources.
+
+### `earlier DCR mechanism ≠ demonstrated GeckoFTL genealogy`
+
+Chronological and functional prior art blocks an origin claim. It does not prove that GeckoFTL inherited code, data structures, or design decisions from DCR.
+
 ---
 
 ## Functional analogies
@@ -437,6 +467,14 @@ This is not a claim that FTL metadata is automatically Stieglerian `tertiary ret
 
 ---
 
+
+## Prior-art limits added in this deepening
+
+- `2016 GeckoFTL = invention of generic FTL crash recovery` is rejected: DCR already makes FTL metadata consistency, checkpoints, reconstruction, and recovery time explicit in 2014.
+- `DCR = GeckoFTL mechanism` is rejected: the inspected DCR record describes a block-level deterministic-replay scheme, while GeckoFTL's bounded mechanism is page-associative / Flash-resident and includes PVB, Logarithmic Gecko, LSM-like runs, completion witnesses, and pinned-run dependencies.
+- `DCR → GeckoFTL direct genealogy` remains unsupported. Earlier publication establishes a prior-art floor, not a transmission path.
+- Neither research-system record proves deployment in a named commercial SSD controller.
+
 ## Related repositories
 
 ### `tmzncty/computing-archaeology`
@@ -472,6 +510,7 @@ Useful anti-anachronism warning: the authors explicitly formulate `recovery from
 
 ### Primary / period research sources
 
+- Chi Zhang, Yi Wang, Tianzheng Wang, Renhai Chen, Duo Liu, and Zili Shao, _Deterministic Crash Recovery for NAND Flash Based Storage Systems_, DAC 2014, 2–5 June 2014, DOI `10.1109/DAC.2014.6881475` / ACM proceedings DOI `10.1145/2593069.2593124`: <https://ieeexplore.ieee.org/document/6881475>; institutional record: <https://research.polyu.edu.hk/en/publications/deterministic-crash-recovery-for-nand-flash-based-storage-systems/>.
 - Niv Dayan and Philippe Bonnet, _Garbage Collection Techniques for Flash-Resident Page-Mapping FTLs_, arXiv:1504.01666v1, submitted 7 April 2015: <https://arxiv.org/abs/1504.01666>.
 - Niv Dayan, Philippe Bonnet, and Stratos Idreos, _GeckoFTL: Scalable Flash Translation Techniques For Very Large Flash Devices_, Proceedings of ACM SIGMOD 2016, pp. 327–342, DOI `10.1145/2882903.2915219`.
 - Philippe Bonnet and Niv Dayan, _Solid-state storage device flash translation layer_, U.S. patent application `US20170249257A1`, filed 29 February 2016, published 31 August 2017. IT University of Copenhagen institutional patent record: <https://pure.itu.dk/en/publications/solid-state-storage-device-flash-translation-layer/>.
