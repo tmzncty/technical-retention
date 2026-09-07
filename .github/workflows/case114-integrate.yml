@@ -1,0 +1,21 @@
+name: Case 114 one-shot integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.case114_integrate.py'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.event.head_commit.message == 'case114: stage integration helper'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Integrate Case 114 navigation
+        run: python .case114_integrate.py
