@@ -1,4 +1,4 @@
-name: Consolidate HDFS SafeMode duplicate
+name: Polish canonical HDFS SafeMode consolidation
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  consolidate:
+  polish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,40 +19,41 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - name: Consolidate Case 117 into canonical Case 79
-        run: python scripts/consolidate_case117_into_case79.py
-      - name: Normalize changed research files
+      - name: Reconcile Case 79 chronology wording
         run: |
           python - <<'PY'
           from pathlib import Path
-          for name in [
-              'cases/79-apache-hdfs-startup-safemode-block-report-reobservation.md',
-              'evidence/79-hadoop-2010-2016-startup-safemode-grounding.md',
-              'cases/117-apache-hdfs-startup-safemode-reobservation.md',
-              'evidence/117-hadoop-2008-2017-startup-safemode-grounding.md',
-              'ROADMAP.md',
-              'CASE_INDEX.md',
-          ]:
-              p = Path(name)
-              lines = p.read_text(encoding='utf-8').splitlines()
-              p.write_text('\n'.join(line.rstrip() for line in lines) + '\n', encoding='utf-8')
+          p = Path('cases/79-apache-hdfs-startup-safemode-block-report-reobservation.md')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace(
+              "The Apache 1.0.4 documentation alone shows the SafeMode concept predates the bounded 2.7.3 source used here. Earlier distributed filesystems and storage systems also had startup, recovery, and inventory-reconstruction mechanisms; reconstructing that genealogy belongs in distributed-filesystem history, preferably in `computing-archaeology` if the work expands beyond this retention-specific slice.",
+              "Exact released Hadoop 0.18.0 source already implements report-rebuilt block-location state and separate startup/manual SafeMode control before the 2010 paper and later 1.x/2.x continuity sources. Earlier distributed filesystems and storage systems also had startup, recovery, and inventory-reconstruction mechanisms; reconstructing that broader genealogy belongs in distributed-filesystem history, preferably in `computing-archaeology` if the work expands beyond this retention-specific slice."
+          )
+          s = s.replace(
+              "> **By the 2010 HDFS architecture account, block replica locations were deliberately excluded from the NameNode's persistent checkpoint and reconstructed from DataNode reports; the Hadoop 2.7.3 implementation then provides a directly inspectable SafeMode control regime that counts sufficiently replicated blocks, gates mutation/replication, waits through a threshold/extension boundary, and only afterward proceeds with ordinary under-replication repair.**",
+              "> **By released Hadoop 0.18.0, the implementation already kept the block-to-machine relation in memory and rebuilt it from reports while separating startup and manual SafeMode control state; the 2010 architecture paper and later 1.x/2.x documentation/source then independently expose the same namespace/re-observation split and its evolving threshold, extension, mutation-gating, and post-exit repair semantics.**"
+          )
+          s = s.replace(
+              "- behavior of every Hadoop release before/after 2.7.3;",
+              "- behavior of every Hadoop release outside the bounded 0.18.0 / 1.0.4 / 2.7.3 / 2.8.0 evidence chain;"
+          )
+          ledger_anchor = "| HDFS NameNode persistent namespace recovery is separated from replica-location reconstruction | `H/P` | Shvachko et al. 2010 plus Apache architecture docs |"
+          ledger_add = "| released Hadoop 0.18.0 keeps block→machine location state in memory and rebuilds it from reports | `H/P` | exact `release-0.18.0` `FSNamesystem.java`; HDFS implementation chronology floor only |\n| startup and manual SafeMode already use distinguishable control state in 0.18.0 | `H/P` | separate `SafeModeInfo` constructors plus `isManual()`; later 2.8.0 source is continuity evidence |\n" + ledger_anchor
+          if ledger_anchor in s and "released Hadoop 0.18.0 keeps block→machine" not in s:
+              s = s.replace(ledger_anchor, ledger_add, 1)
+          p.write_text(s.rstrip() + '\n', encoding='utf-8')
           PY
-      - name: Validate consolidation
+      - name: Validate polish
         run: |
           git diff --check
           python - <<'PY'
           from pathlib import Path
-          road = Path('ROADMAP.md').read_text(encoding='utf-8')
-          idx = Path('CASE_INDEX.md').read_text(encoding='utf-8')
-          c79 = Path('cases/79-apache-hdfs-startup-safemode-block-report-reobservation.md').read_text(encoding='utf-8')
-          c117 = Path('cases/117-apache-hdfs-startup-safemode-reobservation.md').read_text(encoding='utf-8')
-          assert 'cases/117-apache-hdfs-startup-safemode-reobservation.md' not in road
-          assert 'cases/117-apache-hdfs-startup-safemode-reobservation.md) | **grounded**' not in idx
-          assert 'Case 79 deepening — HDFS startup SafeMode consolidation findings' in idx
-          assert 'release-0.18.0' in c79
-          assert 'retired duplicate / link-stability stub' in c117
+          s = Path('cases/79-apache-hdfs-startup-safemode-block-report-reobservation.md').read_text(encoding='utf-8')
+          assert 'By released Hadoop 0.18.0' in s
+          assert 'released Hadoop 0.18.0 keeps block→machine' in s
+          assert 'The Apache 1.0.4 documentation alone shows' not in s
           PY
-      - name: Commit research consolidation
+      - name: Commit polish
         run: |
           if git diff --quiet; then
             echo "No changes needed"
@@ -60,11 +61,6 @@ jobs:
           fi
           git config user.name "technical-retention automation"
           git config user.email "actions@users.noreply.github.com"
-          git add \
-            cases/79-apache-hdfs-startup-safemode-block-report-reobservation.md \
-            evidence/79-hadoop-2010-2016-startup-safemode-grounding.md \
-            cases/117-apache-hdfs-startup-safemode-reobservation.md \
-            evidence/117-hadoop-2008-2017-startup-safemode-grounding.md \
-            ROADMAP.md CASE_INDEX.md
-          git commit -m "case79: consolidate duplicate HDFS SafeMode case"
+          git add cases/79-apache-hdfs-startup-safemode-block-report-reobservation.md
+          git commit -m "case79: align SafeMode chronology after consolidation"
           git push
