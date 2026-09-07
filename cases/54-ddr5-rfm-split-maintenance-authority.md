@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/54-ddr5-rfm-2022-2025-grounding.md`](../evidence/54-ddr5-rfm-2022-2025-grounding.md).
 
+Directed spatial continuation: [`118-micron-ddr5-directed-refresh-management.md`](118-micron-ddr5-directed-refresh-management.md) now grounds a named Micron DDR5 DRFM product contract in which a sampled row address anchors a BRC-bounded physical-neighbor refresh set; this is separate from Case 54's bank-level RAA/RFM split-authority relation.
+
 ## Scope
 
 Case 53 established a bounded 2012–2020 RowHammer / targeted-refresh history: disturbance can make a victim row need extra restoration even when ordinary periodic refresh is otherwise on schedule, and a mitigation label such as `TRR` does not by itself establish implementation-level immunity.
