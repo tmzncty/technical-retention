@@ -37,9 +37,16 @@ jobs:
           grep -Fq "## Case 110 — Amazon S3 Object Lock findings" CASE_INDEX.md
           grep -Fq "cases/110-amazon-s3-object-lock-version-worm-retention.md" ROADMAP.md
           grep -Fq "Case 110 — Amazon S3 Object Lock" cases/109-amazon-s3-versioning-delete-marker-lifecycle.md
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('cases/109-amazon-s3-versioning-delete-marker-lifecycle.md')
+          p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
           rm -f tools/case110_integrate.py .github/workflows/case110-integration.yml
           git add -A
           git diff --cached --check
           git status --short
           git commit -m "case110: ground S3 Object Lock WORM boundary"
           git push origin HEAD:main
+
+# retry after EOF-whitespace validator correction
