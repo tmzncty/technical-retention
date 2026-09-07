@@ -392,11 +392,11 @@ This case makes **no invention-priority claim** for:
 - replication repair;
 - read-only recovery states.
 
-The Apache 1.0.4 documentation alone shows the SafeMode concept predates the bounded 2.7.3 source used here. Earlier distributed filesystems and storage systems also had startup, recovery, and inventory-reconstruction mechanisms; reconstructing that genealogy belongs in distributed-filesystem history, preferably in `computing-archaeology` if the work expands beyond this retention-specific slice.
+Exact released Hadoop 0.18.0 source already implements report-rebuilt block-location state and separate startup/manual SafeMode control before the 2010 paper and later 1.x/2.x continuity sources. Earlier distributed filesystems and storage systems also had startup, recovery, and inventory-reconstruction mechanisms; reconstructing that broader genealogy belongs in distributed-filesystem history, preferably in `computing-archaeology` if the work expands beyond this retention-specific slice.
 
 The defensible historical claim is narrower:
 
-> **By the 2010 HDFS architecture account, block replica locations were deliberately excluded from the NameNode's persistent checkpoint and reconstructed from DataNode reports; the Hadoop 2.7.3 implementation then provides a directly inspectable SafeMode control regime that counts sufficiently replicated blocks, gates mutation/replication, waits through a threshold/extension boundary, and only afterward proceeds with ordinary under-replication repair.**
+> **By released Hadoop 0.18.0, the implementation already kept the block-to-machine relation in memory and rebuilt it from reports while separating startup and manual SafeMode control state; the 2010 architecture paper and later 1.x/2.x documentation/source then independently expose the same namespace/re-observation split and its evolving threshold, extension, mutation-gating, and post-exit repair semantics.**
 
 ---
 
@@ -434,7 +434,7 @@ This bounded case does not establish:
 
 - the first historical SafeMode implementation in HDFS;
 - the genealogy of safe startup/read-only recovery modes;
-- behavior of every Hadoop release before/after 2.7.3;
+- behavior of every Hadoop release outside the bounded 0.18.0 / 1.0.4 / 2.7.3 / 2.8.0 evidence chain;
 - every HA startup/failover interaction;
 - checksum validation semantics of block reports;
 - exact large-cluster startup performance;
@@ -457,6 +457,8 @@ A search of `tmzncty/computing-archaeology` found no dedicated HDFS/SafeMode tre
 
 | Claim | Layer | Support / boundary |
 | --- | --- | --- |
+| released Hadoop 0.18.0 keeps block→machine location state in memory and rebuilds it from reports | `H/P` | exact `release-0.18.0` `FSNamesystem.java`; HDFS implementation chronology floor only |
+| startup and manual SafeMode already use distinguishable control state in 0.18.0 | `H/P` | separate `SafeModeInfo` constructors plus `isManual()`; later 2.8.0 source is continuity evidence |
 | HDFS NameNode persistent namespace recovery is separated from replica-location reconstruction | `H/P` | Shvachko et al. 2010 plus Apache architecture docs |
 | block replica locations are not part of the persistent NameNode checkpoint in the bounded architecture | `H/P` | Shvachko et al. 2010 |
 | DataNodes re-advertise local block inventories through block reports | `H/P` | 2010 paper + Apache docs/source |
