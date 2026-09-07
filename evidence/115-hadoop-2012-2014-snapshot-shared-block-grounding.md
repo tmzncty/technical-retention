@@ -1,4 +1,3 @@
-\
 # Evidence 115 — HDFS Snapshot Shared Blocks and Replication Obligation, 2012–2014
 
 ## Purpose

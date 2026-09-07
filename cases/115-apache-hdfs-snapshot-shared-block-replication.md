@@ -1,4 +1,3 @@
-\
 # Apache HDFS Snapshots: Shared Blocks, Historical Namespace Reachability, and Retained Replication Obligation
 
 **Status:** `grounded`
