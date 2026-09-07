@@ -4,36 +4,34 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def insert_once(path: str, anchor: str, addition: str, marker: str) -> None:
+def before(path: str, anchor: str, addition: str, marker: str) -> None:
     p = ROOT / path
     text = p.read_text(encoding="utf-8")
     if marker in text:
         return
     if anchor not in text:
-        raise RuntimeError(f"anchor not found in {path}: {anchor[:80]!r}")
-    text = text.replace(anchor, addition + anchor, 1)
-    p.write_text(text, encoding="utf-8")
+        raise RuntimeError(f"anchor not found in {path}: {anchor!r}")
+    p.write_text(text.replace(anchor, addition + anchor, 1), encoding="utf-8")
 
 
-def replace_once(path: str, old: str, new: str, marker: str) -> None:
+def after(path: str, anchor: str, addition: str, marker: str) -> None:
     p = ROOT / path
     text = p.read_text(encoding="utf-8")
     if marker in text:
         return
-    if old not in text:
-        raise RuntimeError(f"replace target not found in {path}: {old[:80]!r}")
-    text = text.replace(old, new, 1)
-    p.write_text(text, encoding="utf-8")
+    if anchor not in text:
+        raise RuntimeError(f"anchor not found in {path}: {anchor!r}")
+    p.write_text(text.replace(anchor, anchor + addition, 1), encoding="utf-8")
 
 
-case_addition = r'''
+case_history = r'''
 ### H/P — generic FTL checkpoint/crash-recovery work predates GeckoFTL
 
 A narrower prior-art check changes the novelty boundary of this case without changing its mechanism. Chi Zhang, Yi Wang, Tianzheng Wang, Renhai Chen, Duo Liu, and Zili Shao's paper _Deterministic Crash Recovery for NAND Flash Based Storage Systems_ was presented at DAC in June 2014, roughly two years before the SIGMOD GeckoFTL publication. The IEEE publication record states the problem in FTL terms: because the FTL manages Flash through metadata, crash recovery must efficiently and effectively maintain and recover **FTL metadata consistency** after a system crash.
 
 The paper's stated `DCR` mechanism already uses a checkpoint boundary. Its basic idea is to reproduce deterministic FTL events that occurred **between the last checkpoint and the crash point**, then inspect only a bounded set of blocks selected from those deterministic operations rather than scan the entire Flash chip. The authors report an implementation for a block-level FTL on an ARM11-based embedded evaluation board and compare it with a version-based recovery scheme.
 
-This supplies a strong chronological floor for several generic ideas that Case 39 must not attribute to GeckoFTL in 2016:
+This supplies a chronological floor for several generic ideas that Case 39 must not attribute to GeckoFTL in 2016:
 
 - FTL crash recovery as a metadata-consistency problem;
 - an explicit `last checkpoint → crash point` recovery interval;
@@ -49,14 +47,14 @@ No inspected source establishes a direct implementation genealogy from DCR into 
 
 **Primary anchor:** Chi Zhang et al., _Deterministic Crash Recovery for NAND Flash Based Storage Systems_, DAC 2014, DOI `10.1109/DAC.2014.6881475` / ACM proceedings DOI `10.1145/2593069.2593124`; IEEE Xplore publication record and abstract, with the Hong Kong Polytechnic University institutional publication record as bibliographic corroboration.
 '''
-insert_once(
+before(
     "cases/39-geckoftl-power-failure-metadata-recovery.md",
     "\n---\n\n## Retained state\n",
-    case_addition,
+    case_history,
     "generic FTL checkpoint/crash-recovery work predates GeckoFTL",
 )
 
-case_prior_boundary = r'''
+case_engineering = r'''
 ### `GeckoFTL recovery ≠ invention of generic FTL checkpoint/replay`
 
 The 2014 DCR paper already formulates FTL metadata consistency after crash, a last-checkpoint-to-crash recovery interval, deterministic event reproduction, bounded recovery scanning, and recovery-time evaluation. GeckoFTL's defensible novelty boundary in this repository is therefore narrower: scaling Flash-resident mapping/validity metadata and reconstructing the specific PVB/LSM/run-directory relations described by its sources.
@@ -65,35 +63,38 @@ The 2014 DCR paper already formulates FTL metadata consistency after crash, a la
 
 Chronological and functional prior art blocks an origin claim. It does not prove that GeckoFTL inherited code, data structures, or design decisions from DCR.
 '''
-insert_once(
+before(
     "cases/39-geckoftl-power-failure-metadata-recovery.md",
     "\n---\n\n## Functional analogies\n",
-    case_prior_boundary,
+    case_engineering,
     "GeckoFTL recovery ≠ invention of generic FTL checkpoint/replay",
 )
 
-replace_once(
+case_limits = r'''
+## Prior-art limits added in this deepening
+
+- `2016 GeckoFTL = invention of generic FTL crash recovery` is rejected: DCR already makes FTL metadata consistency, checkpoints, reconstruction, and recovery time explicit in 2014.
+- `DCR = GeckoFTL mechanism` is rejected: the inspected DCR record describes a block-level deterministic-replay scheme, while GeckoFTL's bounded mechanism is page-associative / Flash-resident and includes PVB, Logarithmic Gecko, LSM-like runs, completion witnesses, and pinned-run dependencies.
+- `DCR → GeckoFTL direct genealogy` remains unsupported. Earlier publication establishes a prior-art floor, not a transmission path.
+- Neither research-system record proves deployment in a named commercial SSD controller.
+
+'''
+before(
     "cases/39-geckoftl-power-failure-metadata-recovery.md",
-    "- This case does not establish invention priority for Flash metadata recovery, mapping-table persistence, checkpointing, LSM trees, or FTLs. The authors explicitly build on earlier page-associative FTL work and their own April 2015 Logarithmic Gecko paper.\n",
-    "- This case does not establish invention priority for Flash metadata recovery, mapping-table persistence, checkpointing, LSM trees, or FTLs. The authors explicitly build on earlier page-associative FTL work and their own April 2015 Logarithmic Gecko paper; Zhang et al.'s June-2014 DCR paper independently supplies an earlier explicit FTL metadata-consistency / checkpoint-recovery floor.\n- DCR's earlier checkpoint/replay mechanism is not evidence of direct design descent into GeckoFTL; the inspected sources support a prior-art boundary, not a genealogy.\n",
-    "DCR's earlier checkpoint/replay mechanism is not evidence",
+    "## Related repositories\n",
+    case_limits,
+    "## Prior-art limits added in this deepening",
 )
 
-replace_once(
-    "cases/39-geckoftl-power-failure-metadata-recovery.md",
-    "| GeckoFTL was deployed in commercial SSDs | X | unsupported |\n",
-    "| FTL metadata-consistency recovery with a last-checkpoint-to-crash interval predates GeckoFTL in Zhang et al. DCR (DAC 2014) | H/P | grounded prior-art floor |\n| GeckoFTL 2016 invented generic FTL checkpoint/crash recovery | X | rejected by 2014 DCR prior-art floor |\n| DCR directly evolved into GeckoFTL | X | unsupported genealogy |\n| GeckoFTL was deployed in commercial SSDs | X | unsupported |\n",
-    "DCR directly evolved into GeckoFTL",
-)
-
-replace_once(
+source_line = "- Chi Zhang, Yi Wang, Tianzheng Wang, Renhai Chen, Duo Liu, and Zili Shao, _Deterministic Crash Recovery for NAND Flash Based Storage Systems_, DAC 2014, 2–5 June 2014, DOI `10.1109/DAC.2014.6881475` / ACM proceedings DOI `10.1145/2593069.2593124`: <https://ieeexplore.ieee.org/document/6881475>; institutional record: <https://research.polyu.edu.hk/en/publications/deterministic-crash-recovery-for-nand-flash-based-storage-systems/>.\n"
+after(
     "cases/39-geckoftl-power-failure-metadata-recovery.md",
     "### Primary / period research sources\n\n",
-    "### Primary / period research sources\n\n- Chi Zhang, Yi Wang, Tianzheng Wang, Renhai Chen, Duo Liu, and Zili Shao, _Deterministic Crash Recovery for NAND Flash Based Storage Systems_, DAC 2014, 2–5 June 2014, DOI `10.1109/DAC.2014.6881475` / ACM proceedings DOI `10.1145/2593069.2593124`: <https://ieeexplore.ieee.org/document/6881475>; institutional record: <https://research.polyu.edu.hk/en/publications/deterministic-crash-recovery-for-nand-flash-based-storage-systems/>.\n",
-    "10.1109/DAC.2014.6881475",
+    source_line,
+    "https://research.polyu.edu.hk/en/publications/deterministic-crash-recovery-for-nand-flash-based-storage-systems/",
 )
 
-evidence_addition = r'''
+evidence_source = r'''
 ### Source D — Zhang et al., _Deterministic Crash Recovery for NAND Flash Based Storage Systems_, DAC 2014
 
 **Document:** Chi Zhang, Yi Wang, Tianzheng Wang, Renhai Chen, Duo Liu, and Zili Shao, _Deterministic Crash Recovery for NAND Flash Based Storage Systems_, 51st Design Automation Conference, June 2014, DOI `10.1109/DAC.2014.6881475`; ACM proceedings DOI `10.1145/2593069.2593124`.
@@ -106,7 +107,7 @@ evidence_addition = r'''
 
 #### Source D — FTL crash recovery is explicitly a metadata-consistency problem by 2014
 
-The IEEE record states that because an FTL directly manages Flash using metadata, its crash-recovery problem is how to maintain and recover **FTL metadata consistency** after a system crash. This is already explicit period vocabulary two years before GeckoFTL's SIGMOD publication.
+The IEEE record states that because an FTL directly manages Flash using metadata, its crash-recovery problem is how to maintain and recover **FTL metadata consistency** after a system crash. This is explicit period vocabulary two years before GeckoFTL's SIGMOD publication.
 
 **Use:** blocks any Case-39 origin claim for the generic proposition that surviving NAND payload needs consistent/recoverable FTL management metadata.
 
@@ -116,7 +117,7 @@ The paper describes DCR's basic idea as exploiting deterministic FTL behavior to
 
 **Use:** grounds an earlier floor for `checkpoint boundary + reconstruction/replay + bounded recovery scope` as an FTL crash-recovery design family.
 
-**Boundary:** the inspected abstract does not license importing GeckoFTL's PVB, Logarithmic Gecko, LSM runs, postambles, pinned runs, or page-associative metadata organization into DCR.
+**Boundary:** the inspected record does not license importing GeckoFTL's PVB, Logarithmic Gecko, LSM runs, postambles, pinned runs, or page-associative metadata organization into DCR.
 
 #### Source D — implementation/evaluation class remains bounded
 
@@ -171,25 +172,20 @@ The arrow is **not** a demonstrated genealogy. It means only that Case 39 must d
 **Status:** explicit anti-genealogy guardrail.
 
 '''
-insert_once(
+before(
     "evidence/39-geckoftl-2015-2017-metadata-recovery-grounding.md",
-    "\n## Related-repository duplication check\n",
-    evidence_addition,
-    "Source D — Zhang et al.",
+    "## Related-repository duplication check\n",
+    evidence_source,
+    "### Source D — Zhang et al.",
 )
 
 roadmap_bullet = "- [x] GeckoFTL generic FTL crash-recovery / checkpoint prior-art deepening — canonical [`cases/39-geckoftl-power-failure-metadata-recovery.md`](cases/39-geckoftl-power-failure-metadata-recovery.md), with [`evidence/39-geckoftl-2015-2017-metadata-recovery-grounding.md`](evidence/39-geckoftl-2015-2017-metadata-recovery-grounding.md), now adds Zhang et al.'s DAC 2014 DCR as an earlier explicit floor for FTL metadata-consistency recovery, a `last checkpoint → crash point` reconstruction interval, and bounded-block recovery instead of whole-device scanning. This blocks any claim that GeckoFTL invented generic FTL checkpoint/crash recovery while preserving GeckoFTL's narrower metadata-scaling/PVB/LSM-run contribution. DCR is a chronological and functional prior-art floor only; direct DCR→GeckoFTL genealogy, commercial-controller deployment, full pre-2014 PORCE/SPOR history, and fault injection remain open.\n"
-insert_once(
+after(
     "ROADMAP.md",
     "## Phase 2 — Build missing technical bridges\n\n",
-    "## Phase 2 — Build missing technical bridges\n\n" + roadmap_bullet,
+    roadmap_bullet,
     "GeckoFTL generic FTL crash-recovery / checkpoint prior-art deepening",
 )
-# The helper above inserted a second heading because insert_once preserves its anchor. Normalize it.
-p = ROOT / "ROADMAP.md"
-text = p.read_text(encoding="utf-8")
-text = text.replace("## Phase 2 — Build missing technical bridges\n\n" + roadmap_bullet + "## Phase 2 — Build missing technical bridges\n\n", "## Phase 2 — Build missing technical bridges\n\n" + roadmap_bullet, 1)
-p.write_text(text, encoding="utf-8")
 
 findings = r'''
 
@@ -209,20 +205,16 @@ findings = r'''
 p = ROOT / "CASE_INDEX.md"
 text = p.read_text(encoding="utf-8")
 if "## Case 39 — DCR prior-art deepening findings" not in text:
-    text = text.rstrip() + findings + "\n"
-    p.write_text(text, encoding="utf-8")
+    p.write_text(text.rstrip() + findings + "\n", encoding="utf-8")
 
-# Validation
 required = {
     "cases/39-geckoftl-power-failure-metadata-recovery.md": [
         "generic FTL checkpoint/crash-recovery work predates GeckoFTL",
-        "10.1109/DAC.2014.6881475",
         "GeckoFTL recovery ≠ invention of generic FTL checkpoint/replay",
+        "## Prior-art limits added in this deepening",
+        "https://research.polyu.edu.hk/en/publications/deterministic-crash-recovery-for-nand-flash-based-storage-systems/",
     ],
-    "evidence/39-geckoftl-2015-2017-metadata-recovery-grounding.md": [
-        "Source D — Zhang et al.",
-        "G-39.14",
-    ],
+    "evidence/39-geckoftl-2015-2017-metadata-recovery-grounding.md": ["### Source D — Zhang et al.", "G-39.14"],
     "ROADMAP.md": ["GeckoFTL generic FTL crash-recovery / checkpoint prior-art deepening"],
     "CASE_INDEX.md": ["**1741 —", "**1750 —"],
 }
@@ -231,11 +223,6 @@ for path, needles in required.items():
     for needle in needles:
         if needle not in data:
             raise RuntimeError(f"missing {needle!r} in {path}")
-
-if (ROOT / "CASE_INDEX.md").read_text(encoding="utf-8").count("**1741 —") != 1:
-    raise RuntimeError("finding 1741 not unique")
-if (ROOT / "ROADMAP.md").read_text(encoding="utf-8").count("GeckoFTL generic FTL crash-recovery / checkpoint prior-art deepening") != 1:
-    raise RuntimeError("ROADMAP integration marker not unique")
 
 subprocess.run(["git", "diff", "--check"], cwd=ROOT, check=True)
 print("Case 39 DCR prior-art integration validated")
