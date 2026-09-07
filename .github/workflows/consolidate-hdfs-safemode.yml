@@ -1,0 +1,70 @@
+name: Consolidate HDFS SafeMode duplicate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/consolidate-hdfs-safemode.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  consolidate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Consolidate Case 117 into canonical Case 79
+        run: python scripts/consolidate_case117_into_case79.py
+      - name: Normalize changed research files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for name in [
+              'cases/79-apache-hdfs-startup-safemode-block-report-reobservation.md',
+              'evidence/79-hadoop-2010-2016-startup-safemode-grounding.md',
+              'cases/117-apache-hdfs-startup-safemode-reobservation.md',
+              'evidence/117-hadoop-2008-2017-startup-safemode-grounding.md',
+              'ROADMAP.md',
+              'CASE_INDEX.md',
+          ]:
+              p = Path(name)
+              lines = p.read_text(encoding='utf-8').splitlines()
+              p.write_text('\n'.join(line.rstrip() for line in lines) + '\n', encoding='utf-8')
+          PY
+      - name: Validate consolidation
+        run: |
+          git diff --check
+          python - <<'PY'
+          from pathlib import Path
+          road = Path('ROADMAP.md').read_text(encoding='utf-8')
+          idx = Path('CASE_INDEX.md').read_text(encoding='utf-8')
+          c79 = Path('cases/79-apache-hdfs-startup-safemode-block-report-reobservation.md').read_text(encoding='utf-8')
+          c117 = Path('cases/117-apache-hdfs-startup-safemode-reobservation.md').read_text(encoding='utf-8')
+          assert 'cases/117-apache-hdfs-startup-safemode-reobservation.md' not in road
+          assert 'cases/117-apache-hdfs-startup-safemode-reobservation.md) | **grounded**' not in idx
+          assert 'Case 79 deepening — HDFS startup SafeMode consolidation findings' in idx
+          assert 'release-0.18.0' in c79
+          assert 'retired duplicate / link-stability stub' in c117
+          PY
+      - name: Commit research consolidation
+        run: |
+          if git diff --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add \
+            cases/79-apache-hdfs-startup-safemode-block-report-reobservation.md \
+            evidence/79-hadoop-2010-2016-startup-safemode-grounding.md \
+            cases/117-apache-hdfs-startup-safemode-reobservation.md \
+            evidence/117-hadoop-2008-2017-startup-safemode-grounding.md \
+            ROADMAP.md CASE_INDEX.md
+          git commit -m "case79: consolidate duplicate HDFS SafeMode case"
+          git push
