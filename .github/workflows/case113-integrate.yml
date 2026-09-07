@@ -56,8 +56,8 @@ jobs:
           index = Path('CASE_INDEX.md').read_text(encoding='utf-8')
           case89 = Path('cases/89-ata-lba-chs-translation-logical-sector-identity.md').read_text(encoding='utf-8')
 
-          assert roadmap.count('cases/113-ata-atapi6-48bit-lba-reachability.md') == 1
-          assert '- [x] ATA/ATAPI-6 48-bit Address feature / legacy-reachability boundary' in roadmap
+          assert roadmap.count('- [x] ATA/ATAPI-6 48-bit Address feature / legacy-reachability boundary') == 1
+          assert 'cases/113-ata-atapi6-48bit-lba-reachability.md' in roadmap
           hdd_line = next(x for x in roadmap.splitlines() if x.startswith('- [ ] HDD geometry, bad-sector remapping, CHS → LBA'))
           assert 'Cases 14, 89, 108, and 113' in hdd_line
           assert 'LBA28→LBA48' not in hdd_line
