@@ -1,0 +1,47 @@
+name: case111-extended-shutdown-integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/case111-extended-shutdown-integration.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: technical-retention-case111-extended-shutdown
+  cancel-in-progress: false
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fast-forward to current main
+        run: git pull --ff-only origin main
+
+      - name: Integrate bounded Case 111 extended-shutdown slice
+        run: python tools/case111_extended_shutdown_integrate.py
+
+      - name: Validate and commit research tree
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          grep -Fq "Enterprise SSD Extended Shutdown: Qualification Window, Powered Maintenance, and Operator Scheduling" cases/111-enterprise-ssd-extended-shutdown-maintenance.md
+          grep -Fq "IBM / Dell Enterprise-SSD Extended-Shutdown Guidance" evidence/111-ibm-dell-2020-2026-ssd-extended-shutdown-grounding.md
+          grep -Fq "Enterprise SSD extended-shutdown operational maintenance" ROADMAP.md
+          grep -Fq "Case 111 — Enterprise SSD extended-shutdown operational-retention findings" CASE_INDEX.md
+          grep -Fq "1740. **related-repository boundary**" CASE_INDEX.md
+          grep -Fq "Case 111 — Enterprise SSD Extended Shutdown" cases/76-jedec-ssd-endurance-retention-qualification.md
+          grep -Fq "Case 111 — Enterprise SSD Extended Shutdown" cases/37-samsung-840-evo-old-data-performance-refresh.md
+          rm -f tools/case111_extended_shutdown_integrate.py .github/workflows/case111-extended-shutdown-integration.yml
+          git add -A
+          git diff --cached --check
+          git status --short
+          git commit -m "case111: ground enterprise SSD extended-shutdown maintenance boundary"
+          git push origin HEAD:main
