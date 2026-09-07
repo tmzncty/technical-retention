@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to the Persistent Event Log (`PEL`, Log Identifier `0Dh`) standardized in NVM Express Base Specification Revision 1.4, dated 10 June 2019. The case uses the ratified specification as the primary source and NVM Express's 2019 institutional description only as corroboration of intended operational use.
+**`grounded`** — bounded to the Persistent Event Log (`PEL`, Log Identifier `0Dh`) standardized in NVM Express Base Specification Revision 1.4, dated 10 June 2019. Earlier NVMe Revision 1.0 (2011) and Revision 1.3c (2018) are used only to establish a narrower prior-art and lifetime contrast for diagnostic state; they are not treated as the PEL mechanism itself.
 
 Grounding record: [`../evidence/66-nvme14-2019-persistent-event-log-grounding.md`](../evidence/66-nvme14-2019-persistent-event-log-grounding.md).
 
@@ -114,6 +114,31 @@ and:
 
 A snapshot turns the state of another diagnostic interface at a past moment into one event-bearing historical record.
 
+### The same NVMe interface family contains deliberately different history lifetimes
+
+PEL is easier to misread if every diagnostic log is treated as one generic history store. Earlier NVMe revisions already expose a different lifetime decomposition.
+
+NVM Express Revision 1.0, ratified **1 March 2011**, defines the Error Information entry's 64-bit `Error Count` as an incrementing identifier retained across power-off conditions. The same revision describes SMART / Health information as information over the life of the controller that is retained across power cycles. This is an earlier NVMe floor for **retained diagnostic summary/ordinal state**, not for the later PEL mechanism.
+
+By Revision 1.3c, dated **24 May 2018**, §5.14.1.1 describes the controller-global Error Information log as a bounded recent-error list. If full, the controller **should** insert the new entry and discard the oldest, and it **should** remove all entries on power cycle and reset. The `Error Count`, however, is still specified as retained across power-off conditions.
+
+Revision 1.4 preserves this contrast while adding PEL. In the same specification family:
+
+- Error Information is **controller-global** in Revision 1.3c/1.4;
+- its recent detailed entries are recommended to be cleared on power/reset boundaries;
+- the per-error `Error Count` survives power-off conditions;
+- PEL is **NVM-subsystem-global** and its event information **shall** survive power cycles and resets, subject to the separate suppression/deletion/sanitize rules already discussed above.
+
+Therefore:
+
+> **detailed diagnostic entry lifetime ≠ diagnostic count lifetime ≠ persistent event-history lifetime**.
+
+and:
+
+> **controller-local history scope ≠ subsystem-global history scope**.
+
+The standard can preserve a long-lived ordinal/aggregate trace while allowing a richer recent-entry population to disappear at a failure boundary, then separately provide another log whose event records cross that boundary.
+
 ## Retained states and control state
 
 The bounded regime contains several separable states:
@@ -125,6 +150,7 @@ The bounded regime contains several separable states:
 5. **reporting context** — a temporary controller-created selection/view describing what one PEL retrieval should include;
 6. **current controller/subsystem state** — the live state from which some later events may be generated;
 7. **other diagnostic state** — SMART/Health and telemetry, which may be snapshotted or referenced but are not identical to PEL.
+8. **Error Information state** — controller-local recent detailed entries plus a cross-power `Error Count` whose lifetime is not the same as the entry population or PEL.
 
 This composition matters because only some of these states share the same lifetime.
 
@@ -159,6 +185,22 @@ Therefore:
 > **event occurrence ≠ guaranteed one retained entry per occurrence**.
 
 The log may preserve the fact-pattern needed for diagnostics without retaining one-to-one event cardinality.
+
+### A retained count can outlive the detailed records it once identified
+
+The Error Information contrast makes the repository's `history retention` category more precise. A controller may retain the monotonically advancing `Error Count` across power-off while the richer recent Error Information entries are recommended to be cleared at power/reset boundaries.
+
+Therefore:
+
+> **retained historical count/ordinal ≠ retained historical detail**.
+
+A later observer may learn that error-history state advanced without recovering the queue ID, command ID, status, LBA, namespace, parameter-error location, or other fields of the discarded earlier entry. Persistence of the summary relation does not reconstruct the forgotten event record.
+
+This also blocks a scope shortcut:
+
+> **same Get Log Page command family ≠ same retention regime**.
+
+NVMe log pages can differ in scope, persistence boundary, capacity policy, and historical granularity even when they share a retrieval command family.
 
 ### The reporting context is a retained view, not the log itself
 
@@ -220,14 +262,16 @@ The mechanism is not an accidental failure of an otherwise perfect archive. Boun
 
 ### Versus Case 55 — NVMe SMART / Health
 
-Case 55:
+Case 55 and the pre-PEL Error Information path already show that diagnostic state can split by lifetime:
 
 ```text
 current warning
     !=
-cumulative counters
+cumulative/lifetime counters
     !=
-reserve/endurance estimate
+recent detailed Error Information entries
+    !=
+cross-power Error Count ordinal
 ```
 
 Case 66:
@@ -289,6 +333,9 @@ Forgetting in this case can therefore be **policy-mediated historical omission**
 | sanitize may alter PEL to prevent derivation of user data; exact removed events are unspecified | `H/P` | explicit normative text |
 | PEL reporting context excludes events that occur after that context is established while those events are still logged | `H/P` | explicit normative text |
 | SMART/Health snapshots can become PEL historical events | `H/P` | §5.14.1.13.1.1 |
+| NVMe 1.3c recommends clearing detailed Error Information entries on power cycle/reset while retaining the entry `Error Count` across power-off | `H/P` | official Revision 1.3c §5.14.1.1; preserve `should` strength |
+| NVMe 1.4 keeps Error Information controller-global while PEL is NVM-subsystem-global and cross-reset persistent | `H/P` | official Revision 1.4 §§5.14.1.1, 5.14.1.13 |
+| a retained error count reconstructs the discarded detailed error entry | `X` | count/ordinal persistence does not preserve queue, command, status, LBA, namespace, parameter-error location, or other discarded fields |
 | PEL therefore preserves every event over the entire usable life of every NVMe 1.4 device | `X` | contradicted by optional event support, suppression, finite capacity, and deletion rules |
 | reporting context is the persistent history itself | `X` | context has a shorter/reset-sensitive lifetime and vendor-specific representation |
 | NVMe 1.4 invented persistent event logging | `X` | no such priority claim is made or needed |
@@ -320,6 +367,10 @@ complete device-event sequence
     !=
 SMART/Health aggregate state
     !=
+recent Error Information entry population
+    !=
+cross-power Error Count ordinal
+    !=
 PEL retention/suppression/deletion policy
     !=
 reporting context
@@ -333,14 +384,18 @@ The strongest new result is that **persistent history can be both durable across
 
 NVM Express's 2019 public description presents PEL as enabling robust drive history for issue triage and debugging at scale. That is useful period institutional context for the feature's intended role, but the detailed semantics above come from the ratified Revision 1.4 specification.
 
-This case does not claim that NVMe invented event logging, audit histories, black-box recording, or drive-health diagnostics. A full ATA/SCSI/vendor event-log genealogy would be a different historical slice. The defensible claim here is narrower:
+This case does not claim that NVMe invented event logging, audit histories, black-box recording, or drive-health diagnostics. Even inside NVMe, Revision 1.0 in 2011 already retained Error Count across power-off and SMART/Health information across power cycles, while Revision 1.3c in 2018 explicitly paired a reset-cleared recent Error Information population with a cross-power Error Count. These are earlier floors for retained diagnostic state and mixed history lifetimes, not the PEL mechanism itself.
+
+A full ATA/SCSI/vendor event-log genealogy would be a different historical slice. The defensible 2019 claim is narrower:
 
 > **By NVMe 1.4 in 2019, NVM Express standardized a host-visible, subsystem-global significant-event history with explicit cross-reset persistence, bounded/suppressible/deletable retention, sanitize interaction, and a reporting-context mechanism for coherent retrieval.**
 
 ## Sources
 
-1. NVM Express, Inc., **NVM Express Base Specification Revision 1.4**, 10 June 2019, especially §5.14.1.13–5.14.1.13.1.15, printed pp. 138–151: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_4-2019.06.10-Ratified.pdf>
-2. NVM Express, Inc., **“New NVM Express, Inc. Specifications Bolster Cloud and Enterprise Advancements,”** 2019, describing PEL as robust drive history for issue triage/debug: <https://nvmexpress.org/new-nvm-express-inc-specifications-bolster-cloud-and-enterprise-advancements/>
+1. NVM Express, Inc., **NVM Express Base Specification Revision 1.4**, 10 June 2019, especially §5.14.1.1 (printed p. 120) and §5.14.1.13–5.14.1.13.1.15 (printed pp. 138–151): <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_4-2019.06.10-Ratified.pdf>
+2. NVM Express, Inc., **NVM Express Revision 1.3c**, 24 May 2018, §5.14.1.1, printed p. 103: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_3c-2018.05.24-Ratified.pdf>
+3. NVM Express / NVMHCI Workgroup, **NVM Express Revision 1.0**, ratified 1 March 2011, §5.10.1.1–5.10.1.2, printed pp. 63–64: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_0-Gold.pdf>
+4. NVM Express, Inc., **“New NVM Express, Inc. Specifications Bolster Cloud and Enterprise Advancements,”** 2019, describing PEL as robust drive history for issue triage/debug: <https://nvmexpress.org/new-nvm-express-inc-specifications-bolster-cloud-and-enterprise-advancements/>
 
 ## Related repositories
 

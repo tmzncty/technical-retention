@@ -1,10 +1,10 @@
-# Grounding Record — NVMe 1.4 Persistent Event Log (2019)
+# Grounding Record — NVMe Persistent Event History and Log-Lifetime Contrast (2011–2019)
 
 ## Purpose
 
 This record grounds [`../cases/66-nvme14-persistent-event-log-history.md`](../cases/66-nvme14-persistent-event-log-history.md).
 
-The bounded claim is not that NVMe invented event logs. It is that **NVM Express Base Specification Revision 1.4 (10 June 2019) directly standardizes a persistent, subsystem-global significant-event history whose survival, capacity, suppression/deletion, sanitize interaction, and retrieval-context semantics are explicit enough to support a retention-specific case.**
+The bounded claim is not that NVMe invented event logs. It is that **NVM Express Base Specification Revision 1.4 (10 June 2019) directly standardizes a persistent, subsystem-global significant-event history whose survival, capacity, suppression/deletion, sanitize interaction, and retrieval-context semantics are explicit enough to support a retention-specific case, while Revision 1.0 (2011) and Revision 1.3c (2018) establish earlier internal-NVMe floors for retained diagnostic state and mixed log lifetimes.**
 
 ## Source hierarchy
 
@@ -136,6 +136,76 @@ Safe claim:
 
 This is history evidence, not a substitute for the controller's current live feature state.
 
+## Deepening — Error Information entries, retained Error Count, and PEL
+
+### A — NVMe 1.0 historical floor (2011)
+
+NVM Express Revision 1.0 was ratified **1 March 2011**. In §5.10.1.1, the Error Information entry defines a 64-bit incrementing `Error Count` and says it is retained across power-off conditions. In §5.10.1.2, SMART / Health information is described as information over the life of the controller and retained across power cycles.
+
+Safe claim:
+
+> NVMe retained diagnostic summary/ordinal state across power boundaries from Revision 1.0.
+
+Unsafe upgrade:
+
+> Revision 1.0 already provided the later NVMe 1.4 Persistent Event Log.
+
+It did not. This is prior art inside NVMe for retained diagnostic state, not identity with PEL.
+
+### A — NVMe 1.3c explicit mixed-lifetime error history (2018)
+
+Revision 1.3c §5.14.1.1 makes the lifetime split explicit. Error Information is controller-global and returns a bounded recent-error population. If full, the controller should add the new entry and discard the oldest. The controller **should** remove all entries on power cycle and reset. The `Error Count` field is nevertheless specified as retained across power-off conditions.
+
+The wording strength matters: `should clear` is a recommendation, not a `shall` requirement. The case therefore records the historical contract without upgrading recommendation to mandatory conformance.
+
+Safe relations:
+
+- detailed recent Error Information entries ≠ cross-power Error Count;
+- recent-error population ≠ lifetime diagnostic summary;
+- controller-global log scope ≠ later PEL subsystem-global scope.
+
+### A — NVMe 1.4 preserves the contrast while adding PEL (2019)
+
+Revision 1.4 §5.14.1.1 retains the same basic Error Information decomposition: controller-global recent entries, oldest-entry displacement under capacity pressure, recommended clearing on power cycle and Controller Level Reset, and a cross-power `Error Count`.
+
+Revision 1.4 §5.14.1.13 then defines a separate PEL whose event information **shall** be retained across power cycles and resets and whose scope is the NVM subsystem.
+
+This is a stronger retention-specific comparison than simply saying that PEL is persistent:
+
+```text
+error occurrence
+    -> recent detailed Error Information entry
+    -> Error Count / ordinal history that can cross power-off
+
+significant device event
+    -> PEL event entry
+    -> subsystem-global cross-reset history
+```
+
+The two paths may refer to related faults, but the specification does not make them the same record population or the same lifetime contract.
+
+### Engineering reconstruction boundary
+
+A retained count/ordinal can survive after richer records have been discarded. It can establish that diagnostic history advanced, but it cannot reconstruct the lost queue ID, command ID, completion status, parameter-error location, LBA, namespace, or vendor-specific fields.
+
+Therefore:
+
+> **historical-summary persistence ≠ historical-detail persistence**.
+
+and:
+
+> **history lifetime is a property of a particular state relation, not of the word `log` in general**.
+
+### Prior-art consequence for the 2019 PEL claim
+
+The safe novelty boundary is now narrower than the first pass:
+
+- 2011 NVMe already has retained error ordinal and lifetime SMART/Health state;
+- 2018 NVMe 1.3c explicitly has mixed lifetimes inside one error-reporting path;
+- 2019 NVMe 1.4 adds the inspected PEL composition: subsystem-global significant-event detail with explicit cross-reset persistence plus bounded suppression/deletion/sanitize/retrieval-context rules.
+
+Chronology therefore blocks any claim that PEL introduced `retained device history` as such. The bounded contribution is the 2019 **event-detail persistence and retrieval-policy composition**, not first invention of diagnostic memory.
+
 ## In-repository prior-art boundary
 
 ### Case 55 — SMART / Health
@@ -156,7 +226,7 @@ Those cases ask about user-data forgetting and implementation-level physical rem
 
 ## Related-repository duplication check
 
-A current search of `tmzncty/computing-archaeology` for `Persistent Event Log NVMe` returned no dedicated case. This record therefore keeps the retention-specific analysis here while leaving general SSD/controller history and ATA/SCSI genealogy to that repository if pursued later.
+Current searches of `tmzncty/computing-archaeology` for `NVMe Persistent Event Log` and `NVMe Error Information SMART Health` returned no dedicated case. This record therefore keeps the retention-specific lifetime/scope analysis here while leaving general SSD/controller history and broader ATA/SCSI/NVMe diagnostic-log genealogy to that repository if pursued later.
 
 ## Prior-art / novelty boundary
 
@@ -192,5 +262,7 @@ These remain separate research slices.
 
 ## Sources
 
-1. NVM Express, Inc., **NVM Express Base Specification Revision 1.4**, 10 June 2019, §5.14.1.13–5.14.1.13.1.15: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_4-2019.06.10-Ratified.pdf>
-2. NVM Express, Inc., **“New NVM Express, Inc. Specifications Bolster Cloud and Enterprise Advancements,”** 2019: <https://nvmexpress.org/new-nvm-express-inc-specifications-bolster-cloud-and-enterprise-advancements/>
+1. NVM Express, Inc., **NVM Express Base Specification Revision 1.4**, 10 June 2019, §5.14.1.1 and §5.14.1.13–5.14.1.13.1.15: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_4-2019.06.10-Ratified.pdf>
+2. NVM Express, Inc., **NVM Express Revision 1.3c**, 24 May 2018, §5.14.1.1: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_3c-2018.05.24-Ratified.pdf>
+3. NVM Express / NVMHCI Workgroup, **NVM Express Revision 1.0**, ratified 1 March 2011, §5.10.1.1–5.10.1.2: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_0-Gold.pdf>
+4. NVM Express, Inc., **“New NVM Express, Inc. Specifications Bolster Cloud and Enterprise Advancements,”** 2019: <https://nvmexpress.org/new-nvm-express-inc-specifications-bolster-cloud-and-enterprise-advancements/>
