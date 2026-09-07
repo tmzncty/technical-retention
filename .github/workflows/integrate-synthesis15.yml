@@ -1,0 +1,101 @@
+name: integrate-synthesis15
+
+on:
+  push:
+    paths:
+      - '.github/workflows/integrate-synthesis15.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Integrate synthesis navigation and findings
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          # README navigation.
+          p = Path('README.md')
+          s = p.read_text()
+          if 'docs/SYNTHESIS_15_LOGICAL_IDENTITY_EMBODIMENT_REPLACEMENT.md' not in s:
+              anchor = "\n\nThis chain is a **research heuristic**, not a claim that all of these mechanisms are historically or philosophically identical."
+              assert s.count(anchor) == 1, 'README synthesis-chain anchor drifted'
+              para = (
+                  "\n\nA bounded logical-identity/embodiment-replacement comparison is now available in "
+                  "[`docs/SYNTHESIS_15_LOGICAL_IDENTITY_EMBODIMENT_REPLACEMENT.md`](docs/SYNTHESIS_15_LOGICAL_IDENTITY_EMBODIMENT_REPLACEMENT.md). "
+                  "Across grounded mapped-Flash, SCSI defect-reassignment, ATA CHS/LBA-translation, and DDR4 PPR cases it separately audits designation continuity, payload-value continuity, resolution/currentness relation, physical embodiment, retirement state, and replacement capacity. It fixes the counterexamples `mapping changed ≠ data moved`, `same address ≠ same value survived`, `persistent repair mapping ≠ persistent payload`, `replacement ≠ erasure`, and `similar remapping ≠ shared genealogy`."
+              )
+              s = s.replace(anchor, para + anchor, 1)
+              p.write_text(s)
+
+          # ROADMAP status: close only the bounded relation-decomposition question.
+          p = Path('ROADMAP.md')
+          s = p.read_text()
+          old = '- [ ] When a mapping layer moves state, is the retained object data, address, relation, or all three?'
+          new = ('- [x] When a mapping layer moves state, is the retained object data, address, relation, or all three? '
+                 '— bounded by [`docs/SYNTHESIS_15_LOGICAL_IDENTITY_EMBODIMENT_REPLACEMENT.md`](docs/SYNTHESIS_15_LOGICAL_IDENTITY_EMBODIMENT_REPLACEMENT.md): separately audit designation continuity, payload-value continuity, resolution/currentness relation, and physical embodiment; a map can change without data movement, replacement can preserve designation without preserving payload, and persistent repair state can outlive volatile payload.')
+          if old in s:
+              assert s.count(old) == 1, 'ROADMAP mapping question duplicated'
+              s = s.replace(old, new, 1)
+          else:
+              assert 'SYNTHESIS_15_LOGICAL_IDENTITY_EMBODIMENT_REPLACEMENT.md' in s, 'ROADMAP mapping question drifted'
+          p.write_text(s)
+
+          # CASE_INDEX cross-case findings. Keep existing case numbering untouched.
+          p = Path('CASE_INDEX.md')
+          s = p.read_text().rstrip() + '\n'
+          heading = '## Synthesis 15 — logical identity / resolution relation / embodiment findings'
+          if heading not in s:
+              block = r'''
+
+          ## Synthesis 15 — logical identity / resolution relation / embodiment findings
+
+          - **1930 — stable designation ≠ stable physical embodiment:** mapped Flash, SCSI defect reassignment, and DDR4 PPR all permit a caller-facing designation to remain usable while the lower-layer bearer changes. (`E`, `A`)
+          - **1931 — mapping/presentation change ≠ demonstrated data movement:** ATA logical-CHS re-parameterization changes an address-presentation relation while the same logical sector retains its LBA; the standards do not thereby establish physical relocation. (`H/P`, `E`, `X`)
+          - **1932 — embodiment replacement ≠ payload preservation:** SCSI `REASSIGN BLOCKS` can preserve the same LBA while the affected old payload requires separate recovery/rewrite. (`H/P`, `E`, `X`)
+          - **1933 — designation continuity ≠ payload continuity:** an address/service slot may survive repair more strongly than the value previously stored through that slot. (`E`, `A`)
+          - **1934 — payload relocation ≠ logical update:** Case 04 transfer/reclamation can re-create still-current data at a new Flash location without changing its logical value, whereas an out-of-place rewrite intentionally changes the value under the same designation. (`H/P`, `E`)
+          - **1935 — logical update ≠ in-place physical rewrite:** Case 04 can preserve one virtual designation while a new value is written to an unwritten block and the old embodiment becomes stale/deleted. (`H/P`, `E`)
+          - **1936 — persistent resolution/repair state ≠ persistent payload:** DDR4 hard PPR can retain a row-address→spare-row relation across later boots/power cycles while ordinary DRAM payload remains volatile. (`H/P`, `E`, `X`)
+          - **1937 — resolution metadata can be constitutive without being the user object:** Flash maps, disk defect/replacement state, and PPR repair state can be necessary to recover the current service while remaining infrastructure rather than user payload. (`E`, `A`)
+          - **1938 — constitutive relation ≠ invariant relation:** mapping or repair state may have to change precisely so that a higher-level designation continues to resolve as the same service slot. (`E`)
+          - **1939 — current embodiment retirement ≠ secure physical forgetting:** a Flash block can become deleted before erase; disk reassignment and PPR likewise do not establish sanitization of the retired bearer. (`H/P`, `E`, `A`, `X`)
+          - **1940 — reserved replacement capacity ≠ current payload capacity:** Flash transfer/free space, disk spare sectors, and DRAM spare rows can be retention infrastructure because they preserve future repair/relocation capability. (`E`, `A`)
+          - **1941 — present service correctness ≠ remaining repair margin:** a designation may still resolve correctly even after spare/transfer resources have been partly or fully consumed; future retainability is a separate state. (`E`)
+          - **1942 — one word `remapping` ≠ one transition class:** presentation re-parameterization, failure-triggered replacement, current-value relocation, and out-of-place logical update have different value/identity/embodiment semantics. (`E`, `A`, `X`)
+          - **1943 — similar logical/physical indirection ≠ shared mechanism or genealogy:** ATA translation, SCSI defect management, Flash mapping, and DDR4 PPR solve different constraints and are compared only functionally. (`A`, `X`)
+          - **1944 — roadmap answer is transition-typed, not object-essentialist:** a defensible claim must separately audit designation, payload value, resolution/currentness relation, and embodiment; there is no universal answer that the retained object is simply `data`, `address`, `relation`, or `all three`. (`E`)
+          - **1945 — related-repository boundary:** current `computing-archaeology` search exposes no dedicated cross-mechanism FTL/defect-reassignment/PPR/logical-address synthesis to reuse; broad mechanism genealogy belongs there if developed, while Synthesis 15 keeps only retention-specific relation decomposition. (`H/P` project-state record)
+          '''
+              block = '\n'.join(line[10:] if line.startswith('          ') else line for line in block.splitlines())
+              s += block.strip('\n') + '\n'
+          p.write_text(s)
+          PY
+
+          git diff --check
+          grep -Fq 'SYNTHESIS_15_LOGICAL_IDENTITY_EMBODIMENT_REPLACEMENT.md' README.md
+          grep -Fq -- '- [x] When a mapping layer moves state' ROADMAP.md
+          grep -Fq '## Synthesis 15 — logical identity / resolution relation / embodiment findings' CASE_INDEX.md
+          grep -Fq '**1945 — related-repository boundary:**' CASE_INDEX.md
+
+      - name: Commit integrated research navigation
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'No integration diff; already applied.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md ROADMAP.md CASE_INDEX.md
+          git commit -m 'synthesis15: integrate logical identity comparison'
+          git push origin HEAD:main
