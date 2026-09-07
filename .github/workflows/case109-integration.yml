@@ -1,0 +1,41 @@
+name: case109-integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/case109-integration.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fast-forward to current main
+        run: git pull --ff-only origin main
+
+      - name: Integrate bounded Case 109 slice
+        run: |
+          python tools/case109_integrate.py
+          rm -f tools/case109_integrate.py .github/workflows/case109-integration.yml
+
+      - name: Validate and commit research tree
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          test -f cases/109-amazon-s3-versioning-delete-marker-lifecycle.md
+          test -f evidence/109-amazon-s3-2010-2014-versioning-lifecycle-grounding.md
+          grep -Fq "## Case 109 — Amazon S3 Versioning findings" CASE_INDEX.md
+          grep -Fq "Amazon S3 Versioning delete-marker / noncurrent-version lifecycle boundary" ROADMAP.md
+          git add -A
+          git diff --cached --check
+          git status --short
+          git commit -m "case109: ground S3 versioned deletion lifecycle boundary"
+          git push origin HEAD:main
