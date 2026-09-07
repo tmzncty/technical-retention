@@ -1,0 +1,41 @@
+name: Case 120 navigation integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - tools/_case120_integrate.py
+      - .github/workflows/case120-integration.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply Case 120 navigation updates
+        run: python tools/_case120_integrate.py
+      - name: Validate diff
+        run: |
+          git diff --check
+          test -f cases/120-nvme14-endurance-group-scoped-health-history.md
+          test -f evidence/120-nvme14-2019-endurance-group-grounding.md
+          grep -F 'cases/120-nvme14-endurance-group-scoped-health-history.md' ROADMAP.md
+          grep -F 'cases/120-nvme14-endurance-group-scoped-health-history.md' CASE_INDEX.md
+          grep -F '**1929 — related-repository boundary:**' CASE_INDEX.md
+      - name: Commit research navigation
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ROADMAP.md CASE_INDEX.md
+          if git diff --cached --quiet; then
+            echo 'No navigation changes required.'
+            exit 0
+          fi
+          git commit -m 'case120: integrate NVMe endurance-group navigation'
+          git push
