@@ -20,7 +20,20 @@ jobs:
           fetch-depth: 0
 
       - name: Integrate research slice
-        run: python tools/integrate_case39_dcr_prior_art.py
+        run: |
+          set +e
+          python tools/integrate_case39_dcr_prior_art.py > tools/case39-debug.txt 2>&1
+          rc=$?
+          set -e
+          if [ "$rc" -ne 0 ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add tools/case39-debug.txt
+            git commit -m "chore: capture Case 39 integration failure"
+            git push origin HEAD:main
+            exit "$rc"
+          fi
+          rm tools/case39-debug.txt
 
       - name: Verify research diff
         run: |
@@ -33,9 +46,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           rm tools/integrate_case39_dcr_prior_art.py
           rm .github/workflows/zz-case39-dcr-prior-art.yml
+          rm -f tools/case39-debug.txt
           git add cases/39-geckoftl-power-failure-metadata-recovery.md evidence/39-geckoftl-2015-2017-metadata-recovery-grounding.md ROADMAP.md CASE_INDEX.md tools/integrate_case39_dcr_prior_art.py .github/workflows/zz-case39-dcr-prior-art.yml
+          git add -u tools/case39-debug.txt || true
           git diff --cached --check
           git commit -m "case39: deepen FTL crash-recovery prior-art boundary"
           git push origin HEAD:main
-
-# rerun: anchor-safe helper
