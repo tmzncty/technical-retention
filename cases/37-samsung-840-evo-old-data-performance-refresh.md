@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/37-samsung-840-evo-2014-2015-performance-refresh-grounding.md`](../evidence/37-samsung-840-evo-2014-2015-performance-refresh-grounding.md).
 
+Operational continuation: [`Case 111 — Enterprise SSD Extended Shutdown`](111-enterprise-ssd-extended-shutdown-maintenance.md) moves the powered-maintenance comparison outward from this named-product episode to IBM/Dell operator-facing shutdown schedules; the link is functional, not genealogical.
+
 ## Scope
 
 This case asks a narrow question left deliberately open by Case 36:

@@ -8,6 +8,8 @@ A 2025 Solidigm D5-P5336 QLC product brief and Micron 7600 Rev. B (07/2026) TLC 
 
 Grounding record: [`../evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md`](../evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md).
 
+Operational continuation: [`Case 111 — Enterprise SSD Extended Shutdown`](111-enterprise-ssd-extended-shutdown-maintenance.md) separates this qualification relation from later IBM/Dell operator power-up schedules, powered maintenance opportunity, and recommissioning policy.
+
 ## Scope
 
 This case asks a narrow question left open by Cases 36, 37, and 55:
