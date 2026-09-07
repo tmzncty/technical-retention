@@ -496,3 +496,19 @@ Therefore:
 > **stable logical identity ≠ stable geometric representation ≠ stable physical location.**
 
 Case 89 adds the middle term that Case 14 and mapped Flash leave easy to blur. A state can remain designated not only while its embodiment moves, but also while the coordinate system used to talk about it changes.
+
+---
+
+## Continuation — Case 113 48-bit address-width expansion
+
+[Case 113](113-ata-atapi6-48bit-lba-reachability.md) closes a different address-retention axis left open here. Case 89 shows that **one logical sector can keep the same LBA while its logical-CHS representation changes**. Case 113 shows that **one ATA logical-block namespace can outgrow the numeric reach of the legacy 28-bit command family while a wider 48-bit command family coexists with it**.
+
+The comparison is deliberately bounded:
+
+> **coordinate-representation continuity ≠ command-address-width reachability**
+
+and:
+
+> **ATA-2/ATA-3 translation → ATA/ATAPI-6 48-bit chronology ≠ proof that all physical placement or capacity-history mechanisms form one genealogy**.
+
+Case 108 remains the physical ZBR counterpart and Case 14 remains the failure-triggered physical-reassignment counterpart.
