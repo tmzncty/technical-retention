@@ -1,0 +1,37 @@
+name: Case 115 integration
+
+on:
+  push:
+    paths:
+      - 'tools/integrate_case115.py'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Integrate research slice
+        run: python tools/integrate_case115.py
+      - name: Validate patch
+        run: |
+          git diff --check
+          test -f cases/115-apache-hdfs-snapshot-shared-block-replication.md
+          test -f evidence/115-hadoop-2012-2014-snapshot-shared-block-grounding.md
+          grep -q 'cases/115-apache-hdfs-snapshot-shared-block-replication.md' ROADMAP.md
+          grep -q 'cases/115-apache-hdfs-snapshot-shared-block-replication.md' CASE_INDEX.md
+          grep -q '1812 — related-repository boundary' CASE_INDEX.md
+      - name: Commit research and cleanup helper
+        run: |
+          git config user.name 'technical-retention automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add ROADMAP.md CASE_INDEX.md cases/99-zfs-snapshot-reference-pinned-retention.md cases/115-apache-hdfs-snapshot-shared-block-replication.md evidence/115-hadoop-2012-2014-snapshot-shared-block-grounding.md
+          git commit -m 'case115: ground HDFS snapshot shared-block retention boundary'
+          rm -f tools/integrate_case115.py .github/workflows/case115-integration.yml
+          git add -A
+          git commit -m 'chore: remove Case 115 integration helper'
+          git push origin HEAD:main
