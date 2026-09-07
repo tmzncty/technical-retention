@@ -1,0 +1,39 @@
+name: Case 39 DCR prior-art integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/zz-case39-dcr-prior-art.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Integrate research slice
+        run: python tools/integrate_case39_dcr_prior_art.py
+
+      - name: Verify research diff
+        run: |
+          git diff --check
+          git diff -- cases/39-geckoftl-power-failure-metadata-recovery.md evidence/39-geckoftl-2015-2017-metadata-recovery-grounding.md ROADMAP.md CASE_INDEX.md
+
+      - name: Commit research and self-clean helper
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm tools/integrate_case39_dcr_prior_art.py
+          rm .github/workflows/zz-case39-dcr-prior-art.yml
+          git add cases/39-geckoftl-power-failure-metadata-recovery.md evidence/39-geckoftl-2015-2017-metadata-recovery-grounding.md ROADMAP.md CASE_INDEX.md tools/integrate_case39_dcr_prior_art.py .github/workflows/zz-case39-dcr-prior-art.yml
+          git diff --cached --check
+          git commit -m "case39: deepen FTL crash-recovery prior-art boundary"
+          git push origin HEAD:main
