@@ -14,6 +14,9 @@ Case 113 asks the next bounded question:
 
 > What remains the same, and what changes, when the ATA LBA namespace outgrows the address width of the older command family?
 
+
+Policy-reach continuation: [`122-ata4-host-protected-area-addressability-retention.md`](122-ata4-host-protected-area-addressability-retention.md) grounds the distinct ATA/ATAPI-4 relation in which a host-set current maximum can intentionally withhold ordinary access to part of a larger native address population; this is separate from Case 113's command-encoding width ceiling.
+
 This case is **not**:
 
 - a complete history of IDE/ATA capacity barriers;
