@@ -45,8 +45,7 @@ jobs:
           idx = ip.read_text(encoding="utf-8")
           if "cases/112-hbm3-rfm-bonus-maintenance-vs-periodic-refresh.md" not in idx:
               lines = idx.splitlines()
-              pos = [i for i, line in enumerate(lines)
-                     if "cases/111-enterprise-ssd-extended-shutdown-maintenance.md" in line]
+              pos = [i for i, line in enumerate(lines) if "cases/111-enterprise-ssd-extended-shutdown-maintenance.md" in line]
               if len(pos) != 1:
                   raise SystemExit(f"expected one Case-111 row, got {len(pos)}")
               lines.insert(pos[0] + 1, index_row)
@@ -67,7 +66,7 @@ jobs:
                   raise SystemExit(f"finding {n} count={final_idx.count(marker)}")
           if final_idx.count("cases/112-hbm3-rfm-bonus-maintenance-vs-periodic-refresh.md") != 1:
               raise SystemExit("Case 112 CASE_INDEX link count unexpected")
-          if rp.read_text(encoding="utf-8").count("cases/112-hbm3-rfm-bonus-maintenance-vs-periodic-refresh.md") != 1:
+          if rp.read_text(encoding="utf-8").count("cases/112-hbm3-rfm-bonus-maintenance-vs-periodic-refresh.md") != 2:
               raise SystemExit("Case 112 ROADMAP link count unexpected")
           PY
 
@@ -75,8 +74,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           rm .github/workflows/integrate-case112-hbm3-rfm.yml
-          git add ROADMAP.md CASE_INDEX.md cases/54-ddr5-rfm-split-maintenance-authority.md \
-                  .github/workflows/integrate-case112-hbm3-rfm.yml
+          git add ROADMAP.md CASE_INDEX.md cases/54-ddr5-rfm-split-maintenance-authority.md .github/workflows/integrate-case112-hbm3-rfm.yml
           git diff --cached --check
           git commit -m "case112: integrate HBM3 RFM navigation and comparison"
           git push origin HEAD:main
