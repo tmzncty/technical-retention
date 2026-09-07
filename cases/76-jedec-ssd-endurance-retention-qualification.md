@@ -4,6 +4,8 @@
 
 **`grounded`** — bounded to the September 2010 JESD218 SSD-level endurance/retention qualification relation, with Intel's June 2012 retention application note used to expose the difference between standardized TBW and actual media wear, and Intel's September 2015 DC P3608 specification used as a named commercial product witness. Prior-art deepening now also separates the earlier JESD22-A117 device-level program/erase-endurance-and-retention test family from JESD218's later SSD-level host-TBW service contract, using a 2006 Renesas standards inventory, JEDEC's own later revision ledger, and a 2002 IEEE post-cycling retention paper. The 2010→2012 workload chronology is now further bounded by July 2012 JESD219A publication metadata and its separately distributed Master/Test Trace artifacts; this does not substitute for direct inspection of the normative JESD219A body. A January 2026 HPE QuickSpecs/product witness now adds a named QLC P5430 SKU to the commercial-product layer, while keeping its QLC media label, workload label, write-endurance rating, and post-endurance power-off retention statement separate from raw-cell physics or an independently audited JESD218 compliance claim. The same QuickSpecs now also supplies a bounded 7.68 TB TLC CM7 cross-check, used only to compare product-level endurance/retention contracts rather than to infer a universal TLC-versus-QLC media law.
 
+A 2025 Solidigm D5-P5336 QLC product brief and Micron 7600 Rev. B (07/2026) TLC product brief now add a bounded cross-vendor manufacturer-contract check: both publish a three-month / 40 °C power-off retention figure while their media labels, endurance envelopes, workload geometry, and exact wording differ. This corroborates recurrence of the service interval without turning it into a TLC/QLC cell-physics law or an independently audited compliance result.
+
 Grounding record: [`../evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md`](../evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md).
 
 ## Scope
@@ -305,6 +307,49 @@ same raw-cell retention law
 
 The historically supportable product statement is narrow: **HPE documented a 7.68 TB TLC CM7 at 14,016 TB / 1 DWPD and a 7.68 TB QLC P5430 at 8,040 TB / 0.57 DWPD in the same QuickSpecs family, whose general data-retention clause states three months unpowered after maximum rated write endurance.** It is not evidence that TLC intrinsically has a particular multiple of QLC endurance, that the two drives use the same controller/ECC margin, or that equal capacity makes the pair a controlled media-physics experiment.
 
+
+### Solidigm 2025 + Micron 2026: cross-vendor product-contract corroboration, not a TLC/QLC physics experiment
+
+The HPE pair above is useful because one OEM document places TLC and QLC products under a common retention clause, but it remains one document family and does not by itself answer the roadmap's cross-vendor corroboration gap. Two later manufacturer product briefs provide a bounded second check while also showing why equal-looking retention numbers must not be over-harmonized.
+
+Solidigm's **D5-P5336** product brief, ©2025, identifies the drive family as **192-layer QLC NAND**. Its key-feature table states **`Power off Retention 3 months @ 40°C`** and separately publishes five-year endurance values ranging from **0.42 to 0.60 DWPD** across capacities from 7.68 TB to 122.88 TB, with corresponding PBW values. The endurance footnote further says the IU-aligned endurance figures use 100% random writes with 16 KB or 32 KB transfer geometry depending on SKU.[^solidigm-p5336]
+
+Micron's **7600 NVMe SSD** product brief, Rev. B **07/2026**, identifies the family as using **Micron G9 TLC NAND**. It states **three months of data retention at 40 °C, power off at EOL**, and then separates two endurance classes: 7600 PRO is marketed as read-intensive at **1 DWPD**, while 7600 MAX is mixed-use at **3 DWPD**. Its specification table gives capacity-specific total-bytes-written values and notes that the endurance calculation assumes the drive is 100% full under 100% random aligned 4 KB writes; actual lifetime varies by workload.[^micron-7600]
+
+The overlap is historically useful but narrow:
+
+```text
+Solidigm D5-P5336
+    192L QLC NAND
+    + 3 months @ 40°C power-off retention
+    + one family of DWPD/PBW envelopes
+
+Micron 7600
+    G9 TLC NAND
+    + 3 months @ 40°C power-off-at-EOL retention
+    + different PRO/MAX DWPD/TBW envelopes
+```
+
+This establishes that by 2025–2026 **two different SSD manufacturers could publish the same numerical three-month / 40 °C power-off retention interval while using different media labels and different endurance/workload envelopes**. It strengthens the product-contract interpretation of the interval; it does not establish a media-only law.
+
+Several controls are essential.
+
+First, Solidigm's table does **not** use the same wording as Micron's: Solidigm gives `Power off Retention 3 months @ 40°C`, whereas Micron explicitly adds `power off at EOL`. The present evidence therefore does not silently upgrade the Solidigm sentence into an EOL clause or a JESD218 compliance statement.
+
+Second, the endurance test descriptions are not matched. Solidigm's footnote uses IU-aligned 16 KB/32 KB random-write conditions for the quoted family endurance figures, whereas Micron's footnote describes 100% random aligned 4 KB writes at full user capacity for its TBW calculation. Therefore:
+
+> **same numerical retention interval ≠ same endurance-stress workload**.
+
+Third, the product families differ in capacity range, workload positioning, NAND generation, controller/firmware, correction margin, over-provisioning, interface generation, and other implementation details not controlled here. Therefore:
+
+> **cross-vendor QLC/TLC product corroboration ≠ controlled QLC-versus-TLC experiment**.
+
+And because these are vendor product briefs rather than independent qualification reports:
+
+> **manufacturer contract corroboration ≠ independently audited standards compliance**.
+
+The bounded result is consequently stronger than a single-OEM anecdote but weaker than a causal media comparison: the **service-level retention interval can recur across independently published TLC and QLC SSD product contracts while their host-write endurance envelopes and test wording remain distinct**.
+
 ---
 
 ## Engineering reconstruction
@@ -420,7 +465,7 @@ The bounded historical contribution used here remains more specific:
 
 > by September 2010, JESD218 standardized an **SSD-level**, application-class-specific endurance rating expressed as host TBW and tied it to workload, capacity, UBER/FFR, and a subsequent power-off retention requirement, above an already-existing device-level endurance/retention qualification tradition.
 
-A full pre-2000 EEPROM/Flash qualification genealogy, direct facsimile archaeology of original A117/A117B, the complete JESD219 workload history, later JESD218 revision history, and broader cross-vendor TLC/QLC qualification/fault evidence remain separate work best coordinated with `computing-archaeology`. The bounded HPE same-capacity TLC/QLC product cross-check is now grounded above; it is not a substitute for controlled media experiments or independent qualification evidence. Fresh repository searches for `JESD219A`, `SSD endurance workload`, `P5430`, `CM7`, and `TLC QLC SSD retention` found no dedicated `computing-archaeology` case to reuse; this repository therefore keeps only the bounded retention-specific standard/product relation while leaving broad standards and NAND-generation genealogy to that companion project.
+A full pre-2000 EEPROM/Flash qualification genealogy, direct facsimile archaeology of original A117/A117B, the complete JESD219 workload history, later JESD218 revision history, controlled media-only TLC/QLC experiments, independent cross-vendor qualification/compliance evidence, and fault evidence remain separate work best coordinated with `computing-archaeology`. The bounded HPE same-capacity TLC/QLC product cross-check is now grounded above; it is not a substitute for controlled media experiments or independent qualification evidence. Fresh repository searches for `JESD219A`, `SSD endurance workload`, `P5430`, `CM7`, and `TLC QLC SSD retention` found no dedicated `computing-archaeology` case to reuse; this repository therefore keeps only the bounded retention-specific standard/product relation while leaving broad standards and NAND-generation genealogy to that companion project.
 
 ---
 
@@ -462,6 +507,8 @@ The HPE P5430 witness adds a second orthogonal warning: **NAND density label (fo
 
 The CM7 cross-check sharpens that warning: **same nominal capacity and the same family-level post-endurance retention interval ≠ a controlled TLC/QLC comparison**. The documented endurance ratings differ, but workload class, product generation, controller design, ECC margin, and other implementation variables are not held constant. The comparison therefore constrains product-contract interpretation without ranking the intrinsic retention physics of TLC and QLC.
 
+The Solidigm/Micron cross-vendor check adds a different control: **same three-month / 40 °C power-off number across manufacturers ≠ same qualification wording, same endurance workload, same NAND physics, or same compliance path**. The recurrence is evidence about published SSD service contracts, not a controlled causal ranking of QLC and TLC media.
+
 It complements:
 
 - **Cases 11–13** — floating-gate/EEPROM/early-Flash substrate, program, erase, and cycling constraints below the SSD qualification layer;
@@ -492,3 +539,6 @@ The mechanisms should not be collapsed simply because all of them can be describ
 [^jesd219a-catalog]: Accuris / JEDEC catalog, **JESD219A, _Solid-State Drive (SSD) Endurance Workloads_**, published 1 July 2012, 26 pages. The catalog description says the workloads are used with JESD218 and points to `JESD219A_MT` and `JESD219A_TT` as supporting trace files: <https://store.accuristech.com/asa/standards/jedec-jesd219a?product_id=1837609>. Accuris's JEDEC browse page also lists the September 2010 `JESD 219` and July 2012 `JESD219A` as separate catalog entries: <https://store.accuristech.com/products?page=23&per_page=10&publisher_id=110&sort_direction=asc&sort_order=doc_no>. This is publication/catalog evidence, not direct inspection of the full secured normative standard.
 [^jesd219a-mt]: Accuris / JEDEC catalog, **JESD219A_MT, _Master Trace for 128 GB SSD_**, published 1 July 2012. The description identifies it as a supporting file for the endurance-verification client workload, says it represents seven months of actual SSD activity, and documents its direct/scaled capacity use: <https://store.accuristech.com/standards/jedec-jesd219a_mt?product_id=1838012>.
 [^jesd219a-tt]: Accuris / JEDEC catalog, **JESD219A_TT, _Test Trace for 64 GB - 128 GB SSD_**, published 1 July 2012. The description says it is derived from the 128 GB Master Trace using the JESD219 compression method and preserves the Master Trace characteristics except for maximum LBA: <https://store.accuristech.com/standards/jedec-jesd219a_tt?product_id=1837608>.
+
+[^solidigm-p5336]: Solidigm, **_Solidigm D5-P5336 Product Brief_**, ©2025, especially the printed p. 3 `Solidigm D5-P5336 Key Feature Overview`: <https://www.solidigm.com/content/dam/solidigm/en/site/products/technology/p5336-product-brief/documents/Solidigm-D5P5336-ProductBrief.pdf>. The table identifies `192L QLC NAND`, `Power off Retention 3 months @ 40°C`, per-capacity five-year DWPD values, and PBW values. Footnote 17 states the IU-aligned endurance workload uses 100% random writes with 16 KB transfer units for 16 KB-IU SKUs and 32 KB for the 122.88 TB 32 KB-IU SKU.
+[^micron-7600]: Micron Technology, **_Micron 7600 NVMe SSD Product Brief_**, Rev. B 07/2026, printed pp. 2–3: <https://my.micron.com/content/dam/micron/global/public/products/storage/ssds/data-center/7600/7600-nvme-ssd-product-brief.pdf>. Printed p. 2 identifies ninth-generation `TLC NAND` and states `3 months data retention @ 40 °C ... (power off at EOL)`; printed p. 3 identifies 7600 PRO as read-intensive / 1 DWPD and 7600 MAX as mixed-use / 3 DWPD, gives capacity-specific TBW figures, and notes that total-bytes-written calculations assume 100% random aligned 4 KB writes at full user capacity while actual lifetime varies by workload.

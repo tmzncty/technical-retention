@@ -371,6 +371,77 @@ This source now closes only a **bounded named HPE TLC/QLC commercial-product cro
 
 ---
 
+
+## Source 11 — Solidigm D5-P5336 QLC + Micron 7600 TLC cross-vendor product-contract check, 2025–2026
+
+**Documents:**
+
+- Solidigm, _Solidigm D5-P5336 Product Brief_, ©2025: <https://www.solidigm.com/content/dam/solidigm/en/site/products/technology/p5336-product-brief/documents/Solidigm-D5P5336-ProductBrief.pdf>;
+- Micron Technology, _Micron 7600 NVMe SSD Product Brief_, Rev. B 07/2026: <https://my.micron.com/content/dam/micron/global/public/products/storage/ssds/data-center/7600/7600-nvme-ssd-product-brief.pdf>.
+
+### Exact locations inspected
+
+Solidigm D5-P5336, printed p. 3 / PDF page 3:
+
+- `Media`: **192L QLC NAND**;
+- `Power off Retention`: **3 months @ 40°C**;
+- `Endurance (DWPD 5yrs)`: 0.42 / 0.53 / 0.56 / 0.58 / 0.60 across the listed capacities;
+- `Endurance (PBW)`: 5.9 / 14.7 / 32.1 / 65.2 / 134.3;
+- footnote 17: IU-aligned endurance based on **100% Random Write 16KB** for 16KB-IU SKUs and **100% Random Write 32KB** for the 122.88TB 32KB-IU SKU;
+- final page: © Solidigm 2025.
+
+Micron 7600, printed pp. 2–3:
+
+- printed p. 2: the 7600 is identified as using **ninth-generation TLC NAND / G9 TLC NAND**;
+- the same page states **3 months data retention @ 40 °C, power off at EOL**;
+- printed p. 3: **7600 PRO — Read-Intensive, 1 Drive Write per Day**;
+- printed p. 3: **7600 MAX — Mixed-Use, 3 Drive Writes per Day**;
+- the same table publishes capacity-specific random/sequential TBW values and identifies the NAND again as **Micron G9 TLC NAND**;
+- footnote 13: total bytes written are calculated at 100% full user capacity with **100% random aligned 4KB** writes; actual lifetime varies by workload;
+- document footer: **Rev. B 07/2026**.
+
+Both product tables were also checked on rendered PDF page images rather than relying only on text extraction/search snippets.
+
+### What this source pair directly grounds
+
+**Historical/product record:**
+
+- by 2025 Solidigm publicly documented a named 192L QLC data-center SSD family with a three-month / 40 °C power-off retention specification and capacity-specific endurance figures;
+- by July 2026 Micron publicly documented a named G9 TLC data-center SSD family with a three-month / 40 °C **power-off-at-EOL** retention statement and distinct 1-DWPD and 3-DWPD product classes;
+- the same numerical retention interval therefore appears in independent manufacturer documentation over differently labeled NAND media and differently shaped host-write endurance envelopes.
+
+**Engineering reconstruction:**
+
+```text
+same 3 months @ 40°C power-off number
+    !=
+same media label
+    !=
+same capacity range
+    !=
+same DWPD / PBW / TBW envelope
+    !=
+same endurance workload geometry
+    !=
+same exact retention wording
+    !=
+same controller / ECC / over-provisioning design
+    !=
+same standards-compliance path
+```
+
+This is the bounded cross-vendor corroboration that the earlier HPE-only TLC/QLC pair could not provide by itself.
+
+### Evidence limit
+
+These are **manufacturer product briefs**, not independent qualification-laboratory reports and not raw NAND-retention experiments. They do not expose threshold-voltage distributions, P/E-cycle distributions, ECC margin, wear-leveling state, internal refresh/rewrite policy, or qualification raw data.
+
+The wording is also not identical. Micron explicitly says `power off at EOL`; the inspected Solidigm feature table says `Power off Retention 3 months @ 40°C` but does not, in that table, explicitly attach the interval to EOL or cite a JESD218 revision. The source pair therefore supports recurrence of a published **service-level number**, not a claim that both manufacturers used the same test method, the same JEDEC revision, or identical end-of-life semantics.
+
+Finally, the quoted endurance workloads differ. A direct ratio between Solidigm DWPD/PBW and Micron TBW/DWPD cannot be attributed to `QLC` versus `TLC` because transfer geometry, product class, capacity, controller behavior, NAND generation, and other variables are not controlled.
+
+---
+
 ## Qualification-semantics deepening from the original JESD218 facsimile
 
 Additional directly inspected locations in the September 2010 JESD218 facsimile sharpen the existing case:
