@@ -20,6 +20,14 @@ jobs:
           python-version: '3.12'
       - name: Apply Case 120 navigation updates
         run: python tools/_case120_integrate.py
+      - name: Normalize Markdown EOF
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for name in ('ROADMAP.md', 'CASE_INDEX.md'):
+              p = Path(name)
+              p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
       - name: Validate diff
         run: |
           git diff --check
