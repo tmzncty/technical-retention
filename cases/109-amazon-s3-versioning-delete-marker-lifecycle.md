@@ -438,3 +438,7 @@ Primary / first-party anchors:
 7. Amazon S3 User Guide, **“Managing delete markers”**: <https://docs.aws.amazon.com/AmazonS3/latest/userguide/ManagingDelMarkers.html>
 8. Amazon S3 User Guide, **“Lifecycle configuration elements”**: <https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html>
 9. Amazon S3 User Guide, **“Deleting object versions from a versioning-enabled bucket”**: <https://docs.aws.amazon.com/AmazonS3/latest/userguide/DeletingObjectVersions.html>
+
+## Continuation
+
+The immutable-retention layer intentionally excluded here is now handled separately in [`Case 110 — Amazon S3 Object Lock: Per-Version WORM Retention, Legal Holds, and Delete-Marker Boundaries`](110-amazon-s3-object-lock-version-worm-retention.md). Case 109 remains the Versioning/currentness/reclamation case; Case 110 asks when one retained version is additionally protected against deletion and why that still does not freeze the key or prove physical write-once media.
