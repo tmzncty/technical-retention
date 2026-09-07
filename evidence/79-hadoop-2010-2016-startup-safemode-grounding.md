@@ -1,4 +1,4 @@
-# Case 79 Grounding Record — HDFS Startup SafeMode and Block-Report Re-observation (2010–2016)
+# Case 79 Grounding Record — HDFS Startup SafeMode and Block-Report Re-observation (2008–2017)
 
 ## Evidence goal
 
@@ -7,6 +7,42 @@ Ground the narrow claim used by Case 79:
 > HDFS can recover persistent namespace identity without persisting one authoritative checkpoint of current block replica locations; DataNodes re-report their inventories after restart, and NameNode SafeMode delays ordinary mutation/replication until enough minimum-replica evidence has been re-observed.
 
 This record does **not** attempt a full HDFS architecture history or a first-invention genealogy for safe startup modes.
+
+---
+
+## Source 0 — Apache Hadoop 0.18.0 exact implementation (2008)
+
+**Type:** released primary implementation source (`P/H`).
+
+Official release chronology: Apache Hadoop, **release 0.18.0 available**, **22 August 2008**: <https://hadoop.apache.org/release/0.18.0.html>
+
+Exact released source: <https://github.com/apache/hadoop/blob/release-0.18.0/src/hdfs/org/apache/hadoop/dfs/FSNamesystem.java>
+
+### Directly inspected anchors
+
+The source-level bookkeeping comment states that:
+
+- the valid filesystem name → block list is kept on disk/logged;
+- `block -> machinelist` is **kept in memory, rebuilt dynamically from reports**.
+
+The `datanodeMap` documentation further says the descriptor list is checkpointed in the namespace image, but only the `DatanodeInfo` portion is persistent and the list of blocks is restored from DataNode block reports.
+
+During `FSNamesystem` initialization the implementation loads `FSImage`, creates `SafeModeInfo(conf)`, and sets the total-block denominator. The startup `SafeModeInfo(Configuration)` has a threshold, extension, minimum safe replication, `blockTotal`, `blockSafe`, and reached-state accounting. Its release-specific defaults are:
+
+- `dfs.safemode.threshold.pct = 0.95f`;
+- `dfs.safemode.extension = 0`;
+- `dfs.replication.min = 1`.
+
+The same source has a separate no-argument `SafeModeInfo()` for manual entry, uses sentinel/unreachable automatic-exit values, and exposes `isManual()` via `blockTotal == -1`.
+
+### Supported boundaries
+
+- `checkpointed namespace / DataNode descriptor state ≠ checkpointed block-location inventory`;
+- `startup SafeMode ≠ manual SafeMode`;
+- `2008 0.95 + no extension ≠ later 0.999 + 30 s defaults`;
+- `released HDFS implementation floor ≠ invention priority`.
+
+This exact source is stronger than using a later architecture rendering merely to infer what the 2008 release already did.
 
 ---
 
@@ -140,15 +176,32 @@ The defaults are **release-specific**. They are not projected backward or forwar
 
 ---
 
+## Source 6 — Hadoop 2.8.0 `FSNamesystem.SafeModeInfo` continuity
+
+**Type:** released primary implementation source (`P/H`).
+
+<https://hadoop.apache.org/docs/r2.8.0/hadoop-project-dist/hadoop-hdfs/api/src-html/org/apache/hadoop/hdfs/server/namenode/FSNamesystem.SafeModeInfo.html>
+
+The class documentation explicitly says startup SafeMode counts safe blocks and uses threshold/extension progress for automatic exit, while manually entered SafeMode does not track safe blocks for that automatic-exit lifecycle because it is not intended to leave automatically on the startup condition.
+
+This is a later continuity witness, not evidence that the distinction originated in 2.8.0; exact 0.18.0 source already contains a separate manual `SafeModeInfo()` state and `isManual()` discriminator.
+
+### Consolidation note
+
+A later repository slice accidentally created `Case 117` for the same HDFS startup-SafeMode mechanism already grounded here. Its genuinely useful additions — the exact 2008 chronology floor, manual/startup lifecycle emphasis, and cross-controls with Cases 80/83/116 — are now absorbed into canonical Case 79. The old Case-117 paths remain only as link-stability stubs.
+
+---
+
 ## Source triangulation
 
 The case is `grounded` because the central relation is supported at several levels:
 
-1. **2010 system architecture paper** — location state is not in the persistent checkpoint and is re-learned from DataNodes;
-2. **versioned Apache documentation** — startup SafeMode waits for reported minimum-replica evidence and postpones block replication;
-3. **tag-matched implementation** — the exact SafeMode counters, threshold/extension checks, mutation gate, and replication-queue gating are inspectable;
-4. **tag-matched configuration source** — release defaults show why SafeMode `safe` cannot be normalized into `full configured redundancy`;
-5. **older Apache user guide** — confirms the operational rationale is older than 2.7.3 without turning the case into a priority claim.
+1. **exact released 0.18.0 source (2008)** — explicitly marks block→machine location state as in-memory/report-rebuilt and already distinguishes startup from manual SafeMode;
+2. **2010 system architecture paper** — location state is not in the persistent checkpoint and is re-learned from DataNodes;
+3. **versioned Apache documentation** — startup SafeMode waits for reported minimum-replica evidence and postpones block replication;
+4. **tag-matched 2.7.3 implementation** — the SafeMode counters, threshold/extension checks, mutation gate, and replication-queue gating are inspectable;
+5. **tag-matched configuration source** — release defaults show why SafeMode `safe` cannot be normalized into `full configured redundancy`;
+6. **2.8.0 source continuity** — explicitly preserves the lifecycle distinction between automatic startup SafeMode and manual entry.
 
 ---
 
@@ -171,7 +224,7 @@ These boundaries are carried into the case text.
 
 ## Prior-art boundary
 
-No invention claim is made for SafeMode, startup inventory reconstruction, or replication repair. Apache HDFS 1.0.4 already documents the mechanism before the 2.7.3 implementation used for source-level inspection. A proper genealogy would need earlier HDFS releases plus predecessor/distributed-filesystem recovery literature.
+No invention claim is made for SafeMode, startup inventory reconstruction, or replication repair. Exact released Hadoop 0.18.0 source already implements the report-rebuilt location relation and distinct startup/manual SafeMode state before the 2010 paper and later 1.x/2.x documentation used for continuity. A proper genealogy would need earlier HDFS releases plus predecessor/distributed-filesystem recovery literature.
 
 That broader technical history belongs in `computing-archaeology` if pursued. The retention-specific contribution here is the decomposition:
 
@@ -189,4 +242,4 @@ Repository search found no dedicated `HDFS` or `SafeMode` treatment in `tmzncty/
 
 **`grounded`**.
 
-Reason: the central claim is triangulated by a contemporary system paper, versioned Apache documentation, and exact tag-matched source/configuration. Historical vocabulary and source boundaries are explicit, analogies are labeled, and the case does not depend on an unverified implementation assumption.
+Reason: the central claim is triangulated by exact released 0.18.0 implementation source, a contemporary 2010 system paper, versioned Apache documentation, and later tag-matched source/configuration through 2.8.0. Historical vocabulary and source boundaries are explicit, analogies are labeled, and the case does not depend on an unverified implementation assumption.
