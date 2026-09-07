@@ -2351,3 +2351,21 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 1663. **page replacement ≠ forgetting** — moving a selected block from core to a directory-resolved drum location can end one physical residency while preserving the block's designation and later recoverability.
 1664. **same virtual block ≠ same physical embodiment** — Atlas one-level storage is a direct historical case in which identity can continue through migration between core and drum positions.
 1665. **Atlas paging ≠ universal later virtual-memory copy policy** — later clean/dirty-page and retained-backing-copy regimes are legitimate functional comparisons, but Lavington's no-copy witness blocks projecting them onto Atlas as if the semantics were identical.
+
+## Case 108 — Seagate Medalist ZBR findings
+
+1666. **fixed logical-block size ≠ uniform physical track/cylinder capacity** — the Medalist 1080sl keeps 512-byte sectors while its ZBR layout places more logical blocks on outer cylinders than inner cylinders.
+1667. **more logical blocks per outer cylinder ≠ larger logical block** — ZBR changes how many fixed-size blocks fit in a radial region rather than changing the host-visible byte size of each logical sector.
+1668. **logical-block service ≠ exposed physical geometry** — every logical block belongs to a notch, yet the host-facing block abstraction does not itself state a constant sectors-per-track geometry.
+1669. **notch membership/boundaries ≠ user payload** — physical zone boundaries and the relation identifying which notch is active qualify layout/control interpretation rather than encoding the 512-byte application value.
+1670. **active-notch selection ≠ payload relocation** — changing which notch Mode Sense/Select refers to changes control/query scope; the bounded source does not say that this operation moves logical blocks between zones.
+1671. **notch-specific parameter scope ≠ one uniform physical operating regime** — `pages notched` explicitly permits some mode-page parameters to differ by notch while other pages remain common across the drive.
+1672. **internal ZBR data-rate range ≠ external SCSI transfer contract** — the manual separately reports a 33–65 Mbit/s internal range, fixed-size sectors, and external Fast SCSI-2 transfer limits; physical recording rate and interface service are different layers.
+1673. **ZBR physical geometry ≠ ATA logical-CHS translation** — Case 108 concerns real radial layout differences, whereas Case 89 concerns mutable host-visible logical-coordinate representation and explicitly blocks equating logical CHS with actual media coordinates.
+1674. **ZBR zone layout ≠ defect reassignment** — ordinary radial capacity zoning differs from Case 14's failure-triggered spare-sector substitution even though both operate below a stable logical-block service.
+1675. **ZBR ≠ Flash Translation Layer** — a nonuniform magnetic recording geometry does not imply erase-before-write, dynamic mapping, garbage collection, or wear-leveling semantics from Case 04.
+1676. **physical-zone membership ≠ guaranteed lifetime physical-location stability** — the ZBR layout describes ordinary geometry, while Case 14 independently shows a later defect can substitute a different physical sector for the same logical designation.
+1677. **geometry abstraction ≠ geometry disappearance** — hidden radial structure still shapes capacity, internal transfer regime, notch boundaries, and controller/positioning obligations even when software receives regular logical blocks.
+1678. **August 1995 named-product documentation ≠ ZBR invention date** — National Semiconductor AN-599 (1989) already treats Zoned Bit Recording as an engineering design topic, and a January-1991-filed patent calls zone-bit recording a known technique.
+1679. **earlier ZBR prior art ≠ demonstrated Medalist genealogy** — chronological and functional similarity do not prove that the Medalist uses the DP8459 implementation or the 1991 patent's positioning circuit.
+1680. **Cases 14/89/108 form a layer decomposition, not one remapping genealogy** — defect replacement, logical CHS/LBA representation, and physical zone/notch geometry can all sit beneath logical block service while retaining different triggers, metadata, and historical vocabularies.

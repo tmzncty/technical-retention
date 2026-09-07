@@ -15,6 +15,8 @@ Grounding record: [`../evidence/89-ata-1994-1997-lba-chs-translation-grounding.m
 
 This case advances the open `HDD tracks / heads / cylinders / sectors; CHS → LBA` item without pretending to be a complete history of disk geometry.
 
+The physical-layout counterpart is grounded separately in [Case 108](108-seagate-medalist-zone-bit-recording-geometry.md): Seagate's 1995 Medalist ZBR/notch contract shows that fixed-size logical blocks can span a medium whose outer and inner physical cylinders have different block capacities. That link is a layer decomposition, not a claim that CHS translation and ZBR are the same mechanism.
+
 It is **not**:
 
 - a general history of IDE/ATA;
