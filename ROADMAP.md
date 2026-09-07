@@ -224,7 +224,7 @@ Research problems:
 - [ ] Should `passive positional retention` and `human-mediated addressability` become controlled terms?
 - [ ] Does `recurrence` deserve a separate controlled term from `refresh`?
 - [ ] Should the project formally distinguish quiescent retention, continuous maintenance, access-triggered restoration, deadline-driven maintenance, capacity/reclaim-triggered maintenance, wear/lifetime-triggered placement, and failure/repair-triggered maintenance?
-- [ ] When a mapping layer moves state, is the retained object data, address, relation, or all three?
+- [x] When a mapping layer moves state, is the retained object data, address, relation, or all three? — bounded by [`docs/SYNTHESIS_15_LOGICAL_IDENTITY_EMBODIMENT_REPLACEMENT.md`](docs/SYNTHESIS_15_LOGICAL_IDENTITY_EMBODIMENT_REPLACEMENT.md): separately audit designation continuity, payload-value continuity, resolution/currentness relation, and physical embodiment; a map can change without data movement, replacement can preserve designation without preserving payload, and persistent repair state can outlive volatile payload.
 - [ ] When replicas disagree, is `currentness` itself retained metadata/protocol state?
 - [ ] In a replicated log, how should physical suffix survival, replica currentness, committed-prefix/high-watermark state, consumer visibility, and failover truncation authority be separated?
 - [ ] In log-structured tablet recovery, how should committed redo history, volatile memtable state, immutable materialized files, live-file membership, redo points, replay cost, and deletion-marker retirement be separated?
