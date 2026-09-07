@@ -22,6 +22,19 @@ jobs:
           python-version: '3.x'
       - name: Integrate Case 36 prior-art deepening
         run: python scripts/integrate_case36_prior_art.py
+      - name: Normalize changed research files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for name in [
+              'cases/36-nand-flash-correct-and-refresh-maintenance.md',
+              'ROADMAP.md',
+              'CASE_INDEX.md',
+          ]:
+              p = Path(name)
+              lines = p.read_text(encoding='utf-8').splitlines()
+              p.write_text('\n'.join(line.rstrip() for line in lines) + '\n', encoding='utf-8')
+          PY
       - name: Validate diff
         run: git diff --check
       - name: Commit research integration
