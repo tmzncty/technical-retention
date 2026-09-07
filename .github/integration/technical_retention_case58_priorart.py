@@ -163,7 +163,7 @@ for path, text in [(CASE, case), (EVID, evid), (ROAD, road), (INDEX, index)]:
     path.write_text(text, encoding='utf-8')
 
 checks = {
-    CASE: [MARKER.split(' + ')[0], 'Birrell → Chubby → Raft', 'Chubby database snapshotting ≠ Chubby off-cell backup snapshot role'],
+    CASE: ['Checkpoint/replay materialization predates Raft 2014.', 'Birrell → Chubby → Raft', 'Chubby database snapshotting ≠ Chubby off-cell backup snapshot role'],
     EVID: ['Source 3 — Birrell/Jones/Wobber 1987', 'Source 4 — Chubby 2006', 'earlier analogous mechanism ≠ proven direct genealogy'],
     ROAD: [MARKER, 'broader checkpoint/consensus genealogy'],
     INDEX: [MARKER],
