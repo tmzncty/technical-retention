@@ -1,0 +1,70 @@
+name: Case 121 integration
+
+on:
+  push:
+    paths:
+      - '.github/workflows/case121-integrate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Integrate Case 121 navigation and findings
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          roadmap = Path('ROADMAP.md')
+          r = roadmap.read_text()
+          case_link = 'cases/121-ddr5-prac-activation-counter-initialization.md'
+          if case_link not in r:
+              marker = '## Phase 2 — Build missing technical bridges\n\n'
+              assert marker in r
+              bullet = (
+                  '- [x] DDR5 PRAC activation-counter initialization / volatile-maintenance-metadata boundary — '
+                  '[`cases/121-ddr5-prac-activation-counter-initialization.md`](cases/121-ddr5-prac-activation-counter-initialization.md), '
+                  'grounded by [`evidence/121-ddr5-2021-2025-prac-activation-counter-grounding.md`](evidence/121-ddr5-2021-2025-prac-activation-counter-grounding.md): '
+                  'JEDEC\'s 17 April 2024 JESD79-5C announcement establishes PRAC as a named wordline-granular counting/alert framework, while Micron Rev. E 11/2024 exposes a distinct support → enable → full-array Activation Counter Initialization → completion → counting/ABO readiness sequence and states that the activation-counter bits themselves require refresh. '
+                  'This closes only the bounded `payload state vs per-row maintenance metadata vs counter validity/readiness vs ACI transition` relation; exact JEDEC proposal genealogy, cross-vendor counter implementations, reset/power-cycle semantics, named-platform traces, PRAC/ARFM/DRFM interaction, and fault injection remain open.\n'
+              )
+              r = r.replace(marker, marker + bullet, 1)
+              roadmap.write_text(r)
+
+          ci = Path('CASE_INDEX.md')
+          c = ci.read_text().rstrip() + '\n'
+          if '## Case 121 — DDR5 PRAC activation-counter findings' not in c:
+              c += '''\n## Case 121 — DDR5 PRAC activation-counter findings\n\n- **1946 — 17 April 2024 JESD79-5C PRAC publication ≠ invention of per-row activation counting:** JEDEC supplies the named DDR5 PRAC standards floor, while Intel US20210365316A1 was filed 4 June 2021 with per-row activation-count storage, ECC, threshold comparison, and update logic. (`H/P`, `X`)\n- **1947 — DDR5 generation membership ≠ PRAC support:** Micron MR70 exposes PRAC/ABO support as optional rather than inferable from the word `DDR5`. (`H/P`)\n- **1948 — PRAC support ≠ PRAC enabled:** Micron separates read-only support from a host-controlled enable bit whose bounded default is disabled. (`H/P`)\n- **1949 — PRAC enabled ≠ protection ready:** after enable, a full-array Activation Counter Initialization is required; the bounded Micron device does not track activation counts or issue ABO until initialization completes. (`H/P`, `E`)\n- **1950 — payload state ≠ activation-count state:** user data answers what value later reads should return; PRAC counters retain activity-pressure metadata used to decide whether extra protection work is due. (`E`)\n- **1951 — maintenance metadata can itself be volatile:** Micron explicitly states that activation-counter bits require refresh like normal device cells. (`H/P`, `E`)\n- **1952 — same volatility class ≠ same retained object:** payload cells and activation-counter cells can both depend on refresh while carrying different semantics, validity rules, and later uses. (`E`)\n- **1953 — counter refresh violation ≠ trustworthy old count:** when activation-counter refresh requirements are violated, the bounded contract requires ACI to restore a known starting condition rather than continuing to trust the prior count. (`H/P`, `E`)\n- **1954 — ACI ≠ transparent payload-preserving scrub:** Micron states that the main array need not be refreshed during ACI and previously written data may be corrupted, so initializing protection metadata cannot be described as preserving pre-existing payload in place. (`H/P`, `E`, `X`)\n- **1955 — counter-history loss ≠ loss of a complete access archive:** a per-row count is a compressed maintenance state, not an ordered/timestamped record of accesses; reinitialization deliberately discards that prior pressure summary. (`E`, `X`)\n- **1956 — maintenance-history relevance depends on payload continuity:** Micron notes that after refresh violation array data can also be corrupted and previous activation-counter values become irrelevant; preserving stress metadata does not resurrect a no-longer-admissible payload state. (`H/P`, `E`)\n- **1957 — hidden metadata ≠ free metadata:** Micron's PRAC path adds per-row counter cells and read-modify-write activation-counter updates that change core timings; independent 2025 hardware work measures a real service cost on tested systems. (`H/P`, `S/E`)\n- **1958 — Case 03 payload refresh ≠ Case 121 counter preservation:** ordinary DRAM refresh preserves user-state charge, while PRAC adds second-order activity state that also requires preservation/initialization. (`A`)\n- **1959 — Case 54 controller RAA ≠ Case 121 in-DRAM per-row count:** both support disturbance-conditioned maintenance but place activity state at different architectural loci and expose different readiness/alert relations. (`A`, `X`)\n- **1960 — Case 118 DRFM target geometry ≠ PRAC counter validity:** deciding which physical-neighbor rows receive directed mitigation is separate from establishing trustworthy activity-count state that may request mitigation. (`A`)\n- **1961 — per-row counter prior art ≠ proven Intel→JEDEC genealogy:** the 2021 patent blocks an invention claim but does not establish committee descent, implementation identity, or textual lineage into JESD79-5C. (`H/P`, `A`, `X`)\n- **1962 — standardized PRAC/ABO framework ≠ universal RowHammer immunity:** JEDEC defines coordination and independent security literature treats actual protection as implementation-dependent. (`H/P`, `S`, `X`)\n- **1963 — related-repository boundary:** current `tmzncty/computing-archaeology` searches for `PRAC` and `activation counter` returned no dedicated case; broad PRAC/RowHammer/DDR5 standards genealogy belongs there if developed, while Case 121 keeps only the retention-specific second-order-state/readiness relation. (`H/P` project-state record)\n'''
+              ci.write_text(c)
+
+          case54 = Path('cases/54-ddr5-rfm-split-maintenance-authority.md')
+          s = case54.read_text()
+          continuation = ('\nPRAC state-validity continuation: [`121-ddr5-prac-activation-counter-initialization.md`](121-ddr5-prac-activation-counter-initialization.md) '
+                          'grounds the later per-row-counter initialization/readiness boundary in which activity-accounting metadata itself is volatile and must be initialized before counting/ABO becomes authoritative.\n')
+          anchor = 'Directed spatial continuation: [`118-micron-ddr5-directed-refresh-management.md`](118-micron-ddr5-directed-refresh-management.md) now grounds a named Micron DDR5 DRFM product contract in which a sampled row address anchors a BRC-bounded physical-neighbor refresh set; this is separate from Case 54\'s bank-level RAA/RFM split-authority relation.\n'
+          if 'PRAC state-validity continuation' not in s:
+              assert anchor in s
+              s = s.replace(anchor, anchor + continuation, 1)
+              case54.write_text(s)
+          PY
+
+          git diff --check
+          test -f cases/121-ddr5-prac-activation-counter-initialization.md
+          test -f evidence/121-ddr5-2021-2025-prac-activation-counter-grounding.md
+          grep -q '121-ddr5-prac-activation-counter-initialization' ROADMAP.md
+          grep -q 'Case 121 — DDR5 PRAC activation-counter findings' CASE_INDEX.md
+          grep -q 'PRAC state-validity continuation' cases/54-ddr5-rfm-split-maintenance-authority.md
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ROADMAP.md CASE_INDEX.md cases/54-ddr5-rfm-split-maintenance-authority.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'case121: integrate PRAC counter-retention findings'
+            git push
+          fi
