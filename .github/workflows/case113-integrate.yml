@@ -62,7 +62,7 @@ jobs:
           assert 'Cases 14, 89, 108, and 113' in hdd_line
           assert 'LBA28→LBA48' not in hdd_line
 
-          assert index.count('cases/113-ata-atapi6-48bit-lba-reachability.md) == 1
+          assert index.count('cases/113-ata-atapi6-48bit-lba-reachability.md') == 1
           assert index.count('## Case 113 — ATA/ATAPI-6 48-bit LBA reachability findings') == 1
           for n in range(1766, 1781):
               assert re.search(rf'\*\*{n} —', index), n
