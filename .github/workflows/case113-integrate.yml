@@ -25,6 +25,18 @@ jobs:
       - name: Integrate Case 113 navigation and status
         run: python tools/case113_integrate.py
 
+      - name: Normalize generated EOFs
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for name in [
+              'CASE_INDEX.md',
+              'cases/89-ata-lba-chs-translation-logical-sector-identity.md',
+          ]:
+              p = Path(name)
+              p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
+
       - name: Validate research tree
         run: |
           git diff --check
