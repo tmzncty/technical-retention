@@ -370,3 +370,11 @@ This case is `grounded` for the bounded split-responsibility and platform-compos
 - full security evaluation of residual RowHammer patterns.
 
 Those are future bounded cases, not hidden requirements for this one.
+
+## Continuation — Case 112 HBM3 per-bank RFM
+
+Case 112 extends this split-maintenance analysis into HBM3 without duplicating the DDR5 case. Its bounded contribution is target/coverage geometry: HBM3 `RFMpb` selects one bank and is explicitly exempt from the rolling-all-bank rule that applies to HBM3 periodic `REFpb`. The HBM3 standard also states that RFM does not replace periodic REF or advance the ordinary internal refresh counters.
+
+See [`112-hbm3-rfm-bonus-maintenance-vs-periodic-refresh.md`](112-hbm3-rfm-bonus-maintenance-vs-periodic-refresh.md) and [`../evidence/112-jedec-hbm3-2022-2023-rfm-grounding.md`](../evidence/112-jedec-hbm3-2022-2023-rfm-grounding.md).
+
+This is a **functional/interface comparison**, not a claim that DDR5 `RFMsb` and HBM3 `RFMpb` have identical target geometry or that one is genealogically derived from the other.
