@@ -72,12 +72,12 @@ assert text.count(case_path) == 1
 assert text.count(findings_heading) == 1
 assert '**1796 — related-repository boundary:**' in text
 road = ROADMAP.read_text(encoding='utf-8')
-assert road.count(case_path) == 1
+assert road.count('[`cases/114-nvme14-namespace-write-protection.md`]') == 1
 
 subprocess.run(['git', 'diff', '--check'], check=True)
 subprocess.run(['git', 'config', 'user.name', 'Tmzncty'], check=True)
 subprocess.run(['git', 'config', 'user.email', '72063145+tmzncty@users.noreply.github.com'], check=True)
 subprocess.run(['git', 'add', 'ROADMAP.md', 'CASE_INDEX.md'], check=True)
-subprocess.run(['git', 'rm', '.case114_integrate.py', '.github/workflows/case114-integrate.yml'], check=True)
+subprocess.run(['git', 'rm', '-f', '.case114_integrate.py'], check=True)
 subprocess.run(['git', 'commit', '-m', 'case114: integrate NVMe write-protection navigation'], check=True)
 subprocess.run(['git', 'push', 'origin', 'main'], check=True)
