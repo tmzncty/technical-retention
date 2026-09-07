@@ -1,8 +1,8 @@
-# Case 44 Grounding — TCG Opal / NVMe Deallocate and Sanitize (2009–2017)
+# Case 44 Grounding — ATA / TCG Opal / NVMe Deallocate and Sanitize (1996–2017)
 
 ## Purpose
 
-This record grounds [`../cases/44-nvme13-deallocate-sanitize-forgetting.md`](../cases/44-nvme13-deallocate-sanitize-forgetting.md) in official TCG Opal 1.0 Revision 1.0 plus NVM Express Revision 1.3 / Revision 1.2.1 text, and uses NIST SP 800-88 Rev. 1 (December 2014) as an institutional historical source for the conditions under which cryptographic-key sanitization can support a Cryptographic Erase claim. It records the exact evidence needed to keep deallocation, physical erasure, cryptographic key retirement, and completed subsystem sanitization from collapsing into one generic `erase` relation:
+This record grounds [`../cases/44-nvme13-deallocate-sanitize-forgetting.md`](../cases/44-nvme13-deallocate-sanitize-forgetting.md) in the T13 D96156 / ATA/ATAPI-4 Enhanced Security Erase record, official TCG Opal 1.0 Revision 1.0, and NVM Express Revision 1.3 / Revision 1.2.1 text, and uses NIST SP 800-88 Rev. 1 (December 2014) as an institutional historical source for the conditions under which cryptographic-key sanitization can support a Cryptographic Erase claim. It records the exact evidence needed to keep deallocation, physical erasure, cryptographic key retirement, and completed subsystem sanitization from collapsing into one generic `erase` relation:
 
 ```text
 host deallocation hint
@@ -17,6 +17,33 @@ successful subsystem sanitization
 It also records the prior-art boundary needed to avoid claiming that Revision 1.3 invented secure erase, cryptographic erasure, deallocation, or media sanitization.
 
 ## Primary sources
+
+### T13 D96156 / ATA/ATAPI-4 Enhanced Security Erase (1996–1998)
+
+Official T13 archival records inspected:
+
+- **D96156r0, “Enhanced security erase unit proposal,” October 14, 1996**;
+- D96156r1, January 14, 1997;
+- D96156r2, January 28, 1997;
+- **T13/1153D Revision 18, ATA/ATAPI-4, August 19, 1998**;
+- T13 Expired Standards index entry for **INCITS 317-1998 (1153D), ATA/ATAPI-4**, dated August 18, 1998.
+
+Archive/index sources:
+
+- <https://www.t13.org/docsearch>
+- <https://www.t13.org/standards-expired>
+
+Late-draft facsimile used for exact revision-history and command text:
+
+- <https://ptacts.uspto.gov/ptacts/public-informations/petitions/1554771/download-documents?artifactId=0EWigRzVKg7sPjzD0givwKpcihsaStqqZz6WGAMqZ789VgCRCY9LVrg>
+
+Sections inspected in Revision 18:
+
+- front matter / document status, which explicitly identifies the file as an internal working document rather than an approved final standard;
+- revision history, where Revision 9 (February 10, 1997) says **“Added enhanced security erase proposal (D96156R2)”**;
+- §8.31.6–§8.31.8, especially `SECURITY ERASE UNIT` prerequisites, abort conditions, and Normal/Enhanced erase descriptions.
+
+Evidence-strength boundary: the T13 archive establishes proposal identity/date and the published 1153D project identity; the inspected exact command wording comes from Revision 18, which must remain labeled a late working draft. The repository therefore does not claim to have visually verified the final ANSI/INCITS publication page-for-page.
 
 ### NVM Express Revision 1.3
 
@@ -78,6 +105,23 @@ Historical-status boundary: NIST marks Revision 1 **withdrawn on September 26, 2
 Inspection level: **official NIST publication record + official archived PDF text + visual inspection of the relevant CE pages**.
 
 ## Directly grounded historical claims
+
+### T13 D96156 / ATA/ATAPI-4 — reallocation creates a hidden-embodiment erase problem
+
+The official T13 archive dates the first `Enhanced security erase unit proposal` record to October 14, 1996. Revision 18 of the ATA/ATAPI-4 working draft later records that Revision 9 added D96156R2 and contains the resulting `SECURITY ERASE UNIT` semantics.
+
+In §8.31.8, Normal erase writes zeroes to all user-data areas. Enhanced erase is optional and writes predetermined patterns to all user-data areas; critically, the text says this includes sectors no longer in use because of **reallocation**. The command must be immediately preceded by `SECURITY ERASE PREPARE`, and inability to overwrite the data area is an abort condition.
+
+**Supported historical claim:** by the ATA/ATAPI-4 development record, the standards process explicitly treated ordinary host-visible overwrite reach and reallocated stale-sector reach as different problems and added a device-internal enhanced erase path whose target includes reallocated user-data sectors.
+
+**Engineering consequence:** `logical address retired by reassignment` does not imply `old physical user-data embodiment already forgotten`; a later forgetting operation may need an authority below ordinary host addressing.
+
+**Scope guardrails:**
+
+- `reallocated sectors included` does not prove every implementation-hidden, HPA/DCO, firmware, cache, or non-user-data region is included;
+- overwrite-based ATA Enhanced Erase is not evidence of cryptographic erase;
+- Revision-18 late-draft semantics plus the T13 published-project index do not justify silently calling the inspected facsimile the final ANSI standard;
+- proposal/adoption chronology does not prove invention priority or a direct ATA→NVMe genealogy.
 
 ### Revision 1.3 §6.7 — Dataset Management is advisory
 
@@ -230,7 +274,7 @@ These are used as institutional chronology support. The ratified specifications 
 
 ## Broader prior-art boundary
 
-TCG **Opal 1.0 Revision 1.0**, dated January 27, 2009, now provides the earlier storage-interface witness for media-key eradication and explicit `cryptographic erase` semantics. This moves the repository's bounded prior-art line earlier than both NIST SP 800-88 Rev. 1 and NVMe secure-erase/sanitize revisions without making an invention-priority claim.
+For overwrite-based whole-user-data erasure, the bounded prior-art line now moves earlier: T13 D96156r0 (October 1996) and the ATA/ATAPI-4 Revision-18 record establish Enhanced Security Erase coverage of reallocated user-data sectors. TCG **Opal 1.0 Revision 1.0**, dated January 27, 2009, remains the earlier storage-interface witness in this case for the **different** media-key-eradication / explicit `cryptographic erase` mechanism class. Neither boundary is an invention-priority claim.
 
 NIST **SP 800-88 Rev. 1**, finalized December 17, 2014, defines media sanitization as rendering access to target data infeasible for a given level of effort and includes `crypto erase` and `secure erase` in its keyword vocabulary. Its inspected CE sections also make all-copy/wrapping-key coverage, lifecycle key handling, and backup/escrow survival explicit. Revision 1 was withdrawn on September 26, 2025 and is retained here strictly as a historical 2014 source.
 
@@ -306,3 +350,8 @@ The bounded evidence does **not** establish:
 ## Related-repository check
 
 `tmzncty/computing-archaeology` was searched before writing for `NVMe sanitize`, `secure erase`, `deallocate`, `TRIM`, SSD sanitization, and again during the two Case 44 deepenings for `Opal`, `RevertSP`, media-encryption-key destruction, `cryptographic erase`, wrapping keys, and key escrow. No dedicated case was found. Generic Flash/SSD/SED implementation history remains routed there; this record exists because the **retention/forgetting-layer distinction** changes the cross-case argument in `technical-retention`.
+
+
+## Related-repository recheck — ATA Secure Erase deepening
+
+Current `tmzncty/computing-archaeology` searches for `ATA secure erase` and `security erase ATA/ATAPI` returned no dedicated case. Broad ATA security-command genealogy belongs there if developed; this record keeps only the retention-specific boundary between logical reassignment/address reach and device-internal forgetting reach.
