@@ -1,0 +1,35 @@
+name: technical-retention-case58-priorart-one-shot
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/technical-retention-case58-priorart.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Integrate bounded Case 58 prior-art deepening
+        run: python .github/integration/technical_retention_case58_priorart.py
+      - name: Validate and commit research slice
+        run: |
+          git diff --check
+          grep -F 'Checkpoint/replay materialization predates Raft 2014.' cases/58-raft-snapshot-log-compaction.md
+          grep -F 'Source 3 — Birrell/Jones/Wobber 1987' evidence/58-raft-2014-snapshot-log-compaction-grounding.md
+          grep -F 'Raft snapshot/log-compaction prior-art floor deepening' ROADMAP.md
+          grep -F 'Birrell 1987 checkpoint/log replay + Chubby 2006 WAL/snapshot prior-art floor' CASE_INDEX.md
+          rm .github/integration/technical_retention_case58_priorart.py
+          rm .github/workflows/technical-retention-case58-priorart.yml
+          git add -A
+          git diff --cached --check
+          git config user.name github-actions
+          git config user.email actions@github.com
+          git commit -m 'case58: deepen checkpoint snapshot prior-art boundary'
+          git push origin HEAD:main
