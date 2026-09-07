@@ -33,6 +33,7 @@ jobs:
           test -f cases/109-amazon-s3-versioning-delete-marker-lifecycle.md
           test -f evidence/109-amazon-s3-2010-2014-versioning-lifecycle-grounding.md
           grep -Fq "## Case 109 — Amazon S3 Versioning findings" CASE_INDEX.md
+          grep -Fq "cases/108-seagate-medalist-zone-bit-recording-geometry.md" CASE_INDEX.md
           grep -Fq "Amazon S3 Versioning delete-marker / noncurrent-version lifecycle boundary" ROADMAP.md
           git add -A
           git diff --cached --check
@@ -40,4 +41,4 @@ jobs:
           git commit -m "case109: ground S3 versioned deletion lifecycle boundary"
           git push origin HEAD:main
 
-# retry after helper repair
+# retry after CASE_INDEX anchor repair
