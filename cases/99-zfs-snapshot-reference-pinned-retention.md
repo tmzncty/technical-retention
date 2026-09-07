@@ -334,6 +334,16 @@ Case 98 preserves a recovery obligation toward a currently absent newer state. C
 
 Both show that retention can reside in authority/reference metadata, but the retained object of obligation differs.
 
+### Case 115 — HDFS snapshots
+
+Both Case 99 and Case 115 retain an older point-in-time view through shared underlying payload rather than eagerly copying a complete dataset at snapshot creation. The bounded implementation relation is nevertheless different: HDFS snapshot diffs can retain historical file-replication attributes, and the shared HDFS block collection uses the maximum replication requirement across current and snapshot versions.
+
+Therefore:
+
+> **shared-reference historical retention != identical physical redundancy semantics.**
+
+This is a functional comparison only. It does not establish WAFL/ZFS→HDFS implementation genealogy.
+
 ## Functional analogy
 
 A bounded analogy can be made to garbage collectors or persistent data structures: an object remains live while reachable from a root, and old structure can be shared across versions.
