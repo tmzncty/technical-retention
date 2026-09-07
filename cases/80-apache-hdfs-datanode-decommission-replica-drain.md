@@ -474,3 +474,15 @@ The rack-placement deepening sharpens what “enough elsewhere” means. In the 
 Therefore:
 
 > **planned embodiment withdrawal can itself be retention work: the system preserves enough, in an admissible topology, before it authorizes itself to stop depending on here.**
+
+---
+
+## Continuation — Case 116: temporary maintenance is not decommission
+
+Grounded [Case 116](116-apache-hdfs-datanode-maintenance-state.md) handles the later HDFS maintenance-state regime deliberately left outside this case. It keeps `ENTERING_MAINTENANCE` / `IN_MAINTENANCE`, a maintenance-specific redundancy threshold, retained expiry, and post-expiry convergence separate from the bounded 0.18–2.7.3 decommission path documented here.
+
+The comparison is narrow:
+
+> **decommission retirement admissibility != temporary-maintenance admissibility**
+
+Case 80 asks when HDFS may stop depending on a node as an ordinary embodiment. Case 116 asks when HDFS may temporarily keep depending on an expected-to-return embodiment while denying it ordinary service eligibility and relaxing how much redundancy must be live elsewhere. Do not project the later maintenance states, threshold, or expiry backward into the 0.18/2.7.3 record.
