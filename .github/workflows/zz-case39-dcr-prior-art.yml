@@ -21,6 +21,16 @@ jobs:
 
       - name: Integrate research slice
         run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('tools/integrate_case39_dcr_prior_art.py')
+          text = p.read_text(encoding='utf-8')
+          old = 'p.write_text(text.rstrip() + findings + "\\n", encoding="utf-8")'
+          new = 'p.write_text(text.rstrip() + findings.rstrip() + "\\n", encoding="utf-8")'
+          if old not in text:
+              raise SystemExit('expected CASE_INDEX EOF write pattern not found')
+          p.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
           set +e
           python tools/integrate_case39_dcr_prior_art.py > tools/case39-debug.txt 2>&1
           rc=$?
