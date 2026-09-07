@@ -33,3 +33,4 @@ jobs:
           git config user.email actions@github.com
           git commit -m 'case58: deepen checkpoint snapshot prior-art boundary'
           git push origin HEAD:main
+# retry after validator fix
