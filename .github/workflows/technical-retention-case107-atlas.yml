@@ -1,0 +1,35 @@
+name: technical-retention-case107-atlas-one-shot
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/technical-retention-case107-atlas.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Integrate bounded Atlas paging retention slice
+        run: python .github/integration/technical_retention_case107_atlas.py
+      - name: Validate and commit research slice
+        run: |
+          git diff --check
+          grep -F 'virtual designation ≠ real-frame residency' cases/107-atlas-one-level-store-paging-residency.md
+          grep -F 'no copy was normally kept on drum' evidence/107-atlas-1961-1978-paging-grounding.md
+          grep -F 'cases/107-atlas-one-level-store-paging-residency.md' ROADMAP.md
+          grep -F '1665. **Atlas paging ≠ universal later virtual-memory copy policy**' CASE_INDEX.md
+          rm .github/integration/technical_retention_case107_atlas.py
+          rm .github/workflows/technical-retention-case107-atlas.yml
+          git add -A
+          git diff --cached --check
+          git config user.name github-actions
+          git config user.email actions@github.com
+          git commit -m 'case107: ground Atlas paging residency boundary'
+          git push
