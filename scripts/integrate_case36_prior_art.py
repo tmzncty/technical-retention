@@ -10,7 +10,6 @@ prior_path = "evidence/36-flash-refresh-1997-2009-prior-art-deepening.md"
 
 # --- Case 36 ---
 case = CASE.read_text(encoding="utf-8")
-
 old_status = "**`grounded`** — bounded to Yu Cai et al.'s peer-reviewed 2012 ICCD proposal and evaluation of **Flash Correct-and-Refresh (FCR)** for 3x-nm MLC NAND Flash, with later 2015 retention-characterization work used only as a boundary check on retention-age/read-recovery semantics."
 new_status = old_status + " The historical novelty boundary is additionally deepened by pre-2012 nonvolatile-memory refresh patent records from 1997–2009; those records narrow what can safely be attributed to FCR without changing the case's bounded 2012 object."
 if new_status not in case:
@@ -73,14 +72,12 @@ if ledger_rows not in case:
 
 source_url = "https://patents.google.com/patent/US5909449A/en"
 if source_url not in case:
-    extra_sources = """
+    case = case.rstrip() + "\n" + """
 5. Hock C. So and Sau C. Wong, **“Multibit-per-cell non-volatile memory with error detection and correction,”** US 5,909,449 A, filed 8 September 1997, public patent 1 June 1999: <https://patents.google.com/patent/US5909449A/en>.
 6. **“Flash memory with dynamic refresh,”** US 6,396,744 B1, filed 25 April 2000, public patent 28 May 2002; same family includes relocation/address-mapping refresh records: <https://patents.google.com/patent/US6396744B1/en>.
 7. **“Refreshing data stored in a flash memory,”** US 2005/0243626 A1 / US 7,325,090 B2, priority 29 April 2004, application publication 3 November 2005: <https://patents.google.com/patent/US7325090B2/en>.
 8. Darlene G. Hamilton, Mark W. Randolph, Don Carlos Darling, Ron Kornitz, **“Extending flash memory data retension via rewrite refresh,”** US 2009/0161466 A1, filed 20 December 2007, published 25 June 2009: <https://patents.google.com/patent/US20090161466A1/en>.
-"""
-    case = case.rstrip() + "\n" + extra_sources.lstrip() + "\n"
-
+""".lstrip() + "\n"
 CASE.write_text(case, encoding="utf-8")
 
 # --- ROADMAP ---
@@ -93,7 +90,7 @@ if prior_path not in roadmap:
     roadmap = roadmap.replace(marker, marker + roadmap_entry + "\n", 1)
     ROADMAP.write_text(roadmap, encoding="utf-8")
 
-# --- CASE_INDEX row + findings ---
+# --- CASE_INDEX ---
 index = INDEX.read_text(encoding="utf-8")
 new_row = f"""| [NAND Flash Correct-and-Refresh: ECC-Bounded Retention Through Controller Maintenance]({case_path}) | **grounded** | nonvolatile MLC NAND + retention-error accumulation + ECC-corrected read + remap/in-place reprogram + adaptive controller scheduling | separate physical nonvolatility from maintenance-free reliable retention; show error-margin renewal can relocate state and consume endurance; bound FCR novelty against explicit 1997–2009 nonvolatile-refresh prior art | [2012 FCR grounding]({grounding_path}) + [1997–2009 refresh prior-art deepening]({prior_path}); commercial deployment, pre-1997 prior art, later 3D-NAND/read-retry interaction, vendor-specific refresh, and full controller genealogy remain separate work |"""
 lines = index.splitlines()
@@ -121,15 +118,13 @@ findings = """## Case 36 — pre-FCR Flash-refresh prior-art deepening
 """
 if "## Case 36 — pre-FCR Flash-refresh prior-art deepening" not in index:
     index = index.rstrip() + "\n\n" + findings.rstrip() + "\n"
-
 INDEX.write_text(index, encoding="utf-8")
 
 # --- invariants ---
 case_final = CASE.read_text(encoding="utf-8")
 roadmap_final = ROADMAP.read_text(encoding="utf-8")
 index_final = INDEX.read_text(encoding="utf-8")
-
-if case_final.count(prior_path) != 2:
+if case_final.count(prior_path) != 4:
     raise SystemExit(f"unexpected Case 36 prior-art path count: {case_final.count(prior_path)}")
 if roadmap_final.count(prior_path) != 2:
     raise SystemExit(f"unexpected ROADMAP prior-art path count: {roadmap_final.count(prior_path)}")
@@ -138,6 +133,5 @@ if index_final.count(prior_path) != 1:
 if index_final.count("## Case 36 — pre-FCR Flash-refresh prior-art deepening") != 1:
     raise SystemExit("Case 36 prior-art findings heading missing or duplicated")
 for n in range(1847, 1860):
-    token = f"**{n} —"
-    if index_final.count(token) != 1:
+    if index_final.count(f"**{n} —") != 1:
         raise SystemExit(f"finding {n} missing or duplicated")
