@@ -39,3 +39,5 @@ jobs:
           git status --short
           git commit -m "case109: ground S3 versioned deletion lifecycle boundary"
           git push origin HEAD:main
+
+# retry after helper repair
