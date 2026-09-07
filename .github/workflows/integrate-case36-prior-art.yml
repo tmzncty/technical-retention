@@ -1,0 +1,37 @@
+name: Integrate Case 36 prior art
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/integrate-case36-prior-art.yml'
+      - 'scripts/integrate_case36_prior_art.py'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Integrate Case 36 prior-art deepening
+        run: python scripts/integrate_case36_prior_art.py
+      - name: Validate diff
+        run: git diff --check
+      - name: Commit research integration
+        run: |
+          if git diff --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add cases/36-nand-flash-correct-and-refresh-maintenance.md ROADMAP.md CASE_INDEX.md
+          git commit -m "case36: deepen pre-FCR flash refresh prior-art boundary"
+          git push
