@@ -22,6 +22,14 @@ jobs:
           git config user.email 'technical-retention-automation@users.noreply.github.com'
       - name: Integrate bounded synthesis
         run: python3 scripts/integrate_synthesis16_currentness.py
+      - name: Normalize markdown EOF
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in ['README.md', 'ROADMAP.md', 'CASE_INDEX.md', 'docs/SYNTHESIS_16_REPLICA_CURRENTNESS_RETAINED_RELATION.md']:
+              p = Path(name)
+              p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
       - name: Validate and commit
         run: |
           test -f docs/SYNTHESIS_16_REPLICA_CURRENTNESS_RETAINED_RELATION.md
