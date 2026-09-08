@@ -15,7 +15,7 @@ Case 89 establishes that one logical sector can keep its LBA while the host-visi
 This case is **not**:
 
 - a complete history of HPA, PARTIES, BIOS recovery partitions, or OEM service environments;
-- a Device Configuration Overlay (`DCO`) case;
+- a Device Configuration Overlay (`DCO`) case; that follow-on is now grounded separately as [Case 123](123-ata6-device-configuration-overlay-capability-retention.md);
 - a secure-erasure or sanitization case;
 - a claim that sectors above the current maximum are physically contiguous in a simple platter geometry;
 - a claim that ATA/ATAPI-4 invented hidden/reserved disk regions;
@@ -347,7 +347,7 @@ This can discipline philosophical claims about technical availability, concealme
 - Restoring reach does not prove that payload survived; it only makes the address eligible again.
 - The inspected 1998 document is a working draft, not the final approved standard.
 - The 2001 Maxtor manual proves one named product family implemented the bounded commands, not universal drive behavior.
-- DCO can also alter visible capacity in later ATA generations but is a separate mechanism and remains outside this slice.
+- DCO can also alter visible capacity and even the `READ NATIVE MAX` observation in later ATA generations; that separate capability/configuration layer is now grounded in [Case 123](123-ata6-device-configuration-overlay-capability-retention.md).
 
 ---
 
