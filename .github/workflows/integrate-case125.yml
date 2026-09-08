@@ -24,6 +24,19 @@ jobs:
       - name: Integrate Case 125 navigation
         run: python scripts/integrate_case125_orphan.py
 
+      - name: Normalize changed research files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for name in ['ROADMAP.md', 'CASE_INDEX.md']:
+              p = Path(name)
+              text = p.read_text(encoding='utf-8')
+              lines = [line.rstrip() for line in text.splitlines()]
+              while lines and not lines[-1]:
+                  lines.pop()
+              p.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+
       - name: Validate bounded integration
         run: |
           test -f cases/125-linux-ext3-ext4-orphan-crash-cleanup-reclamation.md
