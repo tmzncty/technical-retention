@@ -1,0 +1,102 @@
+name: Case 130 integration v2
+
+on:
+  push:
+    paths:
+      - '.github/workflows/case130-integrate-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch roadmap and case index
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          case_path = Path('cases/130-lto-generational-compatibility-reader-obsolescence.md')
+          evidence_path = Path('evidence/130-lto-generational-compatibility-grounding.md')
+          assert case_path.exists(), case_path
+          assert evidence_path.exists(), evidence_path
+
+          road_path = Path('ROADMAP.md')
+          lines = road_path.read_text(encoding='utf-8').splitlines()
+
+          if not any('Case 130' in line for line in lines):
+              p2 = next(i for i, line in enumerate(lines) if line.startswith('## Phase 2'))
+              p3 = next(i for i, line in enumerate(lines[p2 + 1:], p2 + 1) if line.startswith('## Phase 3'))
+              entry = ('- [x] **Case 130 — LTO generational compatibility / reader obsolescence** — '
+                       'grounded from official LTO Program and IBM compatibility records: surviving cartridges still require '
+                       'a compatible drive/media/operation relation; read and write windows differ; later generations do not '
+                       'monotonically preserve every older read path.')
+              while p3 > p2 and not lines[p3 - 1].strip():
+                  p3 -= 1
+              lines.insert(p3, entry)
+
+          media_hits = [i for i, line in enumerate(lines) if 'media obsolescence' in line.lower() and '[ ]' in line]
+          assert len(media_hits) == 1, media_hits
+          i = media_hits[0]
+          indent = lines[i][:len(lines[i]) - len(lines[i].lstrip())]
+          lines[i] = (indent + '- [ ] **media obsolescence** — substantially advanced at the removable-tape '
+                      'reader-compatibility layer by Case 130: LTO demonstrates bounded read/write generation windows '
+                      'and a current LTO-10 backward-compatibility break; broader media families, reader failure/maintenance, '
+                      'host-interface obsolescence, controlled migration, and earlier tape genealogy remain open.')
+          road_path.write_text('\n'.join(lines).rstrip() + '\n', encoding='utf-8')
+
+          idx_path = Path('CASE_INDEX.md')
+          idx = idx_path.read_text(encoding='utf-8').rstrip()
+          if '## Case 130 —' not in idx:
+              ids = [int(x) for x in re.findall(r'\*\*(\d{4})\s+—', idx)]
+              assert ids and max(ids) == 2314, max(ids) if ids else None
+              block = '''
+
+## Case 130 — LTO generational compatibility / reader obsolescence
+
+- **2315 — LTO compatibility is a retained drive/media/operation relation, not a cartridge property.** Official LTO Program and IBM matrices make access depend on both drive and media generation. (`H/S`, `E`)
+- **2316 — Generations 1–7 document a two-generation read / one-generation write backward window.** The current LTO Program summary and IBM Redbooks product documentation agree on this bounded policy. (`H/S`)
+- **2317 — LTO-8 does not read or write LTO-6.** IBM's LTO-8 support matrix explicitly limits the drive to Ultrium 7/8 formats. (`H/S`)
+- **2318 — LTO-9 does not read or write LTO-7 or M8.** IBM's LTO-9 support matrix, modified 9-Feb-2026, limits read/write formats to Ultrium 8/9 variants. (`H/S`)
+- **2319 — LTO-10 is not backward compatible.** The current LTO Program roadmap states that generation 10 does not support backward compatibility and attributes the break to a drive-head redesign. (`H/S`)
+- **2320 — Read compatibility ≠ write compatibility.** IBM compatibility tables include read-only older-generation paths, so extraction can remain possible after in-place rewrite support has ended. (`H/S`, `E`)
+- **2321 — Newer drive generation ≠ strict superset of older reader capability.** LTO-8/9/10 provide direct counterexamples to monotonic legacy-media support. (`H/S`, `E`)
+- **2322 — Media survival ≠ compatible-reader availability.** Intact magnetic state is insufficient when no supported reader/media pair remains. (`E`)
+- **2323 — Reader obsolescence ≠ physical erasure.** Loss of a compatible drive path can make surviving inscription operationally inaccessible without changing the cartridge bits. (`E`)
+- **2324 — Generation transition ≠ immediate data loss.** An incompatible new generation does not erase older media; retained older drives can preserve an access path. (`E`, `X`)
+- **2325 — Current-generation acquisition ≠ legacy-media access.** Buying the newest drive can fail to preserve an archive's older compatibility window. (`E`)
+- **2326 — Vendor interchangeability ≠ time-unbounded generation compatibility.** LTO compliance/interchangeability testing and backward-generation rules are separate official claims. (`H/S`, `E`)
+- **2327 — Mixed-generation library service depends on compatibility-set intersection.** IBM's support guidance constrains common read-write media when different drive generations share a library. (`H/S`, `E`)
+- **2328 — Bounded reader compatibility can create a migration obligation.** Data may need migration while a compatible reader still exists, but no universal migration cadence is inferred. (`E`)
+- **2329 — Software-format admissibility ≠ physical reader admissibility.** Case 129's ZFS feature interpreter and Case 130's drive/media generation gate are only functional analogies. (`A`)
+- **2330 — Broad magnetic-tape genealogy remains in `computing-archaeology`.** Fresh searches found no dedicated `7-track`, `IBM 729`, or `magnetic tape` case there; Case 130 therefore avoids inventing an earlier genealogy without direct manual inspection. (`H/P` project-state, `X`)
+'''
+              idx += block.rstrip()
+          idx_path.write_text(idx.rstrip() + '\n', encoding='utf-8')
+          PY
+      - name: Validate integration
+        shell: bash
+        run: |
+          grep -q 'Case 130' ROADMAP.md
+          grep -q '^## Case 130 —' CASE_INDEX.md
+          grep -q '2315 —' CASE_INDEX.md
+          grep -q '2330 —' CASE_INDEX.md
+          test -f cases/130-lto-generational-compatibility-reader-obsolescence.md
+          test -f evidence/130-lto-generational-compatibility-grounding.md
+          git diff --check
+      - name: Commit navigation and self-clean
+        shell: bash
+        run: |
+          rm .github/workflows/case130-integrate-v2.yml
+          git add ROADMAP.md CASE_INDEX.md .github/workflows/case130-integrate-v2.yml
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'case130: integrate LTO reader-obsolescence navigation'
+          git push
