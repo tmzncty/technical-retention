@@ -1,0 +1,47 @@
+name: Deepen Case 86 KP8-E hold-up evidence
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/deepen-case86-kp8e-hold-up.yml'
+      - 'scripts/deepen_case86_kp8e_hold_up.py'
+
+permissions:
+  contents: write
+
+jobs:
+  deepen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Apply canonical Case 86 deepening
+        run: python scripts/deepen_case86_kp8e_hold_up.py
+      - name: Validate canonical diff
+        run: |
+          grep -q '1971–1974 KP8-E' cases/86-dec-pdp8-core-power-fail-auto-restart.md
+          grep -q 'filter capacitors in the power supply' evidence/86-dec-1960-1970-core-power-restart-grounding.md
+          grep -q 'Case 86 deepening — PDP-8/E KP8-E hold-up findings' CASE_INDEX.md
+          grep -q '\*\*2250 — related-repository boundary:' CASE_INDEX.md
+          grep -q 'hold-up energy vs saved execution state' ROADMAP.md
+          test ! -e scripts/deepen_case86_kp8e_hold_up.py
+          test ! -e .github/workflows/deepen-case86-kp8e-hold-up.yml
+          git diff --check
+      - name: Commit deepening and one-shot cleanup
+        run: |
+          git config user.name "chatgpt-research-agent"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- \
+            cases/86-dec-pdp8-core-power-fail-auto-restart.md \
+            evidence/86-dec-1960-1970-core-power-restart-grounding.md \
+            ROADMAP.md CASE_INDEX.md \
+            scripts/deepen_case86_kp8e_hold_up.py \
+            .github/workflows/deepen-case86-kp8e-hold-up.yml
+          git diff --cached --check
+          git commit -m "case86: deepen KP8-E power-fail hold-up evidence"
+          git push
