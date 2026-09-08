@@ -432,3 +432,103 @@ Promotion is justified because the bounded claim has:
 - cross-case separation from mapped Flash, PLP, and NAND retention refresh.
 
 Remaining work should not expand this case into a generic SSD-controller history. Higher-value follow-ups are commercial/named-controller metadata recovery, independent fault compliance, or higher-layer composition with filesystem/database durability.
+
+---
+
+## 2009–2011 intermediate prior-art bridge
+
+This addendum fills the gap between the 1993–1995 mapped-Flash foundation already delegated to Case 04 and the 2014 DCR prior-art floor already present in this evidence record.
+
+### Source E — Park et al., IEICE Electronics Express, 2009
+
+**Document:** Jung-Wook Park, Seung-Ho Park, Gi-Ho Park, Shin-Dug Kim, *An integrated mapping table for hybrid FTL with fault-tolerant address cache*, IEICE Electronics Express 6(7), 368–374.
+**Received:** **26 December 2008**
+**Accepted:** **3 March 2009**
+**Released:** **10 April 2009**
+**DOI:** `10.1587/elex.6.368`
+**Primary record:** <https://www.jstage.jst.go.jp/article/elex/6/7/6_7_368/_article/-char/en>
+**Institutional corroboration:** <https://yonsei.elsevierpure.com/en/publications/an-integrated-mapping-table-for-hybrid-ftl-with-fault-tolerant-ad/>
+
+**Evidence class:** `H/P/S` — peer-reviewed contemporary research paper; the mechanism is the authors' proposed design, with simulation evaluation.
+
+#### Source E — power failure can remove cached address state while Flash retains mapping evidence
+
+The abstract states that entire FTL mapping tables cannot necessarily fit in fast SRAM as capacity grows. It describes physical page addresses retained in Flash/spare areas plus a page-address cache used for lookup speed, and explicitly warns that losing only a few cached addresses during power failure can cause substantial data-information inconsistency.
+
+The proposed scheme integrates metadata into a Flash-resident `hybrid map block` containing the physical page table. An initial scan of that map block generates working metadata tables.
+
+**Use:** establishes an explicit 2009 floor for `volatile address cache loss + Flash-resident reconstruction basis`.
+
+**Boundary:** proposed/simulated design ≠ universal or commercial SSD implementation.
+
+### Source F — ITRI, US 9,164,887 B2 / US20130145076A1
+
+**Document:** *Power-failure recovery device and method for flash memory*
+**Inventors:** Tzi-cker Chiueh, Ting-Fang Chien, Shih-Chiang Tsao, Chien-Yung Lee
+**Assignee:** Industrial Technology Research Institute (ITRI)
+**Filed / priority:** **5 December 2011**
+**Application publication:** **6 June 2013**
+**Grant publication:** **20 October 2015**
+**Primary record:** <https://patents.google.com/patent/US9164887B2/en>
+
+**Evidence class:** `H/P` for the disclosed design and chronology.
+
+#### Source F — cached BMT is not the only retained mapping evidence
+
+The patent says the `block map table (BMT)` records logical-block → physical-block mappings and is temporarily stored in cache. It separately describes Flash-resident physical blocks/spare metadata and a hierarchy of `super map`, `dedicated map`, BMT records, and an `update log`.
+
+For abnormal shutdown the disclosed recovery method reads the super/dedicated maps, loads the Flash-resident BMT into cache, reads the update log, and applies its labels to update the cached BMT. The disclosure explicitly says this can recover a BMT lost due to power failure using information registered in the update log.
+
+**Use:** directly grounds `working translation representation ≠ nonvolatile recovery substrate` and `mapping-log replay ≠ payload reconstruction`.
+
+**Boundary:** patent disclosure ≠ evidence of a named shipping product or priority over all earlier work.
+
+## Claims added by this deepening
+
+### G-39.15 — `2009 power-failure-sensitive address cache ≠ first mapped-Flash recovery`
+
+Case 04 already grounds 1993–1995 startup-rebuildable mapping/allocation state. Park et al. supply a later explicit power-failure/cache-loss witness, not an invention origin.
+
+**Status:** grounded prior-art boundary.
+
+### G-39.16 — `volatile address-cache loss ≠ permanent mapping loss`
+
+Park et al.'s Flash-resident hybrid map block is explicitly designed so an initial scan can regenerate metadata tables after cached state is lost.
+
+**Status:** grounded for the proposed design.
+
+### G-39.17 — `cached BMT ≠ sole mapping authority`
+
+The 2011 ITRI filing temporarily stores BMT in cache while retaining BMT/map/log material in Flash for recovery.
+
+**Status:** grounded for the disclosed design.
+
+### G-39.18 — `update-log replay ≠ payload reconstruction`
+
+The ITRI recovery path updates the mapping relation in cache from surviving map/log evidence. It does not claim to recreate missing user payload bits.
+
+**Status:** grounded engineering distinction.
+
+### G-39.19 — `retained relation evidence ≠ immediate service readiness`
+
+Both the 2009 map-block scan and 2011 map/log load/replay require restart work before a working translation state is reconstituted.
+
+**Status:** grounded engineering reconstruction.
+
+### G-39.20 — `mapping recovered ≠ payload validated`
+
+A reconstructed logical→physical relation says which embodiment to use; it does not prove that page media are intact or that an interrupted write became durable.
+
+**Status:** explicit limit.
+
+### G-39.21 — `intermediate prior art ≠ GeckoFTL mechanism identity`
+
+Park's hybrid map block and ITRI's hierarchical BMT/update-log recovery predate GeckoFTL, but they do not establish GeckoFTL's PVB/Logarithmic-Gecko/run/pinned-run mechanisms or a direct genealogy.
+
+**Status:** grounded mechanism-separation rule.
+
+### G-39.22 — related-repository boundary
+
+A renewed search of `tmzncty/computing-archaeology` for `FTL`, `flash translation layer`, and power-failure mapping recovery still found no dedicated case. Broad FTL/controller genealogy should live there if developed; this record retains only the relation-lifetime and recovery distinctions.
+
+**Status:** project-state record.

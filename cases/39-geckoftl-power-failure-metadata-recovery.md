@@ -525,3 +525,109 @@ Useful anti-anachronism warning: the authors explicitly formulate `recovery from
 - `US20170249257A1` transcription: <https://uspto.report/patent/app/20170249257>.
 
 The institutional patent record establishes inventors, filing/publication metadata, and the patent's LSM mapping-table abstract. The public transcription is used for paragraph-level recovery locations; claims depending on those locations remain bounded to the published patent application rather than generalized to commercial products.
+
+---
+
+## 2009–2011 prior-art deepening — cached mapping, Flash-resident recovery state, and replay
+
+This bounded deepening fills the chronology between Case 04's 1993–1995 mapped-Flash/FTL floor and the already-grounded 2014 DCR → 2015–2017 GeckoFTL sequence. It does **not** turn Case 39 into a complete FTL history.
+
+### H/P/S — Park et al. 2009 make volatile address-cache loss a power-failure consistency problem
+
+Jung-Wook Park, Seung-Ho Park, Gi-Ho Park, and Shin-Dug Kim, *An integrated mapping table for hybrid FTL with fault-tolerant address cache*, was received **26 December 2008**, accepted **3 March 2009**, and released by IEICE Electronics Express on **10 April 2009**.
+
+The paper's bounded problem statement is directly relevant here: as Flash capacity grows, an entire mapping table may not fit in fast SRAM, so physical-page address information may remain in Flash while a smaller page-address cache accelerates lookup. The authors explicitly say power failure that loses only a few cached addresses can create substantial inconsistency.
+
+Their proposed design stores integrated metadata in a Flash-resident `hybrid map block`; an initial scan of that map block regenerates working metadata tables.
+
+This gives an earlier explicit witness for:
+
+```text
+volatile working address cache
+        !=
+Flash-resident recovery substrate
+        !=
+user payload
+```
+
+The paper is a peer-reviewed proposed design evaluated by simulation. It is **not** evidence that every 2009 SSD used this architecture, and it is not an invention-date claim.
+
+Primary/institutional anchors:
+
+- IEICE / J-STAGE: <https://doi.org/10.1587/elex.6.368>
+- Yonsei institutional record: <https://yonsei.elsevierpure.com/en/publications/an-integrated-mapping-table-for-hybrid-ftl-with-fault-tolerant-ad/>
+
+### H/P — ITRI 2011 separates cached BMT from Flash-resident map/log recovery evidence
+
+US `9,164,887 B2`, *Power-failure recovery device and method for flash memory*, has a **5 December 2011** filing/priority date and names Industrial Technology Research Institute (ITRI) as assignee.
+
+The disclosure describes:
+
+- a `block map table (BMT)` that records logical-block → physical-block mappings;
+- that BMT as temporarily stored in cache;
+- Flash-resident `super map`, `dedicated map`, and BMT records;
+- an `update log` used after abnormal shutdown;
+- a recovery procedure that loads the Flash-resident BMT and replays update-log labels to update the cached BMT.
+
+The disclosure explicitly says the mechanism can recover a BMT lost due to power failure using information registered in the update log.
+
+Thus by the 2011 filing, the following separation is explicit in a primary technical source:
+
+> **normal-operation translation state in volatile cache ≠ nonvolatile relation evidence used to reconstitute it after failure.**
+
+The patent is evidence of a disclosed design, not proof of shipping-product adoption or first invention.
+
+Primary anchor: <https://patents.google.com/patent/US9164887B2/en>.
+
+### H/P/S — the chronology narrows GeckoFTL novelty without erasing its distinct problem
+
+The bounded chronology now reads:
+
+```text
+1993–1995  Case 04
+mapped Flash / FTL relation state can be rebuilt at startup
+        ↓ chronology only
+2009       Park et al.
+power-failure-sensitive address cache + Flash map-block reconstruction
+        ↓ chronology only
+2011       ITRI filing
+cache-resident BMT + Flash maps/log + abnormal-shutdown replay
+        ↓ chronology only
+2014       DCR
+FTL metadata-consistency recovery + checkpoint→crash deterministic replay
+        ↓ chronology only
+2015–2017  GeckoFTL
+metadata scaling + PVB/Logarithmic Gecko + run admissibility + pinned-run dependencies
+```
+
+No arrow claims direct descent. The earlier sources block any statement that GeckoFTL originated the broad ideas `volatile mapping can be lost`, `mapping can be reconstructed from Flash-resident evidence`, or `post-failure replay can rebuild FTL metadata`.
+
+GeckoFTL's bounded contribution remains different: it makes **metadata scale, PVB footprint, Flash-resident validity structures, recovery admissibility of partial runs, and safe reclamation dependencies** central in a page-associative/large-device research design.
+
+### Engineering reconstruction — relation recovery is not payload reconstruction
+
+Across the 2009 and 2011 sources, the failure/recovery path can be represented as:
+
+```text
+payload pages survive in Flash
+        +
+volatile lookup/cache state is lost
+        +
+Flash-resident map/log evidence survives
+        ↓
+scan / load / replay
+        ↓
+working logical→physical relation is reconstructed
+        ↓
+ordinary logical service becomes possible again
+```
+
+The operation being reconstructed is the controller's **resolution/currentness relation**. It cannot manufacture a user page that was never durably programmed or repair a physically corrupt page.
+
+Therefore:
+
+- **payload survival ≠ logical legibility**;
+- **volatile working map ≠ recovery substrate**;
+- **mapping reconstruction ≠ payload reconstruction**;
+- **mapping recovered ≠ payload integrity validated**;
+- **retained recovery evidence ≠ zero restart work**.
