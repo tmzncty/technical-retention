@@ -1,0 +1,50 @@
+name: Fix Synthesis 19 index spacing
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-synthesis19-index.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore section boundary
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('CASE_INDEX.md')
+          text = p.read_text(encoding='utf-8')
+          old = '(`H/P` project-state record)## Synthesis 19 — Log-structured tablet recovery findings'
+          new = '(`H/P` project-state record)\n\n## Synthesis 19 — Log-structured tablet recovery findings'
+          assert old in text
+          text = text.replace(old, new, 1)
+          p.write_text(text.rstrip() + '\n', encoding='utf-8')
+          PY
+          git diff --check
+          grep -F '## Synthesis 19 — Log-structured tablet recovery findings' CASE_INDEX.md >/dev/null
+
+      - name: Commit index correction
+        run: |
+          git config user.name technical-retention-bot
+          git config user.email technical-retention-bot@users.noreply.github.com
+          git add CASE_INDEX.md
+          git diff --cached --check
+          git commit -m 'synthesis19: restore CASE_INDEX section boundary'
+          git push origin HEAD:main
+
+      - name: Remove one-shot workflow
+        if: success()
+        run: |
+          rm .github/workflows/fix-synthesis19-index.yml
+          git add .github/workflows/fix-synthesis19-index.yml
+          git commit -m 'chore: remove Synthesis 19 index-fix workflow'
+          git push origin HEAD:main
