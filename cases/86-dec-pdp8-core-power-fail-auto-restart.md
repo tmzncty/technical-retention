@@ -23,7 +23,7 @@ This is not:
 - a claim that magnetic remanence preserves CPU registers, I/O registers, peripheral mechanical state, timing state, or external-world progress;
 - a claim that DEC invented power-fail detection, automatic restart, or software state save;
 - a claim that the KR01 is a modern checkpoint/restore system in historical vocabulary;
-- a claim that the 1 ms operating interval was specifically capacitor-backed unless a separate DEC power-supply source establishes that physical mechanism;
+- a claim that the **1966 KR01** 1 ms interval used the same capacitor hold-up mechanism later documented for PDP-8/E KP8-E; the later 1971–1974 KP8-E sources now ground filter-capacitor hold-up only for that later option/configuration;
 - a replacement for the core-device engineering in Cases 02 and 70 or in `computing-archaeology`.
 
 The broader magnetic-core engineering history is already routed to [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology), especially its core-memory work. A repository search for this slice found no existing dedicated PDP-8 power-fail/restart treatment there, so only the retention-specific whole-system boundary is developed here.
@@ -158,6 +158,27 @@ The 1970 description explicitly calls out a `shut-down sequence circuit` and a r
 
 It is not used to claim that every circuit detail of KR01, KP8/L, and KP8/I is identical.
 
+### H/P — 1971–1974 KP8-E closes the later PDP-8/E hold-up mechanism without rewriting KR01
+
+A 9 July 1971 DEC engineering specification for `POWER FAIL AND AUTO-RESTART, KP8/E` adds a later PDP-8/E implementation witness. Its overall description says the option protects active-register contents **when properly programmed** and restarts the computer after AC power returns. The specification also separates the lower threshold that sets the Power Low flag / generates the interrupt request from the upper threshold used for restart, gives the programmer one millisecond after Power Low is set, and makes restart independently disableable by the option switch.
+
+The January 1974 *PDP-8/E Maintenance Manual, Volume 2* closes one physical question that the 1966 KR01 handbook left open. In the KP8-E chapter, DEC explicitly says that **filter capacitors in the power supply** guarantee continued operation for one millisecond, enough for the interrupt request to be recognized and the interrupt routine to run. The same chapter again says the power-fail sequence stores PC, AC, MQ, and Link in known memory locations and that restart enters through a configured memory location.
+
+This later source changes the evidence boundary, but only locally:
+
+```text
+1974 PDP-8/E KP8-E: capacitor-backed hold-up is directly documented
+        ≠
+1966 PDP-8 KR01: exact energy-storage implementation established
+```
+
+The later manual therefore permits a stronger engineering reconstruction for KP8-E — stored electrical energy preserves **time to transfer state**, while memory preserves the transferred computational state — without retroactively assigning the same circuit or supply implementation to KR01, KP8/L, or KP8/I.
+
+Primary sources for this deepening:
+
+- DEC, *Engineering Specification: Power Fail and Auto-Restart, KP8/E*, A-SP-KP8-E-1, 9 July 1971, rev. A 16 July 1971: <https://deramp.com/downloads/mfe_archive/011-Digital%20Equipment%20Corporation/02%20PDP-8e/03%20PDP-8e%20Options/KP8-E%20M848%20Power%20Fail%20Detect/01%20KP8-E%20Documentation/KP8-E_PwrFail_EngrDrws_May73.pdf>.
+- DEC, *PDP-8/E Maintenance Manual, Volume 2: Internal Bus Options*, January 1974, Part 4 Chapter 1 `KP8-E Power Fail and Auto-Restart`: <https://bitsavers.computerhistory.org/pdf/dec/pdp8/pdp8e/DEC-8E-HMM2A-D-D_PDP-8e_Maintenance_Manual_Volume_2_Internal_Bus_Options_Jan74.pdf>.
+
 ### H/P — IBM System/360 Model 65 preserves main storage across controlled power sequencing while excluding protection controls
 
 IBM's *System/360 Model 65 Functional Characteristics*, Fourth Edition (September 1968), gives a useful contemporary counterexample to any simple equation between `system reset`, `power off`, and `memory erase`.
@@ -266,7 +287,7 @@ This is a useful retention pattern beyond this machine, but only the DEC-specifi
 
 The brief interval in which logic remains operational is not the saved state. It is a **temporal resource** that permits volatile state to be transferred into core before normal execution becomes impossible.
 
-This is comparable in function to later emergency power-fail work, but the case does not infer a capacitor, battery, or other particular energy-storage implementation from the user handbook alone.
+For the 1966 KR01, the user handbook alone still does not identify the exact energy-storage implementation. The later PDP-8/E KP8-E manual does: its filter capacitors guarantee the documented one-millisecond operating interval. This supports `hold-up energy ≠ retained payload` for KP8-E while preserving the anti-back-projection boundary for KR01.
 
 ### E — state-class migration can be the decisive retention act
 
@@ -465,7 +486,8 @@ This is an interpretation of the engineering relation, not DEC's own philosophic
 | address 0000 is a recovery entry, not a complete saved state | E | reconstruction from DEC restart flow |
 | processor restart does not establish complete peripheral/external-world continuity | E | bounded by Power Clear + 200 ms Teletype rationale + manual-reset warning |
 | KR01 is historically a `checkpoint` system | X | useful modern analogy only; not established as DEC vocabulary |
-| KR01 was capacitor-backed | X | not established by the handbook evidence used here |
+| PDP-8/E KP8-E filter capacitors guarantee the documented 1 ms operating interval | H/P | DEC 1974 Volume 2, KP8-E Chapter 1 |
+| the 1966 KR01 used the same capacitor hold-up implementation | X | later KP8-E evidence cannot be back-projected to the earlier option |
 | all core-memory computers automatically resume after arbitrary power failure | X | explicitly rejected |
 | IBM 7090 directly influenced DEC KR01 | X | no lineage evidence established |
 
@@ -508,7 +530,7 @@ This case is `grounded` for the bounded retention relation because manufacturer-
 
 The case does **not** establish:
 
-- the exact energy-storage/power-supply circuit that physically provides the 1 ms interval;
+- the exact energy-storage/power-supply implementation that provides the 1966 KR01 1 ms interval (the later PDP-8/E KP8-E path is now explicitly grounded to power-supply filter capacitors, but that evidence is not back-projected);
 - survival of every core word under every possible power fault;
 - exactly-once peripheral I/O continuation;
 - full KR01/KP8/L/KP8/I circuit identity;

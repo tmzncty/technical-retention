@@ -1,7 +1,7 @@
-# Grounding Record 86 — DEC PDP-8 Core-Resident Power-Fail Save and Automatic Restart, 1960–1970
+# Grounding Record 86 — DEC PDP-8 Core-Resident Power-Fail Save and Automatic Restart, 1960–1974
 
-**Supports:** [`../cases/86-dec-pdp8-core-power-fail-auto-restart.md`](../cases/86-dec-pdp8-core-power-fail-auto-restart.md)  
-**Status:** `grounded`  
+**Supports:** [`../cases/86-dec-pdp8-core-power-fail-auto-restart.md`](../cases/86-dec-pdp8-core-power-fail-auto-restart.md)
+**Status:** `grounded`
 **Research question:** What primary evidence shows that magnetic-core content survival and whole-computer program continuation were separate retention problems, and how did DEC's PDP-8 KR01 bridge them?
 
 ## Why this slice was chosen
@@ -18,10 +18,10 @@ A repository search found no dedicated PDP-8 power-fail/automatic-restart slice 
 
 ### A — DEC PDP-8 Users Handbook, March 1966
 
-**Source:** Digital Equipment Corporation, *Programmed Data Processor-8 Users Handbook*, F-85, March 1966; revised/reprinted through 1967.  
-**Primary status:** manufacturer-primary / contemporary.  
-**Direct scan:** <https://bitsavers.org/pdf/dec/pdp8/handbooks/1966_PDP8_UsersHandbook.pdf>  
-**Searchable inspection aid:** <https://manuals.plus/m/7bf964f156fe2d7a4c9fd352acca0dc596ead2350a42fdaa517152d5d97e9568>  
+**Source:** Digital Equipment Corporation, *Programmed Data Processor-8 Users Handbook*, F-85, March 1966; revised/reprinted through 1967.
+**Primary status:** manufacturer-primary / contemporary.
+**Direct scan:** <https://bitsavers.org/pdf/dec/pdp8/handbooks/1966_PDP8_UsersHandbook.pdf>
+**Searchable inspection aid:** <https://manuals.plus/m/7bf964f156fe2d7a4c9fd352acca0dc596ead2350a42fdaa517152d5d97e9568>
 **Location:** Chapter 9, `AUTOMATIC RESTART TYPE KR01`, around printed p. 48 and the following power-fail sequence.
 
 #### Directly supported facts
@@ -56,9 +56,9 @@ The case therefore uses `brief remaining reliable-operation interval`, not `capa
 
 ### B — DEC PDP-8/L Users Handbook, 1968
 
-**Source:** Digital Equipment Corporation, *PDP-8/L Users Handbook*, 1968.  
-**Primary status:** manufacturer-primary / contemporary.  
-**Public scan:** <https://commons.princeton.edu/motorcycledesign/wp-content/uploads/sites/70/2018/07/DEC-PDP-8L-Users-Handbook-1968.pdf>  
+**Source:** Digital Equipment Corporation, *PDP-8/L Users Handbook*, 1968.
+**Primary status:** manufacturer-primary / contemporary.
+**Public scan:** <https://commons.princeton.edu/motorcycledesign/wp-content/uploads/sites/70/2018/07/DEC-PDP-8L-Users-Handbook-1968.pdf>
 **Location:** KP8/L power-failure / automatic-restart option, around printed p. 48.
 
 #### Directly supported facts
@@ -78,9 +78,9 @@ This is used as a **later same-family witness**, not as evidence that all circui
 
 ### C — DEC Small Computer Handbook, 1970
 
-**Source:** Digital Equipment Corporation, *digital Small Computer Handbook*, 1970 edition.  
-**Primary status:** manufacturer-primary / contemporary.  
-**Direct scan:** <https://bitsavers.org/pdf/dec/pdp8/handbooks/SmallComputerHandbook_1970.pdf>  
+**Source:** Digital Equipment Corporation, *digital Small Computer Handbook*, 1970 edition.
+**Primary status:** manufacturer-primary / contemporary.
+**Direct scan:** <https://bitsavers.org/pdf/dec/pdp8/handbooks/SmallComputerHandbook_1970.pdf>
 **Location:** Section 6-2, `POWER FAILURE DETECTION AND RESTART KP8/I [KP8/L]`, around printed p. 56.
 
 #### Directly supported facts
@@ -99,9 +99,9 @@ This witness is useful because it makes the **detection → shutdown/save opport
 
 ### D — IBM 7090 Operator's Guide, early 1960s
 
-**Source:** IBM, *IBM 7090 Data Processing System Operator's Guide*, early-1960s edition/revision.  
-**Primary status:** manufacturer-primary / contemporary.  
-**Searchable public copy:** <https://manualzz.com/doc/19740167/ibm-7090-data-processing-system-operator%E2%80%99s-guide>  
+**Source:** IBM, *IBM 7090 Data Processing System Operator's Guide*, early-1960s edition/revision.
+**Primary status:** manufacturer-primary / contemporary.
+**Searchable public copy:** <https://manualzz.com/doc/19740167/ibm-7090-data-processing-system-operator%E2%80%99s-guide>
 **Location:** `IBM 7151 Console Control`, panel keys **26 `Clear Key`** and **27 `Reset Key`**.
 
 #### Directly supported facts
@@ -128,10 +128,10 @@ It is therefore categorized as **prior-art/comparative boundary evidence**, not 
 
 ### E — IBM System/360 Model 65 Functional Characteristics, September 1968
 
-**Source:** IBM, *IBM System/360 Model 65 Functional Characteristics*, Fourth Edition, September 1968, Form A22-6884-3.  
-**Primary status:** manufacturer-primary / contemporary.  
-**Direct scan:** <https://www.bitsavers.org/pdf/ibm/360/functional_characteristics/GA22-6884-3_System_360_Model_65_Functional_Characteristics_196809.pdf>  
-**Searchable inspection aid:** <https://manualzilla.com/doc/5665606/ibm-360-65---bitsavers.org>  
+**Source:** IBM, *IBM System/360 Model 65 Functional Characteristics*, Fourth Edition, September 1968, Form A22-6884-3.
+**Primary status:** manufacturer-primary / contemporary.
+**Direct scan:** <https://www.bitsavers.org/pdf/ibm/360/functional_characteristics/GA22-6884-3_System_360_Model_65_Functional_Characteristics_196809.pdf>
+**Searchable inspection aid:** <https://manualzilla.com/doc/5665606/ibm-360-65---bitsavers.org>
 **Location:** `System Control Panel`, printed pp. 13–14, `POWER ON Pushbutton` and `POWER OFF Pushbutton`.
 
 #### Directly supported facts
@@ -166,8 +166,8 @@ The source does **not** establish:
 
 ### F — Smithsonian publication artifact metadata
 
-**Source:** Smithsonian National Museum of American History, catalog record for DEC *Programmed Data Processor-8 Users Handbook*.  
-**Status:** institutional provenance / secondary metadata.  
+**Source:** Smithsonian National Museum of American History, catalog record for DEC *Programmed Data Processor-8 Users Handbook*.
+**Status:** institutional provenance / secondary metadata.
 **URL:** <https://americanhistory.si.edu/collections/object/nmah_692491>
 
 Used only to corroborate the existence/provenance of the 1966 DEC publication. Mechanism claims remain anchored in DEC's manual itself.
@@ -179,6 +179,59 @@ Used only to corroborate the existence/provenance of the 1966 DEC publication. M
 **Source:** [`tmzncty/computing-archaeology/docs/memory/why-core-memory-was-worth-weaving.md`](https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md).
 
 **Reuse boundary:** broader core-memory physics, Whirlwind engineering, manufacturing labor, and historical constraint analysis belong there. This slice reuses only the already-grounded premise that ferrite-core main memory provides a power-independent remanent state at the element level and then studies the separate program-restart relation.
+
+---
+
+### H — DEC KP8/E Engineering Specification, 9 July 1971 (rev. A 16 July 1971)
+
+**Source:** Digital Equipment Corporation, *Engineering Specification: Power Fail and Auto-Restart, KP8/E*, A-SP-KP8-E-1, dated 9 July 1971, revision A 16 July 1971.
+**Primary status:** manufacturer-primary / contemporary engineering specification.
+**Surviving scan:** <https://deramp.com/downloads/mfe_archive/011-Digital%20Equipment%20Corporation/02%20PDP-8e/03%20PDP-8e%20Options/KP8-E%20M848%20Power%20Fail%20Detect/01%20KP8-E%20Documentation/KP8-E_PwrFail_EngrDrws_May73.pdf>.
+
+#### Directly supported facts
+
+The specification states that:
+
+1. KP8/E protects active-register contents **when properly programmed** and restarts the computer when AC power is restored;
+2. a lower threshold sets the Power Low flag and generates the interrupt request, while a separate upper threshold is used for restart;
+3. `SPL` 6102 should be first in the interrupt-service skip chain;
+4. after Power Low is set, the programmer has **one millisecond** before supply levels fall below operating levels;
+5. the option's enable/disable switch can prevent automatic restart after power returns.
+
+#### Boundary
+
+This is a later PDP-8/E implementation witness. It does not establish that every earlier PDP-8-family option used identical thresholds, circuitry, or restart logic.
+
+---
+
+### I — DEC PDP-8/E Maintenance Manual, Volume 2, January 1974
+
+**Source:** Digital Equipment Corporation, *PDP-8/E Maintenance Manual, Volume 2: Internal Bus Options*, January 1974, Part 4 Chapter 1, `KP8-E Power Fail and Auto-Restart`.
+**Primary status:** manufacturer-primary / contemporary maintenance manual.
+**Direct scan:** <https://bitsavers.computerhistory.org/pdf/dec/pdp8/pdp8e/DEC-8E-HMM2A-D-D_PDP-8e_Maintenance_Manual_Volume_2_Internal_Bus_Options_Jan74.pdf>.
+
+#### Directly supported facts
+
+The chapter states that:
+
+1. KP8-E monitors the primary-power condition through the machine supply;
+2. when line voltage falls below the lower condition, `UP` is negated, `PWR LOW` is set, and the OMNIBUS interrupt request is asserted;
+3. **filter capacitors in the power supply guarantee continued operation for 1 ms**, sufficient for interrupt recognition and the program-interrupt routine;
+4. because the interval is bounded, `SPL` should be the first status check;
+5. the shutdown routine stores PC, AC, MQ, and Link in known memory locations before ordinary operation stops.
+
+#### Why this source changes the case
+
+Earlier Case-86 evidence deliberately refused to infer the physical source of the 1966 KR01 one-millisecond interval. The 1974 KP8-E manual now directly grounds a capacitor-backed hold-up path for the later PDP-8/E implementation.
+
+The safe historical statement is therefore:
+
+```text
+later KP8-E capacitor hold-up = directly documented
+1966 KR01 capacitor hold-up = still unproven by the inspected KR01 source
+```
+
+This is a source-deepening correction, not a reason to create a second PDP-8 power-fail case.
 
 ---
 
@@ -204,7 +257,8 @@ Used only to corroborate the existence/provenance of the 1966 DEC publication. M
 | restart entry ≠ restored runnable context | DEC sources | E | strong reconstruction | address 0000 only initiates restore |
 | CPU continuation ≠ complete peripheral/external continuity | DEC 1966 | E | strong reconstruction | supported by Power Clear / Teletype / manual-reset warnings |
 | KR01 is a modern checkpoint/restore system | none | A/X | rejected as historical terminology | functional analogy only |
-| KR01 uses capacitor-backed hold-up | inspected source does not say | X | unsupported | do not infer physical implementation |
+| PDP-8/E KP8-E filter capacitors guarantee the 1 ms continued-operation interval | DEC 1974 Volume 2, KP8-E Ch. 1 | H/P | strong | later KP8-E implementation only |
+| 1966 KR01 uses the same capacitor hold-up implementation | later KP8-E evidence only | X | unsupported back-projection | exact KR01 supply mechanism remains open |
 
 ---
 
@@ -220,7 +274,7 @@ The defensible historical claim is narrower:
 
 > **By March 1966, DEC documented a PDP-8 automatic-restart option in which power-failure detection provided a bounded interval for software to copy active processor state into core, and restored power invoked a core-resident restore path before the interrupted program continued.**
 
-The 1968/1970 DEC witnesses show that this relation persisted in the later PDP-8 family.
+The 1968/1970 DEC witnesses show that this relation persisted in the later PDP-8 family. The 1971/1974 KP8-E sources then deepen the later implementation by directly identifying a one-millisecond programming budget and, in the maintenance manual, the filter-capacitor hold-up that sustains it. They do **not** move the 1966 historical floor or justify back-projecting the later power-supply implementation into KR01.
 
 ---
 
