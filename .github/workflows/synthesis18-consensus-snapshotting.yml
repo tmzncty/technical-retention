@@ -1,0 +1,50 @@
+name: Integrate Synthesis 18 consensus snapshotting
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/synthesis18-consensus-snapshotting.yml'
+      - '.github/scripts/integrate_synthesis18_consensus_snapshotting.py'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fast-forward authoritative main
+        run: git pull --ff-only origin main
+
+      - name: Integrate bounded synthesis slice
+        run: python .github/scripts/integrate_synthesis18_consensus_snapshotting.py
+
+      - name: Validate research tree
+        run: |
+          git diff --check
+          test -f docs/SYNTHESIS_18_CONSENSUS_SNAPSHOT_CONTINUATION.md
+          grep -Fq 'Synthesis 18 — Consensus Snapshotting: History Replacement, Continuation Metadata, and State-Transfer Repair' docs/SYNTHESIS_18_CONSENSUS_SNAPSHOT_CONTINUATION.md
+          grep -Fq 'SYNTHESIS_18_CONSENSUS_SNAPSHOT_CONTINUATION.md' README.md
+          grep -Fq '[x] In consensus snapshotting' ROADMAP.md
+          grep -Fq '2093 — committed command history ≠ applied state' CASE_INDEX.md
+          grep -Fq '2108 — related-repository boundary' CASE_INDEX.md
+
+      - name: Commit and push canonical research
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/SYNTHESIS_18_CONSENSUS_SNAPSHOT_CONTINUATION.md README.md ROADMAP.md CASE_INDEX.md
+          git diff --cached --check
+          git commit -m 'synthesis18: separate consensus-snapshot retention layers'
+          git push origin HEAD:main
+
+      - name: Remove one-shot integration infrastructure
+        run: |
+          git rm .github/scripts/integrate_synthesis18_consensus_snapshotting.py .github/workflows/synthesis18-consensus-snapshotting.yml
+          git commit -m 'chore: remove Synthesis 18 integration helper'
+          git push origin HEAD:main
