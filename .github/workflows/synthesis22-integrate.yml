@@ -23,6 +23,17 @@ jobs:
         shell: bash
         run: |
           rm tools/integrate_synthesis22.py .github/workflows/synthesis22-integrate.yml
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in [
+              'README.md',
+              'ROADMAP.md',
+              'CASE_INDEX.md',
+              'docs/SYNTHESIS_22_ERASE_INVALIDATION_SANITIZATION_VERIFICATION.md',
+          ]:
+              p = Path(name)
+              p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
           git diff --check
           test -f docs/SYNTHESIS_22_ERASE_INVALIDATION_SANITIZATION_VERIFICATION.md
           grep -q 'SYNTHESIS_22_ERASE_INVALIDATION_SANITIZATION_VERIFICATION.md' README.md
