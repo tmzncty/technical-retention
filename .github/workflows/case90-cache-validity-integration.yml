@@ -1,0 +1,49 @@
+name: Integrate Case 90 cache validity
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/case90-cache-validity-integration.yml'
+      - '.github/scripts/integrate_case90_cache_validity.py'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fast-forward authoritative main
+        run: git pull --ff-only origin main
+
+      - name: Integrate bounded research slice
+        run: python .github/scripts/integrate_case90_cache_validity.py
+
+      - name: Validate research tree
+        run: |
+          git diff --check
+          grep -Fq 'Post-0.11 validation and evolution — 2018–2019' cases/90-apache-kafka-leader-epoch-safe-truncation.md
+          grep -Fq 'P10 — Apache Kafka JIRA KAFKA-7984' evidence/90-kafka-2016-2017-leader-epoch-truncation-grounding.md
+          grep -Fq 'metadata presence ≠ metadata admissibility' ROADMAP.md
+          grep -Fq '2063 — checkpoint presence ≠ checkpoint completeness' CASE_INDEX.md
+          grep -Fq '2076 — related-repository boundary' CASE_INDEX.md
+
+      - name: Commit and push canonical research
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add cases/90-apache-kafka-leader-epoch-safe-truncation.md evidence/90-kafka-2016-2017-leader-epoch-truncation-grounding.md ROADMAP.md CASE_INDEX.md
+          git diff --cached --check
+          git commit -m 'case90: deepen leader-epoch cache validity history'
+          git push origin HEAD:main
+
+      - name: Remove one-shot integration infrastructure
+        run: |
+          git rm .github/scripts/integrate_case90_cache_validity.py .github/workflows/case90-cache-validity-integration.yml
+          git commit -m 'chore: remove Case 90 cache-validity integration helper'
+          git push origin HEAD:main
