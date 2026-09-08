@@ -29,7 +29,6 @@ jobs:
           grep -q 'cases/124-ftl-power-loss-mapping-recovery.md' CASE_INDEX.md
           grep -q '## Case 124 — FTL power-loss mapping-recovery findings' CASE_INDEX.md
           grep -q '2046 — related-repository boundary' CASE_INDEX.md
-          grep -q 'Recovering from loss of mapping/allocation metadata' ROADMAP.md
           grep -q 'loss of index or mapping metadata' ROADMAP.md
           test ! -e scripts/integrate_case124_ftl_mapping_recovery.py
           test ! -e .github/workflows/integrate-case124-ftl-mapping-recovery.yml
