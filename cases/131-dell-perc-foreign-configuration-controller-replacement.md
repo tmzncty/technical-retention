@@ -4,8 +4,8 @@
 
 ## Scope
 
-- **Object / system:** Dell PowerEdge RAID Controller (PERC), bounded historically by PERC 6/i firmware released **20 November 2007** and PERC 6/E firmware released **6 December 2011**, with later Dell management documentation used only as continuity / operational witnesses.
-- **Retention question:** what array-defining state can remain on the member disks when the controller's current configuration disappears or no longer admits those disks, and what separate controller-local state can still prevent transparent recovery?
+- **Object / system:** Dell PowerEdge RAID Controller (PERC), bounded historically by PERC 6/i firmware released **20 November 2007**, the PERC H700/H800 documentation set revised **March 2011**, and PERC 6/E firmware released **6 December 2011**, with later Dell management documentation used only as continuity / operational witnesses.
+- **Retention question:** what array-defining state can remain on the member disks when the controller's current configuration disappears or no longer admits those disks, and under what bounded hardware design can pending controller-cache state itself survive a controller-card failure and move to a replacement controller?
 - **Roadmap role:** advances `controller failure` at the RAID configuration / admissibility layer.
 - **Related-repository boundary:** a fresh search of `tmzncty/computing-archaeology` found no dedicated PERC foreign-configuration / controller-replacement case to reuse. Broad RAID-controller history, MegaRAID genealogy, NVRAM-controller architecture, and vendor-family archaeology belong there if developed.
 
@@ -62,6 +62,26 @@ This blocks a simplistic model in which "the disks carry the config" means "disk
 > **disk-resident configuration survival ≠ arbitrary hot-migration safety.**
 
 There are still transition states whose interruption can make the retained configuration inadmissible or unusable.
+
+### H/P — March 2011 PERC H800 makes a transportable failed-controller cache path explicit
+
+Dell's _PERC H700 and H800 Technical Guide_, Revision 3 (**March 2011**), distinguishes the H800 from the H700 at the cache-carrier layer. The H800 cache options include a **512 MB transportable battery backup unit (TBBU)** and transportable 512 MB / 1 GB nonvolatile-cache options. Section 4.5.7.1 defines the TBBU as a cache-memory module with an integrated battery pack that can be transported into a new controller. Section 4.5.1 separately states that the nonvolatile-cache option uses battery energy to transfer cache contents to flash during a power cycle, with the guide specifying retention for up to ten years.
+
+The Dell-authored _PERC H700 and H800 User's Guide_, March 2011 Rev. A02, makes the controller-failure use case explicit. Its `Cache Data Recovery` section says that after a **PERC H800 card failure** the complete TBBU/TNVC module can be moved to a new PERC H800 without putting preserved cache data at risk. Its transfer procedure further constrains the path: the replacement is another PERC H800 with no prior configuration, the original storage enclosures are reconnected, and the replacement controller then flushes the retained cache to the virtual disks.
+
+The current Dell H800 support page still indexes this Dell User's Guide; the exact March-2011 page text used here survives on third-party mirrors because Dell's present support front end did not yield a stable directly fetchable copy during this research round. The controller-family design claim does **not** depend solely on that mirror: Dell's own still-hosted March-2011 Technical Guide independently establishes the transportable H800 cache module and the cache-to-flash power-loss path.
+
+This changes the earlier open boundary in one important but narrow way:
+
+> **controller card failure ≠ mandatory loss of controller-local dirty state, if the retained cache carrier itself survives and the documented H800 transplant conditions are met.**
+
+It also requires a finer location distinction:
+
+> **controller-local state ≠ state physically inseparable from the controller card.**
+
+For the H800 TBBU/TNVC path, pending writes are controller-local in the protocol/ownership sense but can inhabit a removable state carrier that outlives the failed controller card.
+
+The evidence does **not** license a universal PERC claim. It does not show that every H700/H800 cache option is transportable, that a destroyed/corrupt TBBU/TNVC can be recovered, that arbitrary later PERC generations accept the module, or that cache already committed to member disks is still only cache-resident.
 
 ### H/P — the 2011 PERC 6/E release separates foreign configuration from preserved dirty write cache
 
@@ -231,13 +251,17 @@ does **not** imply:
 
 A replacement path still depends on compatible interpretation, sufficient member disks, acceptable array state, and — for encrypted configurations — any required key authority.
 
-Most importantly, the 2011 preserved-cache evidence belongs to the **same controller retaining cache across missing-disk episodes**. The inspected sources do not prove that dirty cache trapped on a failed old controller is magically transferred into a replacement controller.
+The PERC 6/E preserved-cache evidence still belongs to the **same controller retaining cache across missing-disk episodes** and, by itself, does not prove failed-card cache transfer. The March-2011 H800 material supplies a separate bounded counterexample: if the TBBU/TNVC survives, Dell documents moving that cache carrier to a replacement H800 and then flushing the retained cache to the virtual disks.
 
-Therefore:
+Therefore the stronger boundary is now:
 
-> **foreign-configuration recovery after controller replacement ≠ recovery of dirty cache from the failed controller.**
+> **foreign-configuration recovery after controller replacement ≠ failed-controller dirty-cache recovery by itself.**
 
-That failed-controller dirty-cache question remains open.
+but also:
+
+> **failed controller card ≠ failed retained-cache carrier.**
+
+The H800 path composes two independently retained state transports: member disks can carry array configuration/payload embodiments, while TBBU/TNVC can carry pending write state. Recovery completeness can depend on both. Failed or corrupt cache modules, nontransportable controller designs, cross-generation compatibility, and independent fault injection remain open.
 
 ---
 
@@ -389,6 +413,14 @@ These modes occur at different layers and should not be reported as one generic 
 
 2. Dell, **PERC 6/E Adapter Firmware v6.1.1-0047, A08**, released 06 Dec 2011. `Fixes & Enhancements` and `Important Information` document preserved uncommitted write cache and its flush after disk return plus foreign import.  
    https://www.dell.com/support/home/en-us/drivers/driversdetails?driverid=tp43x
+
+### PERC H800 March-2011 cache-portability deepening
+
+3. Dell, **Dell PERC H700 and H800 Technical Guide**, Revision 3, March 2011. Dell-hosted primary source. H800 overview lists transportable TBBU/TNVC cache options; §4.5.1 distinguishes battery-held cache from NV-cache transfer to flash; §4.5.7.1 defines the TBBU as a cache module that can move with its battery to a new controller.
+   https://i.dell.com/sites/csdocuments/shared-content_data-sheets_documents/en/perc-technical-guidebook.pdf
+
+4. Dell, **PowerEdge RAID Controller H700 and H800 User's Guide**, March 2011 Rev. A02, especially `Cache Data Recovery` (p. 37) and `Transferring a TBBU or TNVC Between PERC H800 Cards` (p. 63). Dell's current H800 support page continues to index the User's Guide; exact page text was checked against a surviving Dell-authored mirror.
+   https://www.dell.com/support/product-details/en-us/product/poweredge-rc-h800/resources/manuals
 
 ### Later Dell operational / continuity witnesses
 
