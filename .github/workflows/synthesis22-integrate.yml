@@ -1,0 +1,45 @@
+name: Integrate Synthesis 22
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/integrate_synthesis22.py'
+      - '.github/workflows/synthesis22-integrate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply bounded synthesis integration
+        run: python3 tools/integrate_synthesis22.py
+      - name: Validate and commit canonical research
+        shell: bash
+        run: |
+          rm tools/integrate_synthesis22.py .github/workflows/synthesis22-integrate.yml
+          git diff --check
+          test -f docs/SYNTHESIS_22_ERASE_INVALIDATION_SANITIZATION_VERIFICATION.md
+          grep -q 'SYNTHESIS_22_ERASE_INVALIDATION_SANITIZATION_VERIFICATION.md' README.md
+          grep -q 'physical erase — \*\*substantially advanced at the floating-gate / Flash / SSD layers' ROADMAP.md
+          grep -q '\*\*2314 — related-repository boundary:' CASE_INDEX.md
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('CASE_INDEX.md').read_text(encoding='utf-8')
+          nums = [int(x) for x in re.findall(r'^- \*\*(\d+) —', text, flags=re.M)]
+          assert max(nums) == 2314, max(nums)
+          for n in range(2297, 2315):
+              assert nums.count(n) == 1, (n, nums.count(n))
+          PY
+          git config user.name 'chatgpt-research-agent'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A -- README.md ROADMAP.md CASE_INDEX.md docs/SYNTHESIS_22_ERASE_INVALIDATION_SANITIZATION_VERIFICATION.md tools/integrate_synthesis22.py .github/workflows/synthesis22-integrate.yml
+          git diff --cached --check
+          git commit -m 'synthesis22: separate erase and sanitization layers'
+          git push
