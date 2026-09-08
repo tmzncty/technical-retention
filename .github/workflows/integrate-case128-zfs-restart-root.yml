@@ -20,17 +20,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - name: Adapt helper to current compact README navigation
+      - name: Adapt helper to current compact navigation wording
         run: |
           python - <<'PY'
           from pathlib import Path
           p = Path('scripts/integrate_case128_zfs_restart_root.py')
           s = p.read_text(encoding='utf-8')
+
           old = """    if len(positions) != 1:\n        raise SystemExit(f'Expected exactly one README Case 127 row, found {len(positions)}')\n    insert_at = positions[0] + 1\n"""
           new = """    if not positions:\n        positions = [i for i, line in enumerate(lines) if '(cases/100-zfs-dirty-time-log-selective-resilver.md)' in line]\n    if len(positions) != 1:\n        raise SystemExit(f'Expected one README insertion anchor (Case 127 or Case 100), found {len(positions)}')\n    insert_at = positions[0] + 1\n"""
           if old not in s:
               raise SystemExit('README anchor patch target not found in helper')
-          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          s = s.replace(old, new, 1)
+
+          old_roadmap = "positions = [i for i, line in enumerate(lines) if line.startswith('- [x]') and 'Case 127' in line]"
+          new_roadmap = "positions = [i for i, line in enumerate(lines) if line.startswith('- [x]') and '(cases/127-' in line]"
+          if old_roadmap not in s:
+              raise SystemExit('ROADMAP anchor patch target not found in helper')
+          s = s.replace(old_roadmap, new_roadmap, 1)
+
+          p.write_text(s, encoding='utf-8')
           PY
       - name: Integrate Case 128 research and navigation
         run: python scripts/integrate_case128_zfs_restart_root.py
