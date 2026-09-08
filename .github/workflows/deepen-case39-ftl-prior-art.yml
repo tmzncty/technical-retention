@@ -1,0 +1,44 @@
+name: Deepen Case 39 FTL prior art
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/deepen-case39-ftl-prior-art.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Configure git
+        run: |
+          git config user.name 'technical-retention automation'
+          git config user.email 'technical-retention-automation@users.noreply.github.com'
+      - name: Integrate bounded Case 39 prior-art deepening
+        run: python3 scripts/deepen_case39_ftl_prior_art.py
+      - name: Validate and commit
+        run: |
+          test -f cases/39-geckoftl-power-failure-metadata-recovery.md
+          test -f evidence/39-geckoftl-2015-2017-metadata-recovery-grounding.md
+          grep -q '2009–2011 prior-art deepening' cases/39-geckoftl-power-failure-metadata-recovery.md
+          grep -q '2009–2011 intermediate prior-art bridge' evidence/39-geckoftl-2015-2017-metadata-recovery-grounding.md
+          grep -q '### Case 39 deepening — 2009–2011 FTL mapping-recovery prior-art bridge' CASE_INDEX.md
+          grep -q '2046 — related-repository boundary' CASE_INDEX.md
+          grep -q 'substantially advanced by grounded Case 39' ROADMAP.md
+          test ! -e cases/124-ftl-power-loss-mapping-recovery.md
+          test ! -e evidence/124-ftl-1995-2014-mapping-recovery-grounding.md
+          ! grep -q 'cases/124-ftl-power-loss-mapping-recovery.md' CASE_INDEX.md
+          test ! -e scripts/deepen_case39_ftl_prior_art.py
+          test ! -e .github/workflows/deepen-case39-ftl-prior-art.yml
+          git diff --check
+          git add -A
+          git diff --cached --check
+          git diff --cached --exit-code && { echo 'No changes to commit'; exit 1; } || true
+          git commit -m 'case39: deepen FTL mapping-recovery prior art'
+          git push origin HEAD:main
