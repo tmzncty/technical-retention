@@ -2,9 +2,9 @@
 
 ## Scope
 
-- **Bounded system:** Apache Cassandra 3.x operational semantics, using the Cassandra 3.11 documentation/branch as the principal inspected artifact and the 3.x `NEWS.txt` record for the repaired-tombstone option.
+- **Bounded system:** Apache Cassandra 3.x operational semantics remain the principal behavior layer, with bounded historical floors from Apache Incubator Cassandra in 2009 and Cassandra 1.2.19 in 2014; these older artifacts are used only where they directly expose deletion-marker retention and reclamation policy.
 - **Bounded mechanism:** deletion tombstones, `gc_grace_seconds`, compaction-time tombstone purging, repair, hinted handoff, and the `only_purge_repaired_tombstones` safety option.
-- **Primary source base:** Apache Cassandra 3.11 official documentation, Apache Cassandra source/tests on the `cassandra-3.11` branch, and Apache Cassandra `NEWS.txt`.
+- **Primary source base:** Apache Cassandra 3.11 official documentation; Apache Cassandra source/tests and release records; exact Apache git history for the 17 April 2009 GC-grace configurability change and the 11 August 2015 repaired-tombstone purge option; plus bounded 1.2.19 implementation evidence.
 - **Research question:** why can a distributed system need to retain evidence of deletion, and why can forgetting that evidence too early cause older positive data to become current again?
 
 This is **not** a general history of Cassandra, LSM trees, eventual consistency, anti-entropy, or distributed deletion. It does not claim Cassandra invented tombstones, hinted handoff, repair, or grace-period reclamation.
@@ -120,6 +120,84 @@ They must not be treated as one timer or one guarantee.
 
 ---
 
+
+## Historical deepening — Apache Incubator Cassandra 2009 grace-policy floor
+
+This earlier slice sharpens the chronology of a mechanism already present in the canonical case. It does **not** identify the invention date of Cassandra tombstones or grace-period reclamation.
+
+### H/P — by 17 April 2009, GC grace was an explicit configurable propagation/failure budget
+
+Apache Incubator Cassandra commit [`fa1f80f40da0bb629c40bf09791c6c90f2608774`](https://github.com/apache/cassandra/commit/fa1f80f40da0bb629c40bf09791c6c90f2608774), committed on **17 April 2009**, changed a fixed `GC_GRACE_IN_SECONDS` into a configuration value. The added `storage-conf.xml` comment says the interval is the time to wait before garbage-collecting deletion markers and instructs operators to choose a value large enough that they are confident the deletion marker will have propagated to all replicas by then, even in the face of hardware failures. The shipped example/default is `864000` seconds, ten days.
+
+That wording is direct historical implementation evidence for the intended operational relation:
+
+```text
+retained deletion marker
+    + chosen failure/propagation interval
+    -> later eligibility for garbage collection
+```
+
+It is **not** evidence that the timer itself performs propagation or proves convergence.
+
+### H/P — the 2009 configurability commit is not the origin of GC grace
+
+The same diff removes an already-existing fixed constant:
+
+```text
+GC_GRACE_IN_SECONDS = 10 * 24 * 3600
+```
+
+and its unchanged context already says deleted columns, supercolumns, and column families must be preserved until they have been deleted for at least that grace interval. Therefore the inspected trunk already had a ten-day preservation rule before this customization commit.
+
+The safe historical claim is only:
+
+> **17 April 2009 is a public implementation floor for configurable Cassandra GC grace and its explicit propagation/hardware-failure rationale; the grace mechanism itself is older than that change.**
+
+This blocks the novelty error `configuration introduction date = mechanism invention date`.
+
+### E — `gc_grace` is a coordination budget, not a convergence certificate
+
+The source comment delegates a judgment to the operator: choose enough time to be confident the deletion marker will propagate through expected failures. That makes the interval a **retention policy budget** around a distributed maintenance process, not evidence that the maintenance process has actually completed.
+
+Project reconstruction:
+
+```text
+elapsed grace
+    != proof all replicas received the delete
+
+configured failure envelope
+    != observed repair completion
+```
+
+The distinction explains why a ten-day default cannot be universalized into a timeless safe-forgetting theorem. Outage duration, repair practice, topology, operational failures, and later implementation controls can all change whether the retained negative evidence has actually completed its job.
+
+### H/P — 2015 adds an optional repair-qualified retirement rule
+
+Apache Cassandra commit [`6f0c12f3a4668a5dcae162969843f02498ee7e6d`](https://github.com/apache/cassandra/commit/6f0c12f3a4668a5dcae162969843f02498ee7e6d), committed on **11 August 2015** for **CASSANDRA-6434**, adds `only_purge_repaired_tombstones`. Its release-note text explicitly says the option exists to avoid resurrection if repair has not run within `gc_grace_seconds`, while warning that long periods without repair can retain tombstones and create other problems.
+
+This is a later strengthening of the reclamation predicate:
+
+```text
+age-qualified tombstone
+    + optional repaired-state qualification
+    -> narrower purge authority
+```
+
+It must not be projected backward into the 2009 implementation or Cassandra 1.2.19. Conversely, the later option makes visible a distinction that the project should keep explicit: **age eligibility and repair evidence are different kinds of state**.
+
+### E/A — relation to Case 48 without mechanism collapse
+
+Case 48 tracks Cassandra incremental-repair state as its own retained control relation. Case 41 consumes repaired/unrepaired status only insofar as the 2015 option can use it to qualify tombstone reclamation. Thus:
+
+```text
+tombstone age
+    != repairedness state
+    != proof of cluster-wide convergence
+```
+
+This is a bounded cross-case engineering relation, not a claim that all repair metadata and tombstone metadata are one mechanism.
+
+---
 
 ## Historical deepening — Cassandra 1.2.19, local purge ordering, and pre-Cassandra prior art
 

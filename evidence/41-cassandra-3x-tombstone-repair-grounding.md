@@ -170,6 +170,41 @@ The paper states that SSTables produced by non-major compactions can contain `sp
 
 **Boundary:** prior function is not implementation identity and does not prove a direct Bigtable → Cassandra genealogy.
 
+### P12 — Apache Incubator Cassandra GC-grace configurability commit, 17 April 2009
+
+**Commit:** <https://github.com/apache/cassandra/commit/fa1f80f40da0bb629c40bf09791c6c90f2608774>
+
+**Exact artifact:** Apache Incubator Cassandra trunk commit `fa1f80f40da0bb629c40bf09791c6c90f2608774`, committed 2009-04-17 20:08:10 UTC, message `make GC_GRACE_IN_SECONDS customizable in storage.conf.`
+
+Directly inspected diff evidence:
+
+- `conf/storage-conf.xml` adds `GCGraceSeconds = 864000` and describes it as the time to wait before garbage-collecting deletion markers;
+- the added operator comment says the value should be large enough that the deletion marker is expected to have propagated to **all replicas**, even in the face of hardware failures;
+- `DatabaseDescriptor.java` adds the configurable value with the same ten-day default;
+- `ColumnFamilyStore.java` stops using a fixed `GC_GRACE_IN_SECONDS` constant;
+- the diff context itself shows that a fixed ten-day grace and the requirement to preserve deleted columns/supercolumns/column families already existed before the customization change.
+
+**Evidence use:** strong primary implementation floor for the explicit `retention interval ↔ propagation/failure envelope` rationale and for configurability by April 2009.
+
+**Boundary:** this commit is not the origin of Cassandra tombstones or GC grace. It proves the mechanism was already present and that configurability/rationale were public by this date.
+
+### P13 — Apache Cassandra repaired-tombstone purge option commit, 11 August 2015
+
+**Commit:** <https://github.com/apache/cassandra/commit/6f0c12f3a4668a5dcae162969843f02498ee7e6d>
+
+**Exact artifact:** Apache Cassandra commit `6f0c12f3a4668a5dcae162969843f02498ee7e6d`, committed 2015-08-11 06:25:55 UTC, message `Add option to only purge tombstones from repaired sstables`, for CASSANDRA-6434.
+
+Directly inspected diff evidence:
+
+- the 3.0.0-beta1 release notes add an option to not purge unrepaired tombstones;
+- the rationale explicitly names the risk of data being resurrected when repair has not run within `gc_grace_seconds`;
+- the same note warns that failing to run repair for a long time can retain tombstones and cause other problems;
+- source changes add `only_purge_repaired_tombstones` and track unrepaired tombstone deletion time in purge-related read/compaction paths.
+
+**Evidence use:** strong project-history evidence for the later transition from age-only eligibility toward optional repair-qualified retirement authority.
+
+**Boundary:** this later option is not silently attributed to 2009-era Cassandra or 1.2.19, and its presence does not prove cluster-wide convergence by itself.
+
 ### Cross-version claim controls added by the deepening
 
 | Claim | Type | Grounding | Boundary |
@@ -193,6 +228,9 @@ The paper states that SSTables produced by non-major compactions can contain `sp
 | Repair can resurrect data if deletion evidence is absent | H/P | P1, P3 | bounded documented scenario, not claim every repair does so |
 | Tombstone-bearing repair propagates deletion instead of stale positive value | H/P | P1 | depends on currentness evidence present in the bounded scenario |
 | `gc_grace_seconds` retains tombstones for a failure/recovery envelope | H/P + E | P1 | timer is not itself repair |
+| Configurable GC grace with an explicit all-replica/hardware-failure rationale is public by 17 April 2009 | H/P | P12 | implementation floor, not mechanism origin |
+| Elapsed grace is not proof that propagation or repair completed | E | P12 | policy budget, not convergence certificate |
+| Repair-qualified tombstone purge appears as an optional Cassandra change by 11 August 2015 | H/P | P13 | do not project backward |
 | Grace expiry does not imply immediate physical purge | H/P | P1 | compaction/overlap still matter |
 | Repaired/unrepaired status can gate tombstone purge | H/P | P1, P3, P4, P5 | option-specific, not universal default behavior |
 | Hints are best effort and distinct from anti-entropy repair | H/P | P2 | hint window is not a convergence proof |
@@ -244,7 +282,7 @@ Therefore this contribution does not duplicate an existing mechanism history the
 
 ## Evidence limits
 
-1. This record is centered on Cassandra 3.x/3.11 documentation and branch implementation; it is not a cross-version Cassandra semantics history.
+1. This record uses Cassandra 3.x/3.11 as the principal behavior layer, plus bounded 2009 and 1.2.19 historical floors; it is still not a complete cross-version Cassandra semantics history.
 2. It does not prove every stale-replica scenario produces resurrection; it grounds the failure class and the documented conditions.
 3. It does not equate `gc_grace_seconds` with successful repair.
 4. It does not equate hint retention with tombstone retention.
