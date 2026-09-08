@@ -218,6 +218,7 @@ Priority bridges:
 A bridge belongs here only when it changes the retention comparison. Generic technical history belongs primarily in `computing-archaeology`.
 
 ---
+- [x] **Case 130 — LTO generational compatibility / reader obsolescence** — grounded from official LTO Program and IBM compatibility records: surviving cartridges still require a compatible drive/media/operation relation; read and write windows differ; later generations do not monotonically preserve every older read path.
 
 ## Phase 3 — Retention / transfer / computation boundary
 
@@ -342,7 +343,7 @@ Build a mechanism-sensitive map of:
 - [ ] bit rot — **partially advanced by grounded Case 83 at the HDFS replicated-block layer**: periodic/suspect-triggered checksum verification can discover a corrupt local replica before ordinary demand and report it into distributed repair control, but device/media error physics, correlated corruption, checksum failure, independent fault validation, and long-term archival bit-rot regimes remain open;
 - [ ] controller failure;
 - [ ] replica divergence and failed repair — **partially advanced by grounded Case 98**: Ceph can retain evidence that a newer object/version is owed plus historical candidate locations after no recoverable payload is currently found; candidate-source exhaustion still does not itself authorize forgetting, because 2011 source makes the final `unfound`→`lost` transition administrator-gated. Revert/delete then change admissible logical state without establishing physical sanitization. Byzantine divergence, correlated-loss incidents, modern Ceph behavior, quorum-store unrecoverability, and independent fault injection remain open;
-- [ ] media obsolescence;
+- [ ] **media obsolescence** — substantially advanced at the removable-tape reader-compatibility layer by Case 130: LTO demonstrates bounded read/write generation windows and a current LTO-10 backward-compatibility break; broader media families, reader failure/maintenance, host-interface obsolescence, controlled migration, and earlier tape genealogy remain open.
 - [ ] format/software obsolescence — **substantially advanced at the ZFS pool-format layer by grounded Case 129**: a physically surviving/import-discoverable pool can remain read-write-inadmissible or fully unreadable to software that lacks semantics required by its retained active feature set, while an enabled-but-unused feature can remain backward-compatible and a read-only-compatible unknown feature can preserve a weaker read path. This establishes `physical survival ≠ interpreter availability ≠ format admissibility` without closing broader filesystem/file-format obsolescence, send-stream/dataset formats, hardware/controller interfaces, emulation/migration, software-preservation infrastructure, or institutional recovery;
 - [ ] institutional abandonment.
 

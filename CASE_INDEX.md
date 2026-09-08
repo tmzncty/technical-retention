@@ -3137,3 +3137,22 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 - **2312 — forgetting payload can require retained control evidence:** command/verify state, sanitize progress/status, and zone state/write-frontier metadata can remain necessary while another state class is being deliberately retired. (`H/P`, `E`)
 - **2313 — EPROM→EEPROM→Flash comparison ≠ inevitable linear genealogy:** the bounded cases support comparison of erase control and geometry, not a claim that every cited mechanism or actor belongs to one teleological invention chain. (`A`, `X`)
 - **2314 — related-repository boundary:** a fresh `tmzncty/computing-archaeology` search surfaced no dedicated Flash-erase / SSD-sanitization case to reuse; broader device/material erase history and cross-media genealogy belong there, while this synthesis remains a retention-specific cross-case comparison. (`H/P` project-state record)
+
+## Case 130 — LTO generational compatibility / reader obsolescence
+
+- **2315 — LTO compatibility is a retained drive/media/operation relation, not a cartridge property.** Official LTO Program and IBM matrices make access depend on both drive and media generation. (`H/S`, `E`)
+- **2316 — Generations 1–7 document a two-generation read / one-generation write backward window.** The current LTO Program summary and IBM Redbooks product documentation agree on this bounded policy. (`H/S`)
+- **2317 — LTO-8 does not read or write LTO-6.** IBM's LTO-8 support matrix explicitly limits the drive to Ultrium 7/8 formats. (`H/S`)
+- **2318 — LTO-9 does not read or write LTO-7 or M8.** IBM's LTO-9 support matrix, modified 9-Feb-2026, limits read/write formats to Ultrium 8/9 variants. (`H/S`)
+- **2319 — LTO-10 is not backward compatible.** The current LTO Program roadmap states that generation 10 does not support backward compatibility and attributes the break to a drive-head redesign. (`H/S`)
+- **2320 — Read compatibility ≠ write compatibility.** IBM compatibility tables include read-only older-generation paths, so extraction can remain possible after in-place rewrite support has ended. (`H/S`, `E`)
+- **2321 — Newer drive generation ≠ strict superset of older reader capability.** LTO-8/9/10 provide direct counterexamples to monotonic legacy-media support. (`H/S`, `E`)
+- **2322 — Media survival ≠ compatible-reader availability.** Intact magnetic state is insufficient when no supported reader/media pair remains. (`E`)
+- **2323 — Reader obsolescence ≠ physical erasure.** Loss of a compatible drive path can make surviving inscription operationally inaccessible without changing the cartridge bits. (`E`)
+- **2324 — Generation transition ≠ immediate data loss.** An incompatible new generation does not erase older media; retained older drives can preserve an access path. (`E`, `X`)
+- **2325 — Current-generation acquisition ≠ legacy-media access.** Buying the newest drive can fail to preserve an archive's older compatibility window. (`E`)
+- **2326 — Vendor interchangeability ≠ time-unbounded generation compatibility.** LTO compliance/interchangeability testing and backward-generation rules are separate official claims. (`H/S`, `E`)
+- **2327 — Mixed-generation library service depends on compatibility-set intersection.** IBM's support guidance constrains common read-write media when different drive generations share a library. (`H/S`, `E`)
+- **2328 — Bounded reader compatibility can create a migration obligation.** Data may need migration while a compatible reader still exists, but no universal migration cadence is inferred. (`E`)
+- **2329 — Software-format admissibility ≠ physical reader admissibility.** Case 129's ZFS feature interpreter and Case 130's drive/media generation gate are only functional analogies. (`A`)
+- **2330 — Broad magnetic-tape genealogy remains in `computing-archaeology`.** Fresh searches found no dedicated `7-track`, `IBM 729`, or `magnetic tape` case there; Case 130 therefore avoids inventing an earlier genealogy without direct manual inspection. (`H/P` project-state, `X`)
