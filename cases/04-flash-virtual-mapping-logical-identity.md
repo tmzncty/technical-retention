@@ -34,6 +34,8 @@ Its own vocabulary includes:
 
 Modern terms such as **FTL**, **garbage collection**, **out-of-place update**, **write amplification**, **wear leveling**, **TRIM**, and **over-provisioning** may be useful for later comparison, but they should not silently replace the patent's own terminology.
 
+The terminology floor can now be tightened without changing that anti-anachronism rule. A February 1995 *Dr. Dobb's* article already describes this class of sector-translation driver as commonly known as a **Flash Translation Layer (FTL)**; Intel AP-619 in August 1995 remains the stronger primary-vendor witness that PCMCIA had recently approved an FTL format. A later Intel patent record reports a PCMCIA specification release date of May 1996. These sources establish **public term use before AP-619**, while keeping `term attestation`, `approval`, `specification release`, and `first coinage` distinct. See the [1995–1996 terminology addendum](../evidence/04-ftl-1995-1996-terminology-standardization-addendum.md).
+
 In this case, `out-of-place update` is used as an engineering description of a documented operation: changed data are written to an unwritten physical block and the mapping is changed so the original virtual identity now resolves to the new physical location.
 
 `Garbage collection` is used only as a **functional analogy** to later SSD practice. The patent itself speaks of transferring active blocks and periodically reclaiming physical memory space.
@@ -53,6 +55,14 @@ For this repository, the paper matters mainly as a historical boundary:
 - the 1987 paper should not be made to “contain” later FTL semantics that it did not discuss.
 
 **Primary bibliographic anchor:** F. Masuoka, M. Momodomi, Y. Iwata, R. Shirota, IEDM Technical Digest 1987, pp. 552–555, DOI `10.1109/IEDM.1987.191485`.
+
+### H/S + H/P — FTL terminology is public by February 1995, while approval and release remain separate milestones
+
+A February 1995 *Dr. Dobb's* article calls the sector-translation device-driver approach commonly known as a `Flash Translation Layer (FTL)`. This moves the currently inspected **public terminology floor** earlier than the August 1995 Intel AP-619 application note.
+
+The evidence classes remain deliberately separate. *Dr. Dobb's* is a contemporary technical publication rather than the PCMCIA standard itself. Intel AP-619 is the stronger contemporary vendor witness that PCMCIA had recently approved an FTL format. A later Intel patent record, meanwhile, reports a **May 1996 PCMCIA specification release date**. The bounded chronology therefore supports `term use by Feb 1995`, `reported approval by Aug 1995`, and `later-reported specification release May 1996` without equating any of those with first coinage or invention.
+
+**Evidence addendum:** [`evidence/04-ftl-1995-1996-terminology-standardization-addendum.md`](../evidence/04-ftl-1995-1996-terminology-standardization-addendum.md).
 
 ### H/P — Ban's patent begins from block erase-before-write, not from an abstract disk model
 

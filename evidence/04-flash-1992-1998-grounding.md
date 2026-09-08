@@ -191,9 +191,9 @@ Intel reports that several companies worked with Intel and PCMCIA to standardize
 
 This establishes a conservative historical result:
 
-> **By August 1995, `Flash Translation Layer (FTL)` was documented by Intel as the name of a PCMCIA-approved Flash-media format/translation architecture.**
+> **By February 1995, `Flash Translation Layer (FTL)` was already in public contemporary technical use; by August 1995 Intel documented it as a PCMCIA-approved Flash-media format/translation architecture.**
 
-It does **not** establish that August 1995 was the first coinage of `FTL`. Until an earlier directly inspected source is found, the repository should say `documented no later than 1995`, not `invented in 1995`.
+It does **not** establish first coinage. A February 1995 *Dr. Dobb's* article already calls the sector-translation approach commonly known as FTL, while a later Intel patent record reports a PCMCIA specification release date of May 1996. The safe chronology is therefore **public term use by February 1995 → Intel report of recent PCMCIA approval by August 1995 → later-reported specification release in May 1996**; exact ballot/publication chronology and first coinage remain open. See the [1995–1996 terminology addendum](04-ftl-1995-1996-terminology-standardization-addendum.md).
 
 The same page also says allocated Flash space cannot immediately be reused after deletion until a reclamation process called `clean-up` is run.
 
@@ -274,7 +274,7 @@ During this grounding pass, bibliographic metadata and abstract-level records we
 | Logical invalidation can precede physical erase | H/P | Ban allocation statuses + later transfer; Wells dirty-sector + later clean-up | grounded |
 | Reclamation preserves current blocks by copying them before erasing an old unit/block | H/P | Ban FIGS. 7–8; Wells clean-up description | grounded |
 | Mapping/allocation metadata is part of the state needed to recover current identity | H/P + E | Ban map-in-Flash / reconstructible secondary map; Intel AP-619 VBM/BAM | grounded |
-| `Flash Translation Layer (FTL)` is historically attested by August 1995 as a PCMCIA-approved format according to Intel | H/P | Intel AP-619, printed p. 1 | grounded, `no later than 1995`; not claimed as first coinage |
+| `Flash Translation Layer (FTL)` is publicly attested by February 1995 and documented by Intel as PCMCIA-approved by August 1995 | H/S + H/P | *Dr. Dobb's*, February 1995; Intel AP-619, August 1995; [terminology addendum](04-ftl-1995-1996-terminology-standardization-addendum.md) | grounded as a terminology floor / approval boundary; first coinage and exact PCMCIA publication chronology remain open |
 | FTL remaps writes to free areas, invalidates old areas, records physical placement, and presents virtual block semantics | H/P | Intel AP-619, printed p. 3 | grounded |
 | Reclamation and wear leveling are distinct maintenance objectives | H/P + E | Wells patent separates dirty-space clean-up from switching-count equalization | grounded |
 | Flash physical nonvolatility does not imply unlimited rewriting | H/P | Wells finite switching-life discussion; bounded later ONFI evidence in main case | grounded for distinction, not universal numeric lifetime |

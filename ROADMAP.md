@@ -87,7 +87,7 @@ Do not expand this into a general DRAM history; route broader semiconductor-memo
 - [x] add bounded later NAND evidence for bad blocks, ECC, and block replacement;
 - [x] grounding record: [`evidence/04-flash-1992-1998-grounding.md`](evidence/04-flash-1992-1998-grounding.md).
 
-Remaining cleanup: directly inspect Masuoka et al. 1987 IEDM full text if available. Later host-interface deallocation versus media sanitization is now handled separately in grounded Case 44; grounded Case 47 separately supplies anonymized 2011 raw-flash implementation/forensic validation, while ATA/SCSI genealogy, named-device sanitize compliance, and later implementation validation remain distinct work.
+Remaining cleanup: directly inspect Masuoka et al. 1987 IEDM full text if available. FTL terminology is now conservatively attested in public technical use by February 1995, while Intel's August 1995 PCMCIA-approval witness and the later-reported May 1996 specification-release date remain distinct; first coinage and exact PCMCIA ballot/publication chronology are still open. Later host-interface deallocation versus media sanitization is handled separately in grounded Case 44; grounded Case 47 separately supplies anonymized 2011 raw-flash implementation/forensic validation, while ATA/SCSI genealogy, named-device sanitize compliance, and later implementation validation remain distinct work.
 
 ### 6. RADOS replicated objects — `grounded`
 
