@@ -20,6 +20,22 @@ jobs:
         run: |
           set -euo pipefail
           git pull --ff-only origin main
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('CASE_INDEX.md')
+          s = p.read_text(encoding='utf-8')
+          if 'cases/130-lto-generational-compatibility-reader-obsolescence.md' not in s:
+              marker = 'cases/129-zfs-feature-flags-format-compatibility.md'
+              pos = s.index(marker)
+              end = s.index('\n', pos)
+              row = ('| [LTO Generational Compatibility: Retained Reader Dependency and Media Obsolescence]'
+                     '(cases/130-lto-generational-compatibility-reader-obsolescence.md) | **grounded** | '
+                     'surviving magnetic cartridge + bounded drive/media read-write compatibility relation + retained reader population | '
+                     'separate media survival from reader availability; read compatibility from write compatibility; vendor interchangeability from time-unbounded generational compatibility; and migration obligation from physical erasure | '
+                     '[LTO compatibility grounding](evidence/130-lto-generational-compatibility-grounding.md); broader tape genealogy, reader maintenance/failure, host-interface obsolescence, and controlled migration remain open |')
+              s = s[:end+1] + row + '\n' + s[end+1:]
+              p.write_text(s, encoding='utf-8')
+          PY
           python3 .github/case131_nav.py
           git diff --check
           git config user.name "github-actions[bot]"
