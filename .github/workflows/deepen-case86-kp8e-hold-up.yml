@@ -21,7 +21,12 @@ jobs:
         with:
           python-version: '3.x'
       - name: Apply canonical Case 86 deepening
-        run: python scripts/deepen_case86_kp8e_hold_up.py
+        run: |
+          python scripts/deepen_case86_kp8e_hold_up.py
+          sed -i 's/[[:space:]]\+$//' \
+            cases/86-dec-pdp8-core-power-fail-auto-restart.md \
+            evidence/86-dec-1960-1970-core-power-restart-grounding.md \
+            ROADMAP.md CASE_INDEX.md
       - name: Validate canonical diff
         run: |
           grep -q '1971–1974 KP8-E' cases/86-dec-pdp8-core-power-fail-auto-restart.md
