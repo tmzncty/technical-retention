@@ -1,0 +1,40 @@
+name: Normalize Case 04 roadmap term floor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/case04-roadmap-term-floor-normalize.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Align roadmap wording
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('ROADMAP.md')
+          text = p.read_text(encoding='utf-8')
+          old = '- [x] establish `Flash Translation Layer` terminology no later than Intel AP-619 (August 1995) without retroactively renaming earlier systems;'
+          new = '- [x] establish `Flash Translation Layer` terminology in public technical use by February 1995; keep Intel AP-619 (August 1995) as the PCMCIA-approval witness without retroactively renaming earlier systems;'
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one old Case 04 roadmap line, found {text.count(old)}')
+          p.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+          rm .github/workflows/case04-roadmap-term-floor-normalize.yml
+          git diff --check
+          grep -q 'terminology in public technical use by February 1995' ROADMAP.md
+          git config user.name 'chatgpt-research-agent'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A -- ROADMAP.md .github/workflows/case04-roadmap-term-floor-normalize.yml
+          git diff --cached --check
+          git commit -m 'roadmap: align Case 04 FTL terminology floor'
+          git push
