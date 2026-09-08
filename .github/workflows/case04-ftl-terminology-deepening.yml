@@ -1,10 +1,11 @@
-name: Case 04 FTL terminology deepening
+name: Integrate Case 04 FTL terminology deepening
 
 on:
   push:
     branches: [main]
     paths:
       - '.github/workflows/case04-ftl-terminology-deepening.yml'
+      - 'scripts/integrate_case04_ftl_terminology.py'
 
 permissions:
   contents: write
@@ -16,257 +17,36 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
       - name: Apply bounded Case 04 terminology deepening
-        shell: bash
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          addendum = Path('evidence/04-ftl-1995-1996-terminology-standardization-addendum.md')
-          if addendum.exists():
-              raise SystemExit('addendum already exists; refusing duplicate integration')
-          addendum.write_text(r'''# Evidence Addendum — FTL Terminology and PCMCIA Chronology, 1995–1996
-
-## Purpose
-
-This addendum deepens only the **terminology / standardization chronology** around [`Case 04`](../cases/04-flash-virtual-mapping-logical-identity.md). It does not change the bounded mechanism claim grounded in Amir Ban's 1993-filed `Flash file system` patent, and it does not claim that the phrase `Flash Translation Layer` names every earlier Flash mapping system.
-
-The narrow questions are:
-
-1. how early can public use of the term `Flash Translation Layer (FTL)` be directly attested in the currently inspected record?
-2. can term use, PCMCIA approval, and a later-reported specification release date be kept distinct?
-
-The answer from the bounded record is:
-
-```text
-public technical use by February 1995
-        !=
-first coinage / invention
-        !=
-PCMCIA approval event
-        !=
-public specification release date
-```
-
----
-
-## Source A — Dr. Dobb's, February 1995
-
-**Type:** `H/S` — contemporary technical press; useful contemporaneous terminology evidence, but not the primary PCMCIA standard text.
-
-**Article:** `FEB95: The Microsoft Flash File System`
-
-**Date:** February 1995.
-
-**Preserved transcription:** <https://jacobfilipp.com/DrDobbs/articles/DDJ/1995/9502/9502h/9502h.htm>
-
-### Terminology evidence
-
-The article describes a sector-translation device-driver approach and says that this type of driver is commonly known as a **Flash Translation Layer (FTL)**. It then explains the same broad interface problem that later FTL material addresses: DOS/FAT sector requests are translated to physical Flash locations, metadata records the sector arrangement, reads resolve a logical sector to a physical address, and cleanup reclaims deallocated space when clean space is exhausted.
-
-This supports a conservative terminology floor:
-
-> **`Flash Translation Layer (FTL)` was already in public contemporary technical use by February 1995.**
-
-It does **not** establish:
-
-- that February 1995 was the first coinage of the term;
-- that Dr. Dobb's, Microsoft, Intel, or PCMCIA invented the underlying mapping idea;
-- that every earlier virtual-map / Flash-file-system mechanism should be renamed `FTL`;
-- the exact date on which PCMCIA balloted, approved, published, or distributed an FTL specification.
-
-The wording `commonly known` is itself evidence against treating this article as a priority claim: it presents the term as already circulating.
-
----
-
-## Source B — Intel AP-619, August 1995
-
-**Type:** `H/P` — contemporary manufacturer application note reporting a PCMCIA-approved format.
-
-**Document:** Kirk Blum and Peter Lam, `FTL Logger: Exchanging Data with FTL Systems`, Intel Application Note AP-619, order no. 292174-001, August 1995.
-
-**Preserved scan already used by Evidence 04:** <https://intel-vintage-developer.eu5.org/DESIGN/FLCARD/APPLNOTS/292174_1.PDF>
-
-Intel reports that several companies worked with Intel and PCMCIA to standardize the Flash-media format and says that the format had recently been approved by PCMCIA as the **Flash Translation Layer (FTL)** format.
-
-AP-619 therefore remains the stronger primary-vendor anchor for the **PCMCIA approval relation** even though Source A moves the public terminology floor earlier.
-
-The two claims are compatible:
-
-```text
-term publicly used by Feb 1995
-        +
-Intel reports recent PCMCIA approval by Aug 1995
-```
-
-Neither claim establishes first coinage.
-
----
-
-## Source C — Later Intel patent record reporting a May 1996 specification release
-
-**Type:** `H/P` (later retrospective record) — primary patent text from an Intel-assigned Flash-interface filing, used only for the chronology distinction it states.
-
-**Record:** `Improved register interface for flash EEPROM memory arrays`, Google Patents record: <https://patents.google.com/patent/WO1998029876A1/en>
-
-The patent text describes an upper-level `flash translation layer (FTL)` driver and parenthetically identifies a **PCMCIA specification release date of May 1996**.
-
-This later statement must not be silently substituted for a contemporaneous PCMCIA ballot/publication record. Its value here is narrower: it shows why `approved` and `released` should not be collapsed into one event.
-
-Accordingly, the safest bounded chronology is:
-
-```text
-February 1995
-    public contemporary technical use of FTL terminology
-
-August 1995
-    Intel AP-619 reports that PCMCIA had recently approved the FTL format
-
-May 1996
-    later Intel patent text reports a PCMCIA specification release date
-```
-
-The exact PCMCIA ballot, approval, publication, and distribution chronology remains open until primary PCMCIA records are inspected directly.
-
----
-
-## Claim ledger
-
-| Claim | Label | Evidence | Status |
-| --- | --- | --- | --- |
-| `Flash Translation Layer (FTL)` was in public contemporary technical use by February 1995 | `H/S` | Dr. Dobb's, February 1995 | grounded as a terminology floor |
-| Intel documented FTL as a PCMCIA-approved format by August 1995 | `H/P` | Intel AP-619, August 1995 | grounded |
-| A later Intel patent record reports a PCMCIA specification release date of May 1996 | `H/P` later retrospective | WO1998029876A1 text | grounded only as a later-reported release date |
-| February 1995 was the first coinage of `FTL` | `X` | no priority evidence | rejected / unsupported |
-| PCMCIA approval and specification release are necessarily the same dated event | `X` | AP-619 versus later release-date report | rejected |
-| Ban's 1993 `virtual map` terminology should be retroactively rewritten as historical `FTL` vocabulary | `X` | Ban uses its own vocabulary | rejected |
-| Shared FTL terminology proves one implementation or algorithm | `X` | sources describe an abstraction family, not one fixed mapping/cleanup implementation | rejected |
-
----
-
-## Engineering reconstruction
-
-The terminology chronology does not change the mechanism already grounded in Case 04. It clarifies the relation between **mechanism history** and **name history**:
-
-```text
-mapping / relocation mechanism can exist
-        ↓
-without the later umbrella name being used in that source
-
-later umbrella name can become common
-        ↓
-without proving one origin, implementation, or exact standard-release event
-```
-
-For this repository that yields a reusable rule:
-
-> **mechanism attestation ≠ terminology attestation ≠ standardization milestone ≠ invention priority.**
-
----
-
-## Functional analogy boundary
-
-Later SSD documentation can use `FTL` for controller translation layers that are much more elaborate than the 1993–1995 systems discussed here. The functional continuity is useful at the level of logical-to-physical indirection, but it does not prove identical mapping granularity, metadata layout, cleanup policy, wear policy, error recovery, or controller architecture.
-
----
-
-## Related-repository boundary
-
-A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) surfaced no dedicated FTL terminology / PCMCIA chronology case to reuse. Broad Flash/SSD/FTL engineering genealogy still belongs there if developed; this addendum remains limited to the retention project's terminology and anti-anachronism boundary.
-
----
-
-## Remaining open work
-
-- directly inspect the full 1987 Masuoka et al. IEDM paper already flagged by Case 04;
-- locate primary PCMCIA ballot / specification copies that can date approval, publication, and distribution directly;
-- search for pre-February-1995 public or internal uses of `Flash Translation Layer` before making any first-use claim;
-- keep exact FTL implementation genealogy in `computing-archaeology` rather than expanding this addendum into a general SSD history.
-''', encoding='utf-8')
-
-          case = Path('cases/04-flash-virtual-mapping-logical-identity.md')
-          text = case.read_text(encoding='utf-8')
-          anchor = "Modern terms such as **FTL**, **garbage collection**, **out-of-place update**, **write amplification**, **wear leveling**, **TRIM**, and **over-provisioning** may be useful for later comparison, but they should not silently replace the patent's own terminology.\n\n"
-          insert = anchor + "The terminology floor can now be tightened without changing that anti-anachronism rule. A February 1995 *Dr. Dobb's* article already describes this class of sector-translation driver as commonly known as a **Flash Translation Layer (FTL)**; Intel AP-619 in August 1995 remains the stronger primary-vendor witness that PCMCIA had recently approved an FTL format. A later Intel patent record reports a PCMCIA specification release date of May 1996. These sources establish **public term use before AP-619**, while keeping `term attestation`, `approval`, `specification release`, and `first coinage` distinct. See the [1995–1996 terminology addendum](../evidence/04-ftl-1995-1996-terminology-standardization-addendum.md).\n\n"
-          if text.count(anchor) != 1:
-              raise SystemExit(f'Case 04 terminology anchor count={text.count(anchor)}')
-          text = text.replace(anchor, insert, 1)
-          hist_anchor = "**Primary bibliographic anchor:** F. Masuoka, M. Momodomi, Y. Iwata, R. Shirota, IEDM Technical Digest 1987, pp. 552–555, DOI `10.1109/IEDM.1987.191485`.\n\n"
-          hist_insert = hist_anchor + "### H/S + H/P — FTL terminology is public by February 1995, while approval and release remain separate milestones\n\nA February 1995 *Dr. Dobb's* article calls the sector-translation device-driver approach commonly known as a `Flash Translation Layer (FTL)`. This moves the currently inspected **public terminology floor** earlier than the August 1995 Intel AP-619 application note.\n\nThe evidence classes remain deliberately separate. *Dr. Dobb's* is a contemporary technical publication rather than the PCMCIA standard itself. Intel AP-619 is the stronger contemporary vendor witness that PCMCIA had recently approved an FTL format. A later Intel patent record, meanwhile, reports a **May 1996 PCMCIA specification release date**. The bounded chronology therefore supports `term use by Feb 1995`, `reported approval by Aug 1995`, and `later-reported specification release May 1996` without equating any of those with first coinage or invention.\n\n**Evidence addendum:** [`evidence/04-ftl-1995-1996-terminology-standardization-addendum.md`](../evidence/04-ftl-1995-1996-terminology-standardization-addendum.md).\n\n"
-          if text.count(hist_anchor) != 1:
-              raise SystemExit(f'Case 04 history anchor count={text.count(hist_anchor)}')
-          text = text.replace(hist_anchor, hist_insert, 1)
-          case.write_text(text, encoding='utf-8')
-
-          ev = Path('evidence/04-flash-1992-1998-grounding.md')
-          text = ev.read_text(encoding='utf-8')
-          old = "> **By August 1995, `Flash Translation Layer (FTL)` was documented by Intel as the name of a PCMCIA-approved Flash-media format/translation architecture.**"
-          new = "> **By February 1995, `Flash Translation Layer (FTL)` was already in public contemporary technical use; by August 1995 Intel documented it as a PCMCIA-approved Flash-media format/translation architecture.**"
-          if text.count(old) != 1:
-              raise SystemExit(f'Evidence 04 conclusion anchor count={text.count(old)}')
-          text = text.replace(old, new, 1)
-          old = "It does **not** establish that August 1995 was the first coinage of `FTL`. Until an earlier directly inspected source is found, the repository should say `documented no later than 1995`, not `invented in 1995`."
-          new = "It does **not** establish first coinage. A February 1995 *Dr. Dobb's* article already calls the sector-translation approach commonly known as FTL, while a later Intel patent record reports a PCMCIA specification release date of May 1996. The safe chronology is therefore **public term use by February 1995 → Intel report of recent PCMCIA approval by August 1995 → later-reported specification release in May 1996**; exact ballot/publication chronology and first coinage remain open. See the [1995–1996 terminology addendum](04-ftl-1995-1996-terminology-standardization-addendum.md)."
-          if text.count(old) != 1:
-              raise SystemExit(f'Evidence 04 coinage anchor count={text.count(old)}')
-          text = text.replace(old, new, 1)
-          old = "| `Flash Translation Layer (FTL)` is historically attested by August 1995 as a PCMCIA-approved format according to Intel | H/P | Intel AP-619, printed p. 1 | grounded, `no later than 1995`; not claimed as first coinage |"
-          new = "| `Flash Translation Layer (FTL)` is publicly attested by February 1995 and documented by Intel as PCMCIA-approved by August 1995 | H/S + H/P | *Dr. Dobb's*, February 1995; Intel AP-619, August 1995; [terminology addendum](04-ftl-1995-1996-terminology-standardization-addendum.md) | grounded as a terminology floor / approval boundary; first coinage and exact PCMCIA publication chronology remain open |"
-          if text.count(old) != 1:
-              raise SystemExit(f'Evidence 04 ledger anchor count={text.count(old)}')
-          text = text.replace(old, new, 1)
-          ev.write_text(text, encoding='utf-8')
-
-          road = Path('ROADMAP.md')
-          text = road.read_text(encoding='utf-8')
-          old = "Remaining cleanup: directly inspect Masuoka et al. 1987 IEDM full text if available. Later host-interface deallocation versus media sanitization is now handled separately in grounded Case 44; grounded Case 47 separately supplies anonymized 2011 raw-flash implementation/forensic validation, while ATA/SCSI genealogy, named-device sanitize compliance, and later implementation validation remain distinct work."
-          new = "Remaining cleanup: directly inspect Masuoka et al. 1987 IEDM full text if available. FTL terminology is now conservatively attested in public technical use by February 1995, while Intel's August 1995 PCMCIA-approval witness and the later-reported May 1996 specification-release date remain distinct; first coinage and exact PCMCIA ballot/publication chronology are still open. Later host-interface deallocation versus media sanitization is handled separately in grounded Case 44; grounded Case 47 separately supplies anonymized 2011 raw-flash implementation/forensic validation, while ATA/SCSI genealogy, named-device sanitize compliance, and later implementation validation remain distinct work."
-          if text.count(old) != 1:
-              raise SystemExit(f'ROADMAP Case 04 anchor count={text.count(old)}')
-          road.write_text(text.replace(old, new, 1), encoding='utf-8')
-
-          idx = Path('CASE_INDEX.md')
-          text = idx.read_text(encoding='utf-8')
-          old = "| [Flash Virtual Mapping: Logical Identity Without Physical Location](cases/04-flash-virtual-mapping-logical-identity.md) | **grounded** | nonvolatile Flash + virtual/logical/physical mapping + deferred reclamation + bounded wear/failure management | identity persistence without location persistence; logical invalidation vs physical erase; mapping metadata as retained state; reclamation vs wear leveling | [1992–1998 grounding record](evidence/04-flash-1992-1998-grounding.md); full Masuoka 1987 paper remains archival cleanup; TRIM/secure erase remain separate later cases |"
-          new = "| [Flash Virtual Mapping: Logical Identity Without Physical Location](cases/04-flash-virtual-mapping-logical-identity.md) | **grounded** | nonvolatile Flash + virtual/logical/physical mapping + deferred reclamation + bounded wear/failure management | identity persistence without location persistence; logical invalidation vs physical erase; mapping metadata as retained state; reclamation vs wear leveling; mechanism-name chronology | [1992–1998 grounding record](evidence/04-flash-1992-1998-grounding.md) + [1995–1996 FTL terminology addendum](evidence/04-ftl-1995-1996-terminology-standardization-addendum.md); Masuoka 1987 full text, pre-Feb-1995 term use, exact PCMCIA ballot/publication chronology, and later implementation validation remain open |"
-          if text.count(old) != 1:
-              raise SystemExit(f'CASE_INDEX Case 04 row anchor count={text.count(old)}')
-          text = text.replace(old, new, 1)
-          if '2285 —' in text or '**2285 —' in text:
-              raise SystemExit('finding 2285 already present')
-          if '**2284 —' not in text:
-              raise SystemExit('expected finding 2284 missing')
-          findings = r'''
-
-## Case 04 deepening — FTL terminology / PCMCIA chronology findings
-
-- **2285 — FTL public technical use by February 1995 ≠ August 1995 first coinage:** the February *Dr. Dobb's* article already uses the expanded term, so Intel AP-619 remains a stronger approval witness but no longer defines the earliest inspected public terminology floor. (`H/S`, `H/P`, `X`)
-- **2286 — contemporary `commonly known` wording ≠ invention priority:** the 1995 technical-press wording presents FTL as an already circulating name rather than claiming that article, author, Microsoft, Intel, or PCMCIA invented it. (`H/S`, `X`)
-- **2287 — PCMCIA approval ≠ specification release:** Intel AP-619 reports recent approval by August 1995, while a later Intel patent record reports a May 1996 specification release date; the milestones must remain distinct until primary PCMCIA records are inspected. (`H/P`, `E`, `X`)
-- **2288 — May 1996 specification release ≠ 1996 first use of FTL:** public technical use is already attested in February 1995, so a later release date cannot be used as a terminology-origin date. (`H/S`, `H/P`, `X`)
-- **2289 — approval chronology ≠ terminology chronology:** a name can circulate before, during, or after formal standardization work; dating one relation does not automatically date the other. (`E`)
-- **2290 — Ban 1993 virtual-map mechanism ≠ retroactive historical FTL vocabulary:** Ban directly grounds logical/physical remapping before the newly tightened term floor, but its own `virtual map` / `logical unit` vocabulary should remain intact. (`H/P`, `X`)
-- **2291 — terminology continuity ≠ mechanism identity across all Flash managers:** later systems can share the FTL name while differing in mapping granularity, metadata layout, cleanup, wear policy, ECC, recovery, and controller architecture. (`A`, `X`)
-- **2292 — FTL label ≠ one fixed cleanup or wear-leveling algorithm:** the period umbrella name identifies a translation-layer role; it does not collapse the distinct reclamation and wear-leveling objectives already separated by Case 04. (`H/P`, `E`)
-- **2293 — contemporary technical press ≠ primary standards text:** *Dr. Dobb's* is valuable evidence for public terminology use but cannot establish the exact PCMCIA ballot, approval, publication, or normative wording. (`H/S`, `X`)
-- **2294 — later patent retrospective date ≠ contemporaneous PCMCIA publication record:** the May 1996 release date reported in later Intel patent text is a bounded chronology witness, not a substitute for the still-uninspected primary PCMCIA specification/archive. (`H/P`, `X`)
-- **2295 — tighter FTL terminology floor ≠ closure of the Masuoka 1987 archival gap:** the full 1987 IEDM paper remains uninspected in this repository, and the terminology addendum does not project later FTL semantics into that device paper. (`H/S`, `X`)
-- **2296 — related-repository boundary:** a fresh `tmzncty/computing-archaeology` search surfaced no dedicated FTL terminology / PCMCIA chronology case to reuse; broad Flash/SSD/FTL engineering genealogy belongs there if developed, while this deepening remains bounded to naming and standardization milestones. (`H/P` project-state record)
-'''
-          text = text.rstrip() + findings + '\n'
-          idx.write_text(text, encoding='utf-8')
-          PY
-
-          git diff --check
+          python scripts/integrate_case04_ftl_terminology.py
+          rm scripts/integrate_case04_ftl_terminology.py
+          rm .github/workflows/case04-ftl-terminology-deepening.yml
+      - name: Validate canonical state
+        run: |
           test -f evidence/04-ftl-1995-1996-terminology-standardization-addendum.md
-          grep -q '2285 —' CASE_INDEX.md
-          grep -q '2296 —' CASE_INDEX.md
-          grep -q 'February 1995' cases/04-flash-virtual-mapping-logical-identity.md
-          grep -q 'May 1996' ROADMAP.md
-
-          rm -f .github/workflows/case04-ftl-terminology-deepening.yml
-          git config user.name 'technical-retention-agent'
-          git config user.email 'technical-retention-agent@users.noreply.github.com'
-          git add cases/04-flash-virtual-mapping-logical-identity.md evidence/04-flash-1992-1998-grounding.md evidence/04-ftl-1995-1996-terminology-standardization-addendum.md ROADMAP.md CASE_INDEX.md .github/workflows/case04-ftl-terminology-deepening.yml
-          git commit -m 'case04: deepen FTL terminology prior-art boundary'
-          git push origin HEAD:main
+          grep -q 'public term use by February 1995' evidence/04-flash-1992-1998-grounding.md
+          grep -q 'May 1996 PCMCIA specification release date' cases/04-flash-virtual-mapping-logical-identity.md
+          grep -q 'FTL terminology is now conservatively attested in public technical use by February 1995' ROADMAP.md
+          grep -q '^## Case 04 deepening — FTL terminology / PCMCIA chronology findings$' CASE_INDEX.md
+          grep -q '^\- \*\*2285 — FTL public technical use by February 1995' CASE_INDEX.md
+          grep -q '^\- \*\*2296 — related-repository boundary:' CASE_INDEX.md
+          test ! -e scripts/integrate_case04_ftl_terminology.py
+          test ! -e .github/workflows/case04-ftl-terminology-deepening.yml
+          git diff --check
+      - name: Commit integrated research state
+        run: |
+          git config user.name "chatgpt-research-agent"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- ROADMAP.md CASE_INDEX.md \
+            cases/04-flash-virtual-mapping-logical-identity.md \
+            evidence/04-flash-1992-1998-grounding.md \
+            evidence/04-ftl-1995-1996-terminology-standardization-addendum.md \
+            scripts/integrate_case04_ftl_terminology.py \
+            .github/workflows/case04-ftl-terminology-deepening.yml
+          git diff --cached --check
+          git commit -m "case04: deepen FTL terminology prior-art boundary"
+          git push
