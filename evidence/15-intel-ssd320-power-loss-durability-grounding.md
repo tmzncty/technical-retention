@@ -122,6 +122,41 @@ Surviving copy inspected: <https://www.ssdwiki.com/media/ssd-320-specification.p
 
 <https://www.usenix.org/conference/fast13/technical-sessions/presentation/zheng>
 
+### Source F — Intel SSD Firmware Update Tool release-history compilation, preserving the August 2011 SSD 320 entry
+
+**Document:** Intel Corporation, _Intel Solid State Drive Firmware Update Tool Release Notes_, Revision 3.0.7, April 2019, document 328292-030US; SSD 320 Series Revision History on printed p. 18.
+
+**Inspection:** searchable PDF text plus direct source inspection. The surviving copy is hosted on a non-Intel mirror whose path preserves the former Intel Download Center filename; this record treats the document as identifiable Intel-authored release notes, not as current Intel hosting.
+
+**Evidence class:** `H/P` for the Intel-authored firmware revision record, with source-host provenance explicitly qualified.
+
+**Directly establishes:**
+
+- the SSD 320 revision-history entry dates firmware `4PC10362` to **August 2011**;
+- Intel's revision description ties that firmware to fixes for `BAD_CTX 13x` / **8 MB capacity** problems associated with unsafe power-loss situations;
+- a named SSD 320 product family with documented enhanced power-loss protection still had a later firmware-level unsafe-shutdown recovery problem requiring remediation.
+
+**Does not establish:**
+
+- the internal representation or root cause of `BAD_CTX`;
+- that the protection capacitors, power-fail detector, or NAND-transfer path themselves were defective;
+- how much user payload physically survived when the 8 MB symptom occurred;
+- whether post-fix firmware eliminates every possible unsafe-power-loss failure.
+
+Surviving copy inspected: <https://downloads.bl4ckb0x.de/downloadcenter.intel.com/28749/eng/Intel_SSD_Firmware_Update_Tool_3_0_7_Release_Notes-328292-030US.pdf>
+
+### Source G — contemporary public reporting of the Intel 320 8 MB firmware fix, August 2011
+
+**Document:** Marcus Yam, “Intel Releases New SSD Firmware to Fix 8 MB Bug,” _Tom's Hardware_, 18 August 2011.
+
+**Evidence class:** `S` — contemporary secondary corroboration of the public release and symptom description.
+
+**Directly supports:** firmware 4PC10362 was publicly released in August 2011 for the SSD 320 `BAD_CTX 13x` / 8 MB problem, with the problem described as occurring after unexpected power loss under specific conditions.
+
+**Boundary:** use this source to corroborate public chronology/symptoms, not to reverse-engineer the controller. The Intel-authored release history remains the stronger anchor for the firmware revision itself.
+
+<https://www.tomshardware.com/news/intel-320-ssd-bug-8mb-firmware%2C13250.html>
+
 ---
 
 ## Grounded mechanism
@@ -194,6 +229,30 @@ The first branch is command/interface controlled. The second branch is device-tr
 **Evidence:** ATA draft defines flush completion semantics; FAST ’13 shows that fault-injection behavior must be tested as a separate evidence layer.
 
 **Status:** grounded methodological control.
+
+### G-15.7 — documented PLP architecture ≠ bug-free unsafe-shutdown recovery
+
+**Evidence:** Intel's March 2011 design brief documents the power-fail/hold-up/emergency-transfer path; Intel's preserved August 2011 revision history documents firmware 4PC10362 as fixing `BAD_CTX 13x` / 8 MB issues associated with unsafe power loss.
+
+**Status:** grounded named-product historical boundary. It does not identify which internal submechanism failed.
+
+### G-15.8 — host-visible capacity collapse ≠ proof of physical NAND population collapse
+
+**Evidence:** the documented symptom is an 8 MB capacity presentation. Neither Intel release history nor the contemporary public report establishes that NAND beyond that boundary was physically erased.
+
+**Status:** engineering reconstruction / negative boundary.
+
+### G-15.9 — firmware remediation ≠ retroactive data-recovery proof
+
+**Evidence:** 4PC10362 is documented as fixing issues related to the failure mode. The source does not say that installing the firmware after a drive has already entered the bad state restores all user data or proves its prior physical survival.
+
+**Status:** evidence-boundary claim.
+
+### G-15.10 — named-product failure history ≠ independent post-fix conformance testing
+
+**Evidence:** Source F identifies the SSD 320 family and its fix; Zheng et al. independently inject power faults but anonymize device identities.
+
+**Status:** grounded methodological separation. Independent fault-injection validation of a named SSD 320 before/after 4PC10362 remains open.
 
 ---
 

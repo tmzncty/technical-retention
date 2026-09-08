@@ -134,6 +134,42 @@ Its valid use here is narrower:
 
 **Scholarly anchor:** Zheng et al., FAST ’13, especially pp. 273, 279, and 281.
 
+### H/P + H/S — August 2011 firmware history adds a named-product unsafe-power-loss recovery defect
+
+A later Intel-authored Firmware Update Tool release-note compilation preserves the SSD 320 revision history and records firmware `4PC10362` in **August 2011** as fixing issues related to `BAD_CTX 13x`, an **8 MB capacity** failure associated with unsafe power-loss situations. The surviving copy inspected is a mirror of Intel document **328292-030US** (April 2019), not current Intel hosting. Contemporary reporting from 17–18 August 2011 independently records the same firmware revision and public symptom description.
+
+This changes the evidence boundary of the case. The March 2011 Intel brief remains strong primary evidence for the documented power-fail detector / hold-up-capacitance / emergency-transfer architecture, but the August revision history shows that **having that architecture did not make unsafe-shutdown recovery bug-free**. A named product with explicit enhanced power-loss protection still required a firmware repair for a power-loss-associated recovery/context failure severe enough to collapse the host-visible capacity surface to 8 MB.
+
+The release history does **not** disclose the internal structure represented by `BAD_CTX`, does not say that NAND payload was physically erased, and does not identify whether the fault lay in FTL mapping, capacity metadata, startup recovery state, another controller structure, or an interaction among them. The correct historical claim is therefore narrower than many later retellings:
+
+> **Intel documented an SSD 320 firmware defect associated with unsafe power loss and an 8 MB capacity symptom, then documented firmware 4PC10362 as fixing issues related to that defect.**
+
+Primary release-history anchor (Intel-authored document on a surviving non-Intel mirror): <https://downloads.bl4ckb0x.de/downloadcenter.intel.com/28749/eng/Intel_SSD_Firmware_Update_Tool_3_0_7_Release_Notes-328292-030US.pdf>
+
+Contemporary secondary corroboration: Tom's Hardware, 18 August 2011, <https://www.tomshardware.com/news/intel-320-ssd-bug-8mb-firmware%2C13250.html>.
+
+### E — protection architecture ≠ recovery correctness
+
+The named-product history supplies a sharper counterexample than the anonymized FAST '13 population alone:
+
+```text
+documented power-loss protection path
+        ≠
+proof that every unsafe-shutdown recovery transition is correct
+```
+
+Protection hardware can preserve energy and permit emergency transfer while firmware/recovery logic still contains a defect in the state needed to re-present the device correctly after restart.
+
+### E — host-visible capacity ≠ physical media population
+
+The 8 MB symptom is an observation at the controller/interface surface. It therefore demonstrates a failure of **presented capacity/addressability**, not by itself destruction of all NAND beyond 8 MB. This is a mechanism-sensitive negative claim: the source set does not reveal how much user payload physically survived, whether it remained internally reachable, or which controller relation failed.
+
+### E/A — recovery-context failure may be compared with mapping/currentness loss, but not identified with it
+
+Case 39 shows directly that Flash payload can survive while runtime mapping/currentness state must be reconstructed after power failure. That is a useful **functional analogy** for understanding why a controller can lose logical reachability without proving physical erasure. It is not evidence that `BAD_CTX 13x` was specifically an FTL-map failure.
+
+Cases 122–123 similarly show, under intentional ATA HPA/DCO control, that host-visible capacity can differ from a broader native/selectable population. Their use here is only relational: **presented capacity is controller-mediated state**. An involuntary `BAD_CTX` recovery failure is not historically or technically the same mechanism as SET MAX or DCO.
+
 ---
 
 ## Retained state
