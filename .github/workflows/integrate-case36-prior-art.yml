@@ -20,6 +20,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+      - name: Rebase stale finding numbers onto current ledger
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('scripts/integrate_case36_prior_art.py')
+          text = p.read_text(encoding='utf-8')
+          old = list(range(1847, 1860))
+          new = list(range(2389, 2402))
+          for a, b in zip(old, new):
+              text = text.replace(str(a), str(b))
+          p.write_text(text, encoding='utf-8')
+          PY
       - name: Integrate Case 36 prior-art deepening
         run: python scripts/integrate_case36_prior_art.py
       - name: Normalize changed research files
@@ -35,16 +47,31 @@ jobs:
               lines = p.read_text(encoding='utf-8').splitlines()
               p.write_text('\n'.join(line.rstrip() for line in lines) + '\n', encoding='utf-8')
           PY
-      - name: Validate diff
-        run: git diff --check
+      - name: Validate diff and ledger
+        run: |
+          git diff --check
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('CASE_INDEX.md').read_text(encoding='utf-8')
+          for n in range(2389, 2402):
+              assert text.count(f'**{n} —') == 1, n
+          assert 'evidence/36-flash-refresh-1997-2009-prior-art-deepening.md' in text
+          PY
       - name: Commit research integration
         run: |
           if git diff --quiet; then
             echo "No changes needed"
-            exit 0
+          else
+            git config user.name "technical-retention automation"
+            git config user.email "actions@users.noreply.github.com"
+            git add cases/36-nand-flash-correct-and-refresh-maintenance.md ROADMAP.md CASE_INDEX.md
+            git commit -m "case36: deepen pre-FCR flash refresh prior-art boundary"
+            git push
           fi
+      - name: Remove one-shot integration scaffolding
+        run: |
           git config user.name "technical-retention automation"
           git config user.email "actions@users.noreply.github.com"
-          git add cases/36-nand-flash-correct-and-refresh-maintenance.md ROADMAP.md CASE_INDEX.md
-          git commit -m "case36: deepen pre-FCR flash refresh prior-art boundary"
+          git rm .github/workflows/integrate-case36-prior-art.yml scripts/integrate_case36_prior_art.py
+          git commit -m "chore: remove Case 36 integration scaffolding"
           git push
