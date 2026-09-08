@@ -1,0 +1,54 @@
+name: Integrate Case 129 ZFS feature flags
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/integrate-case129-zfs-feature-flags.yml'
+      - 'scripts/integrate_case129_zfs_feature_flags.py'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Apply bounded navigation integration
+        run: |
+          test -f cases/129-zfs-feature-flags-format-compatibility.md
+          test -f evidence/129-zfs-2012-feature-flags-compatibility-grounding.md
+          python scripts/integrate_case129_zfs_feature_flags.py
+          rm scripts/integrate_case129_zfs_feature_flags.py
+          rm .github/workflows/integrate-case129-zfs-feature-flags.yml
+      - name: Validate canonical state
+        run: |
+          grep -q '^# ZFS Feature Flags: Retained Format Requirements and Software Admissibility$' cases/129-zfs-feature-flags-format-compatibility.md
+          grep -q '^# Evidence 129 — ZFS feature-flags / format-compatibility grounding, 2012–2016$' evidence/129-zfs-2012-feature-flags-compatibility-grounding.md
+          grep -q '^\- \[x\] Case 129 ZFS/OpenZFS feature-flags / format-software compatibility boundary' ROADMAP.md
+          grep -q '^\- \[ \] format/software obsolescence — \*\*substantially advanced at the ZFS pool-format layer by grounded Case 129\*\*' ROADMAP.md
+          grep -q '^| \[ZFS Feature Flags: Retained Format Requirements and Software Admissibility\]' CASE_INDEX.md
+          grep -q '^## Case 129 — ZFS feature-flag / format-compatibility findings$' CASE_INDEX.md
+          grep -q '^\- \*\*2269 — payload/root survival ≠ software interpretability:' CASE_INDEX.md
+          grep -q '^\- \*\*2284 — related-repository boundary:' CASE_INDEX.md
+          test ! -e scripts/integrate_case129_zfs_feature_flags.py
+          test ! -e .github/workflows/integrate-case129-zfs-feature-flags.yml
+          git diff --check
+      - name: Commit integrated research state
+        run: |
+          git config user.name "chatgpt-research-agent"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- ROADMAP.md CASE_INDEX.md \
+            cases/128-zfs-vdev-label-uberblock-import-root-recovery.md \
+            evidence/128-zfs-2005-2026-vdev-label-uberblock-grounding.md \
+            scripts/integrate_case129_zfs_feature_flags.py \
+            .github/workflows/integrate-case129-zfs-feature-flags.yml
+          git diff --cached --check
+          git commit -m "case129: integrate ZFS feature compatibility navigation"
+          git push
