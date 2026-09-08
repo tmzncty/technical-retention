@@ -82,7 +82,7 @@ Do not expand this into a general DRAM history; route broader semiconductor-memo
 - [x] logical invalidation versus later physical erase;
 - [x] transfer/reclamation as copy-current → erase-old → remap;
 - [x] mapping/allocation metadata as retained state;
-- [x] establish `Flash Translation Layer` terminology no later than Intel AP-619 (August 1995) without retroactively renaming earlier systems;
+- [x] establish `Flash Translation Layer` terminology in public technical use by February 1995; keep Intel AP-619 (August 1995) as the PCMCIA-approval witness without retroactively renaming earlier systems;
 - [x] separate reclamation from wear leveling using early 1990s primary evidence;
 - [x] add bounded later NAND evidence for bad blocks, ECC, and block replacement;
 - [x] grounding record: [`evidence/04-flash-1992-1998-grounding.md`](evidence/04-flash-1992-1998-grounding.md).
