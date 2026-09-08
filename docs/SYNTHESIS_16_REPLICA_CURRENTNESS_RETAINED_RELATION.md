@@ -1,6 +1,4 @@
-from pathlib import Path
-
-SYNTHESIS = r'''# Synthesis 16 — Replica Currentness as a Retained Relation
+# Synthesis 16 — Replica Currentness as a Retained Relation
 
 ## Status and scope
 
@@ -322,79 +320,3 @@ That relation can decide whether a candidate is:
 The strongest reusable guardrail is therefore:
 
 > **physical survival ≠ currentness; currentness evidence ≠ payload; and losing currentness evidence can change logical survival without immediately changing the surviving bytes.**
-'''
-
-README_INSERT = r'''A bounded logical-identity/embodiment-replacement comparison is now available in [`docs/SYNTHESIS_15_LOGICAL_IDENTITY_EMBODIMENT_REPLACEMENT.md`](docs/SYNTHESIS_15_LOGICAL_IDENTITY_EMBODIMENT_REPLACEMENT.md). Across grounded mapped-Flash, SCSI defect-reassignment, ATA CHS/LBA-translation, and DDR4 PPR cases it separately audits designation continuity, payload-value continuity, resolution/currentness relation, physical embodiment, retirement state, and replacement capacity. It fixes the counterexamples `mapping changed ≠ data moved`, `same address ≠ same value survived`, `persistent repair mapping ≠ persistent payload`, `replacement ≠ erasure`, and `similar remapping ≠ shared genealogy`.
-'''
-
-README_EXTRA = r'''
-A bounded replica-currentness comparison is now available in [`docs/SYNTHESIS_16_REPLICA_CURRENTNESS_RETAINED_RELATION.md`](docs/SYNTHESIS_16_REPLICA_CURRENTNESS_RETAINED_RELATION.md). Across grounded Dynamo, Swift EC, Cassandra, and Kafka cases it separates payload presence, version/lineage designation, currentness/admissibility, authority, visibility, convergence/repair, and retirement. It shows that currentness may be set-valued, cohort-qualified, negative, frontier-shaped, or lineage-qualified, and fixes the counterexamples `surviving replica ≠ current replica`, `longer suffix ≠ authoritative suffix`, `negative marker ≠ absence of state`, and `currentness evidence ≠ complete history`.
-'''
-
-ROADMAP_OLD = "- [ ] When replicas disagree, is `currentness` itself retained metadata/protocol state?"
-ROADMAP_NEW = "- [x] When replicas disagree, is `currentness` itself retained metadata/protocol state? — bounded by [`docs/SYNTHESIS_16_REPLICA_CURRENTNESS_RETAINED_RELATION.md`](docs/SYNTHESIS_16_REPLICA_CURRENTNESS_RETAINED_RELATION.md): currentness is treated as a protocol-qualified admissibility relation whose evidence may be retained as causal summaries, version/durability witnesses, tombstones, ISR/high-watermark frontiers, or leader-epoch lineage metadata. The synthesis separates payload presence, version/lineage designation, currentness, authority, visibility, convergence/repair, and retirement; broader version-vector/replication/epoch genealogy remains companion-repository work."
-
-INDEX_SECTION = r'''
-
-## Synthesis 16 — replica currentness as retained relation findings
-
-- **2013 — payload/replica presence ≠ currentness:** all five bounded systems can retain bytes that are stale, pre-commit, beyond the committed frontier, causally unresolved, or outside the current lineage. (`E`, `A`)
-- **2014 — currentness relation ≠ one universal metadata shape:** Dynamo causal summaries, Swift timestamp/durability relations, Cassandra tombstones, Kafka high-watermark/ISR state, and Kafka epoch checkpoints qualify admissibility in different ways. (`E`, `A`, `X`)
-- **2015 — currentness can be set-valued:** Dynamo can intentionally preserve several causally unrelated leaf versions because no retained causal relation yet authorizes collapsing them to one value. (`H/P`, `E`)
-- **2016 — version identifier ≠ supersession proof:** a timestamp, offset, or version label can distinguish candidates without by itself proving ancestry, commit, or current lineage. (`E`, `A`)
-- **2017 — coded reconstructability ≠ coded currentness:** Swift requires a same-timestamp/distinct-index cohort plus durability evidence; enough surviving fragments under one code do not automatically constitute the current object version. (`H/P`, `E`)
-- **2018 — negative currentness evidence can be a positive retention obligation:** Cassandra tombstones must remain long enough to suppress older positive embodiments that may still survive elsewhere. (`H/P`, `E`)
-- **2019 — longer surviving suffix ≠ more authoritative suffix:** Kafka 0.8.2 and 0.11 both provide bounded recovery paths in which physically retained tail records may remain outside the admissible committed/current lineage. (`H/P`, `E`)
-- **2020 — commit frontier ≠ complete lineage witness:** KIP-101 exists because a locally retained high watermark can be insufficient for safe follower truncation after failures; leader-epoch history answers a different recovery question. (`H/P`, `E`)
-- **2021 — retained currentness summary ≠ complete history:** vector clocks, high-watermark checkpoints, tombstones, `.durable` state, and epoch boundary files retain qualified relations rather than every event that produced the present state. (`E`, `A`)
-- **2022 — currentness ≠ mutation/leadership authority:** the state that counts as current and the process currently authorized to extend or replace it are adjacent but distinct protocol relations. (`E`)
-- **2023 — currentness ≠ reader visibility:** Kafka can retain uncommitted tails beyond consumer visibility; Dynamo can return several admissible siblings; Swift requires a service-specific usable coded cohort. (`H/P`, `E`, `A`)
-- **2024 — currentness ≠ full convergence:** Dynamo read repair/anti-entropy, Swift reconstruction, and Cassandra repair can continue after a logically admissible state already exists for foreground service. (`H/P`, `E`)
-- **2025 — repair evidence ≠ currentness itself:** Cassandra's later repaired-state purge guard can qualify retirement of tombstones, but repairedness is not thereby identical to version/tombstone currentness or cluster-wide convergence. (`H/P`, `E`, `X`)
-- **2026 — currentness-evidence loss can change logical survival without payload destruction:** premature tombstone loss can resurrect stale data; stale/insufficient recovery metadata can change truncation/admission decisions while many bytes physically survive. (`E`, `A`)
-- **2027 — one project term `currentness` ≠ one historical mechanism:** the synthesis uses `currentness/admissibility relation` as a cross-case engineering category only; historical vocabulary and protocol details remain system-specific. (`A`, `X`)
-- **2028 — related-repository boundary:** current `tmzncty/computing-archaeology` searches found no dedicated Dynamo/Swift/Cassandra/Kafka currentness synthesis to reuse; broad version-vector, anti-entropy, tombstone, quorum, epoch, and replicated-log genealogy belongs there if developed. (`H/P` project-state record)
-'''
-
-root = Path('.')
-
-synth_path = root / 'docs' / 'SYNTHESIS_16_REPLICA_CURRENTNESS_RETAINED_RELATION.md'
-if synth_path.exists():
-    existing = synth_path.read_text(encoding='utf-8')
-    if existing != SYNTHESIS:
-        raise SystemExit('Synthesis 16 path already exists with different content')
-else:
-    synth_path.write_text(SYNTHESIS, encoding='utf-8')
-
-readme_path = root / 'README.md'
-readme = readme_path.read_text(encoding='utf-8')
-if 'SYNTHESIS_16_REPLICA_CURRENTNESS_RETAINED_RELATION.md' not in readme:
-    if README_INSERT not in readme:
-        raise SystemExit('README Synthesis 15 anchor not found')
-    readme = readme.replace(README_INSERT, README_INSERT + README_EXTRA, 1)
-    readme_path.write_text(readme, encoding='utf-8')
-
-roadmap_path = root / 'ROADMAP.md'
-roadmap = roadmap_path.read_text(encoding='utf-8')
-if ROADMAP_NEW not in roadmap:
-    if ROADMAP_OLD not in roadmap:
-        raise SystemExit('ROADMAP currentness question anchor not found')
-    roadmap = roadmap.replace(ROADMAP_OLD, ROADMAP_NEW, 1)
-    roadmap_path.write_text(roadmap, encoding='utf-8')
-
-index_path = root / 'CASE_INDEX.md'
-index = index_path.read_text(encoding='utf-8')
-if '## Synthesis 16 — replica currentness as retained relation findings' not in index:
-    if '**2012 — forgetting negative evidence remains a positive-state admission risk**' not in index:
-        raise SystemExit('CASE_INDEX latest finding anchor not found')
-    index = index.rstrip() + INDEX_SECTION + '\n'
-    index_path.write_text(index, encoding='utf-8')
-
-# Remove one-shot integration machinery so the final tree contains only research/navigation changes.
-for rel in [
-    'scripts/integrate_synthesis16_currentness.py',
-    '.github/workflows/integrate-synthesis16-currentness.yml',
-]:
-    p = root / rel
-    if p.exists():
-        p.unlink()
