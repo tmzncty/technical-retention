@@ -1,0 +1,50 @@
+name: Integrate Synthesis 17 replicated-log layers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/synthesis17-replicated-log-layers.yml'
+      - '.github/scripts/integrate_synthesis17_replicated_log_layers.py'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fast-forward authoritative main
+        run: git pull --ff-only origin main
+
+      - name: Integrate bounded synthesis slice
+        run: python .github/scripts/integrate_synthesis17_replicated_log_layers.py
+
+      - name: Validate research tree
+        run: |
+          git diff --check
+          test -f docs/SYNTHESIS_17_REPLICATED_LOG_SUFFIX_CURRENTNESS_VISIBILITY.md
+          grep -Fq 'Synthesis 17 — Replicated-Log Suffix Survival, Currentness, Visibility, and Truncation Authority' docs/SYNTHESIS_17_REPLICATED_LOG_SUFFIX_CURRENTNESS_VISIBILITY.md
+          grep -Fq 'physical suffix survival' README.md
+          grep -Fq 'SYNTHESIS_17_REPLICATED_LOG_SUFFIX_CURRENTNESS_VISIBILITY.md' ROADMAP.md
+          grep -Fq '2077 — physical suffix survival ≠ replica currentness' CASE_INDEX.md
+          grep -Fq '2092 — related-repository boundary' CASE_INDEX.md
+
+      - name: Commit and push canonical research
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/SYNTHESIS_17_REPLICATED_LOG_SUFFIX_CURRENTNESS_VISIBILITY.md README.md ROADMAP.md CASE_INDEX.md
+          git diff --cached --check
+          git commit -m 'synthesis17: separate replicated-log retention layers'
+          git push origin HEAD:main
+
+      - name: Remove one-shot integration infrastructure
+        run: |
+          git rm .github/scripts/integrate_synthesis17_replicated_log_layers.py .github/workflows/synthesis17-replicated-log-layers.yml
+          git commit -m 'chore: remove Synthesis 17 integration helper'
+          git push origin HEAD:main
