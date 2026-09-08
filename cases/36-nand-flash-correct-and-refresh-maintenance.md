@@ -2,9 +2,11 @@
 
 ## Status
 
-**`grounded`** — bounded to Yu Cai et al.'s peer-reviewed 2012 ICCD proposal and evaluation of **Flash Correct-and-Refresh (FCR)** for 3x-nm MLC NAND Flash, with later 2015 retention-characterization work used only as a boundary check on retention-age/read-recovery semantics.
+**`grounded`** — bounded to Yu Cai et al.'s peer-reviewed 2012 ICCD proposal and evaluation of **Flash Correct-and-Refresh (FCR)** for 3x-nm MLC NAND Flash, with later 2015 retention-characterization work used only as a boundary check on retention-age/read-recovery semantics. The historical novelty boundary is additionally deepened by pre-2012 nonvolatile-memory refresh patent records from 1997–2009; those records narrow what can safely be attributed to FCR without changing the case's bounded 2012 object.
 
 Grounding record: [`../evidence/36-cai-2012-flash-correct-refresh-grounding.md`](../evidence/36-cai-2012-flash-correct-refresh-grounding.md).
+
+Prior-art deepening: [`../evidence/36-flash-refresh-1997-2009-prior-art-deepening.md`](../evidence/36-flash-refresh-1997-2009-prior-art-deepening.md).
 
 ## Scope
 
@@ -183,12 +185,26 @@ Forgetting is therefore not one event. In this case it can be **physical drift b
 
 ## Prior art and anti-anachronism
 
-The 2012 paper includes a bounded authorial priority statement (“to our knowledge”) about its combination of retention-error characteristics. This repository does **not** promote that into an invention-priority claim without a broader historical search.
+The 2012 paper includes a bounded authorial priority statement (“to our knowledge”) about its combination of retention-error characteristics. A dedicated prior-art deepening now makes the repository's boundary much firmer: [`../evidence/36-flash-refresh-1997-2009-prior-art-deepening.md`](../evidence/36-flash-refresh-1997-2009-prior-art-deepening.md) documents public pre-2012 records for several mechanisms that must **not** be treated as FCR inventions.
 
-Nor does it project the FCR term backward onto earlier Flash. Cases 11–13 and 04 preserve their own period vocabulary and mechanisms. `FCR` is used historically only for the 2012 proposal and its later descendants/citations where explicitly sourced.
+A 1997-filed / 1999-public U.S. patent already describes multilevel nonvolatile-memory refresh in response to threshold-voltage drift/error evidence, including ECC participation, deferred/idle-time refresh, periodic timer-driven refresh, retained last-refresh time, power-up refresh, and sector buffer→erase→rewrite. A separate 2000-filed / 2002-public Flash patent family describes dynamic refresh that can move data to a different physical location while an address-mapping circuit changes the logical/virtual→physical mapping. A 2005-public record describes age/timestamp-triggered in-place or out-of-place Flash refresh, and a 2007-filed / 2009-public record describes erase-free reprogram refresh triggered by elapsed time, level drift, or read-error evidence.
 
-A 2015 follow-up by Cai et al. characterizes retention age in real 2y-nm MLC NAND and shows that optimal read-reference voltage changes with retention age. That later evidence deepens the general point that retained charge, readable interpretation, and controller recovery parameters can diverge over time. It is not used to rewrite the 2012 FCR mechanism or claim deployment.
+Therefore the repository rejects all of the following as FCR novelty claims:
 
+- `generic nonvolatile-memory refresh first appears in FCR`;
+- `periodic / idle-time / power-up Flash refresh first appears in FCR`;
+- `ECC/error-assisted refresh first appears in FCR`;
+- `refresh-time relocation/remapping first appears in FCR`;
+- `retention-age/timestamp-triggered Flash refresh first appears in FCR`;
+- `erase-free reprogram refresh first appears in FCR`.
+
+The surviving bounded distinction is narrower: Cai et al. combine measured 3x-nm MLC retention-error characterization with explicit storage-time / P/E-wear / ECC trade-offs, remapping and in-place paths, hybrid fallback for the opposite/right-shift error population, per-block P/E-cycle-driven adaptive refresh rate, and SSD/workload simulation that makes the maintenance/endurance trade-off quantitative.
+
+This is a **combination/evaluation boundary**, not an invention-priority judgment. Patent filing/priority date is also kept separate from public publication date. Patent disclosure does not prove commercial deployment, and functional similarity does not prove a patent-family → FCR design genealogy.
+
+Nor does this project project the FCR term backward onto the earlier records. Their own terms — `refresh`, `dynamic refresh`, `refresh timer`, `address mapping`, `storage date`, and `rewrite refresh` — remain historical vocabulary. `FCR` is used historically only for the 2012 proposal and its later descendants/citations where explicitly sourced.
+
+A 2015 follow-up by Cai et al. characterizes retention age in real 2y-nm MLC NAND and shows that optimal read-reference voltage changes with retention age. That later evidence deepens the general point that retained charge, readable interpretation, and controller recovery parameters can diverge over time. It is not used to rewrite either the pre-2012 patent mechanisms or the 2012 FCR mechanism, and it does not establish deployment.
 ## Functional analogy and philosophical limit
 
 A bounded analogy to DRAM is useful only at this level:
@@ -242,6 +258,12 @@ It also separates proactive retention renewal from integrity scrubbing. ZFS/GFS 
 | Adaptive-rate FCR changes refresh frequency with P/E cycles and reuses per-block wear information | H/P | §IV.C–D |
 | More frequent remapping can reduce lifetime because it adds erase cycles | H/P/E | §IV.A + evaluation discussion |
 | FCR requires power and can be scheduled as background/idle work | H/P | §IV.D |
+| Pre-2012 public records already describe periodic/deferred/power-up nonvolatile-memory refresh with error/ECC participation | H/P | US5909449A (1999 public record; 1997 filing) |
+| Pre-2012 public records already describe refresh that relocates data and changes logical-to-physical mapping | H/P | US6396744B1 / 2000 priority family |
+| Pre-2012 public records already describe age/timestamp-triggered in-place or out-of-place Flash refresh | H/P | US20050243626A1 / US7325090B2 |
+| Pre-2012 public records already describe erase-free reprogram refresh triggered by time, drift, or read-error evidence | H/P | US20090161466A1 |
+| Generic Flash refresh, refresh-time remapping, or erase-free rewrite refresh is an invention unique to FCR | X | contradicted by inspected pre-2012 patent records |
+| Similarity between earlier patent mechanisms and FCR proves direct design genealogy or commercial deployment | X | neither influence chain nor shipped implementation is established by this slice |
 | The reported 46× average lifetime improvement proves a production SSD achieved 46× measured field life | X | the paper reports simulation driven by measured characterization/workload data, not a multi-year production deployment |
 | FCR proves all NAND Flash requires periodic refresh | X | outside the bounded 3x-nm MLC proposal/evaluation |
 | NAND FCR refresh is historically or physically identical to DRAM refresh | X | paper itself distinguishes the mechanisms |
@@ -258,3 +280,7 @@ Current inspection of [`tmzncty/computing-archaeology`](https://github.com/tmznc
 2. ETH Zurich Systems Group publication record for the same ICCD 2012 paper: <https://publications.systems.ethz.ch/publication/791>.
 3. Carnegie Mellon KiltHub record, posted 1 October 2012, preserving the abstract and evaluation boundary: <https://kilthub.cmu.edu/articles/journal_contribution/Flash_Correct-and-Refresh_Retention-Aware_Error_Management_for_Increased_Flash_Memory_Lifetime/6468821>.
 4. Yu Cai, Yixin Luo, Erich F. Haratsch, Ken Mai, Onur Mutlu, **“Data Retention in MLC NAND Flash Memory: Characterization, Optimization, and Recovery,”** *HPCA 2015*, pp. 551–563, DOI `10.1109/HPCA.2015.7056062`; used only as later retention-age/read-recovery boundary evidence: <https://www.istc-cc.cmu.edu/publications/papers/2015/flash-memory-data-retention_hpca15_abs.shtml>.
+5. Hock C. So and Sau C. Wong, **“Multibit-per-cell non-volatile memory with error detection and correction,”** US 5,909,449 A, filed 8 September 1997, public patent 1 June 1999: <https://patents.google.com/patent/US5909449A/en>.
+6. **“Flash memory with dynamic refresh,”** US 6,396,744 B1, filed 25 April 2000, public patent 28 May 2002; same family includes relocation/address-mapping refresh records: <https://patents.google.com/patent/US6396744B1/en>.
+7. **“Refreshing data stored in a flash memory,”** US 2005/0243626 A1 / US 7,325,090 B2, priority 29 April 2004, application publication 3 November 2005: <https://patents.google.com/patent/US7325090B2/en>.
+8. Darlene G. Hamilton, Mark W. Randolph, Don Carlos Darling, Ron Kornitz, **“Extending flash memory data retension via rewrite refresh,”** US 2009/0161466 A1, filed 20 December 2007, published 25 June 2009: <https://patents.google.com/patent/US20090161466A1/en>.
