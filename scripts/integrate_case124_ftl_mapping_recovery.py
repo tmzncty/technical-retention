@@ -23,47 +23,37 @@ FINDINGS = r'''## Case 124 — FTL power-loss mapping-recovery findings
 - **2045 — FTL mapping/currentness ≠ distributed replica currentness:** Synthesis 16 supplies a useful analogy that relation loss can change logical survival while bytes remain, but no distributed-consensus or replica genealogy is implied. (`A`, `X`)
 - **2046 — related-repository boundary:** current `tmzncty/computing-archaeology` searches found no dedicated FTL power-loss mapping-recovery case; broad controller/FTL genealogy belongs there if developed, while Case 124 retains only payload/mapping/recovery-state lifetime distinctions. (`H/P` project-state record)'''
 
-ROADMAP_PHASE3_NEW = "- [x] Recovering from loss of mapping/allocation metadata (whose *relation* made older payloads current/legible). — grounded by [Case 124](cases/124-ftl-power-loss-mapping-recovery.md): mapped Flash can retain user pages while volatile lookup state disappears, then reconstruct logical-to-physical/currentness relations from Flash-resident map/allocation/checkpoint/log evidence. This closes the bounded `payload survival ≠ logical legibility`, `volatile working map ≠ recovery substrate`, and `mapping reconstruction ≠ payload reconstruction` relation; named shipping-controller fault behavior and broader FTL genealogy remain open."
-ROADMAP_PHASE4_NEW = "- [x] loss of index or mapping metadata — grounded at the mapped-Flash/FTL layer by [Case 124](cases/124-ftl-power-loss-mapping-recovery.md): nonvolatile payload can outlive volatile lookup state, while retained map blocks/BMT/log/checkpoint evidence can make the relation reconstructible. Complete loss beyond the available reconstruction substrate, named-controller power-cut behavior, filesystem/database index loss, and forensic recovery remain open;"
+ROADMAP_NEW = "- [x] loss of index or mapping metadata — grounded at the mapped-Flash/FTL layer by [Case 124](cases/124-ftl-power-loss-mapping-recovery.md): nonvolatile payload can outlive volatile lookup state, while retained map blocks/BMT/log/checkpoint evidence can make the relation reconstructible. This closes the bounded `payload survival ≠ logical legibility`, `volatile working map ≠ recovery substrate`, and `mapping reconstruction ≠ payload reconstruction` relation; complete loss beyond the available reconstruction substrate, named-controller power-cut behavior, filesystem/database index loss, and forensic recovery remain open;"
 
 roadmap_path = Path("ROADMAP.md")
-roadmap = roadmap_path.read_text(encoding="utf-8")
-lines = roadmap.splitlines()
-phase3_done = False
-phase4_done = False
+lines = roadmap_path.read_text(encoding="utf-8").splitlines()
+found = False
 for i, line in enumerate(lines):
-    if "Recovering from loss of mapping/allocation metadata" in line:
-        lines[i] = ROADMAP_PHASE3_NEW
-        phase3_done = True
     if line.strip().startswith("- [ ] loss of index or mapping metadata") or line.strip().startswith("- [x] loss of index or mapping metadata"):
-        lines[i] = ROADMAP_PHASE4_NEW
-        phase4_done = True
-if not phase3_done:
-    raise SystemExit("ROADMAP Phase-3 mapping-loss marker not found")
-if not phase4_done:
-    raise SystemExit("ROADMAP Phase-4 index/mapping-loss marker not found")
+        lines[i] = ROADMAP_NEW
+        found = True
+        break
+if not found:
+    raise SystemExit("ROADMAP index/mapping-loss marker not found")
 roadmap_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
 
 index_path = Path("CASE_INDEX.md")
 index = index_path.read_text(encoding="utf-8")
 if "cases/124-ftl-power-loss-mapping-recovery.md" not in index:
     anchor = "cases/123-ata6-device-configuration-overlay-capability-retention.md"
-    anchor_pos = index.find(anchor)
-    if anchor_pos < 0:
+    p = index.find(anchor)
+    if p < 0:
         raise SystemExit("Case 123 row anchor not found")
-    line_end = index.find("\n", anchor_pos)
-    if line_end < 0:
+    eol = index.find("\n", p)
+    if eol < 0:
         raise SystemExit("Case 123 row line ending not found")
-    index = index[:line_end + 1] + CASE_ROW + "\n" + index[line_end + 1:]
+    index = index[:eol + 1] + CASE_ROW + "\n" + index[eol + 1:]
 if "## Case 124 — FTL power-loss mapping-recovery findings" not in index:
     index = index.rstrip() + "\n\n" + FINDINGS + "\n"
 else:
     index = index.rstrip() + "\n"
 index_path.write_text(index, encoding="utf-8")
 
-self_path = Path("scripts/integrate_case124_ftl_mapping_recovery.py")
-workflow_path = Path(".github/workflows/integrate-case124-ftl-mapping-recovery.yml")
-if self_path.exists():
-    self_path.unlink()
-if workflow_path.exists():
-    workflow_path.unlink()
+for path in [Path("scripts/integrate_case124_ftl_mapping_recovery.py"), Path(".github/workflows/integrate-case124-ftl-mapping-recovery.yml")]:
+    if path.exists():
+        path.unlink()
