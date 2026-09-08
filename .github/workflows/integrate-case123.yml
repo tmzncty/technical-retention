@@ -32,8 +32,10 @@ jobs:
               'cases/122-ata4-host-protected-area-addressability-retention.md',
           ]:
               p = Path(name)
-              lines = p.read_text(encoding='utf-8').splitlines()
-              p.write_text('\n'.join(line.rstrip() for line in lines) + '\n', encoding='utf-8')
+              lines = [line.rstrip() for line in p.read_text(encoding='utf-8').splitlines()]
+              while lines and not lines[-1]:
+                  lines.pop()
+              p.write_text('\n'.join(lines) + '\n', encoding='utf-8')
           PY
       - name: Validate integration
         run: |
