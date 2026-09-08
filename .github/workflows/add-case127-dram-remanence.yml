@@ -1,0 +1,38 @@
+name: add-case127-dram-remanence
+
+on:
+  push:
+    paths:
+      - '.github/workflows/add-case127-dram-remanence.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Add Case 127 and integrate navigation
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/add_case127_dram_remanence.py
+          rm -f .github/scripts/add_case127_dram_remanence.py .github/workflows/add-case127-dram-remanence.yml
+          grep -q '^# DRAM Power-Off Remanence: Gradual Decay, Cooling, and Residual Recoverability$' cases/127-dram-power-off-remanence-gradual-decay.md
+          grep -q '^# DRAM power-off remanence 1979–2008 grounding record$' evidence/127-dram-1979-2008-remanence-grounding.md
+          grep -q 'DRAM power-off remanence / gradual-decay boundary' ROADMAP.md
+          grep -q 'substantially advanced at the DRAM physical-state layer by grounded Cases 03 and 127' ROADMAP.md
+          grep -q 'substantially advanced at the DRAM physical-state, SSD-device, and access-authority layers' ROADMAP.md
+          grep -q '## Case 127 — DRAM power-off remanence findings' CASE_INDEX.md
+          grep -q '2222' CASE_INDEX.md
+          test "$(grep -c 'cases/127-dram-power-off-remanence-gradual-decay.md' CASE_INDEX.md)" -eq 1
+          git diff --check
+          git config user.name "chatgpt-research-agent"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git status --short
+          git commit -m "case127: ground DRAM power-off remanence boundary"
+          git push origin HEAD:main
