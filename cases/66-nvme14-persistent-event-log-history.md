@@ -400,3 +400,127 @@ A full ATA/SCSI/vendor event-log genealogy would be a different historical slice
 ## Related repositories
 
 A repository search found no dedicated NVMe Persistent Event Log case in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology). Broader controller/SSD chronology and ATA/SCSI event-log genealogy should be developed there if needed; this case keeps the retention-specific history semantics in `technical-retention`.
+
+## 2021 implementation and reporting-generation deepening
+
+The original Case 66 boundary remains the ratified NVMe 1.4 PEL contract of 10 June 2019. This section adds **later implementation evidence and post-1.4 retrieval-validity evolution** without projecting those later rules backward into the 2019 standard.
+
+### 2019 host tooling exposed support and size before a full PEL decoder landed
+
+Two `linux-nvme/nvme-cli` commits dated **25 August 2019** added host-side Identify Controller visibility for the new NVMe 1.4 PEL surface:
+
+- `81b5524bc887cb63447f5acbe41bb128bf62cb8c` — `id-ctrl: show Persistent Event Log Size(PELS)`;
+- `cf98706f0051d44cea4e72abc43c78555040e77b` — `id-ctrl: show Persistent Event Log support in LPA`.
+
+These are primary implementation-history artifacts for the Linux NVMe tooling ecosystem. They show that software could expose whether a controller advertised PEL support and its maximum log size shortly after NVMe 1.4 was ratified.
+
+They do **not** prove that the tool could yet reconstruct the complete event population, that any named controller obeyed the cross-reset persistence requirement, or that 25 August 2019 is the origin date of PEL. The normative mechanism remains grounded in the earlier NVMe 1.4 standard.
+
+Therefore:
+
+> **advertised PEL support / size ≠ demonstrated PEL retrieval correctness.**
+
+### January 2021 adds a full host-side PEL retrieval/parser path
+
+On **11 January 2021**, `linux-nvme/nvme-cli` commit `6879ac41fcc62c468452a8c3e18c60c41e7eac62` added support for Persistent Event Log Page retrieval and decoding, explicitly citing NVMe 1.4 §5.14.1.13 and its cross-power/reset persistence contract.
+
+This is useful implementation evidence because it establishes a concrete host software path from the standardized log to operator-visible event history. It is still not device-conformance evidence:
+
+> **host parser implementation ≠ controller implementation or conformance.**
+
+The host can know the wire format and still encounter controller-specific unsupported events, malformed data, tool bugs, or transfer-consistency problems.
+
+### A November 2021 parser fix contains a named Samsung PM1735 retrieval artifact
+
+Commit `d7c2dd59633fb0485edb5f6093d87154b19ace72`, dated **11 November 2021**, fixes a crash/misparse in the PEL path and includes an actual command/output artifact from a Samsung **PM1735**, reported as `PCIe4 1.6TB NVMe Flash Adapter x8`. The captured header shows a nontrivial PEL population and then demonstrates the parser losing event boundaries and producing implausible event types before the fix.
+
+This is deliberately used at a narrow level:
+
+- it is a **named hardware/tooling retrieval witness**;
+- it proves that a real PM1735 exposed enough PEL data for the Linux tool to parse and fail on it;
+- it does **not** prove cross-power-cycle persistence by controlled test;
+- it does **not** prove that every PEL field/event on that drive conforms to every NVMe 1.4 requirement;
+- it does **not** reveal the physical medium or controller metadata layout used to retain PEL entries.
+
+The artifact supplies an important retention boundary:
+
+> **underlying event-history presence ≠ correct host reconstruction of that history.**
+
+A software decoding failure can make retained history operationally illegible without establishing that the controller forgot the history itself.
+
+### NVMe 2.0a makes multi-command retrieval validity explicitly checkable
+
+The ratified **NVM Express Base Specification Revision 2.0a**, dated **26 July 2021**, adds an explicit `Generation Number` and reporting-context information to the PEL header. For a PEL not read in one Get Log Page command, the host is instructed to:
+
+1. establish a reporting context;
+2. read the Generation Number before collecting the remainder of the log;
+3. read the log through that context;
+4. reread the Generation Number after the entire transfer;
+5. reread the log if the two generation numbers do not match.
+
+Revision 2.0a says a mismatch means the reporting context **may have been lost**, the collected PEL contents **may be invalid**, and host software should reread the log. The Generation Number increments when a reporting context is established and the log page returns data different from the previous reporting context, with defined rollover behavior.
+
+Two `nvme-cli` commits dated **15 November 2021** implement this later contract:
+
+- `303e03c6e228f9296b2fa70ec899db620f2e10f6` — verifies the Generation Number around a multi-command PEL collection and rereads on inconsistency;
+- `82ea68f15b5b5bb0426dc28185fee07baa3729bb` — adds the NVMe 2.0a Generation Number and Reporting Context Information fields.
+
+This creates a stronger distinction than the original 2019 case could establish:
+
+> **persistent log ≠ valid retrieved image.**
+
+> **successful chunk transfers ≠ one coherent historical view.**
+
+> **reporting-context establishment ≠ proof that the same context survived the complete retrieval.**
+
+The later Generation Number is a validation relation over the **host's recovered view** of retained history. It is not itself the event history and it is not evidence that every event has been preserved indefinitely.
+
+### Generation mismatch is not itself proof of event loss
+
+The NVMe 2.0a wording is intentionally conditional: when the numbers differ, the context may have been lost and the contents may be invalid. That does not establish which event entries physically disappeared, whether the underlying PEL changed legitimately, or whether the host merely crossed reporting contexts during retrieval.
+
+Therefore:
+
+> **retrieval-generation mismatch ≠ proven event erasure.**
+
+and conversely:
+
+> **matching generation ≠ archival completeness.**
+
+A matching generation qualifies one collected image as belonging to one stable reporting generation. The separate NVMe 1.4/2.0a capacity, suppression, deletion, sanitize, and supported-event rules still bound what history can exist in that image.
+
+### Reporting-context loss and PEL loss remain different failure classes
+
+Case 66 already separated the temporary reporting context from the longer-lived PEL. The 2.0a Generation Number makes that separation operationally testable:
+
+```text
+persistent event population
+    != temporary reporting context
+    != reporting-generation validation token
+    != host transfer buffers
+    != decoded operator-visible history
+```
+
+A controller reset can invalidate the reporting context while the PEL's cross-reset retention contract still applies to event information. Host software then has reconstruction work to do again. This is not media repair; it is **re-establishment and validation of a retrieval relation**.
+
+### Cross-case boundary: Case 90 is analogy, not genealogy
+
+Case 90's later Kafka leader-epoch history shows a different system in which retained recovery metadata may physically exist yet be incomplete or ineligible for the recovery decision being attempted. The useful comparison is only functional:
+
+> **retained metadata presence ≠ metadata admissibility for a particular recovery/retrieval operation.**
+
+PEL Generation Number validation and Kafka leader-epoch admissibility are not the same mechanism, do not share a demonstrated lineage, and operate at different layers.
+
+### Related-repository boundary
+
+A fresh repository search in this round found no dedicated NVMe Persistent Event Log case in `tmzncty/computing-archaeology`. The broad ATA/SCSI/NVMe diagnostic-log genealogy, device-controller architecture, and physical firmware implementation remain better candidates for that companion repository. Case 66 keeps only the retention-specific lifetime, selection, retrieval, and validity relations.
+
+## Sources added in this deepening
+
+1. NVM Express, Inc., **NVM Express Base Specification Revision 2.0a**, 26 July 2021, Persistent Event Log reporting-context / Generation Number provisions: <https://nvmexpress.org/wp-content/uploads/NVMe-NVM-Express-2.0a-2021.07.26-Ratified.pdf>
+2. `linux-nvme/nvme-cli`, `81b5524bc887cb63447f5acbe41bb128bf62cb8c`, **“id-ctrl: show Persistent Event Log Size(PELS)”**, 25 August 2019: <https://github.com/linux-nvme/nvme-cli/commit/81b5524bc887cb63447f5acbe41bb128bf62cb8c>
+3. `linux-nvme/nvme-cli`, `cf98706f0051d44cea4e72abc43c78555040e77b`, **“id-ctrl: show Persistent Event Log support in LPA”**, 25 August 2019: <https://github.com/linux-nvme/nvme-cli/commit/cf98706f0051d44cea4e72abc43c78555040e77b>
+4. `linux-nvme/nvme-cli`, `6879ac41fcc62c468452a8c3e18c60c41e7eac62`, **“nvme: add support for persistent event log page”**, 11 January 2021: <https://github.com/linux-nvme/nvme-cli/commit/6879ac41fcc62c468452a8c3e18c60c41e7eac62>
+5. `linux-nvme/nvme-cli`, `d7c2dd59633fb0485edb5f6093d87154b19ace72`, **“libnvme: core dump when running nvme persistent-event-log”**, 11 November 2021: <https://github.com/linux-nvme/nvme-cli/commit/d7c2dd59633fb0485edb5f6093d87154b19ace72>
+6. `linux-nvme/nvme-cli`, `303e03c6e228f9296b2fa70ec899db620f2e10f6`, **“nvme: PEL need to check gen number for verification of collected log”**, 15 November 2021: <https://github.com/linux-nvme/nvme-cli/commit/303e03c6e228f9296b2fa70ec899db620f2e10f6>
+7. `linux-nvme/nvme-cli`, `82ea68f15b5b5bb0426dc28185fee07baa3729bb`, **“Add New fields on PEL based on NVMe 2.0a”**, 15 November 2021: <https://github.com/linux-nvme/nvme-cli/commit/82ea68f15b5b5bb0426dc28185fee07baa3729bb>

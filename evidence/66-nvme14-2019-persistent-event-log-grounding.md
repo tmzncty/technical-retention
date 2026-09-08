@@ -266,3 +266,134 @@ These remain separate research slices.
 2. NVM Express, Inc., **NVM Express Revision 1.3c**, 24 May 2018, §5.14.1.1: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_3c-2018.05.24-Ratified.pdf>
 3. NVM Express / NVMHCI Workgroup, **NVM Express Revision 1.0**, ratified 1 March 2011, §5.10.1.1–5.10.1.2: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_0-Gold.pdf>
 4. NVM Express, Inc., **“New NVM Express, Inc. Specifications Bolster Cloud and Enterprise Advancements,”** 2019: <https://nvmexpress.org/new-nvm-express-inc-specifications-bolster-cloud-and-enterprise-advancements/>
+
+## 2021 deepening — implementation artifacts and retrieval-generation validation
+
+### Purpose
+
+This addendum does **not** change the original 2019 mechanism boundary. It adds later primary implementation artifacts and the ratified NVMe 2.0a retrieval-validation rules in order to test a narrower proposition:
+
+> cross-reset persistence of the underlying PEL is not by itself sufficient to guarantee that a host has reconstructed one coherent historical image.
+
+The sources are used as **post-1.4 evolution and implementation evidence**, never as wording that is retroactively attributed to NVMe 1.4.
+
+### P5 — NVM Express Base Specification Revision 2.0a (26 July 2021)
+
+Primary normative source:
+
+<https://nvmexpress.org/wp-content/uploads/NVMe-NVM-Express-2.0a-2021.07.26-Ratified.pdf>
+
+Directly inspected PEL material includes the reporting-context sequence and the PEL header fields on the printed pages around 200–202.
+
+Verified facts:
+
+- a multi-command PEL retrieval has a reporting context;
+- if the PEL is not read with one command, the host should inspect the `Generation Number` after establishing the context and again after completing the log read;
+- if the numbers do not match, the reporting context may have been lost, the collected PEL contents may be invalid, and host software should reread the log;
+- the PEL header includes `Generation Number` and `Reporting Context Information`;
+- Generation Number changes when a newly established reporting context would return different log-page data than the previous reporting context and has defined rollover behavior.
+
+Safe claims:
+
+- `persistent PEL != automatically valid host-collected image`;
+- `successful component transfers != verified one-generation retrieval`;
+- the later protocol provides host-visible validation state for a multi-command historical view.
+
+Unsafe upgrades:
+
+- Generation Number proves every event is present;
+- a mismatch proves physical loss of PEL entries;
+- these 2.0a fields were already part of the exact 2019 Revision-1.4 contract.
+
+### P6 — Linux nvme-cli Identify support, 25 August 2019
+
+Primary implementation-history artifacts:
+
+- `81b5524bc887cb63447f5acbe41bb128bf62cb8c`, `id-ctrl: show Persistent Event Log Size(PELS)`: <https://github.com/linux-nvme/nvme-cli/commit/81b5524bc887cb63447f5acbe41bb128bf62cb8c>
+- `cf98706f0051d44cea4e72abc43c78555040e77b`, `id-ctrl: show Persistent Event Log support in LPA`: <https://github.com/linux-nvme/nvme-cli/commit/cf98706f0051d44cea4e72abc43c78555040e77b>
+
+These commits establish a dated Linux-host-tooling floor for exposing PEL capability and size after NVMe 1.4.
+
+They do not establish full PEL retrieval, device conformance, or invention priority.
+
+### P7 — Linux nvme-cli PEL decoder, 11 January 2021
+
+Primary implementation artifact:
+
+`6879ac41fcc62c468452a8c3e18c60c41e7eac62`, `nvme: add support for persistent event log page`:
+
+<https://github.com/linux-nvme/nvme-cli/commit/6879ac41fcc62c468452a8c3e18c60c41e7eac62>
+
+The commit explicitly cites NVMe 1.4 §5.14.1.13, implements retrieval of Log Identifier `0Dh`, and adds decoding for multiple standardized PEL event types.
+
+Safe claim:
+
+> by January 2021, a concrete Linux userspace implementation existed for retrieving/decoding the standardized PEL.
+
+Unsafe claim:
+
+> this commit proves all compliant controllers retained every PEL event correctly.
+
+### P8 — named Samsung PM1735 retrieval/parser artifact, 11 November 2021
+
+Primary implementation/debug artifact:
+
+`d7c2dd59633fb0485edb5f6093d87154b19ace72`, `libnvme: core dump when running nvme persistent-event-log`:
+
+<https://github.com/linux-nvme/nvme-cli/commit/d7c2dd59633fb0485edb5f6093d87154b19ace72>
+
+The commit message includes captured PEL output for a Samsung PM1735 identified as `PCIe4 1.6TB NVMe Flash Adapter x8`, followed by incorrect parser results and a crash/misparse diagnosis.
+
+Evidence strength:
+
+- strong for a **named hardware/tooling interaction** in 2021;
+- useful for proving that retained structured device history can become unusable at the host parser layer;
+- insufficient for a controlled cross-power retention test;
+- insufficient for whole-device NVMe compliance or physical PEL-layout claims.
+
+Safe reconstruction:
+
+> **host-side historical legibility can fail while the device still presents a PEL structure.**
+
+This is not evidence that the device forgot the event history.
+
+### P9 — Linux nvme-cli Generation Number verification, 15 November 2021
+
+Primary implementation artifacts tied explicitly to the later NVMe 2.0a contract:
+
+- `303e03c6e228f9296b2fa70ec899db620f2e10f6`, `nvme: PEL need to check gen number for verification of collected log`: <https://github.com/linux-nvme/nvme-cli/commit/303e03c6e228f9296b2fa70ec899db620f2e10f6>
+- `82ea68f15b5b5bb0426dc28185fee07baa3729bb`, `Add New fields on PEL based on NVMe 2.0a`: <https://github.com/linux-nvme/nvme-cli/commit/82ea68f15b5b5bb0426dc28185fee07baa3729bb>
+
+The first commit restates the multi-command Generation Number check and the consequences of mismatch; the second adds the later header fields.
+
+These are especially useful because they bridge normative retrieval-validity semantics to an independently inspectable host implementation.
+
+### Claim ledger — 2021 deepening
+
+| Claim | Layer | Support | Boundary |
+| --- | --- | --- | --- |
+| nvme-cli exposed PEL support and PELS in August 2019 | `H/P` | P6 | host tooling, not device conformance |
+| nvme-cli added PEL retrieval/decoding in January 2021 | `H/P` | P7 | implementation floor, not invention date |
+| a Samsung PM1735 appears in a November 2021 PEL parser/debug artifact | `H/P` | P8 | named retrieval witness, not controlled cross-power test |
+| parser failure can make retained history operationally illegible without proving device-side loss | `E` | P8 | host reconstruction failure only |
+| NVMe 2.0a adds Generation Number / Reporting Context Information to qualify multi-command PEL retrieval | `H/P` | P5 | later standard; do not back-project into 1.4 |
+| matching generation qualifies one retrieval generation, not completeness of all historical events | `E` | P5 + original PEL capacity/suppression rules | completeness remains separately bounded |
+| generation mismatch means retrieval may be invalid/context lost, not that event erasure is proven | `H/P` + `E` | P5 | preserve conditional normative wording |
+| reporting-context failure and persistent-log loss are different failure classes | `E` | P5 + original 1.4 context/persistence rules | internal controller representation remains unknown |
+| PEL retrieval-validity and Kafka epoch-cache admissibility are only functional analogies | `A`, `X` | Case 90 comparison | no shared genealogy/mechanism claimed |
+
+### Updated evidence debt
+
+This deepening closes two earlier gaps only partially:
+
+- **named-device implementation evidence:** now there is a named PM1735 host-tooling retrieval artifact, but no controlled power-cycle/reset conformance trace;
+- **later NVMe evolution:** NVMe 2.0a retrieval-generation validation is now grounded, but later revisions and implementation-specific edge cases remain open.
+
+Still open:
+
+- physical PEL storage/layout inside real controllers;
+- exact power-failure atomicity of individual event creation;
+- controlled before/after power-cycle event-retention traces on named drives;
+- independent malformed/context-loss fault injection;
+- exact sanitize-time event-removal behavior on named devices;
+- ATA/SCSI and broader device-history genealogy.
