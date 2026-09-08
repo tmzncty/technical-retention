@@ -137,7 +137,7 @@ The feature bit is a summary/control relation for recovery admission. It is not 
 
 ### H/P — the 2021 orphan-file change was a scaling/representation change, not a new orphan-recovery invention
 
-Linux commit [`02f310fcf47fa9311d6ba2946a8d19e7d7d11f37`](https://github.com/torvalds/linux/commit/02f310fcf47fa9311d6ba2946a8d19e7d7d11f37), authored 16 August 2021 and committed 30 August 2021, calls the existing on-disk linked list a scalability bottleneck for heavy truncate/unlink workloads. It introduces the special orphan file, falls back to the old list when the file has no free slot, and adds the compatibility/RO-compat feature-state relation described above.
+Linux commit [`02f310fcf47fa9311d6ba2946a8d19e7d7d11f37`](https://github.com/torvalds/linux/commit/02f310fcf47fa9311d6ba2946a8d19e7d7d11f37), authored 16 August 2021 and committed upstream 31 August 2021 (UTC), calls the existing on-disk linked list a scalability bottleneck for heavy truncate/unlink workloads. It introduces the special orphan file, falls back to the old list when the file has no free slot, and adds the compatibility/RO-compat feature-state relation described above.
 
 This is later evolution of how cleanup obligations are retained. It must not be projected backward into ext3-0.0.2e or treated as the origin of the orphan mechanism.
 
