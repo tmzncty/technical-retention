@@ -4,6 +4,7 @@
 
 - **Bounded system:** Apache Kafka 0.11.0.0, released 28 June 2017, with KIP-101 and the exact `0.11.0.0` source tag as the principal historical/implementation artifacts.
 - **Bounded mechanism:** leader-epoch identifiers stamped into the replicated log, per-replica epoch→start-offset recovery metadata, the `OffsetsForLeaderEpoch` exchange, follower truncation before normal fetching, and reconciliation of epoch metadata with the local log.
+- **Post-release validation slice:** Apache Kafka fixes/issues from October 2018 through February 2019 are used only to test the lifetime and admissibility of that retained epoch metadata under successive elections and old/new message-format boundaries. They are not back-projected as Kafka 0.11.0.0 shipped semantics.
 - **Research question:** when a follower and leader both retain plausible physical suffixes after failure, what retained relation lets the follower distinguish a common history from a divergent one without using its possibly stale high watermark as the sole truncation boundary?
 
 This is **not** a general history of Kafka replication, ISR membership, producer acknowledgements, log compaction, transactions, or consensus. [Case 56](56-apache-kafka-replicated-log-high-watermark.md) already grounds Kafka 0.8.2 high-watermark/ISR currentness and the older failover-truncation regime. This case begins precisely where Case 56 stops: KIP-101's later lineage-aware recovery mechanism.
@@ -239,6 +240,56 @@ The follower may need to delete a physically surviving divergent suffix before i
 
 Falling back to the high watermark when leader-epoch data is unavailable preserves compatibility; it does not mean the two mechanisms encode the same information.
 
+### E — metadata presence ≠ metadata admissibility
+
+KAFKA-7897 supplies a concrete failure of the shortcut `checkpoint exists -> checkpoint may safely qualify truncation`. The record/message format must actually support the lineage evidence that the cache claims to summarize.
+
+### E — cache completeness ≠ byte persistence
+
+KAFKA-7415 shows a leader can retain a readable log while its sparse epoch cache is still insufficient to answer a follower's lineage query after successive elections. The missing relation is not missing user payload.
+
+### E — correct forgetting can apply to recovery metadata itself
+
+KAFKA-7959 deliberately clears/deletes a stale epoch cache so that a future upgrade cannot misinterpret it as valid lineage evidence. More retained recovery metadata is therefore not monotonically safer.
+
+### E — rebuildable checkpoint ≠ automatically valid checkpoint
+
+KAFKA-7984 documents cache rebuilding from record batches during unclean-log recovery while simultaneously identifying mixed/unsupported message-format cases in which such rebuilding must be constrained. Reconstruction recovers a derived relation only when its source evidence is semantically eligible.
+
+---
+
+## Post-0.11 validation and evolution — 2018–2019
+
+### H/P — KAFKA-7415 made leader-transition completeness an explicit cache obligation
+
+Apache commit [`f2dd6aa2698345fd0b0348f7bc74ce3215adf682`](https://github.com/apache/kafka/commit/f2dd6aa2698345fd0b0348f7bc74ce3215adf682), committed 4 October 2018, is titled `Persist leader epoch and start offset on becoming a leader`. Its commit message gives the failure case: after successive leader elections, a follower can contain records from epochs later than any epoch represented in the new leader's log/cache. The patch therefore records the new leader epoch together with its log-end offset as the epoch start, and tightens the cache so epoch/start-offset entries remain monotonic, deleting conflicting entries when necessary.
+
+This is later corrective/evolution evidence. It shows that **having an epoch checkpoint was not sufficient unless the retained boundary set was complete enough for the recovery question actually asked**.
+
+### H/P — KAFKA-7897 showed that cache presence alone could select an unsafe truncation regime
+
+Apache commit [`d152989f26f51b9004b881397db818ad6eaf0392`](https://github.com/apache/kafka/commit/d152989f26f51b9004b881397db818ad6eaf0392), committed 8 February 2019, is titled `Disable leader epoch cache when older message formats are used`. The commit explains that Kafka had been updating the epoch cache for all message-format versions and then using the presence of *any* cached epoch as the prerequisite for the newer `OffsetsForLeaderEpoch` truncation path. With an older record format that did not actually carry the required epoch history, that test could cause large, unnecessary truncations after leader changes. The fix disables leader-epoch-cache use for those older formats and falls back to high-watermark truncation.
+
+This gives a strong negative boundary:
+
+```text
+retained lineage metadata exists
+        ≠
+retained lineage metadata is admissible for this format/recovery path
+```
+
+### H/P — KAFKA-7959 made deliberate cache deletion a compatibility-preserving action
+
+Apache issue [KAFKA-7959](https://issues.apache.org/jira/browse/KAFKA-7959), resolved 22 February 2019 for the 2.0 branch, records a second-order problem. Guarding use of a sparse cache while an old message format remains active is not enough if that same stale cache survives until a later format upgrade, when it can become eligible for use again and cause unexpected truncation/re-replication. The issue therefore requires deleting or clearing the cache while the old message format is in use.
+
+This is an unusually direct retention counterexample: **forgetting a retained recovery structure can be safer than preserving it when the structure has outlived the compatibility conditions that made it truthful.** The deleted object is recovery/currentness metadata, not the partition payload.
+
+### H/P — KAFKA-7984 records rebuildability and its own validity hazard
+
+Apache issue [KAFKA-7984](https://issues.apache.org/jira/browse/KAFKA-7984), opened 22 February 2019, documents existing recovery logic that rebuilds leader-epoch cache files by walking record batches when recovering log segments after an unclean shutdown. It also warns that rebuilding across segments/batches that do not support leader epochs can itself create misleading cache state.
+
+The safe historical claim is narrow: **by this 2019 code/issue context, the checkpoint could be reconstructed from epoch-bearing record batches during log recovery, but reconstruction was format-qualified rather than mechanically valid for every surviving log byte.** The unresolved issue is evidence of a known validity boundary, not proof that every branch/version had one identical rebuild algorithm.
+
 ---
 
 ## Functional analogies and limits
@@ -315,6 +366,14 @@ These are project interpretations, not claims that Apache authors used this phil
    - <https://github.com/apache/kafka/blob/0.11.0.0/core/src/main/scala/kafka/server/AbstractFetcherThread.scala>
 6. Apache Kafka `0.11.0.0`, `ReplicaFetcherThread.scala`.
    - <https://github.com/apache/kafka/blob/0.11.0.0/core/src/main/scala/kafka/server/ReplicaFetcherThread.scala>
+7. Apache Kafka commit `f2dd6aa2698345fd0b0348f7bc74ce3215adf682`, **KAFKA-7415; Persist leader epoch and start offset on becoming a leader**, 4 October 2018.
+   - <https://github.com/apache/kafka/commit/f2dd6aa2698345fd0b0348f7bc74ce3215adf682>
+8. Apache Kafka commit `d152989f26f51b9004b881397db818ad6eaf0392`, **KAFKA-7897; Disable leader epoch cache when older message formats are used**, 8 February 2019.
+   - <https://github.com/apache/kafka/commit/d152989f26f51b9004b881397db818ad6eaf0392>
+9. Apache Kafka JIRA **KAFKA-7959 — Clear/delete epoch cache if old message format is in use**, resolved 22 February 2019.
+   - <https://issues.apache.org/jira/browse/KAFKA-7959>
+10. Apache Kafka JIRA **KAFKA-7984 — Do not rebuild leader epochs on segments that do not support it**, opened 22 February 2019.
+   - <https://issues.apache.org/jira/browse/KAFKA-7984>
 
 See the source-by-source claim ledger in [`../evidence/90-kafka-2016-2017-leader-epoch-truncation-grounding.md`](../evidence/90-kafka-2016-2017-leader-epoch-truncation-grounding.md).
 

@@ -1,4 +1,4 @@
-# Case 90 Grounding Record — Kafka 2016–2017 Leader-Epoch Truncation
+# Case 90 Grounding Record — Kafka 2016–2019 Leader-Epoch Truncation and Cache-Validity Deepening
 
 ## Purpose
 
@@ -6,7 +6,7 @@ This record grounds [`cases/90-apache-kafka-leader-epoch-safe-truncation.md`](..
 
 **Question:** what evidence supports the claim that Kafka 0.11 retained a compact leader-epoch→offset lineage and used it to qualify follower truncation before ordinary replication resumed?
 
-**Evidence boundary:** accepted Apache design material + exact `0.11.0.0` source are primary. Later Kafka documents are useful only to clarify compatibility/evolution, not to back-project modern semantics into 2017.
+**Evidence boundary:** accepted Apache design material + exact `0.11.0.0` source are primary for the shipped bounded mechanism. Exact 2018–2019 Apache commits/issues are used as post-release validation of cache completeness, format-qualified admissibility, deliberate cache retirement, and rebuildability; they are not back-projected into 2017.
 
 ---
 
@@ -142,6 +142,67 @@ This record grounds [`cases/90-apache-kafka-leader-epoch-safe-truncation.md`](..
 
 ---
 
+### P7 — Apache Kafka commit `f2dd6aa...` / KAFKA-7415, 4 October 2018
+
+**Artifact:** `KAFKA-7415; Persist leader epoch and start offset on becoming a leader (#5678)`.
+
+**URL:** <https://github.com/apache/kafka/commit/f2dd6aa2698345fd0b0348f7bc74ce3215adf682>
+
+**Type:** primary implementation/commit record.
+
+**Supports:**
+
+- successive leader elections can leave followers with epochs later than any epoch represented by the new leader;
+- the new leader must persist its epoch/start offset so followers can obtain a safe truncation point;
+- the cache enforces monotonically increasing epoch/start-offset entries and removes conflicts.
+
+**Boundary:** later corrective/evolution evidence; not Kafka 0.11.0.0 shipped behavior.
+
+### P8 — Apache Kafka commit `d152989...` / KAFKA-7897, 8 February 2019
+
+**Artifact:** `KAFKA-7897; Disable leader epoch cache when older message formats are used (#6232)`.
+
+**URL:** <https://github.com/apache/kafka/commit/d152989f26f51b9004b881397db818ad6eaf0392>
+
+**Type:** primary implementation/commit record.
+
+**Supports:**
+
+- older message formats should disable leader-epoch-cache use and fall back to high-watermark truncation;
+- merely detecting the presence of any cached epoch had been sufficient to select the newer truncation path;
+- sparse/ineligible cache state could cause large unnecessary truncations after leader changes.
+
+### P9 — Apache Kafka JIRA KAFKA-7959, resolved 22 February 2019
+
+**Artifact:** `Clear/delete epoch cache if old message format is in use`.
+
+**URL:** <https://issues.apache.org/jira/browse/KAFKA-7959>
+
+**Type:** primary project issue record.
+
+**Supports:**
+
+- a sparse cache guarded while an old format is active can remain hazardous if retained until a later upgrade;
+- clearing/deleting the cache is used to prevent future misuse and unexpected truncation/re-replication.
+
+**Boundary:** branch/version-specific corrective history; not a universal Kafka rule for all epochs.
+
+### P10 — Apache Kafka JIRA KAFKA-7984, opened 22 February 2019
+
+**Artifact:** `Do not rebuild leader epochs on segments that do not support it`.
+
+**URL:** <https://issues.apache.org/jira/browse/KAFKA-7984>
+
+**Type:** primary project issue record.
+
+**Supports:**
+
+- log recovery code rebuilt leader-epoch cache state by iterating record batches on segments recovered after an unclean shutdown;
+- record/message-format eligibility matters to whether reconstructed epoch state is truthful;
+- mixed/unsupported-format content can make naive reconstruction unsafe.
+
+**Boundary:** the issue was opened as a bug report; use it to establish the documented implementation hazard/rebuild path, not to claim one final fixed behavior across all branches.
+
 ## Claim ledger
 
 | Claim | Layer | Evidence | Strength |
@@ -162,6 +223,12 @@ This record grounds [`cases/90-apache-kafka-leader-epoch-safe-truncation.md`](..
 | correct convergence can require forgetting a surviving divergent suffix | engineering reconstruction | P5, P6 | strong |
 | Kafka leader epoch ≠ HDFS QJM epoch / Raft term | comparison boundary | source-specific meanings; Cases 50/90 | strong as a non-equivalence rule |
 | truncation ≠ secure sanitization | negative boundary | no physical erase claim in P1–P6 | strong as claim-control boundary |
+| a leader-epoch cache can be present yet incomplete for successive-election truncation | post-release historical/implementation record | P7 | strong |
+| cache presence alone is not sufficient evidence that the record format supports safe epoch-based truncation | post-release historical/implementation record | P8 | strong |
+| clearing/deleting stale recovery metadata can prevent later unsafe reuse after a format transition | post-release historical/implementation record | P9 | strong |
+| leader-epoch checkpoint state can be rebuilt from eligible record batches during unclean-log recovery | post-release implementation record | P10 | moderate/strong, bounded to documented code path |
+| retained metadata presence ≠ metadata admissibility | engineering reconstruction | P8, P9 | strong |
+| rebuildability ≠ unconditional semantic validity | engineering reconstruction | P10 | strong as bounded negative rule |
 
 ---
 
