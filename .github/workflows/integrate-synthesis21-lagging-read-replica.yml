@@ -26,6 +26,7 @@ jobs:
           sed -i 's/[[:space:]]\+$//' \
             docs/SYNTHESIS_21_LAGGING_READ_REPLICA_FRESHNESS_AUTHORITY.md \
             README.md ROADMAP.md CASE_INDEX.md
+          perl -0pi -e 's/\n+\z/\n/' CASE_INDEX.md
       - name: Validate canonical diff
         run: |
           test -f docs/SYNTHESIS_21_LAGGING_READ_REPLICA_FRESHNESS_AUTHORITY.md
