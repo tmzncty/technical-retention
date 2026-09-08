@@ -22,6 +22,22 @@ jobs:
           git config user.email 'technical-retention-automation@users.noreply.github.com'
       - name: Integrate bounded Case 39 prior-art deepening
         run: python3 scripts/deepen_case39_ftl_prior_art.py
+      - name: Normalize newly appended markdown
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          targets = [
+              (Path('cases/39-geckoftl-power-failure-metadata-recovery.md'), '## 2009–2011 prior-art deepening'),
+              (Path('evidence/39-geckoftl-2015-2017-metadata-recovery-grounding.md'), '## 2009–2011 intermediate prior-art bridge'),
+          ]
+          for path, marker in targets:
+              text = path.read_text(encoding='utf-8')
+              head, sep, tail = text.partition(marker)
+              if not sep:
+                  raise SystemExit(f'marker missing in {path}')
+              cleaned_tail = '\n'.join(line.rstrip() for line in (marker + tail).splitlines()).rstrip()
+              path.write_text(head.rstrip() + '\n\n' + cleaned_tail + '\n', encoding='utf-8')
+          PY
       - name: Validate and commit
         run: |
           test -f cases/39-geckoftl-power-failure-metadata-recovery.md
