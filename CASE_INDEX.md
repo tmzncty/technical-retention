@@ -2927,7 +2927,9 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 - **2139 — physical block survival ≠ safely reusable capacity:** blocks can remain present while allocation ownership/reclamation is unresolved; reuse requires filesystem metadata to close the ownership transition. (`E`)
 - **2140 — Case 16 deferred reclamation ≠ Case 125 orphan tracking:** BSD FFS soft updates can preserve crash-admissible state while later repair reclaims leaks; ext3/ext4 retain explicit inode targets for resumed cleanup. The similarity is functional, not demonstrated genealogy. (`A`, `X`)
 - **2141 — Case 74/124 recovery adjacency ≠ one filesystem-retention mechanism:** JBD revoke suppresses stale redo, Case 124 separates pathname/file durability, and Case 125 retains post-crash cleanup targets; replay authority, namespace durability, and reclamation obligation remain distinct relations. (`A`, `X`)
-- **2142 — related-repository boundary:** fresh `tmzncty/computing-archaeology` searches found no dedicated ext3/ext4 orphan case to reuse; broad Unix inode lifetime, ext-family/JBD genealogy, `fsck`, and crash-consistency history belong there if developed. (`H/P` project-state record)## Synthesis 19 — Log-structured tablet recovery findings
+- **2142 — related-repository boundary:** fresh `tmzncty/computing-archaeology` searches found no dedicated ext3/ext4 orphan case to reuse; broad Unix inode lifetime, ext-family/JBD genealogy, `fsck`, and crash-consistency history belong there if developed. (`H/P` project-state record)
+
+## Synthesis 19 — Log-structured tablet recovery findings
 
 - **2143 — committed redo history ≠ volatile memtable embodiment:** Bigtable 2006 commits a valid mutation to its GFS-backed commit log before inserting the contents into the in-memory memtable; the serving embodiment can therefore be volatile while logical commitment is recoverable. (`H/P` inherited, `E`)
 - **2144 — commit completion ≠ materialization completion:** minor compaction materializes already-committed memtable state into an SSTable and changes future recovery work; it is not the mutation's original commit event. (`H/P` inherited, `E`)
