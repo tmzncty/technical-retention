@@ -331,6 +331,7 @@ This case does not establish:
 ## Related repositories
 
 - [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) — fresh searches for `ZFS`, `uberblock`, and `vdev label` found no dedicated case to reuse. Broad superblock history, ZFS source genealogy, controller history, and filesystem implementation archaeology belong there if developed.
+- [`Case 129 — ZFS feature flags / format compatibility`](129-zfs-feature-flags-format-compatibility.md) — handles the separate question of whether a surviving, root-legible pool remains interpretable by a particular software/boot environment. `restart-root admissibility ≠ format admissibility`.
 - [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) — a future problem-history slice could ask how actors distinguished `consistent on-disk state`, `import`, `recovery`, `rollback`, and `repair` across filesystem generations.
 
 ## Claim ledger

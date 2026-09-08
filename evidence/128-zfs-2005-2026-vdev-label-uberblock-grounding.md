@@ -208,7 +208,7 @@ This slice intentionally leaves open:
 - modern MMP/import tie-breaking archaeology;
 - hardware HBA / RAID-controller failure and metadata portability;
 - severe MOS/root-chain corruption and forensic recovery;
-- feature-flag/format-obsolescence behavior across old/new implementations;
+- feature-flag / format-software admissibility is now handled separately by grounded [`Case 129`](../cases/129-zfs-feature-flags-format-compatibility.md); exact cross-release matrices and broader obsolescence remain open there;
 - historical genealogy of superblocks and redundant restart roots.
 
 Those gaps should not be inferred closed from this case.
