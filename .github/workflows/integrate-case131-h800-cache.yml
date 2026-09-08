@@ -20,13 +20,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ "$(git log -1 --pretty=%s)" != "chore: restage Case 131 H800 integration" ]; then
+          if [ "$(git log -1 --pretty=%s)" != "chore: normalize Case 131 H800 integration" ]; then
             exit 0
           fi
           git config user.name "technical-retention research automation"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git pull --ff-only origin main
           python3 tools/integrate_case131_h800_cache.py
+          while IFS=: read -r file line rest; do
+            [ -n "$file" ] || continue
+            sed -i "${line}s/[[:space:]]\+$//" "$file"
+          done < <(git diff --check 2>&1 | grep 'trailing whitespace\.$' || true)
           git diff --check
           grep -q 'controller-local state ≠ state physically inseparable' CASE_INDEX.md
           grep -q 'Case 131 deepening — PERC H800 transportable retained-cache findings' CASE_INDEX.md
