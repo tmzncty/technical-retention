@@ -45,7 +45,8 @@ jobs:
           ]:
               p = Path(name)
               lines = p.read_text(encoding='utf-8').splitlines()
-              p.write_text('\n'.join(line.rstrip() for line in lines) + '\n', encoding='utf-8')
+              normalized = '\n'.join(line.rstrip() for line in lines).rstrip() + '\n'
+              p.write_text(normalized, encoding='utf-8')
           PY
       - name: Validate diff and ledger
         run: |
