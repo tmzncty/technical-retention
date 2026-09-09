@@ -23,7 +23,20 @@ jobs:
       - name: Apply bounded Case 121 deepening
         run: |
           set -euo pipefail
-          python3 scripts/apply_case121_prac_reset_reconstitution.py
+          python3 - <<'PY'
+          from pathlib import Path
+          helper = Path('scripts/apply_case121_prac_reset_reconstitution.py')
+          source = helper.read_text(encoding='utf-8')
+          # CASE_INDEX has a dedicated Case-121 findings section but no stable
+          # one-line table-row anchor in the current ledger. Keep the bounded
+          # findings update and avoid manufacturing a synthetic table row.
+          start_marker = '# Update the Case 121 table row by adding the deepening record and narrowing the reset debt.'
+          end_marker = '# Insert new findings into the existing Case 121 findings section.'
+          start = source.index(start_marker)
+          end = source.index(end_marker)
+          source = source[:start] + "index = INDEX.read_text(encoding='utf-8')\n\n" + source[end:]
+          exec(compile(source, str(helper), 'exec'))
+          PY
 
       - name: Validate research changes
         shell: bash
