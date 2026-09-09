@@ -23,6 +23,7 @@ The bounded historical record is already grounded in the Case-25 evidence file. 
 - OpenStack Swift **2.3.0**, `doc/source/overview_erasure_code.rst`, signed release tag 30 April 2015: <https://github.com/openstack/swift/tree/2.3.0>.
 - OpenStack Swift **2.10.1**, `Erasure Code Support`: <https://files.openstack.org/docs/swift/2.10.1/overview_erasure_code.html>.
 - OpenStack Swift **2.11.0** changelog, used here only as a later implementation-continuity witness: <https://github.com/openstack/swift/blob/2.11.0/CHANGELOG>.
+- OpenStack Swift **2.28.0** changelog plus 2021 commits `2934818d`, `bbaed18e`, and `2696a79f`, used only for the later in-flight non-durable-cleanup / `commit_window` boundary: <https://github.com/openstack/swift/blob/2.28.0/CHANGELOG>.
 
 The 2.11.0 changelog is especially useful because it changes the **representation** of durable state without making the underlying currentness/commit relation disappear: instead of a separate `.durable` file, Swift renames the fragment `.data` filename to include a durable marker; existing `.durable` files remain supported. This later witness must not be back-projected into 2.3.0 or 2.10.1 on-disk details.
 
@@ -89,6 +90,28 @@ one permanent on-disk marker representation
 ```
 
 The bounded claim is continuity of an externally meaningful control relation across a Swift implementation change. It is **not** a claim that 2.11.0 was wire/on-disk compatible with every older version; the changelog explicitly warns that data written by 2.11.0 or later is not accessible to earlier Swift versions.
+
+
+### Swift 2.28.0 — cleanup authority must distinguish logical timestamp age from in-flight file age
+
+The later Case-25 [2021 evidence deepening](../evidence/25-swift-2021-commit-window-nondurable-cleanup-deepening.md) adds a transition-race counterexample to an overly simple cleanup model. Bug `#1936508` records that reconciler/container-sync writes can intentionally carry an `X-Timestamp` already older than `reclaim_age` while the local EC `.data` file has only just been written and has not yet been committed. Background cleanup could therefore classify the fragment as stale by logical timestamp and delete it before the object server completed the durable rename.
+
+Swift 2.28.0's released `commit_window` adds a short local-`mtime` grace (default 60 seconds) that temporarily protects otherwise reclaimable non-durable data. The key decomposition is:
+
+```text
+logical version age
+    != local physical-file age
+
+reclaim-eligible by long-term policy
+    != safe to delete during an unfinished commit
+
+protected from cleanup while in-flight
+    != durable / currentness-qualified
+```
+
+This does not add an eleventh universal EC state. It sharpens Relations 6, 8, and 9 by showing that **cleanup itself has a transition-admissibility condition**: state that is not yet authoritative may nevertheless need temporary protection because it is a candidate through which the authority transition is still completing.
+
+The 24 June development name `nondurable_purge_delay` is not treated as released terminology; the 19 July follow-up explicitly says it never appeared in a tagged release and consolidates the behavior under `commit_window` before 2.28.0.
 
 ---
 

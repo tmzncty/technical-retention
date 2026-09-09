@@ -386,3 +386,12 @@ Reason:
 - related-repository duplication checked.
 
 Further work should be a separate bounded case if it addresses later on-disk `#d` durability markers, tombstones/versioned-writes, EC shard ranges, or another consistency regime. Do not expand this case into a complete Swift history.
+
+
+---
+
+## Later bounded deepening (kept separate from the 2015–2016 grounding)
+
+The original grounding above remains scoped to Swift 2.3.0–2.10.1. A separate [2021 `commit_window` / non-durable-cleanup addendum](25-swift-2021-commit-window-nondurable-cleanup-deepening.md) examines Swift 2.28.0's fix for a race in which background cleanup could delete a freshly written, intentionally back-dated EC fragment before the object server finished making it durable.
+
+That later record adds `logical object timestamp age != local file-write age`, `non-durable != discardable-now`, and `cleanup protection != durability witness` without back-projecting the 2021 implementation into the earlier release design.

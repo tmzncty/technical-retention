@@ -2,9 +2,9 @@
 
 ## Scope
 
-- **Bounded system:** OpenStack Swift erasure-coded object storage as released in Swift 2.3.0 (Kilo, 30 April 2015) and sharpened by Swift 2.10.1 (December 2016).
+- **Bounded system:** OpenStack Swift erasure-coded object storage as released in Swift 2.3.0 (Kilo, 30 April 2015) and sharpened by Swift 2.10.1 (December 2016). A later bounded deepening uses Swift 2.28.0 (27 July 2021) only for the `commit_window` / concurrent non-durable-cleanup race.
 - **Bounded mechanism:** mutable object PUT/overwrite under an erasure-code storage policy, especially fragment-archive timestamps/indexes, the multi-phase PUT conversation, `.durable` commit markers, same-timestamp GET reconstruction, delayed deletion of older object versions, and reconstructor repair.
-- **Primary source base:** the OpenStack Swift source tree and release documentation at the signed `2.3.0` tag and `2.10.1` tag/release state.
+- **Primary source base:** the OpenStack Swift source tree and release documentation at the signed `2.3.0` tag and `2.10.1` tag/release state. The 2021 deepening additionally inspects commits `2934818d`, `bbaed18e`, `2696a79f`, and the signed/tagged 2.28.0 release state.
 - **Research question:** when several coded fragments and several object timestamps can coexist, what retained relations let Swift decide that a particular coded object version is sufficiently committed to serve, repair, and eventually replace an older one?
 
 This is **not** a general history of OpenStack Swift, object storage, Reed–Solomon coding, eventual consistency, two-phase commit, or OpenStack releases. It does not claim that Swift invented erasure coding, quorum storage, version timestamps, or transaction commit protocols.
@@ -186,6 +186,53 @@ This source is used only for an implementation boundary:
 It does not prove that all earlier Swift fragments were unreliable, and it does not substitute for the timestamp/commit rule above.
 
 **Primary anchor:** Swift 2.10.1 release changelog / release-note entry, December 2016.
+
+
+### H/P — Swift 2.28.0 adds a grace window against deleting in-flight non-durable fragments
+
+A later, separately bounded implementation witness sharpens the earlier `fragment presence != committed object retention` result. OpenStack Swift commit `bbaed18e9b681ce9cf26ffa6a5d5292f5cb219b7` (19 July 2021; released in 2.28.0 on 27 July) records Bug `#1936508`: an agent such as the reconciler or container-sync can intentionally PUT an object using an older `X-Timestamp`, so a newly written non-durable EC `.data` file may already be older than `reclaim_age` in **logical object time**. If another process calls `cleanup_ondisk_files()` before the object server finishes the commit/rename, the old cleanup rule can remove the file and the later commit fails because its source data file is gone.
+
+The fix adds `commit_window`, default 60 seconds. For otherwise reclaimable non-durable data, cleanup now also checks local filesystem `mtime` and protects files written within that short window. The 2.28.0 changelog explicitly says this improves durability for both back-dated PUTs and fresh writes to handoffs by preventing the reconstructor from deleting data the object server is still writing.
+
+A preceding 24 June development commit (`2934818d`) had introduced a separate `nondurable_purge_delay` for the handoff-reversion race. Commit `2696a79f` (19 July) explicitly says that option never appeared in a tagged release, removes it, and reuses `commit_window` for the reconstructor path. The repository therefore treats `nondurable_purge_delay` as development-history vocabulary only and `commit_window` as the released operator-facing relation.
+
+**Primary anchors:** OpenStack Swift commits `2934818d608e6cedd30ecb81900d02969476275c`, `bbaed18e9b681ce9cf26ffa6a5d5292f5cb219b7`, `2696a79f098b02988136b13caf1c2565ec09481f`; Swift 2.28.0 `CHANGELOG` and object-server sample configuration. See the [2021 commit-window evidence deepening](../evidence/25-swift-2021-commit-window-nondurable-cleanup-deepening.md).
+
+### E — old logical timestamp != old physical file incarnation
+
+The 2021 fix exposes two clocks with different roles. The Swift object timestamp participates in object-version/currentness and stale/reclaim reasoning; filesystem `mtime` can say that the physical file carrying that old logical timestamp was created only moments ago and may still be part of an unfinished commit.
+
+Thus:
+
+```text
+reclaimable by logical timestamp
+    !=
+safe to delete during an in-flight write
+```
+
+and:
+
+```text
+non-durable
+    !=
+discardable-now
+```
+
+The second relation is intentionally narrower than saying every non-durable fragment deserves preservation. A failed pre-commit fragment may still become cleanup debris; `commit_window` merely prevents a freshness-blind cleanup path from deciding that **too early**.
+
+### E/X — `commit_window` protection != durability/currentness authority
+
+A recent `mtime` does not prove that the object version reached quorum, that a `.durable`/durable-filename relation exists, or that the client PUT succeeded. The grace window protects a candidate **while it may become durable**; it is not itself the durability witness.
+
+This extends Case 25's currentness ladder with a transition-safety boundary:
+
+```text
+physical candidate exists
+    -> temporarily protected from cleanup while in-flight
+    -> commit/durability qualification (if it succeeds)
+```
+
+The arrow is conditional. `commit_window` expiration is not a proof that the PUT failed, and the published 60-second default is not treated as a universal upper bound on every write path.
 
 ---
 
@@ -454,7 +501,13 @@ Case 19 and Case 24 are reused for coding-theory and immutable-coded-system comp
 4. OpenStack Swift **2.10.1**, `doc/source/overview_erasure_code.rst`: <https://github.com/openstack/swift/blob/2.10.1/doc/source/overview_erasure_code.rst>
 5. OpenStack Swift 2.10.1 release commit `3129a55d4418e0dc4207c2026e7ef8c59704c6a1`, including the EC fragment-validation release-note change: <https://github.com/openstack/swift/commit/3129a55d4418e0dc4207c2026e7ef8c59704c6a1>
 
+
+6. OpenStack Swift commit `2934818d608e6cedd30ecb81900d02969476275c`, 24 June 2021, `reconstructor: Delay purging reverted non-durable datafiles`: <https://github.com/openstack/swift/commit/2934818d608e6cedd30ecb81900d02969476275c>
+7. OpenStack Swift commit `bbaed18e9b681ce9cf26ffa6a5d5292f5cb219b7`, 19 July 2021, `diskfile: don't remove recently written non-durables`: <https://github.com/openstack/swift/commit/bbaed18e9b681ce9cf26ffa6a5d5292f5cb219b7>
+8. OpenStack Swift commit `2696a79f098b02988136b13caf1c2565ec09481f`, 19 July 2021, `reconstructor: retire nondurable_purge_delay option`: <https://github.com/openstack/swift/commit/2696a79f098b02988136b13caf1c2565ec09481f>
+9. OpenStack Swift **2.28.0**, tag date 27 July 2021, `CHANGELOG` `Erasure coding fixes`: <https://github.com/openstack/swift/blob/2.28.0/CHANGELOG>
+
 ### Reused prior-art boundary
 
-6. [`Case 19`](19-facebook-f4-erasure-coded-failure-domains.md) and its grounding record retain the Reed–Solomon/coding-theory priority boundary.
-7. [`Case 24`](24-windows-azure-lrc-repair-locality-handoff.md) retains the LRC/Pyramid-code repair-locality and immutable redundancy-handoff boundary.
+10. [`Case 19`](19-facebook-f4-erasure-coded-failure-domains.md) and its grounding record retain the Reed–Solomon/coding-theory priority boundary.
+11. [`Case 24`](24-windows-azure-lrc-repair-locality-handoff.md) retains the LRC/Pyramid-code repair-locality and immutable redundancy-handoff boundary.
