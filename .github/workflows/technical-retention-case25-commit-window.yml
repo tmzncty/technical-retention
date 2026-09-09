@@ -19,7 +19,9 @@ jobs:
           ref: main
           fetch-depth: 0
       - name: Apply bounded research slice
-        run: python3 tools/.tmp_case25_commit_window_integrate.py
+        run: |
+          sed -i 's/## Direct historical record (`H\/P`)/## Historical record (`H\/P`)/' tools/.tmp_case25_commit_window_integrate.py
+          python3 tools/.tmp_case25_commit_window_integrate.py
       - name: Validate and commit research
         run: |
           set -euo pipefail
@@ -65,6 +67,7 @@ jobs:
       - name: Remove temporary scaffolding
         run: |
           set -euo pipefail
+          git restore tools/.tmp_case25_commit_window_integrate.py || true
           git rm tools/.tmp_case25_commit_window_integrate.py .github/workflows/technical-retention-case25-commit-window.yml
           git commit -m "chore: remove Case 25 integration scaffolding"
           git push origin HEAD:main
