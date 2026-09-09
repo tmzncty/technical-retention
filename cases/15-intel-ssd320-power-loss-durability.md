@@ -9,6 +9,8 @@
 - **Independent later boundary:** Mai Zheng, Joseph Tucek, Feng Qin, and Mark Lillibridge, **“Understanding the Robustness of SSDs under Power Fault,”** FAST ’13, pp. 271–284.
 - **Research question:** what must remain, and what work must still occur, between a host-side write/flush relation and a recoverable SSD state when the medium is nonvolatile but the controller contains volatile staging and metadata state?
 
+Deepening record: [`../evidence/15-intel320-2011-unsafe-shutdown-telemetry-deepening.md`](../evidence/15-intel320-2011-unsafe-shutdown-telemetry-deepening.md) adds the bounded retained-event-history boundary `unsafe shutdown event != PLP failure verdict`.
+
 This is **not** a general history of SSDs, NAND, FTL algorithms, SATA, filesystems, `fsync`, NVMe persistence domains, or every form of power-loss protection. Case 04 already grounds mapped-Flash logical/physical relocation; Cases 11–13 ground the device-level floating-gate / erase asymmetry chain. This case begins one layer higher:
 
 > **A nonvolatile medium can sit behind a controller whose currently necessary user or system state is still temporarily volatile.**
@@ -74,7 +76,7 @@ Intel's September 2011 SSD 320 product specification states that the Series supp
 
 Intel's April 2011 enterprise addendum independently identifies ATA8-ACS compatibility, `Enhanced power-loss data protection`, and measures the reported random-write workload with the **SSD write-cache enabled**.
 
-The full September product specification currently survives in the research path through a non-Intel mirror; its Intel order number, revision/date, and document content are preserved, but the repository does not describe that mirror as current Intel hosting. The April addendum and March power-loss brief are currently available from Intel's own document host.
+The September product specification is now directly inspectable from Intel's regional content host (`intel.com.br`), including the SMART tables used in the later telemetry deepening. The April addendum and March power-loss brief are likewise available from Intel-hosted document paths.
 
 **Primary anchors:** Intel 325152-002US (September 2011), printed pp. 16, 21–22; Intel 325170-002US (April 2011), printed pp. 1 and 5.
 
@@ -133,6 +135,26 @@ Its valid use here is narrower:
 > **an interface contract or manufacturer feature claim is not the same evidence class as measured compliance under arbitrary fault timing.**
 
 **Scholarly anchor:** Zheng et al., FAST ’13, especially pp. 273, 279, and 281.
+
+### H/P — Unsafe-shutdown telemetry: event history is not a durability verdict
+
+Intel's September 2011 SSD 320 Product Specification adds a second retained-state layer to the power-loss case. SMART attribute `C0h`, `Power-Off Retract Count (Unsafe Shutdown Count)`, reports the **cumulative number of unsafe/unclean shutdown events over the life of the device**. Intel defines the counted event operationally: the device was powered off without `STANDBY IMMEDIATE` being the last command.
+
+The same row is marked `SP=1`, `EC=1`, `OC=1`, `PW=0`, with threshold `0 (none)`; Table 13 identifies these as self-preserving, event-count, online-collection, and advisory rather than pre-fail classifications.
+
+This does not turn C0h into a payload-durability verdict. Intel's March power-loss brief uses the same clean/unsafe boundary while claiming that, during an unsafe shutdown, power-fail detection plus firmware and onboard capacitance transfer temporary user/system data to NAND. The same physical episode can therefore be:
+
+```text
+classified and counted as an unsafe shutdown
+        +
+handled by the emergency protection path
+```
+
+Whether the protection actually succeeded is a separate evidence question.
+
+The cumulative field is also not a complete event log: the inspected specification gives no per-event timestamp, affected LBA set, outstanding-command list, flush state, PLP-health result, or recovery verdict. Nor does it disclose the power-fail atomicity of the counter update itself.
+
+**Primary anchors:** Intel 325152-002US (September 2011), printed pp. 18–19, Tables 12–13; Intel 325207-001US (March 2011), printed p. 1.
 
 ### H/P + H/S — August 2011 firmware history adds a named-product unsafe-power-loss recovery defect
 
@@ -373,6 +395,28 @@ The Intel 320's stored capacitance is valuable because it enables **continued op
 
 A newly programmed physical page is not necessarily enough after restart. The currentness/mapping relation that makes it the authoritative embodiment may also need to be preserved consistently.
 
+### E — unsafe-shutdown event evidence ≠ PLP failure / payload-loss evidence
+
+C0h's classification rule depends on the shutdown/control sequence, not on the outcome of the emergency transfer. A lifetime unsafe-shutdown count therefore records exposure to a class of abnormal power transitions without saying which events caused corruption, which were fully protected, or which payloads were affected.
+
+This yields:
+
+```text
+event counted
+    !=
+protection failed
+    !=
+payload lost
+```
+
+It also yields the converse caution: `C0h == 0` would not prove that every write was properly ordered, flushed, mapped, or otherwise durable.
+
+### E — cumulative event telemetry ≠ per-event audit history
+
+A scalar lifetime count compresses history. It preserves that events have accumulated, but not the sequence-specific evidence needed to reconstruct each event's cause and consequence.
+
+The source also does not reveal the transaction used to preserve C0h itself. Therefore **documented cumulative counter semantics ≠ demonstrated power-fail-atomic counter update**.
+
 ### E — explicit durability contract ≠ empirical implementation compliance
 
 The ATA draft defines what a successful flush is supposed to mean. FAST ’13 demonstrates why a separate evidence layer is needed to establish whether implementations behave correctly under fault injection.
@@ -394,6 +438,12 @@ Similarity does not make power-loss protection an FTL algorithm.
 ### A — comparison with HDD defect reassignment, Case 14
 
 Both cases show metadata/control state becoming constitutive of the service presented above the medium. But Case 14 is failure-triggered replacement of a physical sector behind a stable LBA; Case 15 is a power-failure boundary between volatile staging/control state and a recoverable nonvolatile SSD state.
+
+### A — comparison with NVMe SMART / Health, Case 55
+
+Case 55 later grounds NVMe SMART / Health fields including cumulative unsafe-shutdown history as non-payload retained device evidence. The useful analogy is only relational: both interfaces can retain a summary of abnormal power-transition exposure without turning that summary into the user payload or a complete failure history.
+
+This does **not** establish an ATA/Intel-320 → NVMe genealogy, shared internal counter implementation, or unchanged semantics.
 
 ### A — comparison with RADOS, Case 05
 
@@ -444,6 +494,14 @@ Rejected. The tested devices are anonymized; the paper cannot be mapped to the I
 
 Rejected. In the bounded Intel description, the capacitors provide short hold-up energy so firmware can move state to NAND. They are retention infrastructure, not the long-term payload substrate.
 
+### X — “the unsafe-shutdown SMART count is a count of failed power-loss-protection events”
+
+Rejected. Intel defines C0h by the shutdown sequence. Its separate power-loss brief describes protection work intended to run during that event class.
+
+### X — “Power-Off Retract Count proves an SSD mechanical retract mechanism”
+
+Rejected. The Intel SSD table itself parenthetically identifies the field as `Unsafe Shutdown Count`; the label alone is not mechanism evidence or genealogy.
+
 ### X — “this case establishes filesystem `fsync` or NVMe persistence semantics”
 
 Rejected. The case stops at the ATA/SSD device boundary. Filesystem ordering, block-layer barriers, NVMe volatile-write-cache rules, and later persistence-domain terminology require separate sources and cases.
@@ -465,6 +523,11 @@ Rejected. The case stops at the ATA/SSD device boundary. Filesystem ordering, bl
 | programmed payload and mapping/currentness metadata can fail as separate relations under power fault | H/S + E | high-quality FAST ’13 boundary; not Intel-product-specific |
 | interface flush contract proves empirical correctness of every SSD | X | explicitly rejected |
 | FAST ’13 identifies Intel SSD 320 as a failing device | X | explicitly rejected |
+| Intel SSD 320 C0h retains a cumulative lifetime unsafe/unclean-shutdown event count | H/P | strong: Intel 325152-002US, Tables 12–13 |
+| C0h is event classification rather than a PLP-success/failure verdict | E | strongly bounded by Intel's C0h definition plus separate PLP brief |
+| a cumulative unsafe-shutdown count is not a per-event payload/recovery log | E | strongly bounded by field structure; no per-event details in inspected table |
+| documented cumulative C0h semantics prove power-fail-atomic counter update | X | explicitly rejected; update transaction/fault behavior not disclosed |
+| `Power-Off Retract Count` proves a mechanical SSD retract operation | X | explicitly rejected |
 
 ---
 
@@ -489,8 +552,8 @@ Case 04 remains the main internal technical bridge for 1990s mapped Flash. Cases
 3. Intel Corporation, **_Intel Solid-State Drive 320 Series Enterprise Server/Storage Application Product Specification Addendum_**, order 325170-002US, April 2011. Directly inspected the first page and performance section; the document identifies ATA8-ACS, enhanced power-loss protection, and write-cache-enabled random-write measurement.  
    <https://www.intel.com/content/dam/www/public/us/en/documents/product-specifications/ssd-320-enterprise-server-storage-application-specification-addendum.pdf>
 
-4. Intel Corporation, **_Intel Solid-State Drive 320 Series Product Specification_**, order 325152-002US, September 2011. Directly inspected the surviving mirrored PDF at printed pp. 16, 21–22 for command support and cache-control surfaces. The current research path is a third-party mirror; this source is not represented as presently Intel-hosted.  
-   <https://www.ssdwiki.com/media/ssd-320-specification.pdf>
+4. Intel Corporation, **_Intel Solid-State Drive 320 Series Product Specification_**, order 325152-002US, September 2011. Directly inspected the Intel-hosted PDF at printed pp. 16, 18–19, 21–22 for command support, SMART telemetry, and cache-control surfaces.
+   <https://www.intel.com.br/content/dam/www/public/us/en/documents/product-specifications/ssd-320-specification.pdf>
 
 ### High-quality independent research
 

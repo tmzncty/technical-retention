@@ -85,9 +85,9 @@ Surviving copy inspected: <https://tc.gts3.org/cs3210/2016/spring/r/hardware/ATA
 
 **Document:** Intel Corporation, _Intel Solid-State Drive 320 Series Product Specification_, order 325152-002US, September 2011.
 
-**Inspection:** directly rendered surviving mirrored PDF, especially printed pp. 16, 21, and 22.
+**Inspection:** directly rendered Intel-hosted PDF, especially printed pp. 16, 18–19, 21, and 22.
 
-**Evidence class:** `H/P` for the identifiable Intel document; source-host provenance is separately qualified.
+**Evidence class:** `H/P` — manufacturer-primary named-product specification.
 
 **Directly establishes:**
 
@@ -95,11 +95,14 @@ Surviving copy inspected: <https://tc.gts3.org/cs3210/2016/spring/r/hardware/ATA
 - `FLUSH CACHE` appears in the ATA General Feature command set;
 - `STANDBY IMMEDIATE` appears in the Power Management command set;
 - SCT Feature Control exposes `write cache` and `write cache reordering` feature codes;
-- `FLUSH CACHE EXT` appears in the 48-bit Address command set.
+- `FLUSH CACHE EXT` appears in the 48-bit Address command set;
+- SMART attribute `C0h`, `Power-Off Retract Count (Unsafe Shutdown Count)`, reports a cumulative lifetime unsafe/unclean-shutdown event count;
+- Intel defines the counted unsafe event by power-off without `STANDBY IMMEDIATE` being the last command;
+- C0h is marked self-preserving/event-count/online-collection, advisory rather than pre-fail, with no threshold in Tables 12–13.
 
-**Boundary:** the inspected PDF is currently reached through a third-party mirror (`ssdwiki.com`). The document itself carries Intel's title/order/date, but this record does not represent the mirror as official Intel hosting.
+**Boundary:** the product specification is directly inspectable from Intel's regional content host. The SMART table documents host-visible semantics and classifications; it does not disclose the internal counter representation, update transaction, or fault atomicity.
 
-Surviving copy inspected: <https://www.ssdwiki.com/media/ssd-320-specification.pdf>
+Intel-hosted copy inspected: <https://www.intel.com.br/content/dam/www/public/us/en/documents/product-specifications/ssd-320-specification.pdf>
 
 ---
 
@@ -306,7 +309,7 @@ Why promotion is justified:
 
 - direct period standards-development text supplies the volatile-cache / nonvolatile-media and flush-completion vocabulary;
 - direct Intel-hosted product/design material supplies the named SSD 320 power-fail mechanism and clean/unsafe-shutdown distinction;
-- the Intel product specification supplies actual named-product FLUSH / write-cache command support, with the mirror provenance explicitly qualified;
+- the Intel product specification supplies actual named-product FLUSH / write-cache command support and directly inspected C0h unsafe-shutdown telemetry semantics;
 - independent high-quality FAST ’13 research supplies a counterexample boundary that prevents manufacturer/interface evidence from being overgeneralized;
 - historical record, engineering reconstruction, functional analogy, and philosophical interpretation remain separated;
 - the source set yields concrete failure modes and does not depend on a single loose analogy.
