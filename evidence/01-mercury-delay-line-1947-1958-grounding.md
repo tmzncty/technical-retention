@@ -206,5 +206,5 @@ Remaining work is **archival cleanup or optional extension**, not a grounding bl
 
 - obtain a conveniently renderable full facsimile of IRE pp. 856–861 and record additional exact figure/page anchors if a later argument needs them;
 - add EDSAC-specific temperature-control primary evidence only if making an EDSAC-specific thermal-control claim;
-- decide separately whether `recurrence` deserves a controlled-vocabulary entry distinct from `refresh`;
+- the `recurrence` versus `refresh` terminology question is now closed at the bounded project-vocabulary level by [`Synthesis 25`](../docs/SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md): `recurrence` is an analytical identity-through-re-instantiation descriptor, not a historical synonym for `refresh`;
 - deepen the Ernst comparison only in a bounded philosophical test, not inside the historical mechanism record.

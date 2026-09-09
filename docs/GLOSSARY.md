@@ -161,9 +161,31 @@ A write may require:
 
 ## refresh
 
-Periodic restoration required because the physical state would otherwise decay or become unreliable.
+A source-sensitive technical term for restoration / renewal used to keep retained state recoverable or reliable. In the bounded DRAM evidence, leakage creates an elapsed-time obligation and `refresh` restores charge/state before the service deadline is missed.
 
-Refresh is not merely maintenance performed after failure. In some systems it is **constitutive of ordinary persistence**.
+Do **not** use `refresh` as an umbrella for every preservation action that repeats. Delay-line recirculation, destructive-read core rewrite, Flash reclamation, scrub, reconstruction, migration, and rebuild have their own mechanisms and trigger relations unless a source independently calls a bounded operation `refresh`.
+
+Refresh is not merely maintenance performed after failure. In some systems it is **constitutive of ordinary persistence**. A refresh claim should still identify its target, trigger/deadline, scope, authority, and completion condition where the evidence permits.
+
+See [`SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md`](SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md).
+
+## recurrence
+
+A project analytical descriptor for **identity across repeated re-instantiation**: a later physical event or embodiment is treated as a state-equivalent successor to an earlier one even though one untouched physical token need not survive.
+
+`Recurrence` is **not** a maintenance-mechanism class, not a trigger regime, and not historical vocabulary to project onto every source. It can describe the logical relation produced by delay-line recirculation, DRAM restoration, destructive-read rewrite, or some reconstruction/migration cases while leaving their triggers and mechanisms distinct.
+
+Therefore:
+
+- recurrence does not imply periodic timing;
+- recurrence does not imply a decay deadline;
+- recurrence does not imply `refresh`;
+- recurrence does not imply history retention;
+- recurrence does not establish genealogy or shared period vocabulary.
+
+Use the source's own term (`recirculation`, `regeneration`, `rewrite`, `refresh`, `reconstruction`, etc.) for historical claims, and use `recurrence` only when the analytical question is what makes successive physical realizations count as the same retained state.
+
+See [`SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md`](SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md).
 
 ## retention-maintenance regime
 
