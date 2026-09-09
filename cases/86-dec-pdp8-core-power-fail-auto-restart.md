@@ -4,6 +4,8 @@
 
 Grounding record: [`../evidence/86-dec-1960-1970-core-power-restart-grounding.md`](../evidence/86-dec-1960-1970-core-power-restart-grounding.md)
 
+GE-PAC restart-admission deepening: [`../evidence/86-gepac-1972-restart-inhibit-admissibility-deepening.md`](../evidence/86-gepac-1972-restart-inhibit-admissibility-deepening.md).
+
 ## Scope
 
 This case asks a deliberately narrow question left open by the magnetic-core case:
@@ -212,6 +214,25 @@ This is enough to show that by the early 1960s a commercial core-memory computer
 
 It is not evidence of direct influence on DEC, not an automatic-restart design, and not a priority claim for the full KR01 relation.
 
+
+### H/P* — 1972 GE-PAC 3010/2 adds time-bounded restart admission after a successful core save
+
+General Electric's May 1972 *GE-PAC 3010/2 General Description* documents another process-computer power-fail path: sufficiently low/interrupted primary AC causes the General Register Stack and PSW to be stored automatically in Core Memory before orderly shutdown. A separate GE power-subsystem manual says the save micro-program begins early enough to finish before processor logic power drops below its operating level and associates the save area with a register-save pointer at core address `X'22'`.
+
+GE then adds a relation not present in the DEC evidence used above. Its optional **Restart Inhibit Timer** can prevent automatic restart after an outage judged too long for safe continuation of the controlled process. GET-6227 gives an adjustable range of 10 seconds to 10 minutes; the separate power-subsystem manual gives one minute to 10 minutes. This case preserves that discrepancy rather than silently selecting one universal value.
+
+The retention boundary is the important part:
+
+```text
+saved General Registers + PSW remain in core
+        !=
+automatic restart remains authorized indefinitely
+```
+
+The timer is tied to process/control safety, not to magnetic-core decay. Therefore **restart-admission lifetime != core-retention lifetime**.
+
+These GE details are marked `H/P*` because the archived primary PDFs could not be page-rendered in this pass; exact text was recovered from indexed archival copies. The dedicated deepening record preserves the source-custody and range-discrepancy limits.
+
 ---
 
 ## Engineering reconstruction
@@ -333,6 +354,25 @@ The saved CPU context does not prove that an electromechanical peripheral comple
 
 DEC's 200 ms Teletype rationale and warning about resetting peripherals make the limit concrete. Processor continuation can be reconstructed while external device state remains a separate recovery problem.
 
+
+### E — saved execution context can survive after automatic-restart authority expires
+
+The GE-PAC comparison sharpens `restart closure` into two independent questions. A core-resident checkpoint can remain physically recoverable while a separate process-safety policy refuses to turn it automatically back into a running computation.
+
+So:
+
+> **recoverable saved context != automatically admissible continuation.**
+
+This is not a contradiction. The computer's internal context can be intact while pumps, valves, mechanisms, sensors, backup controls, or other external process state have changed during the outage.
+
+### E — restart-admission deadline != physical-retention deadline
+
+The GE timer does not measure ferrite remanence. It bounds how long the system is permitted to treat an old machine/process relation as safe for automatic resumption. This makes the timer **qualification state around retained context**, not a retention specification for the core medium.
+
+### E — power-fail save != core refresh
+
+The GE and DEC paths perform event-triggered migration of volatile processor state into already-nonvolatile core. That transition is maintenance/continuation work at the machine level, but it is not periodic work required to keep core magnetization alive.
+
 ---
 
 ## Failure and forgetting modes
@@ -408,6 +448,14 @@ So:
 GFS log/checkpoint recovery, Raft snapshots, and ZooKeeper fuzzy snapshots all retain state from which a service can later reconstruct a working configuration. KR01 is functionally comparable only in the narrow sense that **surviving representation plus a recovery procedure** can recreate working state.
 
 It is not a distributed log, consensus snapshot, or filesystem checkpoint.
+
+### GE-PAC 3010/2 — restart safety can expire without core-state loss
+
+The 1972 GE-PAC witness is functionally close to DEC only at the **failure-triggered execution-state handoff** level. Both machines can move volatile CPU context into core before ordinary powered logic disappears and later restore it.
+
+GE additionally documents a customer-adjustable Restart Inhibit Timer for process safety. That makes a useful counterexample to `saved state survived -> automatic continuation remains valid`: the saved representation can remain in core after the machine's automatic-restart policy has expired.
+
+The comparison establishes no DEC/GE circuit identity or genealogy, and the inconsistent GE timer ranges remain a documentation/configuration question rather than a synthesized constant.
 
 ### IBM System/360 Model 65 — controlled power-off versus emergency restart
 
@@ -490,6 +538,11 @@ This is an interpretation of the engineering relation, not DEC's own philosophic
 | the 1966 KR01 used the same capacitor hold-up implementation | X | later KP8-E evidence cannot be back-projected to the earlier option |
 | all core-memory computers automatically resume after arbitrary power failure | X | explicitly rejected |
 | IBM 7090 directly influenced DEC KR01 | X | no lineage evidence established |
+| GE-PAC 3010/2 automatically saves its General Register Stack and PSW into core on the documented power-fail condition | H/P* | GE GET-6227 + power-subsystem indexed archival text; facsimile verification pending |
+| GE-PAC automatic restart can be inhibited after an operator-selected outage interval for process safety | H/P* | GE GET-6227 + power-subsystem indexed archival text |
+| GE-PAC timer expiry proves the saved core state has physically decayed | X | timer governs restart safety/admission, not ferrite retention |
+| recoverable saved context and automatic-restart admissibility are separate relations | E | bounded reconstruction from GE core save + Restart Inhibit Timer |
+| DEC and GE power-fail restart mechanisms are one implementation/genealogy | A/X | functional comparison only |
 
 ---
 
@@ -503,6 +556,12 @@ This is an interpretation of the engineering relation, not DEC's own philosophic
 4. **IBM, _IBM 7090 Data Processing System Operator's Guide_**, early-1960s edition/revision, `IBM 7151 Console Control`, panel keys 26 `Clear Key` and 27 `Reset Key`. Public scan/extraction: <https://manualzz.com/doc/19740167/ibm-7090-data-processing-system-operator%E2%80%99s-guide>.
 
 5. **IBM, _IBM System/360 Model 65 Functional Characteristics_, Fourth Edition, September 1968, Form A22-6884-3**, `System Control Panel`, printed pp. 13–14, `POWER ON Pushbutton` / `POWER OFF Pushbutton`. Direct scan: <https://www.bitsavers.org/pdf/ibm/360/functional_characteristics/GA22-6884-3_System_360_Model_65_Functional_Characteristics_196809.pdf>. Searchable transcription used as an inspection aid: <https://manualzilla.com/doc/5665606/ibm-360-65---bitsavers.org>.
+
+### GE-PAC deepening primary sources
+
+- **General Electric, _GE-PAC 3010/2 General Description_, GET-6227, May 1972**, §4.7 and §4.7.1: <https://www.bitsavers.org/pdf/ge/GE-PAC_3010/GET-6227_GE-PAC_3010_2_General_Description_197205.pdf>.
+- **General Electric, _3010/2 Power Subsystem_**, `Power Failure Detector and Automatic Restart Option` and `AUTOMATIC RESTART INHIBIT TIMER`: <https://www.bitsavers.org/pdf/ge/GE-PAC_3010/3010_Power_Subsystem.pdf>.
+- Dedicated claim/source-custody decomposition: [`../evidence/86-gepac-1972-restart-inhibit-admissibility-deepening.md`](../evidence/86-gepac-1972-restart-inhibit-admissibility-deepening.md).
 
 ### Institutional metadata
 
