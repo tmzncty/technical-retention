@@ -27,31 +27,26 @@ jobs:
           from pathlib import Path
           helper = Path('scripts/apply_case121_prac_reset_reconstitution.py')
           source = helper.read_text(encoding='utf-8')
-
-          # The current CASE_INDEX has a dedicated Case-121 findings section but
-          # does not expose a stable Case-121 summary-table row. Skip only that
-          # optional row rewrite; keep the canonical findings update.
           start_marker = '# Update the Case 121 table row by adding the deepening record and narrowing the reset debt.'
           end_marker = '# Insert new findings into the existing Case 121 findings section.'
           start = source.index(start_marker)
           end = source.index(end_marker)
           source = source[:start] + "index = INDEX.read_text(encoding='utf-8')\n\n" + source[end:]
-
-          # Replace helper-local assertions with an explicit ledger link. The
-          # workflow performs the authoritative validation in the next step.
           assert_marker = '# Local assertions keep this helper one-shot and bounded.'
           assert_at = source.index(assert_marker)
-          source = source[:assert_at] + r'''
-index = INDEX.read_text(encoding='utf-8')
-link_path = 'evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md'
-if link_path not in index:
-    section = '## Case 121 — DDR5 PRAC activation-counter findings\n'
-    link = '\nDeepening record: [`evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md`](evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md).\n'
-    if index.count(section) != 1:
-        raise RuntimeError('Case 121 findings section unavailable for evidence link')
-    index = index.replace(section, section + link, 1)
-    INDEX.write_text(index, encoding='utf-8')
-'''
+          tail = "\n".join([
+              "index = INDEX.read_text(encoding='utf-8')",
+              "link_path = 'evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md'",
+              "if link_path not in index:",
+              "    section = '## Case 121 — DDR5 PRAC activation-counter findings\\n'",
+              "    link = '\\nDeepening record: [`evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md`](evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md).\\n'",
+              "    if index.count(section) != 1:",
+              "        raise RuntimeError('Case 121 findings section unavailable for evidence link')",
+              "    index = index.replace(section, section + link, 1)",
+              "    INDEX.write_text(index, encoding='utf-8')",
+              "",
+          ])
+          source = source[:assert_at] + tail
           exec(compile(source, str(helper), 'exec'))
           PY
 
