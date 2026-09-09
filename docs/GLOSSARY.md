@@ -165,6 +165,24 @@ Periodic restoration required because the physical state would otherwise decay o
 
 Refresh is not merely maintenance performed after failure. In some systems it is **constitutive of ordinary persistence**.
 
+## retention-maintenance regime
+
+A project-controlled classification of **what condition makes preservation work due for a particular retained relation**. It is not a historical actor's vocabulary, not a device taxonomy, and not a rule that one technology belongs to only one regime.
+
+The current bounded regime terms are:
+
+- **quiescent retention** — no recurring preservation action is constitutively due while the stated retention conditions hold;
+- **continuous maintenance** — continuing circulation, feedback, regeneration, or an equivalent process constitutes the retained relation;
+- **access-triggered restoration** — a particular access creates an immediate/near-immediate restore obligation for the selected state;
+- **deadline-driven maintenance** — elapsed time or a retention deadline makes work due even without a foreground access;
+- **capacity/reclaim-triggered maintenance** — obsolete-state accumulation or free-space/reuse pressure makes copy/erase/remap work due while current state is preserved;
+- **wear/lifetime-triggered policy** — accumulated use, wear, endurance, or lifetime evidence changes placement, renewal, admission, retirement, or replacement policy;
+- **failure/repair-triggered maintenance** — a failure, missing member, or consumed redundancy margin creates reconstruction/re-replication/rebuild work.
+
+A regime label identifies the **trigger/obligation relation**, not the response mechanism. Rewrite, relocation, refresh, rebuild, or replacement can answer different triggers. One system can compose several regimes at different layers or times. `Evidence-conditioned` and `environment-conditioned` may be used as orthogonal modifiers where grounded rather than promoted automatically into new universal classes.
+
+See [`SYNTHESIS_24_RETENTION_MAINTENANCE_TRIGGER_REGIMES.md`](SYNTHESIS_24_RETENTION_MAINTENANCE_TRIGGER_REGIMES.md).
+
 ## remanence
 
 Persistence of a physical distinction after the external stimulus that created it is removed.
