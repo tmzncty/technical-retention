@@ -48,7 +48,7 @@ jobs:
           for n in range(2725, 2740):
               marker = f'**{n} —'
               assert idx.count(marker) == 1, (n, idx.count(marker))
-          assert 'program verify != source-read EDC' in case
+          assert 'destination program success != source logical correctness' in case
           assert 'manufacturer mirror = current official hosting' in case
           PY
           git diff --check
