@@ -1,6 +1,6 @@
 # 2015 cryogenic serial-Flash retention / operability grounding record
 
-This evidence record grounds [`cases/132-cryogenic-serial-flash-retention-operability.md`](../cases/132-cryogenic-serial-flash-retention-operability.md).
+This evidence record grounds [`cases/132-cryogenic-serial-flash-retention-operability.md`](../cases/132-cryogenic-serial-flash-retention-operability.md). Elevated-temperature product qualification/derating is deepened separately in [`132-2014-2018-temperature-conditioned-retention-contract-deepening.md`](132-2014-2018-temperature-conditioned-retention-contract-deepening.md).
 
 **Canonical maturity status is tracked in [`CASE_INDEX.md`](../CASE_INDEX.md).** This slice is deliberately bounded to a 2015 commercial serial-Flash batch experiment. It does not substitute for a general Flash-device history, raw-cell retention physics, SSD qualification, or a cryogenic-electronics genealogy.
 
@@ -270,4 +270,4 @@ Case 132 meets the repository's `grounded` threshold for its **bounded environme
 - fresh related-repository duplication check;
 - no invention-priority or raw-cell-physics overclaim.
 
-Future work should be narrow rather than generic: longer-duration replication, elevated-temperature comparison, direct raw-cell threshold/charge-loss studies, named modern serial-Flash products, independent laboratories, or controlled thermal-cycling fault experiments.
+Future work should be narrow rather than generic: longer-duration replication, direct raw-cell threshold/charge-loss and quantitative acceleration studies, named modern serial-Flash products, independent laboratories, or controlled thermal-cycling fault experiments. The bounded elevated-temperature **qualification/contract** comparison is now handled by the linked Case-132 addendum; raw-cell kinetics remain open.

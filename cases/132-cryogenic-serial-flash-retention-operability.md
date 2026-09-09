@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/132-2015-cryogenic-serial-flash-grounding.md`](../evidence/132-2015-cryogenic-serial-flash-grounding.md).
 
+Temperature-conditioned qualification deepening: [`../evidence/132-2014-2018-temperature-conditioned-retention-contract-deepening.md`](../evidence/132-2014-2018-temperature-conditioned-retention-contract-deepening.md). This later/deeper evidence is a bounded comparison, not an identification of the anonymous cryogenic-test ICs with Cypress products.
+
 ## Scope
 
 - **Object / system:** six production batches of commercial serial Flash-memory ICs, 3,600 devices in total;
@@ -91,6 +93,18 @@ one universal low-temperature operating boundary
 ```
 
 A historical product family can preserve its ordinary interface identity while the physical margin underneath that interface changes across production revisions.
+
+### H/P — elevated-temperature qualification is a separate retention relation
+
+A 14-February-2014 Cypress PSoC 3 CY8C34 Automotive datasheet provides a useful pre-publication counterweight to the cryogenic experiment. Its Flash write/erase/program timing is specified over an active range extending to `TA <= 125 °C`, while retention is separately qualified by **average ambient temperature and prior cycling**: after 100 K erase/program cycles the table gives 20 years at `TA <= 55 °C` but 10 years at `TA <= 85 °C`. The same datasheet says the retention period is measured from the last erase cycle and offers a calculator based on an application's temperature profile.
+
+Cypress KBA203737, dated 15 October 2015, independently tells users that low erase counts do not remove temperature dependence: extended higher-temperature storage requires a longevity calculation. Later S25FL1-K serial-Flash documentation preserves the same separation between P/E-conditioned retention and a broader active operating-temperature grade.
+
+These are not evidence about the identity or process of the 2015 paper's anonymous samples. They establish a **vendor qualification boundary**:
+
+> **operating-temperature support != a uniform retention guarantee over that entire operating range.**
+
+Detailed evidence and provenance are kept in the temperature-conditioned addendum.
 
 ---
 
@@ -227,6 +241,18 @@ A bounded sample, pattern, duration, manufacturing range, and verification proce
 
 `colder` is not one scalar measure of `better memory`. In this case the environment can support long storage of an already-written pattern while worsening active-operation timing and pass rate.
 
+### E — active operating range != retention qualification range
+
+The 2014 Cypress product evidence makes the converse boundary explicit: Flash operations may remain specified across a broad high-temperature range while the qualified retention interval is separately conditioned by average temperature and prior cycling. A product's operating-grade ceiling is therefore not a hidden promise that its headline retention number applies unchanged at that ceiling.
+
+### E — temperature history can be retained as a condition even when no temperature log is stored in the memory
+
+The Cypress retention-calculator note makes the guarantee depend on an application's temperature profile. The Flash payload does not need to store a temperature log for environmental history to matter physically and contractually. `retention depends on history` therefore does not imply `the device archives that history`.
+
+### X — cold result != inverse high-temperature acceleration law
+
+The cryogenic paper and Cypress qualification tables constrain the environmental problem from different sides, but they do not establish one measured activation energy or a quantitative conversion from `24 months with zero observed errors while cold` to a predicted room/high-temperature lifetime.
+
 ---
 
 ## Functional analogies and limits
@@ -288,7 +314,8 @@ This is a project interpretation. The 2015 authors do not present the experiment
 - The paper does not directly measure floating-gate threshold-charge decay kinetics across the storage interval.
 - The retention group was periodically warmed for verification; this is not a continuous in-situ cryogenic read-availability test.
 - The six production batches do not represent every serial Flash process, vendor, capacity, or generation.
-- Very-low-temperature program/erase degradation does not imply the same behavior at elevated storage temperatures.
+- Very-low-temperature program/erase degradation does not imply the same behavior at elevated storage temperatures. The Cypress addendum supplies only a separate vendor qualification/derating boundary, not a common microscopic model.
+- Elevated-temperature product contracts do not identify the anonymous 2015 samples, prove raw-cell charge-loss kinetics, or provide a universal Flash activation energy.
 - The experiment does not replace JESD218/JESD219 SSD qualification or named SSD/controller validation.
 - A cryogenic storage result cannot be projected backward into EPROM/EEPROM/early-Flash history without separate evidence.
 
@@ -309,6 +336,9 @@ This is a project interpretation. The 2015 authors do not present the experiment
 | successful warm verification proves continuous in-situ cryogenic read/write service | `X` | procedure does not establish this |
 | cryogenic Flash and cooled DRAM share one physical retention mechanism | `X` | functional analogy only |
 | retention-valid environment can differ from operation-valid environment | `E` | bounded reconstruction from split test results |
+| at fixed 100 K P/E history, Cypress PSoC Flash qualified 20 years at average `TA <= 55 °C` but 10 years at `TA <= 85 °C` | `H/P` | 2014 manufacturer datasheet |
+| active operating-temperature range implies the same retention lifetime at every supported temperature | `X` | manufacturer retention conditions reject this shortcut |
+| cryogenic zero-error observation determines a quantitative high-temperature acceleration law | `X` | no common activation-energy/kinetics measurement |
 
 ---
 
@@ -328,5 +358,8 @@ The historical problem in the 2015 paper is not `how can Flash become an archive
 
 1. Frank R. Ihmig, Stephen G. Shirley, Heiko Zimmermann, **“Batch screening of commercial serial flash-memory integrated circuits for low-temperature applications,”** *Cryogenics* 71 (2015), DOI `10.1016/j.cryogenics.2015.05.005`. Fraunhofer institutional record: <https://publica.fraunhofer.de/entities/publication/bec6d545-e1b1-4a6c-a3cc-ca9d1043ad60>.
 2. Author-uploaded accepted manuscript for the same article, PII `S0011-2275(15)00064-8`, Manuscript ID `CRYOGENICS-D-15-00007`, received 7 January 2015, revised 7 May 2015, accepted 14 May 2015. ResearchGate record: <https://www.researchgate.net/publication/277338221_Batch_screening_of_commercial_serial_flash-memory_integrated_circuits_for_low-temperature_applications>.
+3. Cypress Semiconductor, *PSoC 3: CY8C34 Automotive Family Datasheet*, Document 001-57331 Rev. *G, revised 14 February 2014; first-party legacy copy preserved by Infineon: <https://www.infineon.com/dgdl/Infineon-PSoC_3_CY8C34_Automotive_Family_Datasheet_Programmable_System-on-Chip_%28PSoC%29_Datasheet-AdditionalTechnicalInformation-v08_00-EN.pdf?fileId=8ac78c8c7d0d8da4017d0ecabcb643c4>.
+4. Cypress/Infineon, KBA203737, **“How long will data be retained in Cypress Flash memory devices if only a few erase cycles are planned?”**, 15 October 2015: <https://community.infineon.com/t5/Knowledge-Base-Articles/How-long-will-data-be-retained-in-Cypress-Flash-memory-devices-if-only-a-few/ta-p/249710>.
+5. Cypress Semiconductor, *S25FL116K/S25FL132K/S25FL164K* SPI Flash datasheet, Document 002-00497, current legacy Rev. *I (4 July 2018), with revision history recording Data Retention section addition in 2016: <https://www.infineon.com/assets/row/public/documents/10/49/infineon-s25fl116k-s25fl132k-s25fl164k-16-mbit-2-mbyte-32-mbit-4-mbyte-64-mbit-8-mbyte-3.0-v-spi-flash-memory-datasheet-en.pdf?fileId=8ac78c8c7d0d8da4017d0ed4ebee537f>.
 
-The accepted manuscript, not a publisher-typeset facsimile, is the directly text-inspected experimental source in this slice. Exact claims are therefore anchored to its section/figure/table structure in the accompanying evidence record rather than to unverified final-pagination quotations.
+The accepted manuscript, not a publisher-typeset facsimile, is the directly text-inspected cryogenic experimental source. The Cypress documents are separate product/vendor qualification witnesses used to bound elevated-temperature claims; they are not evidence that the anonymous cryogenic-test parts were Cypress devices.
