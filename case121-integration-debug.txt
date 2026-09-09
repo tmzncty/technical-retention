@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "<stdin>", line 12, in <module>
-  File "scripts/apply_case121_prac_reset_reconstitution.py", line 322, in <module>
-    block = index[start:next_header]
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError
