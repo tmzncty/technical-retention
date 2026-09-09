@@ -3683,3 +3683,35 @@ Evidence: [`docs/SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md`
 - **2677 — documented retention policy != effective retention implementation.** Case 83's monotonic-versus-wall-clock mismatch demonstrates that a configured periodic save interval can fail to produce the intended checkpoint cadence. (`H/P` inherited, `E`)
 - **2678 — maintenance-control-state survival and payload survival are not mutually entailed.** Payload/replica bytes can survive while runtime control knowledge must be rebuilt; compact control telemetry can also survive an event without proving payload survival. (`E`, `A`, `X`)
 - **2679 — related-repository boundary:** a fresh `tmzncty/computing-archaeology` search found no dedicated cross-technology treatment combining DRAM refresh phase, NAND BBT persistence, HDFS scanner/policy reconstitution, and SSD unsafe-shutdown telemetry; broad mechanism genealogies remain there, while Synthesis 26 keeps the retention-specific role/horizon comparison. (`H/P` project-state record)
+
+## Case 78 deepening — BBT currentness arithmetic and candidate-admissibility findings
+
+**2740 — 28-May-2004 Linux MTD BBT reconciliation used ordinary numeric version ordering.** Historical record: the archived CVS `check_create()` chose between differing primary/mirror versions with `td->version[i] > md->version[i]`. This is a dated implementation witness, not an invention claim.
+
+**2741 — the inspected 2004 BBT version was retained as little-endian integer state.** Historical record: the archived source read the OOB version with `le32_to_cpu` and wrote it with `cpu_to_le32`. Later one-byte semantics must not be silently back-projected into this 2004 representation.
+
+**2742 — by final Linux 2.6.12, BBT currentness used a one-byte persisted version plus signed-difference comparison.** Historical record: released 17-June-2005 source writes one version byte and selects between unequal versions with `((int8_t)(td->version[i] - md->version[i])) > 0`.
+
+**2743 — numeric magnitude != currentness under cyclic version reuse.** Engineering reconstruction: for a nearby wrap from `0xff` to `0x00`, the signed-difference rule can treat `0x00` as newer although ordinary unsigned magnitude would rank it lower.
+
+**2744 — finite currentness token != unbounded chronological sequence.** Engineering reconstruction: an 8-bit modular discriminator cannot encode an unlimited total history; its ordering meaning depends on bounded divergence and comparison semantics. The Linux sources inspected here do not state a universal maximum-divergence contract.
+
+**2745 — retained currentness token != retained currentness meaning by itself.** Engineering reconstruction: the persisted version only becomes actionable through the consumer's comparison rule, including its behavior around wrap.
+
+**2746 — higher BBT version != valid BBT payload.** Historical/engineering boundary: the September-2011 MTD patch documents a version-`0x02` primary with uncorrectable ECC and a clean version-`0x01` mirror; the nominally newer candidate must be rejected.
+
+**2747 — provisional version selection != irrevocable authority.** Engineering reconstruction: the 2011 fix postpones propagating/equalizing version state until after a readable valid copy is established, so ordering can be revised by later integrity evidence.
+
+**2748 — relabeling a surviving old payload with a failed candidate's newer version != legitimate recovery.** Historical/engineering boundary: the 2011 patch was specifically designed to prevent the clean old mirror from being rewritten as `0x02` merely because the unreadable primary had carried that version.
+
+**2749 — BBT carrier admissibility != BBT signature/version recognizability.** Historical record: the March-2021 upstream fix skips blocks already marked bad before considering them as BBT candidates, because BBT-host blocks can themselves wear out.
+
+**2750 — BBT describes media qualification != every BBT embodiment is automatically qualified.** Engineering reconstruction: the control structure that excludes bad blocks can itself reside on a block that later becomes inadmissible; carrier qualification and table contents remain distinct relations.
+
+**2751 — version comparison happens inside a larger authority pipeline.** Engineering reconstruction: candidate discovery, carrier admissibility, version ordering, content/ECC validity, selection, and stale-peer rewrite are separable operations; `version` must not stand in for the whole pipeline.
+
+**2752 — version convergence != bad-block event-history recovery.** Engineering reconstruction: rewriting stale/missing peers can restore one current BBT image/version without reconstructing every discovery, failed read, rewrite, or prior table state.
+
+**2753 — Linux MTD BBT currentness ≈ ZFS / distributed sequence selection only functionally.** Functional analogy: multiple retained candidates require a currentness/admissibility rule, but NAND BBT signatures, ECC, bad-block qualification, and one-byte version arithmetic are not ZFS uberblocks, consensus epochs, quorum terms, or evidence of genealogy.
+
+**2754 — broad BBT / sequence-number genealogy remains a related-repository task.** Repository boundary: a fresh `tmzncty/computing-archaeology` search found no dedicated `bad block table NAND BBT version` study to reuse; pre-2004 invention history, DiskOnChip/bootloader/controller lineages, and general finite-sequence-number history belong there if pursued, while this repository keeps the retention-specific authority boundary.

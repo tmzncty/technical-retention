@@ -141,6 +141,24 @@ Therefore the bounded relations are:
 
 See [`evidence/78-linux-mtd-2004-mirrored-versioned-bbt-deepening.md`](../evidence/78-linux-mtd-2004-mirrored-versioned-bbt-deepening.md).
 
+
+### H/P — BBT currentness depends on ordering and candidate admissibility, not version magnitude alone
+
+A second Linux-MTD deepening makes the earlier `higher readable version` shorthand more precise. The 28-May-2004 CVS change used an ordinary numeric `>` comparison between differing primary/mirror versions and stored the then-version field as a little-endian integer. By the final Linux 2.6.12 source (17 June 2005), the persisted BBT version occupies one byte and currentness is chosen with a signed 8-bit difference, `((int8_t)(td->version[i] - md->version[i])) > 0`, allowing nearby versions to be ordered across numeric wrap such as `0xff -> 0x00`.
+
+That comparison rule still does not make the version byte a self-sufficient authority token. A September-2011 MTD patch documents a case where a primary BBT at version `0x02` has uncorrectable ECC errors while a mirror at `0x01` remains clean. The fix delays propagating the nominally newer version until a valid readable copy has actually been selected, preventing the old mirror payload from being falsely relabeled as version `0x02` after the newer candidate fails validation.
+
+A March-2021 upstream change adds another boundary: blocks holding the BBT can themselves become bad, and BBT search must skip such blocks or an obsolete table may be selected instead of a newer available one. Currentness therefore depends on **candidate discovery + carrier admissibility + version ordering + content validity**, not simply on retaining two copies and comparing one scalar.
+
+The bounded relations are:
+
+- `finite version token != unbounded chronology`;
+- `numerically larger != unconditionally newer after cyclic reuse`;
+- `higher/newer version != valid BBT payload`;
+- `recognizable BBT signature/version != admissible BBT embodiment`;
+- `version convergence != bad-block event-history recovery`.
+
+See [`evidence/78-linux-mtd-2004-2021-bbt-currentness-admissibility-deepening.md`](../evidence/78-linux-mtd-2004-2021-bbt-currentness-admissibility-deepening.md).
 ---
 
 ## Retained state
