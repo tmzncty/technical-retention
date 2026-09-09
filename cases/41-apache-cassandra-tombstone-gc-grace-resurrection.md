@@ -2,7 +2,7 @@
 
 ## Scope
 
-- **Bounded system:** Apache Cassandra 3.x operational semantics remain the principal behavior layer, with bounded historical floors from Apache Incubator Cassandra in 2009 and Cassandra 1.2.19 in 2014; these older artifacts are used only where they directly expose deletion-marker retention and reclamation policy.
+- **Bounded system:** Apache Cassandra 3.x operational semantics remain the principal behavior layer, with bounded historical floors from Apache Incubator Cassandra in 2009 and Cassandra 1.2.19 in 2014, plus a narrowly bounded Cassandra 4.1.0–4.1.6 Paxos-v2 defect/fix deepening; the older and later artifacts are used only where they directly change deletion-evidence retention, reclamation, or resurrection boundaries.
 - **Bounded mechanism:** deletion tombstones, `gc_grace_seconds`, compaction-time tombstone purging, repair, hinted handoff, and the `only_purge_repaired_tombstones` safety option.
 - **Primary source base:** Apache Cassandra 3.11 official documentation; Apache Cassandra source/tests and release records; exact Apache git history for the 17 April 2009 GC-grace configurability change and the 11 August 2015 repaired-tombstone purge option; plus bounded 1.2.19 implementation evidence.
 - **Research question:** why can a distributed system need to retain evidence of deletion, and why can forgetting that evidence too early cause older positive data to become current again?
@@ -262,6 +262,56 @@ Do not project the later Cassandra 3.x `only_purge_repaired_tombstones` option b
 
 ---
 
+## Historical deepening — Cassandra 4.1.0–4.1.6 Paxos v2 stale-commit redistribution
+
+This later slice is grounded separately in [`evidence/41-cassandra-2024-paxos-v2-stale-commit-resurrection-deepening.md`](../evidence/41-cassandra-2024-paxos-v2-stale-commit-resurrection-deepening.md). It does **not** replace the 1.2/3.x mechanism above. It adds one post-4.0 counterexample to an overly narrow safe-forgetting model.
+
+### H/P — Cassandra 4.1 adds Paxos v2, Paxos Repair, and non-legacy Paxos-state purge modes
+
+The Cassandra 4.1 release `NEWS.txt` introduces Paxos v2 and a Paxos Repair mechanism. After regular repairs include Paxos repair, the release record encourages operators to move to `paxos_state_purging: repaired`. Tagged 4.1.6 source defines `legacy`, `gc_grace`, and `repaired` purging modes and documents `legacy` as the default.
+
+These are separate from the ordinary table tombstone / `gc_grace_seconds` mechanism already established by the case, even though the later modes deliberately relate Paxos-state retirement to GC grace or repair evidence.
+
+### H/P — CASSANDRA-19617 shows a stale Paxos commit can reapply an insert after tombstone collection
+
+Apache issue CASSANDRA-19617, created **3 May 2024** and resolved **11 June 2024**, is recorded as a critical correctness bug since Cassandra 4.1.0 and fixed beginning with 4.1.6. The issue explicitly limits the defect to `paxos_state_purging: gc_grace` and `repaired`.
+
+Apache identifies two failures: old Paxos state could be purged on compaction but not filtered on load, and `PaxosPrepare` did not filter commits against the Paxos repair low bound. Under the described compaction pattern, some replicas could discard newer Paxos commits while an older commit survived elsewhere. A coordinator could then redistribute that old commit, allowing an **insert to be reapplied after GC grace elapsed and the user-data tombstone had been collected**.
+
+**Primary anchor:** <https://issues.apache.org/jira/browse/CASSANDRA-19617>
+
+### H/P — the 4.1.6 fix makes stale-state admissibility explicit at load and prepare time
+
+Apache commit [`53b06453b7dea147ef6369765e0b7ac7fb0990fd`](https://github.com/apache/cassandra/commit/53b06453b7dea147ef6369765e0b7ac7fb0990fd), `Refresh stale paxos commit`, filters loaded promises/accepted/committed Paxos state using the applicable purge boundary and makes `PaxosPrepare` discard committed state below the maximum repair low bound returned by participants. Its distributed regression test constructs stale `system.paxos` state and requires the deleted row to remain absent after the later Paxos operation.
+
+This fix is not tombstone restoration. It changes which surviving Paxos state is allowed to count.
+
+### E — safe forgetting must close auxiliary re-authorization paths
+
+The earlier case already established:
+
+```text
+stale positive replica
+    + lost deletion evidence
+    -> possible resurrection
+```
+
+The 2024 defect adds:
+
+```text
+stale positive Paxos commit
+    + asymmetric retirement of newer Paxos state
+    + later tombstone collection
+    + obsolete commit wrongly treated as admissible
+    -> possible reapplication of old insert
+```
+
+Therefore `replicas repaired enough for ordinary tombstone retirement` and `every auxiliary mechanism can no longer re-authorize older positive state` are not the same proposition.
+
+This is a bounded engineering reconstruction from one Apache defect class, not a universal theorem about Paxos or distributed deletion.
+
+---
+
 ## Retained state
 
 The bounded regime retains several different kinds of state.
@@ -289,6 +339,10 @@ A tombstone cannot safely be dropped merely because it is old if older shadowed 
 ### 6. Hint state
 
 Hints are temporary retained mutations for unavailable replicas. They can shorten inconsistency duration but do not substitute for the stronger repair relation.
+
+### 7. Paxos coordination state and repair lower bound in the bounded 4.1 deepening
+
+For Paxos-v2/LWT operations, `system.paxos` can retain older accepted/committed coordination state separately from the user-table tombstone. CASSANDRA-19617 shows that this auxiliary positive state also needs an admissibility boundary: a physically surviving old commit below the applicable GC-grace/repair floor must not regain redistribution authority.
 
 The client-visible result `not found` is therefore supported by several hidden states that can outlive the DELETE request itself.
 
@@ -375,6 +429,7 @@ Keep these distinct:
 - tombstone reclamation while a stale replica can still re-enter;
 - compaction failing to include all older shadowed data;
 - loss of repair/currentness evidence;
+- in the bounded Cassandra 4.1 Paxos-v2 defect, stale auxiliary Paxos commit state surviving newer coordination state and later being treated as redistributable after the user-data tombstone is collected;
 - operator configuration of a grace window shorter than the real outage/repair envelope;
 - indefinitely retaining tombstones and incurring storage/read/compaction costs;
 - physical remnants after logical deletion;
@@ -419,6 +474,24 @@ When tombstone evidence survives, repair propagates deletion. When only the stal
 ### E — repair-qualified forgetting trades safety against retained-state cost
 
 `only_purge_repaired_tombstones` can postpone forgetting until repair evidence exists. Apache's own release note simultaneously warns that long-running lack of repair can retain tombstones indefinitely enough to cause other problems. Safer negative-state retention consumes storage and maintenance resources.
+
+
+### E — auxiliary positive state can defeat otherwise-completed negative-state retirement
+
+CASSANDRA-19617 narrows the earlier phrase `safe-forgetting condition`. Tombstone age, local overlap closure, and ordinary repair evidence can be insufficient if a separate retained coordination substrate can still re-authorize a superseded positive mutation.
+
+So, in the bounded 4.1 Paxos-v2 configuration:
+
+```text
+user-data tombstone reclaimed
+    != proof every older positive state is non-authoritative
+```
+
+The fix does not preserve the tombstone longer. It filters old Paxos state so physical survival does not automatically become protocol authority.
+
+### E — purge-on-compaction != purge-on-observation
+
+A retained record can be physically eligible for cleanup yet still reappear between compaction events unless read/load/prepare paths apply the same semantic boundary. CASSANDRA-19617 is therefore also a currentness-check placement failure: applying retirement only during one maintenance path did not guarantee that every later observer would treat the old state as retired.
 
 ---
 
@@ -469,6 +542,8 @@ This can discipline philosophical discussion of forgetting, trace, and technical
 - Hints are explicitly best effort.
 - Tombstone age does not imply immediate physical deletion.
 - `only_purge_repaired_tombstones` strengthens one reclamation condition but does not prove absence of every possible stale/corrupt copy.
+- CASSANDRA-19617 is bounded to Cassandra 4.1 Paxos-v2 `paxos_state_purging: gc_grace` / `repaired`; the issue explicitly says the legacy/default TTL purging mode is not affected by this defect.
+- The 4.1.6 fix is an old-Paxos-state admissibility correction, not proof that all later Paxos/tombstone interactions are closed.
 - The case does not establish secure erasure.
 - The case does not claim Cassandra invented tombstones or anti-entropy repair.
 - The case does not generalize one Cassandra setting into a universal distributed-store deletion rule.
@@ -493,9 +568,18 @@ A search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computi
 4. Apache Cassandra repository, `cassandra-3.11`, `AbstractCompactionStrategy.java`: <https://github.com/apache/cassandra/blob/cassandra-3.11/src/java/org/apache/cassandra/db/compaction/AbstractCompactionStrategy.java>
 5. Apache Cassandra repository, `cassandra-3.11`, `RepairedDataTombstonesTest.java`: <https://github.com/apache/cassandra/blob/cassandra-3.11/test/unit/org/apache/cassandra/db/RepairedDataTombstonesTest.java>
 
+
+### Cassandra 4.1 Paxos-v2 stale-commit deepening
+
+6. Apache Cassandra 4.1.6 `NEWS.txt`, Paxos v2 / Paxos Repair release record: <https://github.com/apache/cassandra/blob/cassandra-4.1.6/NEWS.txt>
+7. Apache Cassandra 4.1.6 `Config.java`, `PaxosStatePurging` modes/default: <https://github.com/apache/cassandra/blob/cassandra-4.1.6/src/java/org/apache/cassandra/config/Config.java>
+8. Apache JIRA CASSANDRA-19617, **Paxos may re-distribute stale commits that predate a collectable tombstone**: <https://issues.apache.org/jira/browse/CASSANDRA-19617>
+9. Apache Cassandra commit `53b06453b7dea147ef6369765e0b7ac7fb0990fd`, **Refresh stale paxos commit**: <https://github.com/apache/cassandra/commit/53b06453b7dea147ef6369765e0b7ac7fb0990fd>
+10. Regression test `CasWriteTest.testStaleCommitInSystemPaxos` at the fix commit: <https://github.com/apache/cassandra/blob/53b06453b7dea147ef6369765e0b7ac7fb0990fd/test/distributed/org/apache/cassandra/distributed/test/CasWriteTest.java>
+
 ### Later terminology / continuity check
 
-6. Apache Cassandra current documentation, **Tombstones**: <https://cassandra.apache.org/doc/latest/cassandra/managing/operating/compaction/tombstones.html>
+11. Apache Cassandra current documentation, **Tombstones**: <https://cassandra.apache.org/doc/latest/cassandra/managing/operating/compaction/tombstones.html>
 
 ---
 
@@ -503,4 +587,4 @@ A search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computi
 
 **`grounded`**
 
-The central mechanism is supported by Apache's release-family documentation, source, tests, and release notes. Remaining work is later-version semantic archaeology or broader genealogy, not a blocker for this bounded case.
+The central mechanism is supported by Apache's release-family documentation, source, tests, and release notes. The 4.1.0–4.1.6 Paxos-v2 deepening additionally grounds one auxiliary-state resurrection path after tombstone collection. Remaining work includes post-4.1.6 Paxos/tombstone semantics, broader range/TTL-tombstone evolution, independent fault injection, and genealogy; none blocks the bounded case.
