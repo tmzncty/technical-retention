@@ -8,6 +8,8 @@ Grounding record: [`../evidence/36-cai-2012-flash-correct-refresh-grounding.md`]
 
 Prior-art deepening: [`../evidence/36-flash-refresh-1997-2009-prior-art-deepening.md`](../evidence/36-flash-refresh-1997-2009-prior-art-deepening.md).
 
+Commercial-product deepening: [`../evidence/36-ibm-flashsystem840-2014-2015-commercial-refresh-deepening.md`](../evidence/36-ibm-flashsystem840-2014-2015-commercial-refresh-deepening.md).
+
 ## Scope
 
 This case asks a narrow question left open by Cases 04, 13, and 15:
@@ -205,6 +207,35 @@ This is a **combination/evaluation boundary**, not an invention-priority judgmen
 Nor does this project project the FCR term backward onto the earlier records. Their own terms — `refresh`, `dynamic refresh`, `refresh timer`, `address mapping`, `storage date`, and `rewrite refresh` — remain historical vocabulary. `FCR` is used historically only for the 2012 proposal and its later descendants/citations where explicitly sourced.
 
 A 2015 follow-up by Cai et al. characterizes retention age in real 2y-nm MLC NAND and shows that optimal read-reference voltage changes with retention age. That later evidence deepens the general point that retained charge, readable interpretation, and controller recovery parameters can diverge over time. It is not used to rewrite either the pre-2012 patent mechanisms or the 2012 FCR mechanism, and it does not establish deployment.
+## Named commercial-product deepening — IBM FlashSystem 840
+
+A new evidence addendum, [`../evidence/36-ibm-flashsystem840-2014-2015-commercial-refresh-deepening.md`](../evidence/36-ibm-flashsystem840-2014-2015-commercial-refresh-deepening.md), closes part of the case's long-standing `commercial deployment` evidence gap without claiming that FCR itself was deployed.
+
+IBM's product-era `Flash Data Retention` guidance for FlashSystem 840 states that Flash storage systems automatically refresh data even when the host has not written or modified it. For an installed 840 powered off longer than seven days, IBM describes an automatic `deep scrub and refresh` process after power returns; the same document gives a bounded safe power-off envelope of up to 90 days at temperatures up to 40 °C and describes recovery attempts beyond that envelope.
+
+This changes the evidence class available to the repository:
+
+> **research refresh proposal/evaluation != named commercial-product retention-maintenance contract**.
+
+But the boundary is equally important:
+
+> **named commercial-product refresh != documented deployment of Cai et al.'s exact FCR algorithm**.
+
+The IBM source does not expose FCR's specific P/E-adaptive cadence, right-shift-error threshold, in-place-versus-remap decision, or controller ECC policy. It therefore grounds **that** automatic retention maintenance existed in a named commercial system while leaving **how** the internal refresh path worked only partially visible.
+
+The product guidance also sharpens four separations:
+
+- **host-unchanged payload != internally unmaintained payload** — IBM explicitly allows refresh without a host write;
+- **bounded power-off nonvolatility != indefinite service-level retention** — the 840 has a product-qualified off/temperature envelope while extended retention is tied to powered normal operation;
+- **crossing a qualification envelope != deterministic erasure timestamp** — IBM describes recovery methods beyond the 90-day / 40 °C conditions rather than a universal day-91 cliff;
+- **power restored != maintenance debt already discharged** — a sufficiently long off interval can cause post-return deep scrub/refresh work.
+
+An IBM Redbooks FlashSystem 720/820 product guide, published 11 April 2013, provides a useful adjacent commercial witness by listing sweeper algorithms that periodically read all data to avoid `data fade`. That wording directly establishes periodic read maintenance but **not** rewrite/remap renewal. It is therefore context, not proof that the earlier systems implemented FCR-style refresh.
+
+Chronology is source-controlled. IBM's current support landing page shows an `Original Publication Date` of 16 October 2013, but the attached file is named `External-6-6-14` and the 840 product announcement chronology falls around December 2013 / January 2014. The repository therefore treats the attachment conservatively as a **2014 product-era artifact** and does not silently convert the landing-page metadata into a secure PDF publication date.
+
+Finally, IBM's historical phrase `deep scrub and refresh` is not normalized into Ceph/HDFS/ZFS `scrub` semantics. The comparison is functional only: background inspection/maintenance can occur outside immediate host demand. The object models, integrity evidence, repair authority, physical mechanisms, and genealogies differ.
+
 ## Functional analogy and philosophical limit
 
 A bounded analogy to DRAM is useful only at this level:
@@ -264,6 +295,10 @@ It also separates proactive retention renewal from integrity scrubbing. ZFS/GFS 
 | Pre-2012 public records already describe erase-free reprogram refresh triggered by time, drift, or read-error evidence | H/P | US20090161466A1 |
 | Generic Flash refresh, refresh-time remapping, or erase-free rewrite refresh is an invention unique to FCR | X | contradicted by inspected pre-2012 patent records |
 | Similarity between earlier patent mechanisms and FCR proves direct design genealogy or commercial deployment | X | neither influence chain nor shipped implementation is established by this slice |
+| IBM documents automatic refresh of FlashSystem 840 data even when host data are not written or modified | H/P | IBM product-era `Flash Data Retention` attachment |
+| An installed 840 powered off longer than seven days can automatically enter `deep scrub and refresh` after return | H/P | IBM product-era `Flash Data Retention` attachment |
+| The 840 up-to-90-day / up-to-40 °C power-off envelope is a universal raw-NAND retention law | X | the source gives a named-system operating/qualification relation, not a medium-wide cell constant |
+| FlashSystem 840 proves commercial deployment of Cai et al.'s exact FCR algorithm | X | product behavior is documented, but algorithm identity/genealogy is not established |
 | The reported 46× average lifetime improvement proves a production SSD achieved 46× measured field life | X | the paper reports simulation driven by measured characterization/workload data, not a multi-year production deployment |
 | FCR proves all NAND Flash requires periodic refresh | X | outside the bounded 3x-nm MLC proposal/evaluation |
 | NAND FCR refresh is historically or physically identical to DRAM refresh | X | paper itself distinguishes the mechanisms |
@@ -284,3 +319,7 @@ Current inspection of [`tmzncty/computing-archaeology`](https://github.com/tmznc
 6. **“Flash memory with dynamic refresh,”** US 6,396,744 B1, filed 25 April 2000, public patent 28 May 2002; same family includes relocation/address-mapping refresh records: <https://patents.google.com/patent/US6396744B1/en>.
 7. **“Refreshing data stored in a flash memory,”** US 2005/0243626 A1 / US 7,325,090 B2, priority 29 April 2004, application publication 3 November 2005: <https://patents.google.com/patent/US7325090B2/en>.
 8. Darlene G. Hamilton, Mark W. Randolph, Don Carlos Darling, Ron Kornitz, **“Extending flash memory data retension via rewrite refresh,”** US 2009/0161466 A1, filed 20 December 2007, published 25 June 2009: <https://patents.google.com/patent/US20090161466A1/en>.
+9. IBM Support, **`Flash Data Retention`**, current landing page and FlashSystem 840 product attachment: <https://www.ibm.com/support/pages/flash-data-retention>.
+10. IBM, **`Flashsystem 840 Data Retention - External-6-6-14.pdf`**, product-era support attachment: <https://www.ibm.com/support/pages/system/files/support/ssg/ssgdocs.nsf/0/e02429f9c68ec7ea85257c0600743ccd/$FILE/Flashsystem%20840%20Data%20Retention%20-%20External-6-6-14.pdf>.
+11. Ilya Krutov, **`IBM FlashSystem 720 and IBM FlashSystem 820`**, IBM Redbooks Product Guide, published 11 April 2013, updated 13 October 2014: <https://www.redbooks.ibm.com/redbooks.nsf/5193609f3941e9cf85256bc300724cfc/c7d2bf380cb6304f85257b3c0051f4a3>.
+12. Karen Orlando et al., **`Implementing IBM FlashSystem 840`**, IBM Redbooks SG24-8189-02, published 9 July 2015: <https://www.redbooks.ibm.com/abstracts/sg248189.html>.
