@@ -1,0 +1,67 @@
+name: Apply Case 134 NAND copyback integrity grounding
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/apply_case134_nand_copyback_integrity.py'
+      - '.github/workflows/apply-case134-nand-copyback-integrity.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply bounded Case 134 research slice
+        run: |
+          set -euo pipefail
+          python3 scripts/apply_case134_nand_copyback_integrity.py
+
+      - name: Validate canonical research changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f cases/134-nand-copyback-relocation-integrity-boundary.md
+          test -f evidence/134-2005-2008-nand-copyback-integrity-grounding.md
+          python3 - <<'PY'
+          from pathlib import Path
+          case = Path('cases/134-nand-copyback-relocation-integrity-boundary.md').read_text(encoding='utf-8')
+          ev = Path('evidence/134-2005-2008-nand-copyback-integrity-grounding.md').read_text(encoding='utf-8')
+          roadmap = Path('ROADMAP.md').read_text(encoding='utf-8')
+          idx = Path('CASE_INDEX.md').read_text(encoding='utf-8')
+          assert case.count('## Historical record') == 1
+          assert case.count('## Engineering reconstruction') == 1
+          assert case.count('## Functional analogy — bounded') == 1
+          assert case.count('## Philosophical interpretation — bounded') == 1
+          assert ev.count('## Historical record') == 1
+          assert 'physical relocation != source-data revalidation' in roadmap
+          assert roadmap.count('Case 134 NAND Copy-Back relocation / integrity-validation boundary') == 1
+          assert idx.count('## Case 134 — NAND Copy-Back relocation / integrity findings') == 1
+          for n in range(2725, 2740):
+              marker = f'**{n} —'
+              assert idx.count(marker) == 1, (n, idx.count(marker))
+          assert 'program verify != source-read EDC' in case
+          assert 'manufacturer mirror = current official hosting' in case
+          PY
+          git diff --check
+
+      - name: Commit research and remove one-shot integration scaffolding
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git rm -f scripts/apply_case134_nand_copyback_integrity.py
+          git rm -f .github/workflows/apply-case134-nand-copyback-integrity.yml
+          git add ROADMAP.md CASE_INDEX.md cases/134-nand-copyback-relocation-integrity-boundary.md evidence/134-2005-2008-nand-copyback-integrity-grounding.md
+          git diff --cached --check
+          git commit -m "case134: ground NAND copyback integrity boundary"
+          git push origin HEAD:main
