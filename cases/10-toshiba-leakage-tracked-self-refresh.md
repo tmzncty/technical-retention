@@ -8,6 +8,8 @@ Grounding record: [`../evidence/10-toshiba-1984-self-refresh-scheduling-groundin
 
 Prior-art deepening: [`../evidence/10-hitachi-1982-1984-leakage-comparator-self-refresh-prior-art.md`](../evidence/10-hitachi-1982-1984-leakage-comparator-self-refresh-prior-art.md).
 
+Named-product boundary deepening: [`../evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md`](../evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md).
+
 ## Scope
 
 This case asks what changes when DRAM refresh no longer depends on an external controller for refresh cadence and instead uses an on-chip monitor of charge decay to decide when an intermittent refresh pass begins. It is not a general history of DRAM self-refresh and does not identify the patent embodiment with a named Toshiba commercial product.
@@ -75,6 +77,42 @@ This makes the safety margin relational rather than merely a single nominal refr
 
 The patent's motivation is lower standby power by avoiding refresh that is more frequent than required by the monitored condition. When refresh is needed, however, the disclosed design still performs the array-maintenance pass. Dynamic state has not become nonvolatile.
 
+## Named-product boundary deepening — Toshiba pseudo-SRAM, 1994–2001
+
+The patent record leaves a product-identity question open. A later Toshiba product-documentation chain now answers only the broad half of that question.
+
+A preserved Toshiba **1994 Static RAM** data-book artifact lists the `TC51832A` family under `Pseudo Static RAM`. The preserved Toshiba family text describes a 32K×8 pseudo-static RAM using a **one-transistor dynamic memory cell**, while exposing an SRAM-like interface. It says the `RFSH` input supports both `Auto Refresh` and `Self Refresh`; the feature list separately says **Self refresh is supported by an internal timer** and **Auto refresh is supported by an internal refresh-address counter**, with 256 refresh cycles / 4 ms. Because the raw Bitsavers PDF could not be directly rendered in this pass and the detailed text was corroborated through a manufacturer-datasheet mirror, these lines are treated as `H/P*` pending direct facsimile page anchors rather than overstated as fully inspected page evidence. See the [named-product evidence addendum](../evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md).
+
+Toshiba's official **18 June 2001** launch announcement supplies a second manufacturer-primary product witness. It names the `TC51W3216XB`, describes a standard SRAM interface over a one-transistor DRAM-like cell, explicitly advertises self refresh, and says a separate DRAM controller / refresh glue logic is unnecessary. The same announcement gives planned sample and full-production timing.
+
+These sources move the product boundary, but they do not collapse it into the patent mechanism:
+
+> **named-product self refresh != named-product leakage-tracked self refresh**
+
+The `TC51832A` product text says `internal timer`; it does not document the preferred US4682306A leak-current-monitor capacitor, threshold detector, or refresh-frequency dependence on measured leakage. A timer cannot be silently renamed a leakage monitor merely because both can start autonomous maintenance.
+
+The stronger decomposition is now:
+
+```text
+one-transistor dynamic payload
+    !=
+SRAM-like service interface
+    !=
+refresh-row enumeration
+    !=
+autonomous refresh timing
+    !=
+leakage-derived/adaptive refresh trigger
+```
+
+This also supplies a bounded comparison to Case 21. Both Toshiba pseudo-SRAM and Micron SDRAM can internalize recurring refresh work, but their external interfaces and documented mode semantics differ. The comparison is functional, not a Toshiba→Micron or patent→JEDEC genealogy.
+
+Finally, Toshiba's 2001 statement that a separate refresh controller/glue logic is unnecessary is an interface-placement result, not evidence that maintenance disappeared:
+
+> **external refresh burden removed != refresh obligation removed**.
+
+The physical payload remains dynamic in the named product descriptions, and `Self Refresh` does not establish unpowered nonvolatility.
+
 ## Failure boundaries
 
 The sourced mechanism separates several failure classes. A monitor that is not conservative enough can initiate maintenance too late; an overly conservative monitor can cause needless refresh and power cost; an incorrect threshold can reduce safety margin; and correct triggering still does not guarantee correct row enumeration or correct row restoration. These are engineering implications of the disclosed partition, not measured failure rates for a commercial Toshiba device.
@@ -124,7 +162,11 @@ Case 09 grounds the separation between external trigger cadence and internal row
 | Hitachi publicly disclosed a two-capacitor leakage-simulation + comparator self-refresh mechanism by 31 March 1984 | H/P | directly inspected JPS5956291A |
 | The 1982 Hitachi filing/priority date is itself a public-disclosure date | X | filing/priority must remain distinct from 1984 publication |
 | Hitachi's two-capacitor comparator circuit and Toshiba's single-monitor preferred embodiment are the same circuit | X | shared preservation function does not erase circuit differences |
-| A named Toshiba commercial part is proven to use this exact circuit | X | unsupported product-identity leap |
+| A named Toshiba pseudo-SRAM family is documented with Auto Refresh and Self Refresh | H/P* | Toshiba 1994 data-book artifact + preserved `TC51832A` family text |
+| `TC51832A` Self Refresh is documented as using an internal timer while Auto Refresh uses an internal refresh-address counter | H/P* | preserved Toshiba family text; direct facsimile page anchors remain open |
+| Toshiba publicly announced a named `TC51W3216XB` pseudo-SRAM with a one-transistor DRAM-like cell, SRAM interface, and self refresh in 2001 | H/P | Toshiba corporate release, 18-Jun-2001 |
+| Named-product self refresh proves deployment of the US4682306A leak-monitor threshold path | X | product evidence does not expose the patent's monitor/threshold mechanism |
+| A named Toshiba commercial part is proven to use this exact leakage-tracked circuit | X | still unsupported; broad self-refresh productization is now grounded, exact circuit identity is not |
 | Toshiba invented adaptive refresh generally | X | blocked by the patent's own Hitachi prior-art discussion |
 | Internal refresh addressing automatically implies internal refresh scheduling | X | contradicted by the Case-09/Case-10 comparison |
 | A deliberately decaying proxy can trigger payload-preservation work | E | bounded reconstruction from the monitor role |
@@ -139,4 +181,7 @@ A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty
 
 1. Takayasu Sakurai and Tetsuya Iizuka, Toshiba Corp., US4682306A, _Self-refresh control circuit for dynamic semiconductor memory device_: <https://patents.google.com/patent/US4682306A/en>.
 2. Hitachi Ltd., JPS5956291A, _MOS storage device_, application/priority 24 September 1982, publication 31 March 1984 — now directly inspected for the two-capacitor leakage-simulation/comparator self-refresh mechanism; detailed anchors and limits are in [`../evidence/10-hitachi-1982-1984-leakage-comparator-self-refresh-prior-art.md`](../evidence/10-hitachi-1982-1984-leakage-comparator-self-refresh-prior-art.md): <https://patents.google.com/patent/JPS5956291A/en>.
-3. H. Kawamoto et al., “A 288Kb CMOS Pseudo SRAM,” _ISSCC Digest of Technical Papers_, 1984, pp. 276–277, DOI 10.1109/ISSCC.1984.1156683 — period context cited by the patent, not a central mechanism source in this case.
+3. Toshiba, **1994 Static RAM** data book, preserved scan: <https://www.bitsavers.org/components/toshiba/_dataBook/1994_Toshiba_Static_RAM.pdf>.
+4. Toshiba Semiconductor, **TC51832A family / TC51832AP, 32,768 word × 8-bit CMOS Pseudo Static RAM**, preserved manufacturer-datasheet mirror: <https://www.alldatasheet.com/datasheet-pdf/pdf/1462395/TOSHIBA/TC51832AP.html>.
+5. Toshiba Corporation, **“Toshiba Announces its 32Mb Pseudo SRAM Solution,”** 18 June 2001: <https://www.global.toshiba/ww/news/corporate/2001/06/pr1802.html>.
+6. H. Kawamoto et al., “A 288Kb CMOS Pseudo SRAM,” _ISSCC Digest of Technical Papers_, 1984, pp. 276–277, DOI 10.1109/ISSCC.1984.1156683 — period context cited by the patent, not a central mechanism source in this case.
