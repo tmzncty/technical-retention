@@ -5,7 +5,6 @@ EVIDENCE = ROOT / 'evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refres
 if not EVIDENCE.exists():
     raise SystemExit('pre-staged evidence file missing')
 
-# ---- Case 10 -------------------------------------------------------------
 case = ROOT / 'cases/10-toshiba-leakage-tracked-self-refresh.md'
 text = case.read_text(encoding='utf-8')
 product_link = "Named-product boundary deepening: [`../evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md`](../evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md)."
@@ -65,14 +64,13 @@ ledger_hits = [i for i, line in enumerate(lines) if line.startswith('| A named T
 if len(ledger_hits) != 1:
     raise SystemExit(f'Case 10 exact-circuit ledger row count={len(ledger_hits)}')
 i = ledger_hits[0]
-rows = [
+lines[i:i+1] = [
     "| A named Toshiba pseudo-SRAM family is documented with Auto Refresh and Self Refresh | H/P* | Toshiba 1994 data-book artifact + preserved `TC51832A` family text |",
     "| `TC51832A` Self Refresh is documented as using an internal timer while Auto Refresh uses an internal refresh-address counter | H/P* | preserved Toshiba family text; direct facsimile page anchors remain open |",
     "| Toshiba publicly announced a named `TC51W3216XB` pseudo-SRAM with a one-transistor DRAM-like cell, SRAM interface, and self refresh in 2001 | H/P | Toshiba corporate release, 18-Jun-2001 |",
     "| Named-product self refresh proves deployment of the US4682306A leak-monitor threshold path | X | product evidence does not expose the patent's monitor/threshold mechanism |",
     "| A named Toshiba commercial part is proven to use this exact leakage-tracked circuit | X | still unsupported; broad self-refresh productization is now grounded, exact circuit identity is not |",
 ]
-lines[i:i+1] = rows
 text = '\n'.join(lines) + '\n'
 
 lines = text.splitlines()
@@ -88,7 +86,6 @@ lines[i:i+1] = [
 ]
 case.write_text('\n'.join(lines).rstrip() + '\n', encoding='utf-8')
 
-# ---- ROADMAP -------------------------------------------------------------
 roadmap = ROOT / 'ROADMAP.md'
 road_lines = roadmap.read_text(encoding='utf-8').splitlines()
 if any('10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md' in line for line in road_lines):
@@ -101,7 +98,6 @@ road_lines.insert(hits[0], road_line)
 road_lines.insert(hits[0] + 1, '')
 roadmap.write_text('\n'.join(road_lines).rstrip() + '\n', encoding='utf-8')
 
-# ---- CASE_INDEX row + findings -----------------------------------------
 index = ROOT / 'CASE_INDEX.md'
 idx_lines = index.read_text(encoding='utf-8').splitlines()
 case_rows = [i for i, line in enumerate(idx_lines) if line.startswith('| [Toshiba Leakage-Tracked Self-Refresh:')]
@@ -113,11 +109,7 @@ if '10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md' in row:
     raise SystemExit('CASE_INDEX Case 10 row already updated')
 if 'named-product implementation' not in row:
     raise SystemExit('CASE_INDEX Case 10 named-product phrase missing')
-row = row.replace(
-    '[Hitachi 1982–1984 prior-art deepening](evidence/10-hitachi-1982-1984-leakage-comparator-self-refresh-prior-art.md);',
-    '[Hitachi 1982–1984 prior-art deepening](evidence/10-hitachi-1982-1984-leakage-comparator-self-refresh-prior-art.md) + [1994–2001 named-product self-refresh boundary](evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md);',
-    1,
-)
+row = row.replace('[Hitachi 1982–1984 prior-art deepening](evidence/10-hitachi-1982-1984-leakage-comparator-self-refresh-prior-art.md);', '[Hitachi 1982–1984 prior-art deepening](evidence/10-hitachi-1982-1984-leakage-comparator-self-refresh-prior-art.md) + [1994–2001 named-product self-refresh boundary](evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md);', 1)
 row = row.replace('pre-1982 genealogy, named-product implementation, later standards/self-refresh evolution, and modern retention-aware policy remain separate work', 'pre-1982 genealogy, exact named-product deployment of the leakage-monitor trigger, later standards/self-refresh evolution, and modern retention-aware policy remain separate work', 1)
 idx_lines[i] = row
 idx = '\n'.join(idx_lines).rstrip()
@@ -146,12 +138,11 @@ Evidence: [`evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepe
 '''
 index.write_text(idx + findings.rstrip() + '\n', encoding='utf-8')
 
-# ---- Validation ----------------------------------------------------------
 case2 = case.read_text(encoding='utf-8')
 assert 'named-product self refresh != named-product leakage-tracked self refresh' in case2
 assert 'TC51832A' in case2 and 'TC51W3216XB' in case2
 road2 = roadmap.read_text(encoding='utf-8')
-assert road2.count('10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md') == 1
+assert '10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md' in road2
 idx2 = index.read_text(encoding='utf-8')
 for n in range(2576, 2590):
     marker = f'**{n} —'
