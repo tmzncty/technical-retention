@@ -32,12 +32,13 @@ jobs:
           test -f evidence/78-linux-mtd-2004-2021-bbt-currentness-admissibility-deepening.md
           python3 - <<'PY'
           from pathlib import Path
+          import subprocess
           case = Path('cases/78-micron-nand-bad-block-marker-management.md').read_text(encoding='utf-8')
           ev = Path('evidence/78-linux-mtd-2004-2021-bbt-currentness-admissibility-deepening.md').read_text(encoding='utf-8')
           roadmap = Path('ROADMAP.md').read_text(encoding='utf-8')
           idx = Path('CASE_INDEX.md').read_text(encoding='utf-8')
           assert case.count('### H/P — BBT currentness depends on ordering and candidate admissibility, not version magnitude alone') == 1
-          assert case.count('78-linux-mtd-2004-2021-bbt-currentness-admissibility-deepening.md') == 1
+          assert case.count('../evidence/78-linux-mtd-2004-2021-bbt-currentness-admissibility-deepening.md') == 1
           assert ev.count('## Historical record') == 1
           assert ev.count('## Engineering reconstruction') == 1
           assert ev.count('## Functional comparisons — not genealogy') == 1
@@ -55,8 +56,8 @@ jobs:
               'cases/78-micron-nand-bad-block-marker-management.md',
               'evidence/78-linux-mtd-2004-2021-bbt-currentness-admissibility-deepening.md',
           }
-          import subprocess
-          changed = set(subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines())
+          status = subprocess.check_output(['git', 'status', '--porcelain'], text=True).splitlines()
+          changed = {line[3:] for line in status if len(line) >= 4}
           assert changed == allowed, (changed, allowed)
           PY
           git diff --check
