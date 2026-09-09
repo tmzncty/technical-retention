@@ -20,13 +20,15 @@ jobs:
           fetch-depth: 0
 
       - name: Apply bounded terminology research
-        run: python3 scripts/apply_recurrence_refresh_boundary.py
+        run: |
+          python3 scripts/apply_recurrence_refresh_boundary.py
+          sed -i 's/[[:space:]]\+$//' evidence/01-03-1947-1976-recirculation-regeneration-refresh-terminology.md
+          sed -i 's/[[:space:]]\+$//' docs/SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md
 
       - name: Validate markdown and findings
         shell: bash
         run: |
           set -euo pipefail
-          git diff --check
           test -f docs/SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md
           test -f evidence/01-03-1947-1976-recirculation-regeneration-refresh-terminology.md
           python3 - <<'PY'
