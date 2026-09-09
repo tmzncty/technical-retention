@@ -23,6 +23,8 @@ It does **not** establish invention priority for checksums, scrubbing, replicate
 | Apache JIRA HADOOP-3635, `Uncaught exception in DataBlockScanner` | 2008; affects 0.17.0, fixed 0.18.0 | project issue / contemporary operational witness | proves an HDFS `DataBlockScanner` was already responsible for verifying local blocks by 2008 | **H/P** |
 | Apache JIRA HDFS-3194, `DataNode block scanner is running too frequently` | 2012 | project issue | historical 21-day / three-week scan-period expectation | **H/P** |
 | Apache JIRA HDFS-7548, `Corrupt block reporting delayed until datablock scanner thread detects it` | 2014–2015 | project issue | confirms scanner-mediated corruption discovery/reporting remained operationally consequential | **H/P** |
+| Apache JIRA HDFS-7430, `Rewrite the BlockScanner to use O(1) memory and use multiple threads` | 2014–2015 | project design / implementation issue | grounds compact last-scanned-position design and per-volume rewrite | **H/P** |
+| Apache JIRA HDFS-12209, `VolumeScanner scan cursor not save periodic` | later project bug, linked from HDFS-7430 | project defect witness | corrects the assumption that the configured in-pass cursor-save interval was effective | **H/P** |
 | Apache Hadoop 2.7.3 HDFS Architecture | 2016 release docs | official system documentation | Blockreport presence, checksums, corruption, alternate replicas, re-replication | **H/P** |
 | Hadoop `rel/release-2.7.3`, `BlockScanner.java` | 2.7.3 | tag-matched source | scan-period semantics, rate enablement, suspect-block scheduling | **H/P** |
 | Hadoop `rel/release-2.7.3`, `VolumeScanner.java` | 2.7.3 | tag-matched source | per-volume threads, verification path, race handling, bad-block reporting, cursor persistence, coverage scheduling | **H/P** |
@@ -160,21 +162,27 @@ Do **not** infer from this method alone the complete NameNode state transition o
 
 #### Retained iterator / cursor
 
-The scanner calls `iter.save()` through `saveBlockIterator`.
+The scanner calls `iter.save()` through `saveBlockIterator`. `findNextUsableBlockIter` explicitly explains that the persisted cursor uses wall-clock time because monotonic time commonly resets when the machine reboots.
 
-In `findNextUsableBlockIter`, the source explicitly explains that the saved cursor file uses wall-clock time because monotonic time commonly resets when the machine reboots. The iterator is saved at block-pool EOF and periodically during scanning based on a cursor-save interval.
+The source-level mechanism is now deepened in [`83-hdfs-blockscanner-cursor-checkpoint-clock-domain-deepening.md`](83-hdfs-blockscanner-cursor-checkpoint-clock-domain-deepening.md): `FsVolumeImpl` serializes directory/subdirectory/entry/EOF position plus wall-clock save/start timestamps to a temporary file and requests `ATOMIC_MOVE` to the live `.cursor`; `VolumeScanner` falls back to a fresh iterator if loading fails.
 
-Supported claim:
+However, the earlier phrase `saved periodically` is too strong for effective 2.7.3 behavior. The in-pass interval branch subtracts the wall-clock `lastSavedMs` from `Time.monotonicNow()`, and Apache HDFS-12209 is explicitly titled `VolumeScanner scan cursor not save periodic`. EOF and orderly-exit saves are separate code paths and remain grounded.
 
-> The implementation intentionally persists enough scanner traversal state to cross process/machine reboot boundaries rather than treating one scan pass as disposable volatile loop state.
+Supported claims:
 
-Evidence limit:
+> The implementation has an explicit restart-persistent scanner traversal checkpoint mechanism.
 
-- this case does not audit the cursor-file format;
-- it does not establish atomicity under every crash point;
-- it does not establish a durable per-block cryptographic verification ledger.
+> Configured periodic-save intent does not establish effective periodic checkpoint cadence.
 
-The safe reconstruction is `retained scan-progress/cursor state`, not `perfect durable proof of verification history`.
+> Missing/unreadable checkpoint state can fall back to replay from a fresh iterator.
+
+Evidence limits:
+
+- requested `ATOMIC_MOVE` does not by itself establish file/directory durability under sudden power loss;
+- a cursor position is not a complete per-block success history;
+- this slice does not provide filesystem fault injection or downstream-vendor patch genealogy.
+
+The safe reconstruction is `retained maintenance-traversal checkpoint`, not `perfect durable proof of verification history`.
 
 #### Rate limiting and coverage
 
@@ -289,6 +297,25 @@ HDFS-12136 is retained as a separate 2017 cost boundary: the issue attributes se
 
 ---
 
+## Cursor checkpoint addendum — retained maintenance state can have a defective retention cadence
+
+Detailed record: [`83-hdfs-blockscanner-cursor-checkpoint-clock-domain-deepening.md`](83-hdfs-blockscanner-cursor-checkpoint-clock-domain-deepening.md).
+
+HDFS-7430 makes the O(1) design goal explicit: retain last-scanned traversal position instead of per-block scan status. The 2.7.3 source serializes that compact cursor and requests a temp-file-to-live-file atomic move. But the periodic checkpoint condition mixes monotonic and wall-clock time domains, and HDFS-12209 records the resulting failure to save the cursor periodically.
+
+The safe engineering relations are:
+
+- `cursor position != per-block verification history`;
+- `configured cursor-save interval != effective periodic checkpoint cadence`;
+- `ATOMIC_MOVE request != demonstrated power-loss durability`;
+- `cursor load failure != scanner disablement`;
+- `checkpoint replay != payload rollback`;
+- `restart continuity != exactly-once scan execution`.
+
+This narrows an earlier Case 83 overstatement without changing the broader conclusion that scan progress is a real retained control-state class.
+
+---
+
 ## Claim ledger
 
 | Claim | Label | Evidence | Boundary |
@@ -300,7 +327,7 @@ HDFS-12136 is retained as a separate 2017 cost boundary: the issue attributes se
 | scanner verifies by exercising a checksummed block-read path | H/P | `VolumeScanner.scanBlock` | not a claim that every Hadoop read path is identical |
 | qualifying scan failures are reported as bad blocks | H/P | `ScanResultHandler` | exact downstream NameNode transition is outside this method |
 | some transient/racy failures are intentionally not reported as corruption | H/P | `ScanResultHandler` FileNotFound handling | specific to inspected implementation/path |
-| scanner traversal/cursor state is saved | H/P | `saveBlockIterator`, cursor-file comment | no crash-atomicity proof for cursor format |
+| scanner traversal/cursor state has explicit save/load paths | H/P | `FsVolumeImpl.BlockIteratorImpl`, `VolumeScanner` | EOF/orderly-exit saves are grounded; in-pass periodic save is affected by the HDFS-12209 clock-domain defect |
 | scan-progress state is retention infrastructure rather than payload | E | source structure | project terminology |
 | successful verification has temporal scope, not permanent validity | E | recurring scan regime + failure model | not an Apache historical phrase |
 | verification and repair are separate | H/P + E | local scanner vs architecture re-replication responsibility | later repair details outside bounded scanner |
@@ -311,6 +338,12 @@ HDFS-12136 is retained as a separate 2017 cost boundary: the issue attributes se
 | the 2016 fix captures last partial checksum under dataset lock | H/P | commit `aebb9127...` | does not establish global snapshot atomicity |
 | checksum mismatch can be a false corruption verdict | H/P + E | HDFS-11160, HDFS-6804 | does not deny genuine corruption mismatches |
 | coherence correction can have service cost | H/P + E | HDFS-12136 | product/code-path witness, not universal law |
+| HDFS-7430 intentionally replaces per-block scan-status memory with last-scanned traversal position | H/P | HDFS-7430 | rewrite witness, not checkpoint invention priority |
+| 2.7.3 cursor save uses temp serialization plus requested `ATOMIC_MOVE` | H/P | `FsVolumeImpl.java` | does not establish sudden-power-loss durability |
+| missing/unreadable cursor load falls back to a fresh iterator | H/P | `VolumeScanner.enableBlockPoolId` | replay can still consume bounded scan budget |
+| 2.7.3 periodic cursor-save check mixes monotonic and wall-clock timestamps | H/P | `VolumeScanner.java` + `FsVolumeImpl.java` | exact elapsed-time comparison is invalid across those domains |
+| Apache records a bug titled `VolumeScanner scan cursor not save periodic` | H/P | HDFS-12209 | supports defect boundary, not every downstream deployment |
+| cursor progress is not a successful-verification ledger | E | iterator advance + separate scan-error path | project reconstruction |
 
 ---
 
@@ -338,7 +371,13 @@ The evidence supports these project-level distinctions:
 18. `integrity metadata presence ≠ currentness for the judged payload state`;
 19. `corrupt-replica report ≠ ground truth about media damage`;
 20. `verification-coherence fix ≠ payload repair`;
-21. `coherent verification ≠ free verification`.
+21. `coherent verification ≠ free verification`;
+22. `cursor position ≠ per-block verification history`;
+23. `configured checkpoint interval ≠ effective checkpoint cadence`;
+24. `ATOMIC_MOVE request ≠ demonstrated power-loss durability`;
+25. `cursor load failure ≠ scanner disablement`;
+26. `checkpoint replay ≠ payload rollback`;
+27. `restart continuity ≠ exactly-once scan traversal`.
 
 The strongest contribution to the repository's maintenance taxonomy is #9–11: **the mechanism that verifies retained data has its own state, schedule, and temporal continuity.**
 
@@ -376,7 +415,7 @@ Case 77 can correct a codeword and write it back within the memory system. Case 
 
 ## Related-repository check
 
-Searches of `tmzncty/computing-archaeology` for `HDFS`, `HDFS block scanner checksum`, and the specific scanner mechanism returned no dedicated case at the time of the original slice. A fresh check during the HDFS-11160 deepening likewise found no dedicated `HDFS-11160`, `VolumeScanner`, or `BlockScanner` case to reuse.
+Searches of `tmzncty/computing-archaeology` for `HDFS`, `HDFS block scanner checksum`, and the specific scanner mechanism returned no dedicated case at the time of the original slice. Fresh checks during the HDFS-11160 deepening and this cursor-checkpoint deepening likewise found no dedicated `HDFS-11160`, `HDFS-7430`, `HDFS-12209`, `VolumeScanner`, or `BlockScanner` case to reuse.
 
 Therefore this record does **not** duplicate an existing companion-repository history. It intentionally leaves the following to future `computing-archaeology` work if pursued:
 
@@ -400,6 +439,8 @@ Do **not** claim:
 - a bad-replica report immediately erases local media;
 - physical deletion is secure sanitization;
 - saved scan progress is a complete durable history of every verification event;
+- the configured ten-minute cursor-save interval proves the 2.7.3 implementation checkpointed effectively every ten minutes;
+- requested `ATOMIC_MOVE` alone proves power-loss durability of the cursor;
 - the configured scan period guarantees a strict per-block upper bound under every workload/failure/configuration;
 - HDFS BlockScanner and ZFS scrub are the same historical mechanism;
 - GFS 2003 proves a direct code or organizational genealogy into HDFS.
@@ -417,4 +458,4 @@ Reason:
 - 2008 and 2012 Apache issue history gives earlier scanner/cadence witnesses;
 - GFS 2003 prevents an invention-priority overclaim;
 - related-repository duplication was checked;
-- uncertainty about exact scanner genealogy, cursor crash atomicity, and later product behavior is explicitly retained rather than hidden.
+- uncertainty about exact scanner genealogy, filesystem/power-loss cursor durability, HDFS-12209 release/downstream handling, and later product behavior is explicitly retained rather than hidden.
