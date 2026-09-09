@@ -2,7 +2,7 @@
 
 ## Scope
 
-- **Bounded system:** DRAM retention-time profiling as represented by the 2012 RAIDR proposal, stressed against variable-retention-time (VRT) and data-pattern-dependence (DPD) evidence from period device research, especially IBM's 1992 VRT study and Liu et al.'s 2013 characterization of 248 commodity DDR3 chips.
+- **Bounded system:** DRAM retention-time profiling as represented by the 2012 RAIDR proposal, stressed against variable-retention-time (VRT) and data-pattern-dependence (DPD) evidence from period device research and the 2013 commodity-DDR3 characterization, then bounded by the 2015 AVATAR research proposal as a concrete runtime requalification response.
 - **Bounded mechanism:** measure a cell/row retention time, retain a classification or `retention time bin`, use that retained control state to choose a future refresh interval, and confront the fact that the physical retention behavior being represented may change with time or stored-data context.
 - **Research question:** what happens to technical retention when the system retains not only payload, but also a *model of how long the payload can safely be left unrefreshed*, and that model can itself become stale?
 
@@ -130,6 +130,27 @@ Liu et al. further note that very high temperatures such as those used in solder
 This is not evidence that every soldering cycle creates VRT. It is a bounded historical argument that the system boundary and lifecycle stage at which profiling occurs can matter to the validity of the retained classification.
 
 **Primary research anchor:** Liu et al., ISCA 2013, §6.3.
+
+### H/P — 2015 AVATAR turns runtime error evidence into refresh-class revision
+
+Qureshi et al.'s 2015 DSN paper **AVATAR** is a useful later boundary because it does not assume that a stored retention profile stays authoritative forever. Its multirate-refresh design retains a per-row **Refresh Rate Table (RRT)**, uses ECC plus proactive memory scrubbing to expose runtime failures, upgrades the containing row to Fast Refresh after an ECC correction, and uses separate infrequent retention testing to permit later downgrade to Slow Refresh.
+
+The paper also discusses storing the RRT itself in a reserved DRAM region and triplicating that control state in the evaluated design option. This makes the second-order retention relation explicit: metadata that decides how aggressively DRAM is preserved may itself reside in, and require protection from errors in, the memory it controls.
+
+The important boundary is not the paper's particular evaluated intervals. It is the state/evidence path:
+
+```text
+initial retention test
+    -> retained row refresh class
+    -> runtime VRT transition may make that class unsafe
+    -> ECC/access or proactive scrub exposes an error
+    -> conservative upgrade to faster refresh
+    -> separate later retention test may authorize downgrade
+```
+
+Thus **error correction ≠ unique fault-cause diagnosis**, **ECC capability ≠ observation coverage**, **scrub ≠ refresh**, and **maintenance-class persistence ≠ maintenance-class immutability**. The paper explicitly notes that ECC corrections can also arise from soft errors; the upgrade rule is conservative rather than a perfect VRT classifier.
+
+This is a peer-reviewed architecture proposal/evaluation, not evidence of commodity deployment or a JEDEC requirement. Exact source anchors and the deployment boundary are recorded in [`../evidence/93-avatar-2015-vrt-aware-refresh-revalidation-deepening.md`](../evidence/93-avatar-2015-vrt-aware-refresh-revalidation-deepening.md).
 
 ---
 
