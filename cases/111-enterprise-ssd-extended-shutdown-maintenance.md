@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/111-ibm-dell-2020-2026-ssd-extended-shutdown-grounding.md`](../evidence/111-ibm-dell-2020-2026-ssd-extended-shutdown-grounding.md).
 
+NetApp rated-life/offline-retention telemetry deepening: [`../evidence/111-netapp-rated-life-offline-retention-telemetry-deepening.md`](../evidence/111-netapp-rated-life-offline-retention-telemetry-deepening.md).
+
 ## Scope
 
 - **Object / system:** enterprise SSD/NVMe storage kept powered off for extended periods, as addressed by IBM storage-system support guidance and Dell PowerEdge support guidance.
@@ -114,6 +116,31 @@ The historical record therefore gives a useful negative result:
 
 The support policies are vendor/system guidance layered above the standards-level qualification relation.
 
+
+### H/P — NetApp adds a wear-state gate for future long-offline retention
+
+NetApp's May 2021 _ONTAP 9.9.1 EMS Event Catalog_ documents `shm.threshold.ratedLife`, `ratedLife2`, and `ratedLifeMax` events at >90%, >95%, and >100% rated life used. The event descriptions say that at 100% rated life an SSD **might not be able to retain data while powered off for long periods of time**. At 90/95% ONTAP tells the operator to plan replacement as the estimate approaches 100%; above 100% it tells the operator to replace the SSD.
+
+Current `storage disk show -ssd-wear` documentation independently states that `Rated Life Used` is an estimate based on actual usage plus the manufacturer's prediction of device life and that a value greater than 99 means estimated endurance has been used but **does not necessarily indicate device failure**. It exposes spare-block-consumption fields separately.
+
+This creates a third operator-facing relation alongside IBM and Dell:
+
+```text
+current payload still serviceable
+    !=
+future long-power-off retention still trusted
+```
+
+and:
+
+```text
+rated-life estimate
+    !=
+immediate failure verdict
+```
+
+NetApp does **not** provide the IBM/Dell periodic power-up cadence in the inspected evidence. The bounded addition is a wear-state **admission/replacement policy**, not another documented refresh schedule.
+
 ## Engineering reconstruction
 
 ### E — qualification interval and maintenance schedule are different relations
@@ -184,6 +211,13 @@ The practical policy is conservative precisely because actual wear, active-use t
 
 ## Cross-case comparison
 
+
+### Case 55 — NVMe SMART / Health endurance telemetry
+
+Case 55 already grounds model-derived endurance state such as NVMe `Percentage Used` and the rule that 100% estimated endurance consumed need not mean immediate failure. NetApp supplies a storage-system operational continuation: model-derived wear evidence can change warning severity and replacement policy because future long-offline retention is no longer treated as unqualified.
+
+The relation is functional/interface-level only. The evidence does not establish that every NetApp `Rated Life Used` value is literally the NVMe field, nor one ATA/NVMe→ONTAP implementation genealogy.
+
 ### Case 76 — JESD218 endurance/retention qualification
 
 Case 76 answers:
@@ -251,6 +285,9 @@ This is a project interpretation, not IBM or Dell's historical vocabulary. It mu
 | power restored ≠ maintenance completion | E | strong | Dell minimum-duration wording supports the distinction |
 | same standards background ≠ same vendor cadence | H/E | strong | IBM and Dell prescriptions differ |
 | powered maintenance opportunity can become fleet-level retention infrastructure | E/A | medium | useful cross-layer interpretation, not vendor terminology |
+| NetApp warns at 90/95% rated life and requires replacement above 100% | H/P | strong | wear-state operator policy; not a deterministic failure threshold |
+| NetApp `Rated Life Used >99` means endurance estimate consumed but not necessarily device failure | H/P | strong | directly documented CLI semantic boundary |
+| readable now ≠ qualified for long powered-off retention | E | strong | current service and future-offline admission are distinct |
 | IBM/Dell guidance demonstrates FCR or Samsung's exact refresh algorithm | X | rejected | no genealogy or implementation identity established |
 | three months is a deterministic failure instant for every drive | X | rejected | vendor wording is probabilistic/risk-based and Case 76 is qualification-bounded |
 
@@ -261,7 +298,7 @@ This is a project interpretation, not IBM or Dell's historical vocabulary. It mu
 - What telemetry, if any, proves that the prescribed background work has completed?
 - How does required powered duration scale with capacity and amount of used NAND in the vendor implementation?
 - Can independent fault/retention testing validate the IBM/Dell operational windows after rated endurance?
-- How do other enterprise vendors operationalize long powered-off intervals?
+- How do other enterprise vendors beyond the now-grounded NetApp wear-state relation operationalize long powered-off intervals?
 - How do these runbooks change across later NAND generations and controller ECC/refresh policies?
 
 ## Sources
@@ -269,5 +306,8 @@ This is a project interpretation, not IBM or Dell's historical vocabulary. It mu
 - IBM Support, **“Potential for SSD data loss after extended shutdown,”** current page modified 28 March 2023: <https://www.ibm.com/support/pages/potential-ssd-data-loss-after-extended-shutdown>.
 - IBM support-content mirror of the same guidance, showing creation on 16 December 2020: <https://supportcontent.ibm.com/support/pages/potential-ssd-data-loss-after-extended-shutdown>.
 - Dell Technologies Support, **“PowerEdge: Data Retention Occur with SSD or Nvme Drives Due to Prolonged Power off,”** article 000198930, version 3, last modified 14 May 2026: <https://www.dell.com/support/kbdoc/en-us/000198930/ssd-data-retention-considerations-when-powering-off-systems-for-a-prolonged-duration>.
+- NetApp, **ONTAP 9.9.1 EMS Event Catalog**, May 2021, doc `215-15259_A0`: <https://docs.netapp.com/p/ontap/9x/9.9.1/EMS-Event-Catalog.pdf>.
+- NetApp, **`shm.threshold events`**: <https://docs.netapp.com/us-en/ontap-ems/shm-threshold-events.html>.
+- NetApp, **`storage disk show`** (`-ssd-wear`): <https://docs.netapp.com/us-en/ontap-cli/storage-disk-show.html>.
 - Internal standards context: [`Case 76 — JEDEC JESD218 SSD Endurance Qualification`](76-jedec-ssd-endurance-retention-qualification.md).
 - Internal commercial-refresh comparison: [`Case 37 — Samsung 840 EVO Old-Data Performance Restoration`](37-samsung-840-evo-old-data-performance-refresh.md).

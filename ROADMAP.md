@@ -494,3 +494,7 @@ Before marking a major case `grounded`:
 - [ ] related-repository duplication checked.
 
 Before marking a case `mature`, additionally require that it survive cross-case comparison and that its central claims no longer depend on a single source, source family, or fragile analogy.
+
+### Recent bounded evidence deepening
+
+- [x] **Case 111 NetApp rated-life / offline-retention telemetry deepening** — May-2021 ONTAP 9.9.1 and current NetApp docs now ground 90%/95%/>100% rated-life warnings, `storage disk show -ssd-wear`, and a replacement policy tied specifically to long powered-off retention. Treat wear telemetry as a future-retention admission signal, not a deterministic failure clock or an IBM/Dell-style periodic power-up cadence.

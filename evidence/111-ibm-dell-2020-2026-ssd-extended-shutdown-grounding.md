@@ -159,6 +159,6 @@ Repository search for `SSD data retention extended shutdown power-off refresh` i
 2. named-drive/controller mapping for Dell's described hidden retention tasks;
 3. telemetry or service logs proving maintenance completion;
 4. independent post-endurance fault/retention tests of the recommended shutdown schedules;
-5. cross-vendor operational guidance beyond IBM and Dell;
+5. broader cross-vendor periodic-power-up guidance beyond IBM and Dell; NetApp rated-life/offline-retention admission is now grounded separately in `111-netapp-rated-life-offline-retention-telemetry-deepening.md`;
 6. direct firmware or patent evidence for the read-triggered retention path;
 7. capacity-to-maintenance-time scaling.
