@@ -4,6 +4,8 @@
 
 This record grounds [`../cases/59-nand-program-interference-write-induced-neighbor-drift.md`](../cases/59-nand-program-interference-write-induced-neighbor-drift.md).
 
+Pre-2002 terminology/mechanism deepening: [`59-program-disturb-1997-1999-terminology-mechanism-boundary.md`](59-program-disturb-1997-1999-terminology-mechanism-boundary.md).
+
 The bounded question is:
 
 > Can programming one planar floating-gate MLC NAND cell/page materially shift the already-retained threshold-voltage state of neighboring cells, and what evidence establishes the roles of coupling geometry, program order, data values, and later read-reference adaptation?
@@ -23,6 +25,21 @@ For the bounded sources, the answer is **yes**, with four evidence layers kept s
 | Park et al., VLSI / JSSC | 2007–2008, Samsung-linked sub-40/60-nm MLC work | manufacturer-linked period engineering prior art | cell-to-cell interference as a scaling problem; temporary-LSB / parallel-MSB programming; program order and neighbor-after-victim exposure as mitigation variables | direct evidence for the 2Y-nm chips in Cai et al.; universal vendor policy |
 | Cai et al., ICCD | October 2013, commercial 2Y-nm two-bit MLC NAND | peer-reviewed primary experimental paper | victim/aggressor mechanism; location/order/data dependencies; measured in-order vs out-of-order effects; model; dynamic read-reference proposal/evaluation | commercial deployment of the proposal; later 3D-NAND constants |
 | Cai et al., SIGMETRICS | June 2014, experimental MLC NAND + simulations | peer-reviewed research extension | neighbor-conditioned voltage distributions; NAC proposal; using neighbor values to select reread references after ECC failure | named-controller deployment; physical restoration of victim threshold voltage |
+
+## 1997–1999 adjacent prior art: program inhibit / `program disturb`
+
+The dedicated addendum directly inspects two manufacturer patent records that precede the 2002 floating-gate-interference paper:
+
+- **Samsung US5677873A, published 14 October 1997** — NAND-specific inadvertent programming of nondesignated cells is an explicit programming/inhibit problem; boosting the channel/source/drain condition reduces Fowler–Nordheim programming risk in cells that should remain unprogrammed.
+- **AMD US5991202A, published 23 November 1999** — `program disturb` is explicitly defined for unintended programming of an unselected cell on the selected word line, while `pass disturb` is separately named in the same self-boosting/pass-voltage discussion.
+
+A **6 October 1998** Invox patent title provides an earlier public title-level use of `program disturb` for multilevel nonvolatile memory; because its full description was not directly inspected in this pass, the addendum does not use it for NAND-specific mechanism claims.
+
+This earlier evidence narrows origin language but does **not** extend the Case 59 cell-to-cell lineage backward. The safe distinction is:
+
+> **failed program inhibition / unintended programming ≠ aggressor-threshold-transition-induced capacitive victim shift.**
+
+The common functional relation is only that the logical program target can be narrower than the physical electrical effect scope.
 
 ## 2002 prior-art record
 

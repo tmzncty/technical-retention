@@ -2,9 +2,11 @@
 
 ## Status
 
-**`grounded`** — bounded to floating-gate MLC NAND cell-to-cell **program interference** as documented from 2002 through the 2013 commercial-2Y-nm characterization, with a 2007 manufacturer-linked architecture paper constraining prior art and a 2014 neighbor-assisted correction paper used only as a bounded recovery extension.
+**`grounded`** — bounded to floating-gate MLC NAND cell-to-cell **program interference** as documented from 2002 through the 2013 commercial-2Y-nm characterization, with a 2007 manufacturer-linked architecture paper constraining prior art and a 2014 neighbor-assisted correction paper used only as a bounded recovery extension. A separate 1997–1999 terminology/prior-art addendum now grounds earlier NAND inhibit / `program disturb` vocabulary without folding those mechanisms into the cell-to-cell genealogy.
 
 Grounding record: [`../evidence/59-nand-2002-2014-program-interference-grounding.md`](../evidence/59-nand-2002-2014-program-interference-grounding.md).
+
+Terminology/prior-art addendum: [`../evidence/59-program-disturb-1997-1999-terminology-mechanism-boundary.md`](../evidence/59-program-disturb-1997-1999-terminology-mechanism-boundary.md).
 
 ## Scope
 
@@ -27,6 +29,22 @@ This is **not**:
 The case is deliberately historical and mechanism-specific. The 2013 paper's tested devices are commercial **2Y-nm (20–24 nm), two-bit MLC, all-bit-line planar NAND**. Its measurements do not authorize numerical projection onto later 3D NAND.
 
 ## Historical vocabulary and prior-art boundary
+
+### Pre-2002 `program disturb` / NAND inhibit boundary
+
+A separate primary-source deepening now prevents this case from treating 2002 `floating-gate interference` as the beginning of every programming-induced non-target error. Samsung US5677873A (published **14 October 1997**) already documents a NAND inhibit problem in which nondesignated cells can be inadvertently programmed during adjacent programming unless channel/source/bitline potentials are biased or boosted appropriately. The inspected patent does not establish the later cell-to-cell interference model and is retained in its own historical vocabulary.
+
+A later AMD record, US5991202A (published **23 November 1999**), explicitly defines NAND **`program disturb`** as unintended programming of an unselected cell on a selected word line and separately names **`pass disturb`** for another unselected-cell path in the self-boosting/pass-voltage regime. A 6 October 1998 Invox patent title supplies an earlier public title-level `program disturb` witness for multilevel nonvolatile memory, but its full mechanism is not used here without direct inspection.
+
+Therefore the prior-art rule is now stronger:
+
+> **pre-2002 program-disturb / program-inhibit evidence ≠ proof of the 2002+ cell-to-cell capacitive program-interference mechanism.**
+
+And conversely:
+
+> **2002 `floating-gate interference` vocabulary ≠ origin of every NAND programming-induced disturb problem.**
+
+See the dedicated [`program-disturb terminology/mechanism addendum`](../evidence/59-program-disturb-1997-1999-terminology-mechanism-boundary.md) for the source chronology and rejected origin upgrades.
 
 ### `floating-gate interference` by 2002
 
