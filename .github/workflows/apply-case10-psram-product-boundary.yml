@@ -1,6 +1,6 @@
 name: Apply Case 10 pseudo-SRAM product boundary
 
-# Hardened helper retry after anchor normalization.
+# Capture a bounded diagnostic if the integration helper fails.
 on:
   push:
     branches:
@@ -21,7 +21,21 @@ jobs:
           fetch-depth: 0
 
       - name: Apply bounded Case 10 research
-        run: python3 scripts/apply_case10_psram_product_boundary.py
+        shell: bash
+        run: |
+          set +e
+          python3 scripts/apply_case10_psram_product_boundary.py > /tmp/case10-helper.out 2>&1
+          rc=$?
+          cat /tmp/case10-helper.out
+          if [ "$rc" -ne 0 ]; then
+            cp /tmp/case10-helper.out .case10-integration-diagnostic.txt
+            git config user.name "technical-retention automation"
+            git config user.email "actions@users.noreply.github.com"
+            git add .case10-integration-diagnostic.txt
+            git commit -m "chore: capture Case 10 integration diagnostic"
+            git push origin HEAD:main
+            exit "$rc"
+          fi
 
       - name: Validate research slice
         shell: bash
@@ -55,6 +69,7 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git rm scripts/apply_case10_psram_product_boundary.py
           git rm .github/workflows/apply-case10-psram-product-boundary.yml
+          if [ -f .case10-integration-diagnostic.txt ]; then git rm .case10-integration-diagnostic.txt; fi
           git add ROADMAP.md CASE_INDEX.md cases/10-toshiba-leakage-tracked-self-refresh.md evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md
           git diff --cached --check
           git commit -m "case10: ground pseudo-SRAM product self-refresh boundary"
