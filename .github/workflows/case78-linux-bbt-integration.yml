@@ -21,6 +21,7 @@ jobs:
           set -euo pipefail
           git pull --ff-only origin main
           python .github/scripts/case78-linux-bbt-integrate.py
+          python -c "from pathlib import Path; p=Path('CASE_INDEX.md'); p.write_text(p.read_text(encoding='utf-8').rstrip()+'\n', encoding='utf-8')"
           test -f evidence/78-linux-mtd-2004-mirrored-versioned-bbt-deepening.md
           grep -Fq 'evidence/78-linux-mtd-2004-mirrored-versioned-bbt-deepening.md' cases/78-micron-nand-bad-block-marker-management.md
           grep -Fq 'Case 78 Linux MTD mirrored/versioned Flash-BBT deepening' ROADMAP.md
@@ -28,11 +29,9 @@ jobs:
           grep -Fq '**2620 —' CASE_INDEX.md
           grep -Fq '**2634 —' CASE_INDEX.md
           git diff --check
-          rm .github/workflows/case78-linux-bbt-integration.yml
-          rm .github/scripts/case78-linux-bbt-integrate.py
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add cases/78-micron-nand-bad-block-marker-management.md evidence/78-linux-mtd-2004-mirrored-versioned-bbt-deepening.md ROADMAP.md CASE_INDEX.md .github/workflows/case78-linux-bbt-integration.yml .github/scripts/case78-linux-bbt-integrate.py
+          git add cases/78-micron-nand-bad-block-marker-management.md evidence/78-linux-mtd-2004-mirrored-versioned-bbt-deepening.md ROADMAP.md CASE_INDEX.md
           git diff --cached --check
           git commit -m 'case78: deepen mirrored BBT currentness boundary'
           git push origin HEAD:main
