@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/09-ti-cbr-refresh-address-grounding.md`](../evidence/09-ti-cbr-refresh-address-grounding.md).
 
+Deepening record: [`../evidence/09-dram-refresh-counter-initialization-test-deepening.md`](../evidence/09-dram-refresh-counter-initialization-test-deepening.md).
+
 ---
 
 ## Scope
@@ -130,6 +132,47 @@ on-chip refresh counter
     !=
 fully autonomous refresh scheduler
 ```
+
+---
+
+## Refresh-counter initialization and testability deepening
+
+### H/P — the TI disclosed counter has a power-on phase
+
+US4653030A states that the disclosed refresh-counter latch is forced to zero at power-on and that the counter starts at zero, then increments through its carry path on successive CAS-before-RAS refresh cycles.
+
+This is a narrower claim than `CBR counters start at zero` in general. It establishes the initialization semantics of **this disclosed TI embodiment**, not a universal DRAM-interface guarantee and not the exact hidden circuit of TMS4256/TMS4257.
+
+### H/P — Motorola exposes a commercial refresh-counter test
+
+Motorola's 1989 *Memory Data* section for MCM514256A / MCM51L4256A documents `CAS BEFORE RAS REFRESH COUNTER TEST`. During that test the internal counter generates the row address while the external address supplies the column address; the prescribed read-write sequence repeats for 512 cycles and later normal reads check the pattern. The product text also requires at least eight CAS-before-RAS initialization cycles before performing the test.
+
+This makes a normally hidden maintenance enumerator operationally testable through controlled payload observations. It does **not** mean that ordinary refresh writes counter history into application data, and the Motorola product implementation is not identified with TI's patent circuit.
+
+### E — the retention infrastructure has its own lifetime boundary
+
+The power-on initialization detail sharpens the earlier `maintenance-control state` claim. The refresh count must persist long enough to distribute refresh work correctly during a powered retention episode, but the TI embodiment does not preserve that phase as a durable cross-power record.
+
+> **maintenance-control state lifetime != application-state lifetime under every failure model.**
+
+For volatile DRAM, losing power ends the ordinary powered retention regime itself. A counter that organizes that regime can therefore be intentionally reinitialized at the next power-up without constituting a rollback of persistent application history.
+
+### E — cadence and coverage are independent maintenance obligations
+
+The existing Case 09 split between external scheduling and internal row enumeration now has an operational witness: Motorola supplies a procedure specifically for checking the counter's traversal behavior.
+
+Thus:
+
+```text
+enough refresh requests
+    !=
+verified traversal of all required rows
+```
+
+and conversely a correctly progressing counter does not prove that external logic met the refresh deadline.
+
+The counter-test result is also event-bounded evidence, not a permanent certificate of future refresh correctness.
+
 
 ---
 
@@ -300,6 +343,8 @@ Hidden refresh can maintain an output while refresh cycles proceed. The operatio
 
 The refresh counter itself must carry enough sequential state between refresh requests to choose successive rows. This is not payload retention, but it is constitutive control state for the bounded maintenance scheme.
 
+The deepening record adds a horizon boundary: the TI disclosed phase is initialized at power-on rather than preserved as a durable cross-power checkpoint. The state is constitutive **during the maintenance regime** without needing to become application history.
+
 ---
 
 ## Philosophical / media-theoretical interpretation
@@ -331,6 +376,14 @@ But this bounded case does **not** establish that mechanism. The historical TI p
 Moving row enumeration from board/controller logic into the DRAM can be described functionally as an offload of one maintenance-control function.
 
 `Offload` is a modern analytical term here, not a recovered 1984 actor category.
+
+### A — analogy to HDFS scanner progress state
+
+Case 83's HDFS scanner cursor is also retained control state that distributes maintenance work across a payload population. The analogy stops at that function. HDFS checkpoints traversal position so a process/restart can resume without replaying the entire scan; the TI DRAM embodiment initializes the cyclic refresh phase at power-on. Their persistence horizons and authority semantics are therefore different.
+
+> **maintenance-control state != one universal checkpoint contract.**
+
+This is a functional comparison, not a DRAM-to-HDFS genealogy.
 
 ### Limit — patent mechanism ≠ exact TMS4256 implementation
 
@@ -383,6 +436,12 @@ This produces three particularly useful controls:
 | TI patented an on-chip refresh counter activated by CAS-before-RAS | H/P | US4653030A abstract/summary/figures |
 | TI explicitly named TMS4164 as a commercial device lacking the patent's refresh counter | H/P | US4653030A description |
 | The bounded patent still leaves refresh-trigger cadence with an external processor/controller | H/P | US4653030A refresh-cycle discussion |
+| TI's disclosed refresh counter starts at zero at power-on and increments on CBR refresh cycles | H/P | US4653030A counter-stage description |
+| Motorola documents a product-level CBR refresh-counter test using internal row selection and controlled data writes | H/P | 1989 *Motorola Memory Data* product section |
+| The Motorola counter test requires initialization cycles and uses 512 cycles to exercise the documented row set | H/P | Motorola counter-test procedure |
+| Motorola's product counter is proven to use TI's power-on-zero circuit | X | unsupported cross-vendor implementation identity |
+| A successful counter test permanently certifies future refresh correctness | X | bounded diagnostic event ≠ continuing scheduler/coverage correctness |
+| Maintenance-control state must persist across power loss whenever it helps retain payload | X/E | TI's disclosed counter is intentionally initialized at power-on; persistence horizon is regime-specific |
 | Moving refresh enumeration on-chip removes the periodic retention obligation | X | contradicted by the same source set |
 | `self refresh circuitry` in this patent automatically means later autonomous self-refresh | X | rejected by the patent's external-trigger statement |
 | The patent is proven to be the exact TMS4256 circuit | X | unsupported product-identity leap |
@@ -394,7 +453,7 @@ This produces three particularly useful controls:
 
 ### `tmzncty/computing-archaeology`
 
-A dedicated TMS4256 / CAS-before-RAS refresh case was not found in the related-repository check for this pass. A broad DRAM technical history still belongs there:
+Fresh related-repository searches for `TMS4256` and `CAS-before-RAS` again found no dedicated case to reuse. A broad DRAM refresh-counter, test-mode, and product-history account still belongs there:
 
 <https://github.com/tmzncty/computing-archaeology>
 
@@ -412,3 +471,4 @@ Use its anti-anachronism discipline for the word `self refresh`. The patent's pe
 2. Texas Instruments, `TMS4256, TMS4257 — 262,144-BIT DYNAMIC RANDOM-ACCESS MEMORIES`, standalone page-preserving copy, revision header `MAY 1983—REVISED JANUARY 1988`, directly inspected printed pp. 4-3 and 4-5: <https://www.ardent-tool.com/datasheets/TI_TMS4256_7.pdf>.
 3. Tadashi Tachibana, Chitranjan N. Reddy, Ngai H. Hong, `Self refresh circuitry for dynamic memory`, US4653030A, filed 31 August 1984, assigned to Texas Instruments: <https://patents.google.com/patent/US4653030A/en>.
 4. Texas Instruments, *MOS Memory Data Book 1984*, TMS4164 family documentation: <https://vintage-computer-books.netlify.app/Texas%20Instruments%20-%20MOS%20Memory%20Data%20Book%20-%201984.pdf>.
+5. Motorola, *Memory Data*, 1989, MCM514256A / MCM51L4256A product section, especially `REFRESH CYCLES` and `CAS BEFORE RAS REFRESH COUNTER TEST`: <https://www.bitsavers.org/components/motorola/_dataBooks/1989_DL113r6_Motorola_Memory_Data.pdf>.
