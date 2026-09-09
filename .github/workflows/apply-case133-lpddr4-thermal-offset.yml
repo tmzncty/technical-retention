@@ -1,0 +1,69 @@
+name: Apply Case 133 LPDDR thermal-offset grounding
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/apply_case133_lpddr4_thermal_offset.py'
+      - '.github/workflows/apply-case133-lpddr4-thermal-offset.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply bounded Case 133 research slice
+        run: |
+          set -euo pipefail
+          python3 scripts/apply_case133_lpddr4_thermal_offset.py
+
+      - name: Validate canonical research changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f cases/133-micron-lpddr4-mr4-thermal-offset-refresh-authority.md
+          test -f evidence/133-micron-2015-2020-lpddr-temperature-status-thermal-offset-grounding.md
+          python3 - <<'PY'
+          from pathlib import Path
+          case = Path('cases/133-micron-lpddr4-mr4-thermal-offset-refresh-authority.md').read_text(encoding='utf-8')
+          ev = Path('evidence/133-micron-2015-2020-lpddr-temperature-status-thermal-offset-grounding.md').read_text(encoding='utf-8')
+          roadmap = Path('ROADMAP.md').read_text(encoding='utf-8')
+          idx = Path('CASE_INDEX.md').read_text(encoding='utf-8')
+          assert case.count('## Historical record') == 1
+          assert case.count('## Engineering reconstruction') == 1
+          assert case.count('## Functional analogy — bounded') == 1
+          assert case.count('## Philosophical interpretation — bounded') == 1
+          assert 'sensor status != hottest-point truth' in roadmap
+          assert roadmap.count('Case 133 Micron LPDDR4 MR4 thermal-offset / status-freshness grounding') == 1
+          assert idx.count('## Case 133 — LPDDR temperature-status freshness / thermal-offset findings') == 1
+          assert idx.count('133-micron-lpddr4-mr4-thermal-offset-refresh-authority.md') >= 1
+          for n in range(2710, 2725):
+              marker = f'**{n} —'
+              assert idx.count(marker) == 1, (n, idx.count(marker))
+          assert '## Source set and custody' in ev
+          assert '## Rejected claims / stop conditions' in ev
+          assert 'TempGradient × (ReadInterval + tTSI + SysRespDelay) ≤ 2°C' in ev
+          assert 'Support of thermal offset function is optional' not in case or 'optional' in case
+          PY
+          git diff --check
+
+      - name: Commit research and remove one-shot integration scaffolding
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git rm -f scripts/apply_case133_lpddr4_thermal_offset.py
+          git rm -f .github/workflows/apply-case133-lpddr4-thermal-offset.yml
+          git add ROADMAP.md CASE_INDEX.md cases/133-micron-lpddr4-mr4-thermal-offset-refresh-authority.md evidence/133-micron-2015-2020-lpddr-temperature-status-thermal-offset-grounding.md
+          git diff --cached --check
+          git commit -m "case133: ground LPDDR thermal-status freshness boundary"
+          git push origin HEAD:main
