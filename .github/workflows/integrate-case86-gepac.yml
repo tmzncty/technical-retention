@@ -15,13 +15,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Recover and run staged integration script
+      - name: Run normalized bounded integration
         shell: bash
         run: |
           python - <<'PY'
           import subprocess
           old = subprocess.check_output(
-              ["git", "show", "HEAD^:.github/workflows/integrate-case86-gepac.yml"],
+              ["git", "show", "9e61cccd4f6c98286cd6e8746c74d67f130315b0:.github/workflows/integrate-case86-gepac.yml"],
               text=True,
           )
           start = "          python - <<'PY'\n"
@@ -29,6 +29,10 @@ jobs:
           body = "\n".join(
               line[10:] if line.startswith("          ") else line
               for line in body.splitlines()
+          )
+          body = body.replace(
+              'idx = idx0.rstrip() + findings + "\\n"',
+              'idx = idx0.rstrip() + findings.rstrip() + "\\n"',
           )
           exec(compile(body, "case86_integration.py", "exec"))
           PY
