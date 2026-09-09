@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/10-toshiba-1984-self-refresh-scheduling-grounding.md`](../evidence/10-toshiba-1984-self-refresh-scheduling-grounding.md).
 
+Prior-art deepening: [`../evidence/10-hitachi-1982-1984-leakage-comparator-self-refresh-prior-art.md`](../evidence/10-hitachi-1982-1984-leakage-comparator-self-refresh-prior-art.md).
+
 ## Scope
 
 This case asks what changes when DRAM refresh no longer depends on an external controller for refresh cadence and instead uses an on-chip monitor of charge decay to decide when an intermittent refresh pass begins. It is not a general history of DRAM self-refresh and does not identify the patent embodiment with a named Toshiba commercial product.
@@ -39,7 +41,9 @@ The preferred embodiment contains a monitor capacitor designed to have character
 
 The patent explicitly says refresh occurs more often when monitored leakage is large and less often when it is small. It also states that the monitor capacitor may be designed with slightly more leakage than ordinary memory-cell capacitors to provide margin before information loss.
 
-The patent itself cites Hitachi Japanese Laid-Open Patent 59-56291, priority 24 September 1982 and publication 31 March 1984, as earlier work that automatically controlled refresh frequency using leak-monitor capacitors and a comparator. This case therefore makes no priority claim for Toshiba.
+The patent itself cites Hitachi Japanese Laid-Open Patent 59-56291, priority/filing 24 September 1982 and publication 31 March 1984, as earlier work that automatically controlled refresh frequency using leak-monitor capacitors and a comparator. That Hitachi document has now been **independently inspected** rather than used only through Toshiba's retrospective description. Its own text directly discloses a refresh-address counter, oscillator, two-capacitor leakage-simulation circuit, voltage comparator, comparator-derived self-refresh control, internally selected refresh addresses, full-array refresh, and overflow-triggered re-precharge. See the [direct prior-art addendum](../evidence/10-hitachi-1982-1984-leakage-comparator-self-refresh-prior-art.md).
+
+The direct inspection moves the public manufacturer-primary floor for this bounded leakage-derived self-refresh relation to **31 March 1984**. It still does not establish first invention, commercial deployment, or a complete genealogy, and the 24 September 1982 filing/priority date must not be silently reported as the public-disclosure date. Toshiba's later preferred embodiment remains a distinct mechanism witness, notably using one monitor capacitor and a threshold/inverter control path rather than Hitachi's two retained capacitor voltages and differential comparison. This case therefore makes no priority claim for Toshiba and no priority claim for Hitachi beyond the bounded public floor.
 
 ## Retained state and maintenance state
 
@@ -117,6 +121,9 @@ Case 09 grounds the separation between external trigger cadence and internal row
 | A monitor capacitor and threshold can start the disclosed refresh sequence | H/P | US4682306A |
 | Oscillator pulses advance the refresh-address counter through the refresh pass | H/P | US4682306A |
 | The monitor may be designed with slightly greater leakage to provide margin | H/P | US4682306A |
+| Hitachi publicly disclosed a two-capacitor leakage-simulation + comparator self-refresh mechanism by 31 March 1984 | H/P | directly inspected JPS5956291A |
+| The 1982 Hitachi filing/priority date is itself a public-disclosure date | X | filing/priority must remain distinct from 1984 publication |
+| Hitachi's two-capacitor comparator circuit and Toshiba's single-monitor preferred embodiment are the same circuit | X | shared preservation function does not erase circuit differences |
 | A named Toshiba commercial part is proven to use this exact circuit | X | unsupported product-identity leap |
 | Toshiba invented adaptive refresh generally | X | blocked by the patent's own Hitachi prior-art discussion |
 | Internal refresh addressing automatically implies internal refresh scheduling | X | contradicted by the Case-09/Case-10 comparison |
@@ -131,5 +138,5 @@ A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty
 ## Sources
 
 1. Takayasu Sakurai and Tetsuya Iizuka, Toshiba Corp., US4682306A, _Self-refresh control circuit for dynamic semiconductor memory device_: <https://patents.google.com/patent/US4682306A/en>.
-2. Hitachi Ltd., JPS5956291A, _MOS storage device_, priority 24 September 1982, publication 31 March 1984 — used here only through Toshiba's explicit prior-art description/citation unless independently inspected: <https://patents.google.com/patent/JPS5956291A/ja>.
+2. Hitachi Ltd., JPS5956291A, _MOS storage device_, application/priority 24 September 1982, publication 31 March 1984 — now directly inspected for the two-capacitor leakage-simulation/comparator self-refresh mechanism; detailed anchors and limits are in [`../evidence/10-hitachi-1982-1984-leakage-comparator-self-refresh-prior-art.md`](../evidence/10-hitachi-1982-1984-leakage-comparator-self-refresh-prior-art.md): <https://patents.google.com/patent/JPS5956291A/en>.
 3. H. Kawamoto et al., “A 288Kb CMOS Pseudo SRAM,” _ISSCC Digest of Technical Papers_, 1984, pp. 276–277, DOI 10.1109/ISSCC.1984.1156683 — period context cited by the patent, not a central mechanism source in this case.

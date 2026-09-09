@@ -28,16 +28,21 @@ Useful locations in the published description:
 - Fig. 3 discussion: gated ring oscillator;
 - later discussion: intermittent refresh, threshold setting, and deliberately higher monitor-capacitor leakage for margin.
 
-### Prior-art control inside the primary source
+### Prior-art control — Hitachi source now independently inspected
 
-The Toshiba patent itself cites **Japanese Laid-Open Patent 59-56291**, Hitachi Ltd., priority 24 September 1982, publication 31 March 1984, as an earlier memory device that automatically controlled refresh frequency using two leak-current monitor capacitors and a comparator.
+The Toshiba patent itself cites **Japanese Laid-Open Patent 59-56291 / JPS5956291A**, Hitachi Ltd., application/priority 24 September 1982 and publication 31 March 1984, as earlier leakage-aware self-refresh work. The repository has now inspected that Hitachi document directly rather than relying only on Toshiba's retrospective description.
+
+The Hitachi source itself discloses an automatic-refresh circuit containing a refresh-address counter, oscillator, and leakage-current simulation circuit. Its principal embodiment precharges two capacitors whose held voltages evolve at intentionally different rates, compares those voltages, and uses reversal of their relation to assert a self-refresh control state. Oscillator pulses then advance internal refresh addresses through the array; counter overflow re-precharges the monitoring capacitors and ends the pass. Claim 1 preserves the first/second-capacitor + comparator + internally addressed automatic-refresh relation, while claim 4 separately allows external triggering.
+
+Detailed direct anchors, chronology, and the Hitachi/Toshiba mechanism comparison are recorded in [`10-hitachi-1982-1984-leakage-comparator-self-refresh-prior-art.md`](10-hitachi-1982-1984-leakage-comparator-self-refresh-prior-art.md).
 
 Therefore:
 
-> **US4682306A is a strong mechanism witness for the bounded Toshiba design; it is not evidence that Toshiba invented leakage-aware or adaptive refresh in general.**
+> **US4682306A is a strong mechanism witness for the bounded Toshiba design; it is not evidence that Toshiba invented leakage-aware or adaptive refresh in general. Direct JPS5956291A inspection establishes an earlier public manufacturer-primary floor by 31 March 1984, but not first invention, product deployment, or complete genealogy.**
 
-The patent also cites H. Kawamoto et al., **“A 288Kb CMOS Pseudo SRAM,”** ISSCC 1984, pp. 276–277, as period context. This record does not rely on an uninspected full text of that paper for central claims.
+The Hitachi filing/priority date (**24 September 1982**) is not silently substituted for its public publication date (**31 March 1984**).
 
+The Toshiba patent also cites H. Kawamoto et al., **“A 288Kb CMOS Pseudo SRAM,”** ISSCC 1984, pp. 276–277, as period context. This record does not rely on an uninspected full text of that paper for central claims.
 ---
 
 ## Direct historical claims
@@ -216,7 +221,7 @@ No claim is made that US4682306A is the exact circuit of a named Toshiba DRAM or
 
 ### Patent mechanism ≠ invention priority
 
-The patent itself describes Hitachi Japanese Laid-Open Patent 59-56291 as prior art that automatically controls refresh frequency using leakage-monitor capacitors. The project therefore makes no `first adaptive self-refresh` claim.
+Direct inspection of Hitachi JPS5956291A strengthens the prior-art boundary: the earlier public document itself shows leakage-simulation capacitors, voltage comparison, internal self-refresh control, oscillator/counter work, and internal refresh addressing. It still does not establish that Hitachi was historically first, that a named product shipped the exact circuit, or that Toshiba's preferred circuit is a direct implementation descendant. The project therefore makes no `first adaptive self-refresh` claim for either bounded patent family.
 
 ### One process statement ≠ universal DRAM law
 
@@ -226,7 +231,7 @@ Temperature/leakage factors and power numbers quoted in the patent belong to its
 
 ## Related-repository duplication check
 
-A current code search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `self refresh`, `self-refresh`, and the Toshiba patent/circuit terms found no dedicated case for this mechanism.
+Fresh code searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `self-refresh` and `JPS5956291A` found no dedicated treatment to reuse.
 
 A broad history of DRAM self-refresh, pseudo-SRAM, oscillator design, process scaling, and JEDEC command evolution still belongs there if developed. `technical-retention` keeps only the retention-specific comparison about **where the scheduler lives and what state triggers preservation work**.
 
