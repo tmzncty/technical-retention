@@ -37,7 +37,9 @@ jobs:
               assert idx.count(marker) == 1, (n, idx.count(marker))
           glossary = Path('docs/GLOSSARY.md').read_text(encoding='utf-8')
           assert '## recurrence' in glossary
-          assert 'recurrence ≠ refresh' in Path('docs/SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md').read_text(encoding='utf-8')
+          synth = Path('docs/SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md').read_text(encoding='utf-8')
+          assert 'Recurrence Is Not Refresh' in synth
+          assert 'recurrence does not imply `refresh`' in synth
           roadmap = Path('ROADMAP.md').read_text(encoding='utf-8')
           assert 'SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md' in roadmap
           readme = Path('README.md').read_text(encoding='utf-8')
