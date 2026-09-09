@@ -65,7 +65,8 @@ jobs:
           assert case.count('### Reset can invalidate counter authority without proving physical erasure') == 1
           assert case.count('121-ddr5-prac-powerup-reset-reconstitution-deepening.md') >= 2
           assert roadmap.count('Case 121 DDR5 PRAC power-up / system-reset reconstitution deepening') == 1
-          assert roadmap.count('121-ddr5-prac-powerup-reset-reconstitution-deepening.md') == 1
+          # The same path appears once as Markdown link text and once as href.
+          assert roadmap.count('121-ddr5-prac-powerup-reset-reconstitution-deepening.md') == 2
           assert idx.count('121-ddr5-prac-powerup-reset-reconstitution-deepening.md') >= 1
           for n in range(2680, 2695):
               marker = f'**{n} —'
@@ -98,9 +99,9 @@ jobs:
           set -euo pipefail
           git config user.name "technical-retention automation"
           git config user.email "actions@users.noreply.github.com"
-          git rm scripts/apply_case121_prac_reset_reconstitution.py
-          git rm .github/workflows/apply-case121-prac-reset-reconstitution.yml
-          git rm -f case121-integration-debug.txt case121-validation-debug.txt || true
+          git rm -f scripts/apply_case121_prac_reset_reconstitution.py
+          git rm -f .github/workflows/apply-case121-prac-reset-reconstitution.yml
+          git rm -f --ignore-unmatch case121-integration-debug.txt case121-validation-debug.txt
           git add ROADMAP.md CASE_INDEX.md cases/121-ddr5-prac-activation-counter-initialization.md evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md
           git diff --cached --check
           git commit -m "case121: deepen PRAC reset-reconstitution boundary"
