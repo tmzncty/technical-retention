@@ -1,0 +1,63 @@
+name: Apply Synthesis 26 maintenance-control-state boundary
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/apply_synthesis26_maintenance_control_state.py'
+      - '.github/workflows/apply-synthesis26-maintenance-control-state.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply bounded cross-case synthesis
+        run: |
+          set -euo pipefail
+          python3 scripts/apply_synthesis26_maintenance_control_state.py
+
+      - name: Validate research changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f docs/SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md
+          python3 - <<'PY'
+          from pathlib import Path
+          idx = Path('CASE_INDEX.md').read_text(encoding='utf-8')
+          for n in range(2665, 2680):
+              marker = f'**{n} —'
+              assert idx.count(marker) == 1, (n, idx.count(marker))
+          readme = Path('README.md').read_text(encoding='utf-8')
+          assert readme.count('A bounded maintenance-control-state persistence-horizon synthesis is now available') == 1
+          assert 'SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md' in readme
+          roadmap = Path('ROADMAP.md').read_text(encoding='utf-8')
+          assert roadmap.count('SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md') == 2
+          glossary = Path('docs/GLOSSARY.md').read_text(encoding='utf-8')
+          assert glossary.count('## maintenance-control state') == 1
+          synth = Path('docs/SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md').read_text(encoding='utf-8')
+          assert '# Synthesis 26' in synth
+          assert 'maintenance-control state must be classified by role' in synth
+          PY
+          git diff --check
+
+      - name: Commit research and remove integration scaffolding
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git rm scripts/apply_synthesis26_maintenance_control_state.py
+          git rm .github/workflows/apply-synthesis26-maintenance-control-state.yml
+          git add README.md ROADMAP.md CASE_INDEX.md docs/GLOSSARY.md docs/SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md
+          git diff --cached --check
+          git commit -m "synthesis26: classify maintenance-control-state horizons"
+          git push origin HEAD:main
