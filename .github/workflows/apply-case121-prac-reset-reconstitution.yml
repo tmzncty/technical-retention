@@ -32,6 +32,9 @@ jobs:
           start = source.index(start_marker)
           end = source.index(end_marker)
           source = source[:start] + "index = INDEX.read_text(encoding='utf-8')\n\n" + source[end:]
+          old_assert = "assert index.count('121-ddr5-prac-powerup-reset-reconstitution-deepening.md') >= 1"
+          new_tail = '''if index.count('121-ddr5-prac-powerup-reset-reconstitution-deepening.md') < 1:\n    section = '## Case 121 — DDR5 PRAC activation-counter findings\\n'\n    link = '\\nDeepening record: [`evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md`](evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md).\\n'\n    index = index.replace(section, section + link, 1)\n    INDEX.write_text(index, encoding='utf-8')\nassert index.count('121-ddr5-prac-powerup-reset-reconstitution-deepening.md') >= 1'''
+          source = source.replace(old_assert, new_tail, 1)
           exec(compile(source, str(helper), 'exec'))
           PY
 
@@ -61,6 +64,7 @@ jobs:
           assert '### Power-up / system-reset reconstitution deepening' in case
           assert '### Reset can invalidate counter authority without proving physical erasure' in case
           assert roadmap.count('Case 121 DDR5 PRAC power-up / system-reset reconstitution deepening') == 1
+          assert idx.count('121-ddr5-prac-powerup-reset-reconstitution-deepening.md') >= 1
           for n in range(2680, 2695):
               marker = f'**{n} —'
               assert idx.count(marker) == 1, (n, idx.count(marker))
