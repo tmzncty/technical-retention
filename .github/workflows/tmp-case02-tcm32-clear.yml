@@ -1,0 +1,52 @@
+name: Temporary Case 02 TCM-32 clear/reset integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tmp-case02-tcm32-clear.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tmp-case02-tcm32-clear
+  cancel-in-progress: false
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply bounded research slice
+        run: python tools/tmp_case02_tcm32_clear.py
+
+      - name: Validate canonical files
+        run: |
+          git diff --check
+          python - <<'PY'
+          from pathlib import Path
+          idx = Path('CASE_INDEX.md').read_text(encoding='utf-8')
+          for n in range(2451, 2463):
+              token = f'**{n} —'
+              assert idx.count(token) == 1, (n, idx.count(token))
+          case = Path('cases/02-magnetic-core-destructive-read.md').read_text(encoding='utf-8')
+          road = Path('ROADMAP.md').read_text(encoding='utf-8')
+          assert '02-1964-tcm32-clear-write-memory-clear-deepening.md' in case
+          assert 'Case 02 magnetic-core clear/write and bulk-reset semantics deepening' in road
+          assert Path('evidence/02-1964-tcm32-clear-write-memory-clear-deepening.md').exists()
+          assert not Path('tools/tmp_case02_tcm32_clear.py').exists()
+          assert not Path('.github/workflows/tmp-case02-tcm32-clear.yml').exists()
+          PY
+
+      - name: Commit and push research
+        run: |
+          git config user.name "technical-retention research automation"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "case02: deepen core clear and reset semantics"
+          git push origin HEAD:main
