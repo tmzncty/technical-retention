@@ -1,0 +1,315 @@
+from pathlib import Path
+import re
+
+repo = Path('.')
+new_ev = repo / 'evidence/111-netapp-rated-life-offline-retention-telemetry-deepening.md'
+evidence_text = '''# Evidence 111 Addendum — NetApp Rated-Life Telemetry as an Offline-Retention Admission Signal
+
+## Scope
+
+This addendum deepens Case 111 with a third enterprise-vendor relation that is **not another periodic power-up schedule**. NetApp ONTAP documentation ties SSD `rated life used` telemetry to whether a drive should still be trusted for long powered-off retention and to an operator replacement policy.
+
+The bounded question is:
+
+> What changes when a system retains an estimate of SSD endurance consumption and uses that estimate to qualify future power-off retention policy?
+
+This record does **not** establish the internal NAND wear model, a universal SSD failure threshold, an IBM/Dell-style powered-maintenance cadence, or first invention of SSD wear telemetry.
+
+## Source 1 — NetApp ONTAP 9.9.1 EMS Event Catalog, May 2021
+
+**Document:** _ONTAP 9.9.1 EMS Event Catalog_, May 2021, document `215-15259_A0`.
+
+**Official PDF:** <https://docs.netapp.com/p/ontap/9x/9.9.1/EMS-Event-Catalog.pdf>
+
+The preserved NetApp catalog contains three related `shm.threshold` events:
+
+- `shm.threshold.ratedLife` — NOTICE when SSD rated life used exceeds **90%**;
+- `shm.threshold.ratedLife2` — ERROR when rated life used exceeds **95%**;
+- `shm.threshold.ratedLifeMax` — ALERT when rated life used exceeds **100%**.
+
+For the 90% and 95% events, NetApp says that when an SSD reaches 100% of rated life it **might not be able to retain data while powered off for long periods of time**. The corrective action says the reported number of weeks remaining is an **estimate based on past usage** and tells the operator to plan replacement as rated life approaches 100% if the SSD is expected to remain in service beyond that estimate.
+
+For the over-100% event, NetApp gives the same long-power-off retention warning and directly instructs the operator to **replace** SSDs that have reached end of rated life.
+
+### Historical boundary
+
+The May 2021 catalog is a directly inspected vendor-documentation floor for this relation. It is **not** used as the first appearance of the event family, the invention date of rated-life telemetry, or the first product deployment of endurance-aware replacement policy.
+
+## Source 2 — NetApp current `shm.threshold` event documentation
+
+**Official page:** <https://docs.netapp.com/us-en/ontap-ems/shm-threshold-events.html>
+
+The current NetApp event page preserves the same semantic separation:
+
+```text
+>90% rated life used
+    -> NOTICE + replacement planning
+
+>95%
+    -> ERROR + replacement planning
+
+>100%
+    -> ALERT + replace drive
+```
+
+The severity ladder is operational policy. The wording does not say a drive is physically unreadable at 100%, and it does not say one particular bit fails exactly when the estimate crosses a threshold.
+
+Therefore:
+
+> **rated-life threshold crossing ≠ deterministic payload failure instant**.
+
+At the same time, the threshold does change what the vendor asks the operator to trust about future service, especially long powered-off retention.
+
+## Source 3 — NetApp `storage disk show -ssd-wear`
+
+**Official CLI page:** <https://docs.netapp.com/us-en/ontap-cli/storage-disk-show.html>
+
+NetApp documents `-ssd-wear` as a view of SSD wear-life information. The fields include:
+
+- `Rated Life Used` — an estimate of the percentage of device life used, based on actual device usage and the manufacturer's prediction of device life;
+- `Spare Blocks Consumed Limit`;
+- `Spare Blocks Consumed`.
+
+The CLI documentation explicitly says that a `Rated Life Used` value greater than 99 means estimated endurance has been used, but **does not necessarily indicate device failure**.
+
+That statement is crucial for the retention boundary:
+
+```text
+estimated endurance consumed
+    !=
+immediate device failure
+    !=
+continued qualification for long powered-off retention
+```
+
+The EMS policy can withdraw operator confidence in long-offline retention even while the CLI refuses to equate the endurance estimate with immediate failure.
+
+## Engineering reconstruction
+
+### E — payload survival and offline-retention admission are different states
+
+A drive can still be online and serving data while its retained endurance estimate approaches the end of rated life. NetApp's warning changes the **future operating policy** before the evidence says the current payload has vanished.
+
+Therefore:
+
+> **current readable payload ≠ continued qualification for extended powered-off retention**.
+
+This is a currentness/admissibility relation about future retention service, not evidence of immediate physical erasure.
+
+### E — retained health telemetry can become retention infrastructure
+
+The `Rated Life Used` estimate is not user payload, yet NetApp uses it to decide when an operator should plan or perform drive replacement because future long-power-off retention may no longer be trustworthy.
+
+Thus:
+
+> **non-payload health state can qualify whether payload retention is operationally trusted**.
+
+This is a direct bridge to Case 55: retained device-history/model state can participate in future service admission without becoming the payload itself.
+
+### E — forecast, threshold, and action are separate relations
+
+NetApp's 90%/95% messages describe a remaining-weeks estimate based on past usage, while the 100% event changes the prescribed action to replacement. These should not be collapsed into one physical clock.
+
+```text
+past-use telemetry
+    -> estimated rated-life consumption / weeks remaining
+    -> warning severity
+    -> operator replacement policy
+```
+
+The arrows are a project engineering reconstruction of the documented relation. NetApp does not expose the internal statistical model or guarantee that the estimate is a wall-clock countdown.
+
+### E — rated-life telemetry and spare-block telemetry are not synonyms
+
+`storage disk show -ssd-wear` exposes `Rated Life Used` separately from `Spare Blocks Consumed` and its limit. The host-visible interface therefore blocks a shortcut in which all SSD wear state is treated as one scalar.
+
+> **rated-life estimate ≠ spare-block consumption**.
+
+The two may both inform service decisions, but this evidence does not establish one-to-one causality between them.
+
+### E — NetApp policy differs from IBM/Dell maintenance cadence
+
+Case 111's IBM and Dell evidence gives operator schedules for restoring powered maintenance opportunity during long shutdowns. The NetApp evidence inspected here instead says that approaching/end-of-rated-life drives may be unsuitable for long powered-off retention and should be planned for replacement/replaced.
+
+Therefore:
+
+> **wear-state admission policy ≠ periodic power-up maintenance schedule**.
+
+Both are operator-facing retention infrastructure, but they intervene on different variables.
+
+## Cross-case comparison
+
+### Case 55 — NVMe SMART / Health endurance telemetry
+
+Case 55 grounds `Percentage Used` as a vendor-specific estimate and preserves the important rule that 100% estimated endurance consumed does not necessarily mean device failure. NetApp's `Rated Life Used` operationalizes the same broad kind of model-derived wear evidence at the storage-system layer: the estimate becomes an input to warning severity and replacement planning.
+
+This is a **functional/interface comparison**, not proof that NetApp's field is copied directly from one NVMe field or that every attached SSD uses NVMe.
+
+### Case 76 — JESD218 SSD endurance/retention qualification
+
+Case 76 establishes that rated endurance and power-off retention are related through a bounded qualification contract. NetApp adds an operator-layer relation after deployment: once rated-life telemetry approaches or exceeds the qualification horizon, future long-offline retention is no longer treated as an unqualified assumption.
+
+Thus:
+
+> **qualification rating ≠ current field evidence about remaining qualified margin**.
+
+### Case 111 — IBM/Dell extended-shutdown policy
+
+IBM and Dell turn extended shutdown into a schedule for backup, environmental control, powered time, and hidden maintenance. NetApp adds a different gate: even before deciding how long to power a system, the operator may need to ask whether the SSD's **wear state still makes long powered-off retention an admissible plan**.
+
+## Historical record / engineering / analogy boundaries
+
+- **H/P:** NetApp's documented 90/95/100% event thresholds, severity levels, long-power-off warning, replacement action, and CLI field semantics.
+- **E:** decomposing telemetry → estimate → policy action and treating this as an admission relation for future retention service.
+- **A:** comparison to NVMe `Percentage Used`, JESD218 qualification, and IBM/Dell shutdown runbooks.
+- **X:** `100% rated life = immediate physical data loss`.
+- **X:** `NetApp rated-life events = one documented NAND refresh algorithm`.
+- **X:** `NetApp policy = IBM/Dell periodic power-up schedule`.
+- **X:** `May 2021 = invention or first-deployment date`.
+
+## Claim ledger
+
+| Claim | Type | Strength | Boundary |
+| --- | --- | --- | --- |
+| ONTAP 9.9.1 EMS documentation contains 90%, 95%, and >100% rated-life events | H/P | strong | vendor-system event contract, not physical wear law |
+| NetApp links end of rated life to possible inability to retain data during long power-off | H/P | strong | probabilistic/vendor wording, not deterministic failure |
+| 90/95% events tell operators to plan replacement; >100% tells them to replace | H/P | strong | operator policy, not proof current payload is unreadable |
+| `storage disk show -ssd-wear` separates Rated Life Used from spare-block consumption | H/P | strong | host-visible model/telemetry separation; internals undisclosed |
+| `>99` estimated endurance used does not necessarily mean device failure | H/P | strong | directly stated by NetApp CLI docs |
+| readable now ≠ qualified for extended powered-off retention | E | strong | cross-source policy decomposition |
+| health telemetry can be retention infrastructure without being payload | E/A | medium | project interpretation, not NetApp vocabulary |
+| NetApp policy proves IBM/Dell-style background-maintenance cadence | X | rejected | no such cadence in inspected NetApp evidence |
+| rated-life threshold proves physical failure instant | X | rejected | NetApp explicitly blocks the stronger reading |
+
+## Open questions
+
+- When did the `shm.threshold.ratedLife*` event family first appear before the inspected May 2021 ONTAP 9.9.1 catalog?
+- Which underlying drive-health field(s) feed NetApp `Rated Life Used` for each supported SSD/SAS/NVMe family?
+- How does ONTAP combine rated-life estimate, spare-block consumption, media errors, and other telemetry in replacement decisions outside these documented events?
+- Are there independent field/fault studies showing how NetApp's replacement thresholds correlate with actual powered-off retention after rated endurance?
+- How do other enterprise storage stacks expose or act on the same `online but no longer trusted for long-offline retention` state?
+
+## Sources
+
+- NetApp, _ONTAP 9.9.1 EMS Event Catalog_, May 2021, doc `215-15259_A0`: <https://docs.netapp.com/p/ontap/9x/9.9.1/EMS-Event-Catalog.pdf>.
+- NetApp, `shm.threshold events`: <https://docs.netapp.com/us-en/ontap-ems/shm-threshold-events.html>.
+- NetApp, `storage disk show`: <https://docs.netapp.com/us-en/ontap-cli/storage-disk-show.html>.
+- Internal comparison: [`Case 55 — NVM Express SMART / Health Endurance Telemetry`](../cases/55-nvme-smart-health-endurance-telemetry.md).
+- Internal comparison: [`Case 76 — JEDEC JESD218 SSD Endurance Qualification`](../cases/76-jedec-ssd-endurance-retention-qualification.md).
+'''
+new_ev.parent.mkdir(parents=True, exist_ok=True)
+if not new_ev.exists():
+    new_ev.write_text(evidence_text, encoding='utf-8')
+
+casep = repo / 'cases/111-enterprise-ssd-extended-shutdown-maintenance.md'
+case = casep.read_text(encoding='utf-8')
+evlink = '[`../evidence/111-netapp-rated-life-offline-retention-telemetry-deepening.md`](../evidence/111-netapp-rated-life-offline-retention-telemetry-deepening.md)'
+anchor = 'Grounding record: [`../evidence/111-ibm-dell-2020-2026-ssd-extended-shutdown-grounding.md`](../evidence/111-ibm-dell-2020-2026-ssd-extended-shutdown-grounding.md).'
+if evlink not in case:
+    case = case.replace(anchor, anchor + '\n\nNetApp rated-life/offline-retention telemetry deepening: ' + evlink + '.')
+section = '''
+### H/P — NetApp adds a wear-state gate for future long-offline retention
+
+NetApp's May 2021 _ONTAP 9.9.1 EMS Event Catalog_ documents `shm.threshold.ratedLife`, `ratedLife2`, and `ratedLifeMax` events at >90%, >95%, and >100% rated life used. The event descriptions say that at 100% rated life an SSD **might not be able to retain data while powered off for long periods of time**. At 90/95% ONTAP tells the operator to plan replacement as the estimate approaches 100%; above 100% it tells the operator to replace the SSD.
+
+Current `storage disk show -ssd-wear` documentation independently states that `Rated Life Used` is an estimate based on actual usage plus the manufacturer's prediction of device life and that a value greater than 99 means estimated endurance has been used but **does not necessarily indicate device failure**. It exposes spare-block-consumption fields separately.
+
+This creates a third operator-facing relation alongside IBM and Dell:
+
+```text
+current payload still serviceable
+    !=
+future long-power-off retention still trusted
+```
+
+and:
+
+```text
+rated-life estimate
+    !=
+immediate failure verdict
+```
+
+NetApp does **not** provide the IBM/Dell periodic power-up cadence in the inspected evidence. The bounded addition is a wear-state **admission/replacement policy**, not another documented refresh schedule.
+
+'''
+if '### H/P — NetApp adds a wear-state gate' not in case:
+    case = case.replace('## Engineering reconstruction\n', section + '## Engineering reconstruction\n')
+case55 = '''
+### Case 55 — NVMe SMART / Health endurance telemetry
+
+Case 55 already grounds model-derived endurance state such as NVMe `Percentage Used` and the rule that 100% estimated endurance consumed need not mean immediate failure. NetApp supplies a storage-system operational continuation: model-derived wear evidence can change warning severity and replacement policy because future long-offline retention is no longer treated as unqualified.
+
+The relation is functional/interface-level only. The evidence does not establish that every NetApp `Rated Life Used` value is literally the NVMe field, nor one ATA/NVMe→ONTAP implementation genealogy.
+
+'''
+if '### Case 55 — NVMe SMART / Health endurance telemetry' not in case:
+    case = case.replace('### Case 76 — JESD218 endurance/retention qualification\n', case55 + '### Case 76 — JESD218 endurance/retention qualification\n')
+needle = "| IBM/Dell guidance demonstrates FCR or Samsung's exact refresh algorithm | X | rejected | no genealogy or implementation identity established |"
+if '| NetApp warns at 90/95% rated life and requires replacement above 100%' not in case and needle in case:
+    repl = "| NetApp warns at 90/95% rated life and requires replacement above 100% | H/P | strong | wear-state operator policy; not a deterministic failure threshold |\n| NetApp `Rated Life Used >99` means endurance estimate consumed but not necessarily device failure | H/P | strong | directly documented CLI semantic boundary |\n| readable now ≠ qualified for long powered-off retention | E | strong | current service and future-offline admission are distinct |\n" + needle
+    case = case.replace(needle, repl)
+case = case.replace('- How do other enterprise vendors operationalize long powered-off intervals?', '- How do other enterprise vendors beyond the now-grounded NetApp wear-state relation operationalize long powered-off intervals?')
+source_anchor = '- Dell Technologies Support, **“PowerEdge: Data Retention Occur with SSD or Nvme Drives Due to Prolonged Power off,”** article 000198930, version 3, last modified 14 May 2026: <https://www.dell.com/support/kbdoc/en-us/000198930/ssd-data-retention-considerations-when-powering-off-systems-for-a-prolonged-duration>.'
+if '215-15259_A0' not in case and source_anchor in case:
+    case = case.replace(source_anchor, source_anchor + '\n- NetApp, **ONTAP 9.9.1 EMS Event Catalog**, May 2021, doc `215-15259_A0`: <https://docs.netapp.com/p/ontap/9x/9.9.1/EMS-Event-Catalog.pdf>.\n- NetApp, **`shm.threshold events`**: <https://docs.netapp.com/us-en/ontap-ems/shm-threshold-events.html>.\n- NetApp, **`storage disk show`** (`-ssd-wear`): <https://docs.netapp.com/us-en/ontap-cli/storage-disk-show.html>.')
+casep.write_text(case, encoding='utf-8')
+
+ev111p = repo / 'evidence/111-ibm-dell-2020-2026-ssd-extended-shutdown-grounding.md'
+ev111 = ev111p.read_text(encoding='utf-8')
+ev111 = ev111.replace('5. cross-vendor operational guidance beyond IBM and Dell;', '5. broader cross-vendor periodic-power-up guidance beyond IBM and Dell; NetApp rated-life/offline-retention admission is now grounded separately in `111-netapp-rated-life-offline-retention-telemetry-deepening.md`;')
+ev111p.write_text(ev111, encoding='utf-8')
+
+roadp = repo / 'ROADMAP.md'
+road = roadp.read_text(encoding='utf-8')
+bullet = '- [x] **Case 111 NetApp rated-life / offline-retention telemetry deepening** — May-2021 ONTAP 9.9.1 and current NetApp docs now ground 90%/95%/>100% rated-life warnings, `storage disk show -ssd-wear`, and a replacement policy tied specifically to long powered-off retention. Treat wear telemetry as a future-retention admission signal, not a deterministic failure clock or an IBM/Dell-style periodic power-up cadence.'
+if bullet not in road:
+    lines = road.splitlines()
+    idx = next((i for i,l in enumerate(lines) if 'Case 111' in l and l.lstrip().startswith('-')), None)
+    if idx is not None:
+        lines.insert(idx+1, bullet)
+    else:
+        lines += ['', '### Recent bounded evidence deepening', '', bullet]
+    road = '\n'.join(lines) + '\n'
+roadp.write_text(road, encoding='utf-8')
+
+cip = repo / 'CASE_INDEX.md'
+ci = cip.read_text(encoding='utf-8')
+if '111-netapp-rated-life-offline-retention-telemetry-deepening.md' not in ci:
+    lines = ci.splitlines()
+    for i,l in enumerate(lines):
+        if 'cases/111-enterprise-ssd-extended-shutdown-maintenance.md' in l:
+            old = '](evidence/111-ibm-dell-2020-2026-ssd-extended-shutdown-grounding.md)'
+            if old in l:
+                l = l.replace(old, old + ' + [NetApp rated-life/offline-retention telemetry deepening](evidence/111-netapp-rated-life-offline-retention-telemetry-deepening.md)')
+            elif l.endswith(' |'):
+                l = l[:-2] + '; [NetApp rated-life/offline-retention telemetry deepening](evidence/111-netapp-rated-life-offline-retention-telemetry-deepening.md) |'
+            lines[i] = l
+            break
+    ci = '\n'.join(lines) + '\n'
+findings = [
+'**rated-life estimate ≠ immediate device-failure verdict** — NetApp says `Rated Life Used >99` means estimated endurance has been consumed but does not necessarily indicate device failure.',
+'**current readable service ≠ qualification for long powered-off retention** — NetApp warns that an SSD at 100% rated life might not retain data through long power-off even though the threshold is not defined as immediate online failure.',
+'**90%/95% warning thresholds ≠ 100% replacement action** — ONTAP escalates NOTICE→ERROR→ALERT and changes the operator action at end of rated life; the thresholds are an operational policy ladder, not one physical state.',
+'**threshold crossing ≠ deterministic bit-loss instant** — the vendor wording is `might not be able to retain`; it does not define a day, temperature-independent cliff, or one cell-level failure event.',
+'**past-usage forecast ≠ wall-clock guarantee** — the remaining-weeks field is described as an estimate based on past usage; the internal model and future workload assumptions are not exposed.',
+'**retained health telemetry can qualify future payload retention without being payload** — rated-life state participates in replacement/offline-retention decisions while remaining device-health/control evidence.',
+'**rated-life estimate ≠ spare-block consumption** — `storage disk show -ssd-wear` exposes Rated Life Used separately from Spare Blocks Consumed and its limit; one host-visible wear scalar cannot stand in for the other.',
+'**wear-state admission policy ≠ periodic power-up maintenance schedule** — NetApp gates long-offline trust by rated life, whereas the bounded IBM/Dell sources prescribe powered intervals/maintenance opportunity.',
+'**operator replacement ≠ proof of present physical unreadability** — a service policy can retire a drive conservatively before the historical record proves current payload loss.',
+'**JESD218 rated-endurance relation ≠ current field estimate of remaining margin** — Case 76 supplies the qualification relation; NetApp supplies an operational estimate and action after deployment.',
+'**NVMe `Percentage Used` analogy ≠ proven NetApp field genealogy** — Case 55 provides a functionally similar model-derived endurance state, but the inspected NetApp docs do not prove a one-field implementation identity across attached drive families.',
+'**May 2021 vendor documentation floor ≠ invention priority** — the ONTAP 9.9.1 catalog directly grounds the event semantics by that publication, not their first implementation or origin.',
+'**future-retention authority can be withdrawn while physical embodiment survives** — the system may still possess and read the SSD while retained wear evidence causes long-offline retention to be treated as inadmissible.'
+]
+if 'future-retention authority can be withdrawn while physical embodiment survives' not in ci:
+    nums = [int(m.group(1)) for m in re.finditer(r'(?m)^(\d+)\.\s', ci)]
+    n = max(nums) if nums else 0
+    ci = ci.rstrip() + '\n\n'
+    for f in findings:
+        n += 1
+        ci += f'{n}. {f}\n'
+cip.write_text(ci, encoding='utf-8')
+
+for p in [new_ev, casep, ev111p, roadp, cip]:
+    p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
