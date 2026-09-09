@@ -1,0 +1,65 @@
+name: Run 11 Case 36 IBM FlashSystem refresh integration
+
+on:
+  push:
+    paths:
+      - '.github/workflows/run11_case36_ibm_refresh.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply bounded research slice
+        run: python .github/helpers/run11_case36_ibm_refresh.py
+
+      - name: Validate canonical changes
+        run: |
+          git diff --check
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          idx = Path('CASE_INDEX.md').read_text(encoding='utf-8')
+          for n in range(2475, 2488):
+              hits = len(re.findall(rf'\*\*{n}\s+—', idx))
+              if hits != 1:
+                  raise SystemExit(f'finding {n}: expected 1 occurrence, got {hits}')
+          required = [
+              'evidence/36-ibm-flashsystem840-2014-2015-commercial-refresh-deepening.md',
+              'cases/36-nand-flash-correct-and-refresh-maintenance.md',
+              'ROADMAP.md',
+              'CASE_INDEX.md',
+          ]
+          for name in required:
+              p = Path(name)
+              if not p.exists() or not p.read_text(encoding='utf-8').endswith('\n'):
+                  raise SystemExit(f'canonical validation failed: {name}')
+          print('canonical validation passed')
+          PY
+
+      - name: Commit research
+        run: |
+          git config user.name 'technical-retention research agent'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add \
+            cases/36-nand-flash-correct-and-refresh-maintenance.md \
+            evidence/36-ibm-flashsystem840-2014-2015-commercial-refresh-deepening.md \
+            ROADMAP.md CASE_INDEX.md
+          git diff --cached --check
+          git commit -m 'case36: ground IBM FlashSystem commercial refresh'
+          git push origin HEAD:main
+
+      - name: Remove one-shot integration scaffolding
+        run: |
+          git rm .github/helpers/run11_case36_ibm_refresh.py .github/workflows/run11_case36_ibm_refresh.yml
+          git commit -m 'chore: remove Case 36 integration scaffolding'
+          git push origin HEAD:main
