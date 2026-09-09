@@ -4,6 +4,8 @@
 
 Grounding record: [`../evidence/02-magnetic-core-1951-1954-grounding.md`](../evidence/02-magnetic-core-1951-1954-grounding.md)
 
+Clear/write and bulk-reset semantics deepening: [`../evidence/02-1964-tcm32-clear-write-memory-clear-deepening.md`](../evidence/02-1964-tcm32-clear-write-memory-clear-deepening.md). The 1964 TCM-32 source is a later implementation/terminology witness, not a replacement for the case's 1950–1954 MIT anchor.
+
 ## Scope
 
 - **Object / system:** classic coincident-current magnetic-core memory, with MIT Project Whirlwind / Memory Test Computer as the principal historical anchor;
@@ -185,6 +187,28 @@ This matters for the repository's later `technical forgetting` work:
 
 All can produce absence of the previous logical value, but they are technically different events.
 
+### H/P deepening — `clear` can mean selected-word replacement or whole-stack reset
+
+A later named production system makes the vocabulary more precise. Computer Control Company's May 1964 **TCM-32** manual describes `Clear/Write` as clearing all cores at the **selected address** to the `ZERO` state before writing the new information-register word. It separately offers a `Memory Clear` operation whose S-103 driver supplies clear current that resets **all cores** in the stack to `ZERO`.[^tcm32]
+
+That evidence strengthens rather than reverses the statement above. Magnetic core still does not require a separate Flash-style erase block before ordinary rewriting. Instead, the TCM-32 shows a reversible reference-state transition used at two different scopes:
+
+```text
+selected address: clear to ZERO -> write new word
+whole stack:      reset all cores to ZERO
+```
+
+The same manual distinguishes `Clear/Write` from `Read/Regenerate`: the former intentionally replaces the prior selected word, whereas the latter reads the prior word and restores identical information. The bulk clear also has its own service constraint: the manual requires a 200-microsecond power-supply recovery interval before other pulses after a clear command.[^tcm32]
+
+Therefore:
+
+- **quiescent nonvolatility ≠ immunity to explicit electrical reset**;
+- **selected-address clear ≠ whole-stack clear**;
+- **clear/write ≠ read/regenerate**;
+- **core clear ≠ Flash erase ≠ secure sanitization**.
+
+The TCM-32 is a 1964 implementation witness. It does not establish that the early MIT system used the same optional Memory Clear hardware, nor that 3C invented the operation.
+
 ---
 
 ## Time: two different retention intervals coexist
@@ -329,6 +353,23 @@ nonvolatile = passive
 
 Coincident-current selection works partly because half-selected cores can tolerate repeated sub-threshold excitation. Addressability therefore creates a retention burden for neighboring states even when they are not the target of an operation.
 
+### Finding 5 — nonvolatility is conditional on operation class
+
+The TCM-32 deepening adds an explicit counterexample to `nonvolatile = difficult to reset`. Holding the remanent state requires no continuous power, while changing or clearing it deliberately requires a switching pulse. Persistence under absence of holding power and susceptibility to an authorized reset are independent properties.
+
+### Finding 6 — forgetting operations need a scope as well as a mechanism
+
+`Clear` is too coarse a comparative category by itself. The same 1964 product family exposes selected-address clear/write and whole-stack Memory Clear, with different state populations and continuation semantics. Cross-case comparison should therefore record at least:
+
+```text
+trigger / authority
++ target scope
++ physical state transition
++ whether old value is observed first
++ whether a replacement value follows
++ when ordinary service may resume
+```
+
 ---
 
 ## Philosophical / media-theoretical interpretation
@@ -449,3 +490,5 @@ Papian's 1952 IRE paper remains contemporary technical evidence for remanence an
 Widrow's M-2383 memorandum is primary operational evidence tied to an actual 32 × 32 core memory under test. Its reported operating values should not be generalized to all core-memory systems.
 
 The Lincoln Laboratory page is a later institutional history. It is useful for chronology and system-level impact, but primary reports take precedence when they differ.
+
+[^tcm32]: Computer Control Company, Inc., *Instruction Manual: Magnetic Core Memory Systems, Series TCM-32*, Document No. 71-218, May 1964, especially §§3-1.4–3-1.5, Clear/Write operating-cycle description, Memory Clear option, and S-103 Memory Clear Driver PAC description; preserved scan: https://bitsavers.org/pdf/computerControlCompany/71-218_3C_TCM-32_Core_Memory_Maint_May64.pdf. Detailed claim decomposition is in the Case 02 deepening evidence record.
