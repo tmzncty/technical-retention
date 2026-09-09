@@ -3321,3 +3321,21 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 - **2460 — `clear` requires target-scope qualification.** The same named system uses clear/reset vocabulary for registers, a selected memory address, and the whole core stack; one historical word is not one universal forgetting geometry. (`H/P`, `E`)
 - **2461 — 1964 TCM-32 evidence != invention priority or retroactive Whirlwind circuit evidence.** The manual grounds a later production implementation/terminology boundary but not first invention, direct genealogy, or identical 1953 MIT bulk-clear hardware. (`H/P`, `X`)
 - **2462 — related-repository boundary is reused rather than duplicated.** `computing-archaeology` already covers core selection, destructive read, manufacturing labor, and system tradeoffs; this addendum keeps only the retention-specific clear/overwrite/reset semantics. (`H/P` project-state record)
+
+
+## Case 83 deepening — HDFS-11160 concurrent-append verification-coherence findings
+
+Evidence: [`evidence/83-hdfs-2016-volume-scanner-concurrent-append-coherence-deepening.md`](evidence/83-hdfs-2016-volume-scanner-concurrent-append-coherence-deepening.md)
+
+- **2463 — HDFS-11160 is a later failure/fix witness, not BlockScanner invention priority.** The issue was created 20-Nov-2016 and resolved 16-Dec-2016; it deepens the already-grounded scanner case without moving HDFS background-scanning origins to 2016. (`H/P`, `X`)
+- **2464 — checksum mismatch != necessarily physical payload corruption.** HDFS-11160 directly records `VolumeScanner` comparing a new checksum against old data during concurrent append and recognizing a good replica as bad. (`H/P`, `E`)
+- **2465 — checksum algorithm correctness != checksum/data observation coherence.** The documented failure can arise from mixing two payload/checksum states even when the checksum computation itself behaves correctly. (`H/P`, `E`)
+- **2466 — integrity-metadata presence != integrity-metadata currentness for the judged payload state.** A checksum can exist yet belong to a different concurrent version from the bytes being verified. (`H/P`, `E`)
+- **2467 — corrupt-replica report != ground truth about media damage.** HDFS-6804 and HDFS-11160 provide bounded Apache witnesses in which a valid/good replica could be wrongly classified after a racy checksum mismatch. (`H/P`, `E`)
+- **2468 — physical embodiment survival != continued qualification as repair source.** False deauthorization can shrink the system's admissible replica set while the local bytes remain valid. (`E`)
+- **2469 — false-positive qualification failure != physical disturbance.** The verifier can change distributed control state by reporting a replica bad without first magnetically/electrically damaging the retained payload. (`H/P`, `E`)
+- **2470 — verification-coherence fix != payload repair.** Commit `aebb9127...` changes capture of the last partial checksum under the dataset lock; it does not reconstruct corrupt user data from another replica. (`H/P`, `E`)
+- **2471 — coherent verification != free verification.** HDFS-12136 attributes serious BlockSender serialization under some workloads to the HDFS-11160 lock/read strategy, showing a historical correctness/service-cost tradeoff without making global locking universal. (`H/P`, `E`, `X`)
+- **2472 — scanner-specific bug framing != scanner-exclusive race family.** HDFS-12136 explicitly warns that concurrent-reader/writer false-positive checksum errors can affect readers beyond `VolumeScanner`; Case 83 nevertheless remains bounded to the scanner path it can directly ground. (`H/P`, `X`)
+- **2473 — HDFS/Ceph integrity-currentness comparison is functional, not genealogical.** Case 27 stale-integrity evidence and HDFS-11160 both show that integrity evidence must correspond to the judged payload state, but their object models, mechanisms, code, and histories differ. (`A`, `X`)
+- **2474 — related-repository nonduplication remains explicit.** A fresh `computing-archaeology` search found no dedicated HDFS-11160/VolumeScanner/BlockScanner case; this slice retains the retention-specific currentness relation here and leaves broader scanner/append/checksum genealogy to the companion repository. (`H/P` project-state record)

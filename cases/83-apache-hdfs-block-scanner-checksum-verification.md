@@ -117,6 +117,24 @@ This is important negative evidence:
 
 The implementation preserves room for concurrency/race interpretation before deauthorizing a replica.
 
+### H/P — 2016 HDFS-11160: checksum verification can fail on an incoherent concurrent observation
+
+A later Apache bug record closes an important limit in the 2.7.3 account above. HDFS-11160, created 20 November 2016 and resolved 16 December 2016, reports that `VolumeScanner` could classify a **good** replica as corrupt when an append raced the scan. The issue identifies the specific comparison failure: the scanner could use a **new checksum** against **old data**, producing a mismatch even though the retained replica was not physically bad.
+
+The corresponding Apache Hadoop commit `aebb9127bae872835d057e1c6a6e6b3c6a8be6cd` changes `BlockSender` so that, for a `FinalizedReplica`, the last partial checksum and its data length are obtained while the dataset lock is held. The commit also adds a concurrent append/scan regression test.
+
+This yields three stricter boundaries:
+
+> **checksum mismatch != necessarily physical payload corruption.**
+
+> **checksum algorithm correctness != checksum/data observation coherence.**
+
+> **integrity metadata presence != currentness for the particular payload state being judged.**
+
+The 2017 follow-up HDFS-12136 reports that this lock-based coherence strategy could serialize `BlockSender` construction under load, so the historical fix also supplies a cost boundary: **coherent verification != free verification**. This is a product/code-path tradeoff, not a claim that every correct verifier must take a global exclusive lock.
+
+The detailed source/claim map is in [`../evidence/83-hdfs-2016-volume-scanner-concurrent-append-coherence-deepening.md`](../evidence/83-hdfs-2016-volume-scanner-concurrent-append-coherence-deepening.md).
+
 ### H/P — suspect blocks can be pulled forward without replacing periodic coverage
 
 `BlockScanner.markSuspectBlock` says a suspect block should be rescanned soon. `VolumeScanner` maintains a `suspectBlocks` collection and a short-lived `recentSuspectBlocks` cache so that suspicious embodiments can be prioritized without endlessly rescanning the same block in a tight loop.
@@ -330,7 +348,13 @@ Case 83 adds these controlled relations:
 11. `successful verification now ≠ permanent future validity`;
 12. `inventory re-observation ≠ integrity qualification`;
 13. `proactive verification ≠ historical identity with ZFS scrub`;
-14. `distributed repair capacity ≠ corruption discovery`.
+14. `distributed repair capacity ≠ corruption discovery`;
+15. `checksum mismatch ≠ necessarily physical payload corruption`;
+16. `checksum algorithm correctness ≠ checksum/data observation coherence`;
+17. `integrity metadata presence ≠ integrity metadata currentness for the payload state being judged`;
+18. `corrupt-replica report ≠ ground truth about media damage`;
+19. `verification-coherence fix ≠ payload repair`;
+20. `coherent verification ≠ free verification`.
 
 These are project engineering terms. They are not claims that Apache developers used this exact ontology.
 
@@ -358,7 +382,7 @@ Still open:
 - a full GFS→HDFS or other distributed-scrubbing genealogy;
 - exact checksum-file / metadata-format evolution across Hadoop releases;
 - fault-injection measurements on named HDFS releases;
-- later `BlockScanner` / `VolumeScanner` changes after 2.7.3;
+- later `BlockScanner` / `VolumeScanner` evolution beyond the bounded HDFS-11160 fix, including later alternatives to its locking tradeoff;
 - interaction with storage-device internal ECC, RAID, filesystems, and controller scrubbing;
 - quantified detection-latency distributions in production clusters;
 - exact durability/atomicity guarantees of the saved block-iterator cursor;
@@ -391,6 +415,9 @@ Useful methodological guardrail: `integrity qualification`, `verification age`, 
 - Apache JIRA, `HADOOP-3635`, **Uncaught exception in DataBlockScanner**, affects 0.17.0 / fixed 0.18.0 (2008): <https://issues.apache.org/jira/browse/HADOOP-3635>
 - Apache JIRA, `HDFS-3194`, **DataNode block scanner is running too frequently** (2012): <https://issues.apache.org/jira/browse/HDFS-3194>
 - Apache JIRA, `HDFS-7548`, **Corrupt block reporting delayed until datablock scanner thread detects it** (2014–2015): <https://issues.apache.org/jira/browse/HDFS-7548>
+- Apache JIRA, `HDFS-11160`, **VolumeScanner reports write-in-progress replicas as corrupt incorrectly** (2016): <https://issues.apache.org/jira/browse/HDFS-11160>
+- Apache Hadoop commit `aebb9127bae872835d057e1c6a6e6b3c6a8be6cd`, **HDFS-11160. VolumeScanner reports write-in-progress replicas as corrupt incorrectly** (2016-12-16 UTC): <https://github.com/apache/hadoop/commit/aebb9127bae872835d057e1c6a6e6b3c6a8be6cd>
+- Apache JIRA, `HDFS-12136`, **BlockSender performance regression due to volume scanner edge case** (2017): <https://issues.apache.org/jira/browse/HDFS-12136>
 - Sanjay Ghemawat, Howard Gobioff, Shun-Tak Leung, **“The Google File System,”** SOSP 2003, especially §5.2 `Data Integrity`: <https://research.google/pubs/the-google-file-system/>
 
 ### Internal comparisons
@@ -406,4 +433,4 @@ Useful methodological guardrail: `integrity qualification`, `verification age`, 
 
 **Grounded bounded case.**
 
-The central claims are directly supported by Apache documentation, tag-matched Hadoop 2.7.3 source, and earlier Apache issue history; GFS 2003 supplies a conservative prior-art boundary. The case does not generalize from HDFS to all scrubbing systems and does not equate detection, reporting, repair, deletion, or sanitization.
+The central claims are directly supported by Apache documentation, tag-matched Hadoop 2.7.3 source, earlier Apache issue history, and the 2016 HDFS-11160 issue/commit deepening; GFS 2003 supplies a conservative prior-art boundary. The case does not generalize from HDFS to all scrubbing systems and does not equate detection, reporting, repair, deletion, or sanitization.

@@ -26,6 +26,8 @@ It does **not** establish invention priority for checksums, scrubbing, replicate
 | Apache Hadoop 2.7.3 HDFS Architecture | 2016 release docs | official system documentation | Blockreport presence, checksums, corruption, alternate replicas, re-replication | **H/P** |
 | Hadoop `rel/release-2.7.3`, `BlockScanner.java` | 2.7.3 | tag-matched source | scan-period semantics, rate enablement, suspect-block scheduling | **H/P** |
 | Hadoop `rel/release-2.7.3`, `VolumeScanner.java` | 2.7.3 | tag-matched source | per-volume threads, verification path, race handling, bad-block reporting, cursor persistence, coverage scheduling | **H/P** |
+| Apache JIRA HDFS-11160 + Hadoop commit `aebb9127...` | 2016 | project issue + matching source commit | concurrent append can mix new checksum with old data; fix captures last partial checksum under dataset lock | **H/P** |
+| Apache JIRA HDFS-12136 | 2017 | project follow-up | lock-based HDFS-11160 fix had a documented BlockSender contention/performance cost | **H/P** |
 | `technical-retention` Case 18 | current repo | grounded internal case | bounded functional comparison to ZFS proactive scrub | **A** |
 | `technical-retention` Case 79 | current repo | grounded internal case | distinguish Blockreport inventory re-observation from integrity qualification | **E/A** |
 
@@ -267,6 +269,26 @@ This does **not** establish direct code lineage or prove that HDFS copied a part
 
 ---
 
+## 2016 addendum — verification evidence must be coherent with the payload state
+
+Detailed record: [`83-hdfs-2016-volume-scanner-concurrent-append-coherence-deepening.md`](83-hdfs-2016-volume-scanner-concurrent-append-coherence-deepening.md).
+
+HDFS-11160 records a concrete counterexample to the shortcut `checksum mismatch = corrupt bytes`: during concurrent append, `VolumeScanner` could compare a new checksum against old data and report a good replica as corrupt. Apache's matching commit captures the finalized replica's last partial checksum while holding the dataset lock and adds a concurrent append/scan regression test.
+
+This later evidence deepens, rather than contradicts, the 2.7.3 `ScanResultHandler` boundary above. The earlier handler already recognized that some race-related failures should not automatically become bad-block reports; HDFS-11160 shows another race that escaped that classification logic because the read/check path itself could construct an incoherent checksum/data observation.
+
+The safe engineering relations are:
+
+- `checksum mismatch != necessarily physical payload corruption`;
+- `checksum algorithm correctness != observation coherence`;
+- `integrity metadata presence != currentness for the judged payload version`;
+- `corrupt-replica report != ground truth`;
+- `verification-coherence fix != payload repair`.
+
+HDFS-12136 is retained as a separate 2017 cost boundary: the issue attributes severe serialization under some load to the HDFS-11160 lock/read strategy. It does not prove that every coherent verifier requires that locking design.
+
+---
+
 ## Claim ledger
 
 | Claim | Label | Evidence | Boundary |
@@ -285,6 +307,10 @@ This does **not** establish direct code lineage or prove that HDFS copied a part
 | corrupt-replica reporting is not physical sanitization | E/X | reporting semantics | no secure-erasure claim supported |
 | GFS had the broad proactive distributed integrity-scan function by 2003 | H/P | GFS §5.2 | no direct HDFS genealogy claim |
 | HDFS scanner and ZFS scrub are functionally comparable but historically distinct | A | Case 18 + HDFS evidence | analogy only |
+| concurrent append can make checksum/data observations incoherent | H/P | HDFS-11160 | bounded to documented race; not every mismatch |
+| the 2016 fix captures last partial checksum under dataset lock | H/P | commit `aebb9127...` | does not establish global snapshot atomicity |
+| checksum mismatch can be a false corruption verdict | H/P + E | HDFS-11160, HDFS-6804 | does not deny genuine corruption mismatches |
+| coherence correction can have service cost | H/P + E | HDFS-12136 | product/code-path witness, not universal law |
 
 ---
 
@@ -306,7 +332,13 @@ The evidence supports these project-level distinctions:
 12. `inventory re-observation ≠ content-integrity qualification`;
 13. `repair capacity ≠ corruption discovery`;
 14. `background verification ≠ historical identity with ZFS scrub`;
-15. `corruption deauthorization ≠ secure sanitization`.
+15. `corruption deauthorization ≠ secure sanitization`;
+16. `checksum mismatch ≠ necessarily physical payload corruption`;
+17. `checksum algorithm correctness ≠ checksum/data observation coherence`;
+18. `integrity metadata presence ≠ currentness for the judged payload state`;
+19. `corrupt-replica report ≠ ground truth about media damage`;
+20. `verification-coherence fix ≠ payload repair`;
+21. `coherent verification ≠ free verification`.
 
 The strongest contribution to the repository's maintenance taxonomy is #9–11: **the mechanism that verifies retained data has its own state, schedule, and temporal continuity.**
 
@@ -344,7 +376,7 @@ Case 77 can correct a codeword and write it back within the memory system. Case 
 
 ## Related-repository check
 
-Searches of `tmzncty/computing-archaeology` for `HDFS`, `HDFS block scanner checksum`, and the specific scanner mechanism returned no dedicated case at the time of this slice.
+Searches of `tmzncty/computing-archaeology` for `HDFS`, `HDFS block scanner checksum`, and the specific scanner mechanism returned no dedicated case at the time of the original slice. A fresh check during the HDFS-11160 deepening likewise found no dedicated `HDFS-11160`, `VolumeScanner`, or `BlockScanner` case to reuse.
 
 Therefore this record does **not** duplicate an existing companion-repository history. It intentionally leaves the following to future `computing-archaeology` work if pursued:
 
