@@ -205,6 +205,23 @@ A regime label identifies the **trigger/obligation relation**, not the response 
 
 See [`SYNTHESIS_24_RETENTION_MAINTENANCE_TRIGGER_REGIMES.md`](SYNTHESIS_24_RETENTION_MAINTENANCE_TRIGGER_REGIMES.md).
 
+## maintenance-control state
+
+A project analytical descriptor for **non-payload state used to schedule, qualify, resume, authorize, or audit maintenance of another retained relation**.
+
+The term does **not** imply that the state is durable, checkpointed, historical, replicated, or equally authoritative across systems. A maintenance-control state may be:
+
+- a regime-local cyclic phase that is reinitialized;
+- a restart-progress checkpoint whose loss causes replay;
+- a persistent qualification/currentness map;
+- retained policy reloaded after restart;
+- runtime embodiment evidence that must be re-observed;
+- a cumulative diagnostic/event-history summary.
+
+Always state its role, minimum persistence horizon, reconstitution path, authority, loss consequence, and whether it carries phase/currentness, compact summary, or actual history. Do not call every such state a `checkpoint`.
+
+See [`SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md`](SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md).
+
 ## remanence
 
 Persistence of a physical distinction after the external stimulus that created it is removed.
