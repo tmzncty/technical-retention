@@ -236,7 +236,7 @@ Accordingly this addendum keeps the retention-specific currentness/coherence bou
 
 - [`../cases/83-apache-hdfs-block-scanner-checksum-verification.md`](../cases/83-apache-hdfs-block-scanner-checksum-verification.md)
 - [`83-hadoop-2003-2016-block-scanner-grounding.md`](83-hadoop-2003-2016-block-scanner-grounding.md)
-- [`../cases/27-ceph-luminous-ec-deep-scrub.md`](../cases/27-ceph-luminous-ec-deep-scrub.md)
+- [`../cases/27-ceph-luminous-ec-deep-scrub-checksum-authority.md`](../cases/27-ceph-luminous-ec-deep-scrub-checksum-authority.md)
 - [`../cases/18-zfs-scrub-latent-error-detection.md`](../cases/18-zfs-scrub-latent-error-detection.md)
 
 ---
