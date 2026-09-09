@@ -1,0 +1,60 @@
+name: Apply Case 10 pseudo-SRAM product boundary
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/apply-case10-psram-product-boundary.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply bounded Case 10 research
+        run: python3 scripts/apply_case10_psram_product_boundary.py
+
+      - name: Validate research slice
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          test -f evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md
+          python3 - <<'PY'
+          from pathlib import Path
+          idx = Path('CASE_INDEX.md').read_text(encoding='utf-8')
+          for n in range(2576, 2590):
+              marker = f'**{n} —'
+              assert idx.count(marker) == 1, (n, idx.count(marker))
+          case = Path('cases/10-toshiba-leakage-tracked-self-refresh.md').read_text(encoding='utf-8')
+          assert 'named-product self refresh != named-product leakage-tracked self refresh' in case
+          assert 'TC51832A' in case and 'TC51W3216XB' in case
+          roadmap = Path('ROADMAP.md').read_text(encoding='utf-8')
+          assert roadmap.count('10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md') == 1
+          assert 'exact leak-monitor/comparator product identity' in roadmap
+          evidence = Path('evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md').read_text(encoding='utf-8')
+          assert 'internal timer' in evidence
+          assert 'internal refresh-address counter' in evidence
+          assert 'facsimile' in evidence.lower()
+          PY
+
+      - name: Commit research and remove integration scaffolding
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git rm scripts/apply_case10_psram_product_boundary.py
+          git rm .github/workflows/apply-case10-psram-product-boundary.yml
+          git add ROADMAP.md CASE_INDEX.md cases/10-toshiba-leakage-tracked-self-refresh.md evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md
+          git diff --cached --check
+          git commit -m "case10: ground pseudo-SRAM product self-refresh boundary"
+          git push origin HEAD:main
