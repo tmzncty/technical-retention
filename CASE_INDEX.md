@@ -2707,6 +2707,8 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 
 ## Case 121 — DDR5 PRAC activation-counter findings
 
+Deepening record: [`evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md`](evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md).
+
 - **1946 — 17 April 2024 JESD79-5C PRAC publication ≠ invention of per-row activation counting:** JEDEC supplies the named DDR5 PRAC standards floor, while Intel US20210365316A1 was filed 4 June 2021 with per-row activation-count storage, ECC, threshold comparison, and update logic. (`H/P`, `X`)
 - **1947 — DDR5 generation membership ≠ PRAC support:** Micron MR70 exposes PRAC/ABO support as optional rather than inferable from the word `DDR5`. (`H/P`)
 - **1948 — PRAC support ≠ PRAC enabled:** Micron separates read-only support from a host-controlled enable bit whose bounded default is disabled. (`H/P`)
@@ -2725,6 +2727,22 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 - **1961 — per-row counter prior art ≠ proven Intel→JEDEC genealogy:** the 2021 patent blocks an invention claim but does not establish committee descent, implementation identity, or textual lineage into JESD79-5C. (`H/P`, `A`, `X`)
 - **1962 — standardized PRAC/ABO framework ≠ universal RowHammer immunity:** JEDEC defines coordination and independent security literature treats actual protection as implementation-dependent. (`H/P`, `S`, `X`)
 - **1963 — related-repository boundary:** current `tmzncty/computing-archaeology` searches for `PRAC` and `activation counter` returned no dedicated case; broad PRAC/RowHammer/DDR5 standards genealogy belongs there if developed, while Case 121 keeps only the retention-specific second-order-state/readiness relation. (`H/P` project-state record)
+
+- **2680 — system-reset readiness clearing ≠ physical counter-cell erasure:** Micron Rev. E clears ACI-completion status when system reset disables PRAC, but the inspected product text does not establish that the activation-counter cells are physically erased. (`H/P`, `E`, `X`)
+- **2681 — ACI completion ≠ durable restart witness:** the bounded product contract deliberately clears completion evidence across the reset transition, so prior completion is not a cross-reset certificate of present counter readiness. (`H/P`, `E`)
+- **2682 — possible embodiment survival ≠ post-reset authority:** even if some counter-cell charge physically survives, the protocol does not thereby authorize the old count state after readiness has been invalidated. (`E`)
+- **2683 — power-up can require counter-state reconstitution:** Micron US20250316301A1 describes activation-counter bits as potentially unknown at power-up and initializes them to a known state before reliance. (`H/P`, `E`)
+- **2684 — product reset contract ≠ patent power-up embodiment:** the 11/2024 data sheet and 10/2025 patent are distinct source types; the latter cannot be silently promoted into a normative JESD79-5C or cross-vendor rule. (`H/P`, `X`)
+- **2685 — reset-triggered reinitialization ≠ ordinary refresh:** ACI establishes known maintenance-control values; ordinary refresh preserves existing volatile cell values. (`E`)
+- **2686 — PRAC disabled after reset ≠ payload physically erased:** the bounded reset statement concerns PRAC enable/readiness and does not by itself establish user-array erasure. (`E`, `X`)
+- **2687 — readiness evidence cleared ≠ initialization failure:** `ACI complete = 0` after reset can represent deliberate invalidation of prior readiness rather than evidence that an attempted ACI failed. (`E`)
+- **2688 — policy re-enabled ≠ counters ready:** after a regime boundary, enabling PRAC and completing ACI remain separate steps before activation tracking/ABO may resume. (`H/P`, `E`)
+- **2689 — refreshed powered-regime continuity ≠ cross-power persistence guarantee:** the inspected sources ground volatile counter maintenance within operation but do not establish nonvolatile preservation of activation counts across loss of power. (`H/P`, `E`, `X`)
+- **2690 — ACI after power-up ≠ recovery of previous activation history:** initialization creates a new known starting condition rather than reconstructing the pre-power-down sequence or exact accumulated counts. (`E`, `X`)
+- **2691 — maintenance-control persistence horizon can be regime-bounded:** a state may be constitutive while the regime is active yet safely lose authority at reset if the protocol reconstitutes it before future reliance. (`E/A`)
+- **2692 — PRAC-count reinitialization ≠ DRAM refresh-counter phase identity:** Case 09 and Case 121 both admit initialization of maintenance-control state, but cyclic row enumeration and per-row disturbance-pressure summaries remain different retained objects and mechanisms. (`A`, `X`)
+- **2693 — PRAC reset reconstitution ≠ HDFS restart-progress checkpointing:** Case 83 preserves scanner position to reduce replay; Case 121 can deliberately invalidate old count readiness and establish a new starting condition. (`A`)
+- **2694 — functional similarity ≠ genealogy:** the Case 09/83/121 comparison classifies persistence horizons only; it establishes no historical descent among DRAM refresh counters, PRAC state, and HDFS scanner cursors. (`A`, `X`)
 
 ## Case 122 — ATA HPA / SET MAX addressability findings
 

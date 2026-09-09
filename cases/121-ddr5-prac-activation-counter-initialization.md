@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/121-ddr5-2021-2025-prac-activation-counter-grounding.md`](../evidence/121-ddr5-2021-2025-prac-activation-counter-grounding.md).
 
+Reset/power-up deepening: [`../evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md`](../evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md).
+
 This is a retention-specific continuation of [`54-ddr5-rfm-split-maintenance-authority.md`](54-ddr5-rfm-split-maintenance-authority.md), not a replacement for it. Case 54 asks who owns activity accounting and creates an RFM maintenance opportunity. Case 121 asks a different question: **what has to be retained before per-row activation accounting itself can be trusted?**
 
 ## Scope
@@ -53,6 +55,14 @@ The initialization sequence uses a full refresh pass under a restricted command 
 
 Most importantly for this case, Micron states that the activation-counter bits require refresh like normal device cells. After refresh violations, ACI is required to put those bits back into a known state.
 
+### Power-up / system-reset reconstitution deepening
+
+A later bounded pass adds a reset/power-up distinction that the original grounding left open. Micron Rev. E (11/2024) states that a system reset which disables PRAC also clears ACI-completion status (`MR70:OP[3]=0`). That is a product-contract statement about readiness/control state; it does not establish that reset physically erases the activation-counter cells themselves.
+
+Micron's later ACI patent application, US20250316301A1 (published 9 October 2025), separately describes power-up as a condition in which activation-counter bits may be unknown and therefore require initialization to a known state before reliance. Because this is a patent embodiment rather than an inspected normative JEDEC clause, it is used only as a primary mechanism witness, not as a universal DDR5 rule.
+
+Evidence: [`../evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md`](../evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md).
+
 ### Earlier prior art: per-row activation-count state predates JESD79-5C
 
 Intel's US20210365316A1, filed 4 June 2021 and published 25 November 2021, describes a memory chip in which storage cells associated with a row hold that row's activation count, with ECC protecting the count, comparison against a threshold, and increment/writeback circuitry.
@@ -90,6 +100,24 @@ Therefore:
 > **PRAC enabled ≠ activation counters initialized ≠ ABO protection active.**
 
 This is a transition-readiness relation, not merely a mode bit. A system can have selected the PRAC policy while the state required to execute that policy is not yet trustworthy.
+
+### Reset can invalidate counter authority without proving physical erasure
+
+The reset path exposes a useful distinction among embodiment, readiness, and authority. Clearing ACI-completion state means the old trusted-counter relation does not transparently survive the transition. The inspected product text does not say that the counter cells are physically erased by that reset.
+
+Therefore:
+
+> **ACI-complete cleared ≠ activation-counter cells physically erased.**
+
+and:
+
+> **possible physical survival ≠ post-reset protocol authority.**
+
+The later patent's power-up path reinforces the reconstitution boundary: counter values may be unknown, and the safe response is to establish a known starting condition through ACI rather than to assume that old values remain trustworthy.
+
+> **counter reinitialization ≠ recovery of previous activation history.**
+
+This gives the PRAC maintenance-control state a bounded persistence horizon: its authority can end at a reset/power-up regime boundary even though the protection mechanism can become usable again after explicit reinitialization. It is therefore not a durable-checkpoint contract.
 
 ### Maintenance metadata is itself volatile
 
@@ -239,7 +267,7 @@ That is an engineering-derived interpretation. It is not historical JEDEC or Mic
 - revision-by-revision PRAC changes after JESD79-5C;
 - cross-vendor product contracts for ACI/counter refresh;
 - exact physical counter-cell topology across named DDR5 parts;
-- power-cycle/reset semantics beyond the bounded public product contract;
+- direct normative JESD79-5C reset/power-up semantics, cross-vendor behavior, and named-controller reset traces beyond the bounded Micron product + patent evidence;
 - independent fault injection that deliberately corrupts/invalidates activation-counter state;
 - PRAC + ARFM/DRFM interaction on named controllers and DRAMs;
 - full security evaluation of ABO/RFM implementations;
