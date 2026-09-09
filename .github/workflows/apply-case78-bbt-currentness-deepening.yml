@@ -24,6 +24,11 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/apply_case78_bbt_currentness_deepening.py
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('CASE_INDEX.md')
+          p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
 
       - name: Validate canonical research changes
         shell: bash
