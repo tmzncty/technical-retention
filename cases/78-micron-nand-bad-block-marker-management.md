@@ -2,7 +2,7 @@
 
 ## Scope
 
-- **Bounded historical/technical regime:** ONFI 1.0 factory-defect mapping (ratified in late 2006), a Micron 8Gb NAND product datasheet dated February 2009, and Micron Technical Note TN-29-59 Rev. H (April 2011).
+- **Bounded historical/technical regime:** Linux MTD flash-resident BBT implementation/documentation from 2004, ONFI 1.0 factory-defect mapping (ratified in late 2006), a Micron 8Gb NAND product datasheet dated February 2009, and Micron Technical Note TN-29-59 Rev. H (April 2011).
 - **Primary question:** what must remain when NAND contains physical blocks that must *not* be treated as usable even though those blocks remain electrically addressable and their defect marker can itself be erased?
 - **Retention-specific focus:** factory bad-block evidence, construction and persistence of a bad-block table (BBT), lifetime-developed bad-block replacement, and reserved replacement capacity.
 - **Excluded from this case:** a general history of NAND, all FTL algorithms, garbage collection, wear leveling, read disturb, program interference, SSD sanitization, or invention priority for bad-block management.
@@ -121,6 +121,25 @@ This is not merely failure detection. It is failure-triggered **identity-preserv
 TN-29-59 separates `user addressable block area` from `reserved block area`. The latter is used for replacement blocks and BBT storage. For the Micron devices covered by the note, the document states a maximum lifetime bad-block allowance of 2% of total blocks and says the same number is commonly reserved.
 
 This 2% figure is **not generalized into a universal NAND constant**. The stronger retention point is architectural: some physically good capacity can be withheld from ordinary user addressing precisely so the logical service can survive later physical-block retirement.
+
+
+### H/P — Linux MTD 2004 makes the persisted BBT itself mirrored and version-qualified
+
+A separate pre-ONFI software witness sharpens the original Micron statement that a BBT may be saved in good NAND. Linux MTD's 2004 NAND documentation describes a Flash-BBT regime whose default arrangement uses **mirrored tables with version numbers** and reserves blocks for BBT placement. The archived 28-May-2004 `nand_bbt.c` change exposes the corresponding currentness logic: if one table is missing, the surviving peer can seed its rewrite; if both are present but have different versions, the higher readable version is selected and the older peer is scheduled for update.
+
+The same source increments per-chip BBT version state during `nand_update_bbt()` and writes primary and mirror through separate operations. It also marks BBT regions so normal erase/write paths do not accidentally consume the blocks that hold this control metadata.
+
+This deepens, rather than reverses, the original limit on crash atomicity. The Linux documentation presents mirroring/version control as risk reduction, and the source supplies a recovery path when a newer readable copy survives. Neither source proves that every sudden-power-loss point leaves one complete readable copy, that both copies cannot be corrupted together, or that a simple version field is an audit history.
+
+Therefore the bounded relations are:
+
+- `saved BBT ≠ single infallible BBT embodiment`;
+- `two BBT copies ≠ two equally authoritative copies`;
+- `BBT version ≠ bad-block event history`;
+- `mirrored + versioned BBT ≠ universal crash-atomic update`;
+- `reserved-for-BBT block ≠ physically defective block`.
+
+See [`evidence/78-linux-mtd-2004-mirrored-versioned-bbt-deepening.md`](../evidence/78-linux-mtd-2004-mirrored-versioned-bbt-deepening.md).
 
 ---
 
@@ -269,7 +288,7 @@ The philosophical point should remain modest: **technical availability is partly
 - The documented PAGE PROGRAM failure boundary should not be generalized to every failure mode or every NAND generation.
 - The 2% reserve statement is limited to the Micron devices covered by TN-29-59 and is not a universal NAND requirement.
 - The sources specify operational exclusion/replacement, not secure sanitization of retired blocks.
-- A saved BBT is necessary in the documented software design but does not by itself prove crash-atomic implementation of every table update.
+- A saved BBT is necessary in the documented software design. Linux MTD 2004 adds mirrored/versioned Flash-BBT recovery, but this narrows rather than eliminates update-loss risk and does not prove transactional crash atomicity, dual-copy survival, or universal power-cut safety.
 - Modern managed SSD controllers may hide this machinery from the host and may use different internal representations.
 
 ---
@@ -282,7 +301,9 @@ The defensible historical statement is narrower:
 
 > By ONFI 1.0 (late 2006), factory-defect mapping and a host-created initial bad-block table were standardized chip-interface obligations; Micron's 2009 product documentation and 2011 technical note make the retention consequence explicit by requiring pre-erase capture of erasable factory defect evidence, durable BBT storage, reboot reconstruction, and runtime replacement of newly bad blocks.
 
-The `computing-archaeology` repository was searched for a dedicated NAND bad-block-management slice before writing this case; no directly reusable case was found. Broader NAND/SSD engineering genealogy still belongs there rather than being recreated here.
+A separate bounded pre-ONFI witness now reaches back to Linux MTD in May 2004: its flash-resident BBT code/documentation already exposes mirrored tables, version-based currentness selection, missing/stale-peer rewrite, and protected BBT regions. This is a historical floor for the inspected implementation, **not** an invention-priority claim.
+
+The `computing-archaeology` repository was searched again for `NAND bad block table`; no directly reusable case was found. Broader NAND/MTD/bootloader/SSD engineering genealogy still belongs there rather than being recreated here.
 
 ---
 
@@ -303,6 +324,10 @@ The `computing-archaeology` repository was searched for a dedicated NAND bad-blo
 | bad-block replacement ≠ garbage collection / wear leveling | E/A | bounded comparison; Micron itself lists them separately |
 | NAND bad-block replacement ≈ SCSI defect reassignment | A | functional analogy only; no genealogy claimed |
 | bad-block mark ≈ tombstone/revoke as negative evidence | A | abstract analogy only |
+| Linux MTD flash BBT can retain primary/mirror copies with version currentness | H/P | grounded by 2004 MTD documentation/source |
+| higher readable BBT version can seed stale/missing-peer rewrite | H/P | grounded by 28-May-2004 archived source |
+| mirrored/versioned BBT ≠ universal crash-atomic update | E/X | bounded reconstruction and explicit limit |
+| reserved-for-BBT ≠ physically defective | E/X | bounded implementation distinction |
 | `bad block` proves every page unreadable | X | rejected |
 | Micron/ONFI invented bad-block management | X | unsupported / not investigated |
 | retired bad block is securely erased | X | unsupported |
@@ -316,6 +341,8 @@ The `computing-archaeology` repository was searched for a dedicated NAND bad-blo
 1. Open NAND Flash Interface Working Group, *Open NAND Flash Interface Specification*, Rev. 1.0, §3.2 `Factory Defect Mapping`, official PDF: <https://onfi.org/files/onfi_1_0_gold.pdf>.
 2. Micron Technology, *8Gb Asynchronous/Synchronous NAND Flash Memory*, MT29F8G08ABABA / MT29F8G08ABCBB family, Draft 27 February 2009, `Error Management`: <https://www.tme.com/Document/f0626004806cbebd352e6f64f6830d11/MT29F8G08ABABAWPIT.pdf>.
 3. Micron Technology, TN-29-59, *Bad Block Management in NAND Flash Memory*, Rev. H, April 2011: <https://e2e.ti.com/cfs-file/__key/communityserver-discussions-components-files/791/tn2959_5F00_bbm_5F00_in_5F00_nand_5F00_flash.pdf>.
+4. Linux MTD, Thomas Gleixner, *MTD NAND Driver Programming Interface*, `Bad block table support`, copyright 2004: <https://www.kernel.org/doc./htmldocs/mtdnand/Bad_Block_table_support.html>.
+5. Linux MTD CVS archive, 28 May 2004, `nand_bbt.c` 1.9→1.10 and related NAND changes: <https://lists.infradead.org/pipermail/linux-mtd-cvs/2004-May/003683.html>.
 
 ### Related cases
 
