@@ -23,13 +23,10 @@ jobs:
       - name: Apply bounded Case 121 deepening
         run: |
           set -euo pipefail
-          python3 - <<'PY'
+          python3 - <<'PY' >case121-integration-debug.txt 2>&1
           from pathlib import Path
           helper = Path('scripts/apply_case121_prac_reset_reconstitution.py')
           source = helper.read_text(encoding='utf-8')
-          # CASE_INDEX has a dedicated Case-121 findings section but no stable
-          # one-line table-row anchor in the current ledger. Keep the bounded
-          # findings update and avoid manufacturing a synthetic table row.
           start_marker = '# Update the Case 121 table row by adding the deepening record and narrowing the reset debt.'
           end_marker = '# Insert new findings into the existing Case 121 findings section.'
           start = source.index(start_marker)
@@ -38,10 +35,22 @@ jobs:
           exec(compile(source, str(helper), 'exec'))
           PY
 
+      - name: Persist diagnostics if apply failed
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add case121-integration-debug.txt
+          git commit -m "chore: capture Case 121 integration failure"
+          git push origin HEAD:main
+
       - name: Validate research changes
         shell: bash
         run: |
           set -euo pipefail
+          rm -f case121-integration-debug.txt
           test -f evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md
           python3 - <<'PY'
           from pathlib import Path
@@ -71,6 +80,7 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git rm scripts/apply_case121_prac_reset_reconstitution.py
           git rm .github/workflows/apply-case121-prac-reset-reconstitution.yml
+          git rm -f case121-integration-debug.txt || true
           git add ROADMAP.md CASE_INDEX.md cases/121-ddr5-prac-activation-counter-initialization.md evidence/121-ddr5-prac-powerup-reset-reconstitution-deepening.md
           git diff --cached --check
           git commit -m "case121: deepen PRAC reset-reconstitution boundary"
