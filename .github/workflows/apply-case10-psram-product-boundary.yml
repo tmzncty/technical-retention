@@ -1,5 +1,6 @@
 name: Apply Case 10 pseudo-SRAM product boundary
 
+# Hardened helper retry after anchor normalization.
 on:
   push:
     branches:
