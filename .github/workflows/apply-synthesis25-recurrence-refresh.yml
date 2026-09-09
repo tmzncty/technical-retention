@@ -1,0 +1,58 @@
+name: Apply Synthesis 25 recurrence-refresh boundary
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/apply-synthesis25-recurrence-refresh.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply bounded terminology research
+        run: python3 scripts/apply_recurrence_refresh_boundary.py
+
+      - name: Validate markdown and findings
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          test -f docs/SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md
+          test -f evidence/01-03-1947-1976-recirculation-regeneration-refresh-terminology.md
+          python3 - <<'PY'
+          from pathlib import Path
+          idx = Path('CASE_INDEX.md').read_text(encoding='utf-8')
+          for n in range(2561, 2576):
+              marker = f'**{n} —'
+              assert idx.count(marker) == 1, (n, idx.count(marker))
+          glossary = Path('docs/GLOSSARY.md').read_text(encoding='utf-8')
+          assert '## recurrence' in glossary
+          assert 'recurrence ≠ refresh' in Path('docs/SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md').read_text(encoding='utf-8')
+          roadmap = Path('ROADMAP.md').read_text(encoding='utf-8')
+          assert 'SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md' in roadmap
+          readme = Path('README.md').read_text(encoding='utf-8')
+          assert 'SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md' in readme
+          PY
+
+      - name: Commit research and remove integration scaffolding
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git rm scripts/apply_recurrence_refresh_boundary.py
+          git rm .github/workflows/apply-synthesis25-recurrence-refresh.yml
+          git add README.md ROADMAP.md CASE_INDEX.md docs/GLOSSARY.md docs/SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md evidence/01-mercury-delay-line-1947-1958-grounding.md evidence/01-03-1947-1976-recirculation-regeneration-refresh-terminology.md
+          git diff --cached --check
+          git commit -m "synthesis25: separate recurrence from refresh terminology"
+          git push origin HEAD:main
