@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/116-hadoop-2014-2018-datanode-maintenance-grounding.md`](../evidence/116-hadoop-2014-2018-datanode-maintenance-grounding.md).
 
+Restart-reconstitution deepening: [`../evidence/116-hadoop-301-maintenance-restart-reconstitution-deepening.md`](../evidence/116-hadoop-301-maintenance-restart-reconstitution-deepening.md).
+
 ## Scope
 
 Case 80 established the older HDFS decommission path: a live DataNode selected for planned retirement remains `DECOMMISSION_INPROGRESS` until enough other replicas satisfy the bounded decommission condition, after which the node can become `DECOMMISSIONED`.
@@ -168,6 +170,28 @@ The retained administrative intent must be followed by evidence that the bounded
 HDFS-7877 is recorded as resolved on 20 September 2017 with fix versions including Hadoop 2.9.0, 3.0.0-beta1, and 3.1.0. Apache's Hadoop 2.9.0 documentation, published 18 November 2017, exposes `-enteringmaintenance` and `-inmaintenance` filters in `hdfs dfsadmin -report`. Hadoop 3.0.0 documentation published 8 December 2017 includes a dedicated DataNode Admin guide, and the 3.0.1 release source inspected here contains the maintenance/decommission manager implementation.
 
 These dates establish an open project/release floor. They do not establish first production deployment in the world or even first private HDFS deployment: the HDFS-7877 discussion itself notes production-cluster interest before the ASF release completion.
+
+---
+
+## Restart reconstitution deepening — Hadoop 3.0.1
+
+A later source-level deepening now separates two restart contracts that the broad maintenance-state case previously left together. In the exact Hadoop 3.0.1 tag, the combined JSON hosts file can retain `adminState: IN_MAINTENANCE` together with `maintenanceExpireTimeInMS`; `CombinedHostFileManager.refresh()` reloads those host properties, and `DatanodeManager` consults them when DataNodes register. Thus a fresh NameNode process can reconstitute maintenance intent and its expiry from retained external configuration.
+
+The same released test suite provides an important counterexample to the shortcut “maintenance policy survived, therefore every replica credit survived.” In a bounded restart scenario where the maintenance DataNode is down, the restarted NameNode restores the normal live-replica count because it does not yet know that the absent maintenance node still carries the replica. When that DataNode later returns, its maintenance replica relation becomes visible again.
+
+So the bounded release now supports:
+
+> **persisted maintenance intent / expiry != persisted runtime knowledge of a particular replica embodiment**
+
+and:
+
+> **policy survival != service-side reliance survival**.
+
+A maintenance replica's bytes may physically survive the NameNode restart while the restarted control plane declines to rely on that unobserved location. This is not payload loss; it is a difference in the restart lifetime of **embodiment evidence**.
+
+The deepening also fixes an important negative boundary. The inspected configuration-reload path does not by itself establish whether every maintenance-related field is or is not serialized through FSImage/edit logs, and a NameNode process restart is not the same event as a DataNode return/re-registration or every HA failover path.
+
+Deepening record: [`../evidence/116-hadoop-301-maintenance-restart-reconstitution-deepening.md`](../evidence/116-hadoop-301-maintenance-restart-reconstitution-deepening.md).
 
 ---
 
