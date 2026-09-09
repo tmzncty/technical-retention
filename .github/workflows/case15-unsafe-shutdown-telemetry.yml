@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'tools/case15_unsafe_shutdown_telemetry.py'
+      - '.github/workflows/case15-unsafe-shutdown-telemetry.yml'
   workflow_dispatch:
 
 permissions:
@@ -23,6 +24,15 @@ jobs:
           python-version: '3.x'
       - name: Apply bounded Case 15 telemetry deepening
         run: python tools/case15_unsafe_shutdown_telemetry.py
+      - name: Normalize newly touched source line
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('cases/15-intel-ssd320-power-loss-durability.md')
+          text = p.read_text()
+          text = text.replace('cache-control surfaces.  \n', 'cache-control surfaces.\n')
+          p.write_text(text)
+          PY
       - name: Validate canonical diff
         run: |
           git diff --check
