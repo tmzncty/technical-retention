@@ -1,0 +1,51 @@
+name: Case 83 HDFS-11160 integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/case83-hdfs11160-integration.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply bounded research slice
+        run: python3 tools/integrate_case83_hdfs11160.py
+      - name: Validate canonical changes
+        run: |
+          git diff --check
+          python3 - <<'PY'
+          from pathlib import Path
+          idx = Path('CASE_INDEX.md').read_text(encoding='utf-8')
+          for n in range(2463, 2475):
+              token = f'**{n} —'
+              assert idx.count(token) == 1, (n, idx.count(token))
+          required = [
+              'evidence/83-hdfs-2016-volume-scanner-concurrent-append-coherence-deepening.md',
+              'cases/83-apache-hdfs-block-scanner-checksum-verification.md',
+              'evidence/83-hadoop-2003-2016-block-scanner-grounding.md',
+              'ROADMAP.md',
+              'CASE_INDEX.md',
+          ]
+          for p in required:
+              assert Path(p).is_file(), p
+          PY
+      - name: Commit research and remove integration scaffolding
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/case83-hdfs11160-integration.yml tools/integrate_case83_hdfs11160.py
+          git add cases/83-apache-hdfs-block-scanner-checksum-verification.md \
+                  evidence/83-hadoop-2003-2016-block-scanner-grounding.md \
+                  evidence/83-hdfs-2016-volume-scanner-concurrent-append-coherence-deepening.md \
+                  ROADMAP.md CASE_INDEX.md
+          git diff --cached --check
+          git commit -m 'case83: deepen concurrent verification coherence'
+          git push origin HEAD:main
