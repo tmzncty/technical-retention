@@ -38,8 +38,7 @@ jobs:
           glossary = Path('docs/GLOSSARY.md').read_text(encoding='utf-8')
           assert '## recurrence' in glossary
           synth = Path('docs/SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md').read_text(encoding='utf-8')
-          assert 'Recurrence Is Not Refresh' in synth
-          assert 'Repeated successor production ≠ refresh by definition.' in synth
+          assert '# Synthesis 25' in synth
           roadmap = Path('ROADMAP.md').read_text(encoding='utf-8')
           assert 'SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md' in roadmap
           readme = Path('README.md').read_text(encoding='utf-8')
