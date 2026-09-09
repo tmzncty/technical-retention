@@ -8,6 +8,8 @@ Grounding record: [`../evidence/132-2015-cryogenic-serial-flash-grounding.md`](.
 
 Temperature-conditioned qualification deepening: [`../evidence/132-2014-2018-temperature-conditioned-retention-contract-deepening.md`](../evidence/132-2014-2018-temperature-conditioned-retention-contract-deepening.md). This later/deeper evidence is a bounded comparison, not an identification of the anonymous cryogenic-test ICs with Cypress products.
 
+Accelerated-retention qualification deepening: [`../evidence/132-2005-2013-arrhenius-qualification-boundary-deepening.md`](../evidence/132-2005-2013-arrhenius-qualification-boundary-deepening.md). This 2005–2013 manufacturer-primary slice grounds accelerated-stress / Arrhenius evidence semantics and technology-specific parameter portability; it does not convert the 2015 cryogenic observation into an inverse acceleration law.
+
 ## Scope
 
 - **Object / system:** six production batches of commercial serial Flash-memory ICs, 3,600 devices in total;
@@ -106,6 +108,14 @@ These are not evidence about the identity or process of the 2015 paper's anonymo
 
 Detailed evidence and provenance are kept in the temperature-conditioned addendum.
 
+### H/P — accelerated retention qualification is model-mediated and technology-qualified
+
+Freescale's April-2005 EB618 engineering bulletin describes `typical data retention` as an estimate derived from accelerated stress plus an Arrhenius stress-to-use transformation. It explicitly separates product minimum retention from the longer typical estimate, says activation energy can be determined empirically from high-temperature time-to-failure data, and separately labels `0.8 eV` as a default when empirical activation-energy data are unavailable. Its technology table also contains different measured/default `Ea` values rather than one universal Flash constant.
+
+A February-2013 Freescale K30 datasheet supplies a particularly strong boundary: it still says typical retention is based on measured high-temperature accelerated response de-rated to a constant 25 °C use profile, yet explicitly states that **EB618 does not apply to this technology**. Thus the method family can persist while one older technology-specific treatment becomes inapplicable.
+
+These records are separate from the anonymous commercial parts in the 2015 cryogenic study. They establish a manufacturer-primary accelerated-qualification method boundary, not product identity or a cold-to-hot conversion for the cryogenic samples. Detailed evidence is in the 2005–2013 accelerated-retention addendum.
+
 ---
 
 ## Retained state and substrate
@@ -170,14 +180,16 @@ The intended cryobiological application made this asymmetry practically useful: 
 
 ## Time
 
-At least four different times must stay separate:
+At least six different times must stay separate:
 
 1. **storage interval** — the duration for which an already-written pattern remains recoverable under the tested cryogenic-storage procedure;
 2. **verification interval** — roughly six months between warm checks in the retention group;
 3. **command latency** — program/erase time, which increased substantially at lower temperature;
-4. **environmental transition time** — the warm/cold mode change needed to perform the periodic verification procedure.
+4. **environmental transition time** — the warm/cold mode change needed to perform the periodic verification procedure;
+5. **accelerated-stress exposure time** — laboratory bake/stress duration actually elapsed in an accelerated-retention test;
+6. **model-equivalent use time** — a longer use-condition interval derived from stress temperature, use temperature, activation energy, and a model rather than directly observed on the specimen.
 
-None of these intervals is interchangeable with a JEDEC SSD retention class, a NAND raw-cell retention constant, or a DRAM refresh interval.
+None of these intervals is interchangeable with a JEDEC SSD retention class, a NAND raw-cell retention constant, or a DRAM refresh interval. In particular, accelerated-stress time and model-equivalent use time are related by assumptions rather than being the same observed history.
 
 ---
 
@@ -249,6 +261,18 @@ The 2014 Cypress product evidence makes the converse boundary explicit: Flash op
 
 The Cypress retention-calculator note makes the guarantee depend on an application's temperature profile. The Flash payload does not need to store a temperature log for environmental history to matter physically and contractually. `retention depends on history` therefore does not imply `the device archives that history`.
 
+### E — accelerated-test time != directly observed use-life time
+
+EB618's high-temperature bake examples compress an evidence-producing test by using an Arrhenius stress-to-use transformation. The stress hours are observed; the much longer nominal-use interval is a model result. `equivalent years` therefore must not be paraphrased as a specimen having literally survived those years.
+
+### E — one activation energy != one universal Flash temperature law
+
+The acceleration factor depends on `Ea`, stress temperature, and use temperature. EB618 itself distinguishes measured technology-specific activation energies from a default value, while the 2013 K30 datasheet explicitly says EB618 does not apply to its technology. Model choice and parameter applicability are therefore evidence questions.
+
+### E — method continuity != parameter portability
+
+A later product can retain the broad practice `measured high-temperature response -> de-rate to use profile` while rejecting the applicability of an older engineering bulletin. Shared reliability methodology does not establish shared process parameters, retention kinetics, or product guarantee.
+
 ### X — cold result != inverse high-temperature acceleration law
 
 The cryogenic paper and Cypress qualification tables constrain the environmental problem from different sides, but they do not establish one measured activation energy or a quantitative conversion from `24 months with zero observed errors while cold` to a predicted room/high-temperature lifetime.
@@ -286,6 +310,8 @@ Therefore:
 
 > **component cryogenic experiment ≠ SSD retention contract.**
 
+The new 2005–2013 slice adds a second boundary: accelerated high-temperature stress plus model de-rating can support a use-condition retention estimate without becoming the same evidence class as Case 132's directly observed finite cryogenic storage experiment. The analogy to Case 76 is only at the qualification/evidence-relation level; SSD workload/controller/error criteria remain separate.
+
 ### A — Cases 12 and 13 EEPROM / early Flash
 
 Those cases establish electrical erase/program asymmetry and erase geometry historically. Case 132 adds a later environmental constraint on whether a commercial device can execute active operations. It does not prove a direct genealogy from the early devices to the tested batches.
@@ -306,6 +332,10 @@ That sharpens the repository's broader claim that `being retained` is relational
 
 This is a project interpretation. The 2015 authors do not present the experiment as a theory of memory, archive, or tertiary retention.
 
+### I — a retention lifetime can be a model-mediated evidence relation
+
+The Freescale accelerated-retention documents add a narrow epistemic distinction: a technical lifetime may summarize observed stress plus a transformation model, technology-specific parameters, and a target use condition rather than one directly elapsed specimen history. That helps separate **the retained state** from **the evidence that licenses a retention claim**. It does not mean the device stores future time or that model-based reliability is identical to memory itself.
+
 ---
 
 ## Counterexamples and limits
@@ -316,6 +346,9 @@ This is a project interpretation. The 2015 authors do not present the experiment
 - The six production batches do not represent every serial Flash process, vendor, capacity, or generation.
 - Very-low-temperature program/erase degradation does not imply the same behavior at elevated storage temperatures. The Cypress addendum supplies only a separate vendor qualification/derating boundary, not a common microscopic model.
 - Elevated-temperature product contracts do not identify the anonymous 2015 samples, prove raw-cell charge-loss kinetics, or provide a universal Flash activation energy.
+- EB618 is manufacturer-primary evidence for one accelerated-retention methodology, not an invention-priority claim for the Arrhenius model and not a universal parameter table for later Flash processes.
+- The 2013 K30 datasheet explicitly says EB618 does not apply to its technology, so same-vendor method continuity cannot be used to carry older parameters forward automatically.
+- No inspected source validates EB618's high-temperature model parameters across the 2015 experiment's liquid-nitrogen-scale storage temperatures.
 - The experiment does not replace JESD218/JESD219 SSD qualification or named SSD/controller validation.
 - A cryogenic storage result cannot be projected backward into EPROM/EEPROM/early-Flash history without separate evidence.
 
@@ -339,6 +372,11 @@ This is a project interpretation. The 2015 authors do not present the experiment
 | at fixed 100 K P/E history, Cypress PSoC Flash qualified 20 years at average `TA <= 55 °C` but 10 years at `TA <= 85 °C` | `H/P` | 2014 manufacturer datasheet |
 | active operating-temperature range implies the same retention lifetime at every supported temperature | `X` | manufacturer retention conditions reject this shortcut |
 | cryogenic zero-error observation determines a quantitative high-temperature acceleration law | `X` | no common activation-energy/kinetics measurement |
+| Freescale EB618 defines typical retention as an accelerated-stress / Arrhenius estimate rather than the product minimum guarantee | `H/P` | 2005 manufacturer engineering bulletin |
+| EB618 distinguishes measured technology-specific activation energy from a `0.8 eV` default used when empirical data are unavailable | `H/P` | direct manufacturer methodology statement |
+| the 2013 K30 datasheet still uses high-temperature acceleration/de-rating but explicitly says EB618 does not apply to that technology | `H/P` | direct product datasheet boundary |
+| accelerated-stress duration is the same directly observed history as the model-equivalent use interval | `X` | equivalence is model- and parameter-mediated |
+| EB618 parameters can be extrapolated to the 2015 anonymous cryogenic parts / liquid-nitrogen regime | `X` | no product/process identity or validated cryogenic-range model |
 
 ---
 
@@ -346,7 +384,7 @@ This is a project interpretation. The 2015 authors do not present the experiment
 
 ### `tmzncty/computing-archaeology`
 
-Fresh searches for `cryogenic` and `serial flash` found no dedicated case to reuse. A broader history of low-temperature electronics, serial-Flash product evolution, device packaging, and cryogenic instrumentation belongs there if developed. This case retains only the retention-specific relation among environmental storage, operation availability, verification, and reversibility.
+Fresh searches for `cryogenic`, `serial flash`, and `data retention Arrhenius flash` found no dedicated case to reuse. A broader history of low-temperature electronics, serial-Flash product evolution, semiconductor reliability/Arrhenius methodology, activation-energy measurement, and cryogenic instrumentation belongs there if developed. This case retains only the retention-specific relation among environmental storage, operation availability, verification, accelerated evidence, model transformation, and reversibility.
 
 ### `tmzncty/problem-history`
 
@@ -361,5 +399,7 @@ The historical problem in the 2015 paper is not `how can Flash become an archive
 3. Cypress Semiconductor, *PSoC 3: CY8C34 Automotive Family Datasheet*, Document 001-57331 Rev. *G, revised 14 February 2014; first-party legacy copy preserved by Infineon: <https://www.infineon.com/dgdl/Infineon-PSoC_3_CY8C34_Automotive_Family_Datasheet_Programmable_System-on-Chip_%28PSoC%29_Datasheet-AdditionalTechnicalInformation-v08_00-EN.pdf?fileId=8ac78c8c7d0d8da4017d0ecabcb643c4>.
 4. Cypress/Infineon, KBA203737, **“How long will data be retained in Cypress Flash memory devices if only a few erase cycles are planned?”**, 15 October 2015: <https://community.infineon.com/t5/Knowledge-Base-Articles/How-long-will-data-be-retained-in-Cypress-Flash-memory-devices-if-only-a-few/ta-p/249710>.
 5. Cypress Semiconductor, *S25FL116K/S25FL132K/S25FL164K* SPI Flash datasheet, Document 002-00497, current legacy Rev. *I (4 July 2018), with revision history recording Data Retention section addition in 2016: <https://www.infineon.com/assets/row/public/documents/10/49/infineon-s25fl116k-s25fl132k-s25fl164k-16-mbit-2-mbyte-32-mbit-4-mbyte-64-mbit-8-mbyte-3.0-v-spi-flash-memory-datasheet-en.pdf?fileId=8ac78c8c7d0d8da4017d0ed4ebee537f>.
+6. Martin Niset and Peter Kuhn, Freescale Semiconductor NVM Reliability, *Typical Data Retention for Nonvolatile Memory*, EB618/D Rev. 4, April 2005; first-party successor-hosted PDF: <https://www.nxp.com/docs/en/engineering-bulletin/EB618.pdf>.
+7. Freescale Semiconductor, *K30 Sub-Family Data Sheet*, K30P81M100SF2, Rev. 7, February 2013; first-party successor-hosted PDF: <https://www.nxp.com/assets/documents/data/en/data-sheets/K30P81M100SF2.pdf>.
 
 The accepted manuscript, not a publisher-typeset facsimile, is the directly text-inspected cryogenic experimental source. The Cypress documents are separate product/vendor qualification witnesses used to bound elevated-temperature claims; they are not evidence that the anonymous cryogenic-test parts were Cypress devices.
