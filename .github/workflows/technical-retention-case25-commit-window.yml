@@ -5,33 +5,28 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/technical-retention-case25-commit-window.yml'
+      - 'tools/.tmp_case25_commit_window_integrate.py'
 
 permissions:
   contents: write
 
 jobs:
   integrate:
-    if: github.event.head_commit.message == 'chore: stage Case 25 commit-window integration'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
-
       - name: Apply bounded research slice
-        run: python tools/.tmp_case25_commit_window_integrate.py
-
-      - name: Validate working tree
-        shell: bash
+        run: python3 tools/.tmp_case25_commit_window_integrate.py
+      - name: Validate and commit research
         run: |
           set -euo pipefail
           git diff --check
-          python - <<'PY'
+          python3 - <<'PY'
           from pathlib import Path
           import re
-
           canonical = [
               'cases/25-openstack-swift-ec-overwrite-durable-currentness.md',
               'evidence/25-openstack-swift-2015-2016-ec-currentness-grounding.md',
@@ -41,17 +36,12 @@ jobs:
               'CASE_INDEX.md',
           ]
           for p in canonical:
-              if not Path(p).is_file():
-                  raise SystemExit(f'missing {p}')
-
+              assert Path(p).is_file(), p
           index = Path('CASE_INDEX.md').read_text(encoding='utf-8')
           nums = [int(x) for x in re.findall(r'^- \*\*(\d+)\b', index, re.M)]
           for n in range(2531, 2546):
-              if nums.count(n) != 1:
-                  raise SystemExit(f'finding {n} count={nums.count(n)}')
-          if max(nums) != 2545:
-              raise SystemExit(f'unexpected max finding {max(nums)}')
-
+              assert nums.count(n) == 1, (n, nums.count(n))
+          assert max(nums) == 2545, max(nums)
           ev = Path('evidence/25-swift-2021-commit-window-nondurable-cleanup-deepening.md').read_text(encoding='utf-8')
           for heading in [
               'Historical record (`H/P`)',
@@ -60,25 +50,21 @@ jobs:
               'Philosophical interpretation (`I`)',
               'Counterexamples and stop conditions (`X`)',
           ]:
-              if heading not in ev:
-                  raise SystemExit(f'missing layer heading {heading}')
+              assert heading in ev, heading
           PY
-
-      - name: Commit canonical research and remove scaffolding
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add \
-            cases/25-openstack-swift-ec-overwrite-durable-currentness.md \
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cases/25-openstack-swift-ec-overwrite-durable-currentness.md \
             evidence/25-openstack-swift-2015-2016-ec-currentness-grounding.md \
             evidence/25-swift-2021-commit-window-nondurable-cleanup-deepening.md \
             docs/SYNTHESIS_10_MUTABLE_EC_CURRENTNESS_RETIREMENT_REPAIR.md \
-            ROADMAP.md \
-            CASE_INDEX.md
-          git rm tools/.tmp_case25_commit_window_integrate.py
-          git rm .github/workflows/technical-retention-case25-commit-window.yml
+            ROADMAP.md CASE_INDEX.md
           git diff --cached --check
-          git commit -m 'case25: deepen in-flight non-durable cleanup boundary'
+          git commit -m "case25: deepen in-flight non-durable cleanup boundary"
+          git push origin HEAD:main
+      - name: Remove temporary scaffolding
+        run: |
+          set -euo pipefail
+          git rm tools/.tmp_case25_commit_window_integrate.py .github/workflows/technical-retention-case25-commit-window.yml
+          git commit -m "chore: remove Case 25 integration scaffolding"
           git push origin HEAD:main
