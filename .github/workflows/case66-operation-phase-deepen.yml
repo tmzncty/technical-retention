@@ -27,3 +27,4 @@ jobs:
           git diff --cached --check
           git commit -m 'case66: deepen PEL operation-phase evidence'
           git push origin HEAD:main
+# retry after append-only navigation patch
