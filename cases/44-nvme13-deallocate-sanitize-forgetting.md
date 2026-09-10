@@ -381,6 +381,21 @@ For the 2014 NIST model, that relation can include target ciphertext, one or mor
 
 This is **engineering reconstruction**, not historical NIST terminology and not a universal theorem about every encryption system. Application/file-level key hierarchies, KMS/HSM implementations, threshold/recovery keys, cloud key services, and named-product behavior remain outside this bounded storage-media case.
 
+## Later institutional boundary — NIST Rev. 2 assurance and logical storage (2025–2026)
+
+NIST SP 800-88 Rev. 2 (September 2025) adds a later assurance layer to this historical NVMe case. It separates technique-outcome **verification** from effectiveness/risk **validation**; its own examples show that a technically completed SSD degauss or too-narrow overwrite can still fail the target-data objective. The July-2026 NIST FAQ also explicitly includes cloud/object storage as logical ISM whose physical media are abstracted from the data owner. Full review: [`../evidence/44-nist-2025-2026-sanitization-assurance-logical-storage-deepening.md`](../evidence/44-nist-2025-2026-sanitization-assurance-logical-storage-deepening.md).
+
+Bounded comparison:
+
+```text
+Sanitize command completion
+ != Sanitize operation completion
+ != NIST verification evidence
+ != NIST validation acceptance
+```
+
+Only the first two are NVMe-1.3 interface semantics. The latter two are later NIST vocabulary. Rev. 2 also states that full/representative post-sanitize sampling is not generally required unless policy demands it, so Case 47's FAST-'11 raw-Flash experiment remains a distinct empirical path rather than the definition of NIST verification.
+
 ## Broader prior art boundary
 
 Whole-device secure-erasure mechanisms predate NVMe 1.3 by much more than the existing 2009 cryptographic-erasure witness. T13 D96156r0 (October 1996) and the ATA/ATAPI-4 Revision-18 history/command text establish an earlier device-internal overwrite path whose enhanced mode reaches reallocated user-data sectors. That is an overwrite/reachability prior-art floor, not a cryptographic-erasure floor. The TCG Opal 1.0 witness separately pushes explicit storage-interface key-eradication / cryptographic-erase semantics back to 2009. NIST SP 800-88 Rev. 1 was finalized in December 2014 and defines media sanitization as rendering access to target data infeasible for a stated level of effort; its keyword set includes `crypto erase` and `secure erase`.

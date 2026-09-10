@@ -3890,3 +3890,24 @@ Evidence: [`evidence/37-samsung-2014-restoration-transaction-deepening.md`](evid
 - **2877 — restoration/update risk != sanitization:** corruption/device-damage warnings during firmware/restoration say nothing about secure erase, forensic disappearance, or an NVMe/ATA sanitization guarantee. (`E`, `X`)
 - **2878 — related-repository boundary:** a fresh `tmzncty/computing-archaeology` search for `Samsung 840 EVO` returned no dedicated overlapping case; broader Samsung firmware/controller/TLC genealogy belongs there if developed, while this slice remains bounded to maintenance transaction/admission semantics. (`H/P` project-state record)
 
+## Case 44 deepening — NIST Rev.-2 sanitization-assurance / logical-storage findings
+
+Evidence: [`evidence/44-nist-2025-2026-sanitization-assurance-logical-storage-deepening.md`](evidence/44-nist-2025-2026-sanitization-assurance-logical-storage-deepening.md)
+
+- **2879 — Rev.-1 historical guidance != current NIST guidance:** SP 800-88 Rev. 2 supersedes Rev. 1. (`H/P`)
+- **2880 — current NIST program guidance != device-command specification:** Rev. 2 shifts most technique detail to evolving standards and an enterprise program. (`H/P`, `E`, `X`)
+- **2881 — ISM != only a physical device:** the 2026 FAQ explicitly includes cloud/object-storage abstractions. (`H/P`)
+- **2882 — logical sanitization != necessarily host overwrite:** Rev. 2 permits commands/access elimination as logical techniques. (`H/P`)
+- **2883 — verification != validation:** outcome/completion inspection is separate from effectiveness/risk acceptance. (`H/P`)
+- **2884 — operation completion evidence != validation acceptance:** completion is an assurance input, not the final effectiveness decision. (`H/P`, `E`)
+- **2885 — completed procedure != substrate-appropriate sanitization:** NIST's SSD-degauss counterexample completes yet sanitizes no sensitive data. (`H/P`, `E`)
+- **2886 — user-addressable overwrite != full target coverage:** Rev. 2 warns about overprovisioned storage. (`H/P`, `E`)
+- **2887 — NIST verification != mandatory raw-media sampling:** elaborate sampling is not generally required absent policy. (`H/P`, `X`)
+- **2888 — FAST-'11 raw-Flash evidence != Rev.-2 assurance by definition:** these are distinct observation/decision practices. (`H/P`, `A`, `X`)
+- **2889 — interface status != independent implementation proof:** NVMe status, NIST assurance, and Case-47 empirical evidence answer different questions. (`E`, `A`)
+- **2890 — data-owner sanitization intent != direct physical-media authority:** cloud physical ISM is abstracted from the owner. (`H/P`, `E`)
+- **2891 — cloud purge can depend on retained key/traceability relations:** FAQ Q13 requires secure key management and traceably validated zeroization for its bounded CE path. (`H/P`, `E`)
+- **2892 — provider agreement != sanitization proof by itself:** contract review is an assurance input, not the physical result. (`H/P`, `E`, `X`)
+- **2893 — 2025/2026 vocabulary != NVMe-1.3 historical vocabulary:** later terms are not evidence of 2017 authorial intent. (`H/P`, `X`)
+- **2894 — related-repository boundary:** fresh `computing-archaeology` searches found no dedicated NIST sanitization-assurance case; broader genealogy belongs there. (`H/P` project-state record)
+
