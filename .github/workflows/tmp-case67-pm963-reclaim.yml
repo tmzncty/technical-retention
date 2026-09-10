@@ -1,0 +1,40 @@
+name: Temporary Case67 PM963 reclaim integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tmp-case67-pm963-reclaim.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Integrate bounded Case67 PM963 research deepening
+        shell: bash
+        run: |
+          set -euo pipefail
+          git pull --ff-only origin main
+          python3 _automation_case67_pm963_reclaim.py
+          rm -f _automation_case67_pm963_reclaim.py .github/workflows/tmp-case67-pm963-reclaim.yml
+          git diff --check
+          test -f evidence/67-samsung-pm963-2016-2018-read-reclaim-telemetry-deepening.md
+          grep -q 'Named-product deepening — Samsung PM963 read-reclaim telemetry' cases/67-sk-hynix-3d-nand-read-disturb-adaptive-reclaim.md
+          grep -q '3145 — PM963 launch date != read-reclaim telemetry date' CASE_INDEX.md
+          grep -q '3158 — related-repository boundary' CASE_INDEX.md
+          grep -q 'Case 67 Samsung PM963 named-product read-reclaim telemetry deepening' ROADMAP.md
+          test ! -e _automation_case67_pm963_reclaim.py
+          test ! -e .github/workflows/tmp-case67-pm963-reclaim.yml
+          git config user.name 'technical-retention automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'case67: deepen PM963 read-reclaim telemetry boundary'
+          git push origin HEAD:main
