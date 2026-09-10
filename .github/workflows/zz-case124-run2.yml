@@ -3,8 +3,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - .github/workflows/zz-case124-run2.yml
 permissions:
   contents: write
 jobs:
