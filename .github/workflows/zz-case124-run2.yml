@@ -11,8 +11,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Apply research slice
-        run: python .github/research/case124_deepen.py
+      - name: Apply bounded roadmap status and research slice
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('ROADMAP.md')
+          s = p.read_text(encoding='utf-8')
+          token = '124-postgresql-2016-durable-rename-wal-name-content-deepening.md'
+          if token not in s:
+              marker = 'The first direct Ernst test is now complete;'
+              assert marker in s
+              entry = ('- [x] In replace-by-rename durability, deepen grounded Case 124 with a production application witness that separates file-content durability, namespace durability, and recovery identity — completed in [`evidence/124-postgresql-2016-durable-rename-wal-name-content-deepening.md`](evidence/124-postgresql-2016-durable-rename-wal-name-content-deepening.md), using PostgreSQL 2016 `durable_rename()` and the concrete recycled-WAL old-name/new-content crash scenario. Cross-directory rename, modern ext4 fast-commit interaction, named-filesystem fault injection, broader database atomic-save genealogy, and lower-device compliance remain separate work.\n\n')
+              s = s.replace(marker, entry + marker, 1)
+              p.write_text(s, encoding='utf-8')
+          PY
+          python .github/research/case124_deepen.py
       - name: Validate and commit
         run: |
           git diff --check
