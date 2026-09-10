@@ -27,7 +27,9 @@ jobs:
           m = re.search(r"          case = r'''(.*?)'''\n\n          evidence = r'''(.*?)'''\n\n          case_path", old, re.S)
           if not m:
               raise SystemExit('could not recover staged Case 135 content')
-          case, evidence = m.group(1), m.group(2)
+          def clean(text):
+              return '\n'.join(line.rstrip() for line in text.splitlines()).rstrip() + '\n'
+          case, evidence = clean(m.group(1)), clean(m.group(2))
           case_path = Path('cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md')
           evidence_path = Path('evidence/135-micron-emmc-2021-2023-self-refresh-grounding.md')
           if case_path.exists() or evidence_path.exists():
