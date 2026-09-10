@@ -26,6 +26,12 @@ jobs:
               raise SystemExit('staged script marker missing')
           body = src[src.index(marker):]
           body = '\n'.join(line[10:] if line.startswith('          ') else line for line in body.splitlines()) + '\n'
+          body = body.replace('        assert base_link in line\n', '', 1)
+          old_replace = '        lines[i] = line.replace(base_link, base_link + " and deepened by " + deep_link, 1)\n'
+          new_replace = '        lines[i] = line.replace(base_link, base_link + " and deepened by " + deep_link, 1) if base_link in line else line + " Deepening evidence: " + deep_link + "."\n'
+          if old_replace not in body:
+              raise SystemExit('index-link replacement marker missing')
+          body = body.replace(old_replace, new_replace, 1)
           body = body.replace(
               'rm .github/workflows/_tmp_case120_namespace_group.yml',
               'rm .github/workflows/_tmp_case120_namespace_group.yml .github/workflows/_tmp_case120_runner.yml',
