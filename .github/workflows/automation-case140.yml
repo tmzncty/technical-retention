@@ -1,0 +1,80 @@
+name: automation case140 integration
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.automation/case140-trigger.txt'
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Patch Case140 navigation
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          case_path = Path('cases/140-ibm-double-disk-failure-array-codes.md')
+          evidence_path = Path('evidence/140-ibm-1991-1994-double-disk-array-codes-grounding.md')
+          if not case_path.exists() or not evidence_path.exists():
+              raise SystemExit('Case 140 canonical files are missing')
+
+          case_index = Path('CASE_INDEX.md')
+          ci = case_index.read_text(encoding='utf-8')
+          case_row = '| [IBM Double-Disk-Failure Array Codes: Retaining a Second Failure Margin](cases/140-ibm-double-disk-failure-array-codes.md) | **grounded** | coded disk/DASD payload + two-member reconstructability relation + reduced post-failure margin + spare-rebuild obligation | separate two-failure coded reconstructability, residual failure margin, degraded service, repair completion, silent-error detection, and later RAID-6 terminology | [1991–1994 IBM grounding](evidence/140-ibm-1991-1994-double-disk-array-codes-grounding.md); full RS/array-code genealogy, RAID-6 naming, named controller deployment, second-failure-during-rebuild behavior, URE policy, and fault/throughput validation remain open |'
+          if 'cases/140-ibm-double-disk-failure-array-codes.md' not in ci:
+              lines = ci.splitlines()
+              positions = [i for i, line in enumerate(lines) if line.startswith('| [') and 'cases/139-lpddr3-lpddr4-per-bank-refresh-target-authority.md' in line]
+              if not positions:
+                  raise SystemExit('Case 139 table row not found')
+              lines.insert(positions[-1] + 1, case_row)
+              ci = '\n'.join(lines) + '\n'
+          heading = '## Case 140 — IBM double-disk-failure array-code findings'
+          if heading not in ci:
+              payload = Path('.automation/case140-findings.md').read_text(encoding='utf-8').strip()
+              ci = ci.rstrip() + '\n\n' + payload + '\n'
+          case_index.write_text(ci, encoding='utf-8')
+
+          roadmap = Path('ROADMAP.md')
+          rm = roadmap.read_text(encoding='utf-8')
+          old_cases = '**partially advanced by grounded Cases 17 and 18**'
+          new_cases = '**partially advanced by grounded Cases 17, 18, and 140**'
+          if old_cases in rm:
+              rm = rm.replace(old_cases, new_cases, 1)
+          elif new_cases not in rm:
+              raise SystemExit('RAID roadmap case-count marker not found')
+
+          old_tail = 'The broad item stays unchecked because double-parity/RAID-6, named production-controller rebuild/crash semantics, rebuild throttling, later URE-aware policy, and distributed scrub protocols remain distinct work;'
+          case140_text = '[`cases/140-ibm-double-disk-failure-array-codes.md`](cases/140-ibm-double-disk-failure-array-codes.md), grounded by [`evidence/140-ibm-1991-1994-double-disk-array-codes-grounding.md`](evidence/140-ibm-1991-1994-double-disk-array-codes-grounding.md), now adds the bounded early-1990s two-member-failure slice: IBM patent/publication evidence and the 1992/1994 papers separate single-parity reconstruction from a two-redundancy relation that can retain one additional located-member-loss margin after the first failure, while preserving `priority != public disclosure`, `two redundant disks != two replicas`, `failed-member recovery != silent-error detection`, and source-era `double disk failure` wording != retroactive `RAID-6` nomenclature. '
+          new_tail = case140_text + 'The broad item stays unchecked because broader RAID-6/array-code genealogy and deployment, named production-controller rebuild/crash semantics, later URE-aware policy, distributed scrub protocols, and production fault validation remain distinct work;'
+          if old_tail in rm:
+              rm = rm.replace(old_tail, new_tail, 1)
+          elif 'cases/140-ibm-double-disk-failure-array-codes.md' not in rm:
+              raise SystemExit('RAID roadmap open-debt marker not found')
+          roadmap.write_text(rm, encoding='utf-8')
+          PY
+
+          test "$(grep -c 'cases/140-ibm-double-disk-failure-array-codes.md' CASE_INDEX.md)" -ge 1
+          test "$(grep -c '^## Case 140 — IBM double-disk-failure array-code findings$' CASE_INDEX.md)" -eq 1
+          test "$(grep -c 'cases/140-ibm-double-disk-failure-array-codes.md' ROADMAP.md)" -ge 1
+          test "$(grep -c '^\- \[ \] RAID / scrubbing / rebuild' ROADMAP.md)" -eq 1
+          git diff --check
+
+          git rm -f --ignore-unmatch .automation/case140-findings.md .automation/case140-trigger.txt .github/workflows/automation-case140.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CASE_INDEX.md ROADMAP.md
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo 'No Case140 navigation changes to commit'
+            exit 0
+          fi
+          git commit -m 'case140: integrate double-disk reconstructability navigation'
+          git push origin HEAD:main
