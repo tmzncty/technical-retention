@@ -1,0 +1,407 @@
+name: one-shot case120 namespace-group deepening
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: startsWith(github.event.head_commit.message, 'chore: stage case120 namespace-group deepening')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply bounded Case 120 research slice
+        shell: bash
+        run: |
+          set -euo pipefail
+          git pull --ff-only origin main
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          evidence_path = Path('evidence/120-nvme14-2019-namespace-group-association-deepening.md')
+          if evidence_path.exists():
+              raise SystemExit(f'{evidence_path} already exists; refusing duplicate slice')
+
+          evidence = """# Evidence 120 Deepening — NVMe 1.4 Namespace → NVM Set → Endurance Group Association Boundary
+
+## Status and bounded question
+
+**`grounded`** for one narrow NVMe Revision 1.4 interface relation:
+
+> When host software creates or deletes a namespace, does that Namespace Management operation itself create, delete, directly select, or reset the Endurance Group whose health/endurance history may cover the namespace?
+
+The inspected answer is narrower than a general Endurance Group lifecycle history. In ratified **NVM Express Base Specification Revision 1.4 (10 June 2019)**, host namespace creation selects an **NVM Set Identifier (`NVMSETID`)**. Each NVM Set is associated with exactly one Endurance Group, while Identify Namespace separately reports the namespace's **Endurance Group Identifier (`ENDGID`)**. The Namespace Management host-specified field list includes `NVMSETID` but not `ENDGID`; namespace deletion removes the namespace and detaches it from controllers, but that command does not define Endurance Group destruction or history reset.
+
+This supports a bounded engineering reconstruction:
+
+```text
+namespace creation
+    -> host selects an NVM Set
+    -> that NVM Set already has exactly one Endurance Group association
+    -> namespace reports the corresponding NVMSETID and ENDGID
+```
+
+It does **not** establish how an Endurance Group itself is provisioned, destroyed, re-created, or reused, nor what happens to every group-lifetime field under controller replacement or subsystem reprovisioning.
+
+---
+
+## Sources and evidence class
+
+### Primary normative source (`H/P`)
+
+- NVM Express, **NVM Express Base Specification Revision 1.4**, ratified 10 June 2019:
+  <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_4-2019.06.10-Ratified.pdf>
+  - §4.9 `NVM Sets`, especially Figure 134 and the NVM Set / Endurance Group association text;
+  - §5.20 `Namespace Management command`, especially Figure 262 `Host Software Specified Fields`;
+  - Figure 245 `Identify Namespace Data Structure`, especially `NVMSETID` and `ENDGID`;
+  - Figure 247 `Identify Controller Data Structure`, especially `NSETIDMAX` and `ENDGIDMAX`;
+  - §8.17 `Endurance Groups (Optional)` and §8.17.1 event configuration.
+
+### Official revision-change record (`H/P`)
+
+- NVM Express, **Changes in NVMe Revision 1.4**:
+  <https://nvmexpress.org/wp-content/uploads/Changes-in-NVMe-Revision-1.4.pdf>
+  - identifies NVM Sets as an optional new feature and points to TP4018b;
+  - identifies Endurance Groups as an optional new feature and points to TP4018b and TP4050.
+
+The individual TP4018b / TP4050 proposal bodies were **not** inspected in this slice. The official change record therefore supports proposal attribution, but not proposal-internal chronology, authorship, invention priority, or a claim that one specific TP introduced every field discussed below.
+
+### Related-repository check (`H/P` project-state record)
+
+Fresh searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `Endurance Group`, `TP4018b`, and `TP4050` found no dedicated overlapping case to reuse. Broader NVMe proposal history, controller provisioning, and SSD implementation genealogy should move there if developed; this repository keeps only the retention-specific scope/lifetime relation.
+
+---
+
+## Historical record
+
+### 1. Revision 1.4 makes NVM Sets and Endurance Groups optional features
+
+The NVM Express Revision-1.4 change record lists **NVM Sets** as an optional new feature and cites TP4018b. It lists **Endurance Groups** separately as optional and describes them as allowing endurance management within one NVM Set or across a collection of NVM Sets, citing TP4018b and TP4050.
+
+This is a safe public-standard floor for the feature set. It is **not** an invention-priority claim for endurance pooling or wear domains in storage generally.
+
+### 2. A namespace is created *in* an NVM Set
+
+Revision 1.4 §4.9 states that a namespace is wholly contained within a single NVM Set. Figure 134 then states that Namespace Management's create action includes the **NVM Set Identifier as a host-specified field**.
+
+The same section says:
+
+- each NVM Set is associated with **exactly one Endurance Group**;
+- when the host creates a namespace, it specifies the NVM Set Identifier of the NVM Set in which the namespace is to be created;
+- the created namespace inherits attributes from that NVM Set;
+- if NVM Sets are supported, controllers also support Endurance Groups and indicate each NVM Set's associated Endurance Group.
+
+Therefore the historical interface exposes an indirection:
+
+```text
+namespace -> selected NVM Set -> associated Endurance Group
+```
+
+The specification does not say that Namespace Management creates a fresh Endurance Group for the namespace.
+
+### 3. Namespace Management exposes `NVMSETID`, not a host-specified `ENDGID`
+
+Revision 1.4 §5.20 defines Namespace Management create/delete. Figure 262 enumerates fields host software may specify when creating a namespace. Among the listed fields is:
+
+- bytes `101:100`: **NVM Set Identifier (`NVMSETID`) — Yes**.
+
+`ENDGID` is not one of the host-specified fields in that create table. Reserved fields must be zeroed by host software.
+
+This is stronger than merely noticing that NVM Sets and Endurance Groups both exist. In the bounded Namespace Management interface, the host chooses the NVM Set; it does not directly provide a novel Endurance Group Identifier as part of namespace creation.
+
+This does **not** prove that no management mechanism anywhere in an NVMe subsystem can provision Endurance Groups. It proves only what this Revision-1.4 Namespace Management command surface does.
+
+### 4. Identify Namespace reports both association levels
+
+Figure 245 reports:
+
+- `NVMSETID`: the NVM Set with which the namespace is associated;
+- `ENDGID`: the Endurance Group with which the namespace is associated.
+
+This gives the host two observable association levels even though Namespace Management create directly supplies only `NVMSETID` among them.
+
+Thus:
+
+> **reported association != direct provisioning field**.
+
+A field can expose the result of a relation without being the field through which that relation is created in the command under study.
+
+### 5. Namespace delete removes the namespace; it does not define Endurance Group destruction
+
+Section 5.20 says Namespace Management delete makes the namespace no longer present in the system and detaches it from all controllers. It also says there is **no data structure transferred for the delete operation**.
+
+The inspected delete semantics do not say that deleting a namespace:
+
+- deletes its NVM Set;
+- deletes its Endurance Group;
+- resets Endurance Group health counters;
+- clears the Endurance Group Information log's lifetime-qualified fields;
+- creates a new group-generation epoch.
+
+The correct historical statement is consequently limited:
+
+> **Namespace Management defines namespace deletion, not Endurance Group lifecycle destruction.**
+
+Absence of such semantics in this command is not positive proof that all group state survives every possible administrative reprovisioning event.
+
+### 6. Endurance Group identifiers select existing group-scoped actions
+
+Section 8.17 defines `ENDGID` as a 16-bit value specifying the Endurance Group with which an action is associated; zero is reserved/invalid. Section 8.17.1 allows the host to configure events per Endurance Group using an Endurance Group Event Configuration feature.
+
+This is selection/configuration **of an Endurance Group**. It should not be re-described as an Endurance Group creation command.
+
+The group remains a wider reporting/management scope: two or more NVM Sets may share one `ENDGID`, while one NVM Set may be the sole member of a group.
+
+### 7. `ENDGIDMAX` is an identifier bound, not a lifecycle epoch
+
+Identify Controller reports `ENDGIDMAX` as the maximum value of a valid Endurance Group Identifier and states that the number of Endurance Groups supported by the subsystem is **less than or equal to** that maximum.
+
+Therefore:
+
+- `ENDGIDMAX` is not necessarily the current number of populated groups;
+- `ENDGID` is not shown to be a monotonically increasing generation number;
+- the fields do not establish identifier-reuse semantics.
+
+A bounded numeric identifier space must not be silently turned into a retained chronology.
+
+---
+
+## Engineering reconstruction (`E`)
+
+### Namespace lifecycle is narrower than Endurance Group lifecycle
+
+The interface relation supports these distinctions:
+
+> **namespace creation != Endurance Group creation**
+
+> **namespace deletion != Endurance Group deletion**
+
+> **host-selected `NVMSETID` != direct host provisioning of `ENDGID` in Namespace Management**
+
+> **reported `ENDGID` association != proof of Endurance Group creation/reset semantics**
+
+A namespace can be a narrower identity participating in a wider endurance-management/history scope. That wider scope may include several NVM Sets and therefore several namespaces.
+
+The evidence does not prove every possible namespace churn sequence against a real controller, but it blocks an especially tempting wrong model:
+
+```text
+create namespace
+    -> automatically create a new Endurance Group
+    -> automatically start a new group-lifetime history
+```
+
+Revision 1.4 does not specify that chain.
+
+### `delete all namespaces` is not demonstrated `delete all Endurance Groups`
+
+Namespace Management even defines deletion of all namespaces (`NSID = FFFFFFFFh`), but the command text still frames the operation as namespace deletion. Because Endurance Groups are separately identified management/reporting scopes associated with NVM Sets, the stronger conclusion that deleting all namespaces necessarily destroys every Endurance Group or resets group history would require additional lifecycle evidence.
+
+So:
+
+> **absence of narrower members != demonstrated destruction of the wider retention-history scope**.
+
+This is a scope relation, not a claim that an empty Endurance Group must persist forever.
+
+### Identity, membership, and history scope have different lifetimes
+
+Case 120 already separated namespace identity, NVM Set membership, Endurance Group association, group health/history, warning state, and hidden media work. The Namespace Management evidence adds a lifetime warning:
+
+```text
+namespace lifetime
+    != automatically
+NVM Set lifetime
+    != automatically
+Endurance Group lifetime/history epoch
+```
+
+The first inequality is grounded only in the sense that namespace create/delete operates on namespaces within NVM Sets. The second remains deliberately open at the actual NVM-Set/Endurance-Group provisioning layer; Revision 1.4's namespace command does not expose enough evidence to reconstruct it.
+
+### A stable wider scope can aggregate work from changing narrower identities
+
+Because Endurance Group accounting is group-scoped while namespaces are narrower objects inside NVM Sets, it is possible at the interface level for endurance information to concern a management domain broader than one namespace's identity.
+
+The safe conclusion is relational:
+
+> **per-namespace identity/history != group-scoped endurance history**.
+
+Do not upgrade this into a claim about how any named controller handles namespace recreation, group-ID reuse, or physical NAND pool reassignment without device evidence.
+
+---
+
+## Functional analogies (`A`) and stop conditions
+
+### Case 04 — mapped Flash
+
+Only a narrow analogy is useful: a host-visible designation can reach a lower-level management relation through indirection. An NVMe namespace → NVM Set → Endurance Group association is **not** an FTL mapping and reveals no logical-to-physical NAND placement.
+
+### Case 55 / Case 76 — health and endurance evidence
+
+Case 55 already separates retained controller health/history from payload; Case 76 separates SSD qualification workload, host TBW, write amplification, error criteria, and later retention. Case 120 adds a **live group-scoped management/history identity** and this deepening adds its namespace-lifecycle boundary. No standards genealogy is inferred among those cases.
+
+### Case 78 — bounded identifiers and currentness
+
+Linux MTD BBT versions and NVMe Endurance Group identifiers are not one mechanism. The only reusable warning is methodological: a bounded numeric field must not be treated as a complete historical epoch without evidence for its comparison/reuse semantics.
+
+### Stop conditions
+
+This slice does **not** establish:
+
+- how an Endurance Group is physically provisioned;
+- whether a vendor exposes group creation/deletion through another management interface;
+- whether `ENDGID` values are ever reused, or how reuse affects counters;
+- exact persistence/reset rules for every field in Endurance Group Information;
+- controller-replacement or subsystem-reprovisioning behavior;
+- named-controller conformance;
+- `nvme-cli` behavior on a real multi-group device;
+- any NAND die/channel/plane/block correspondence;
+- TP4018b/TP4050 internal proposal chronology or invention priority.
+
+Those are separate evidence debts rather than conclusions inferred from Namespace Management.
+
+---
+
+## Narrow philosophical interpretation (`I`)
+
+A retention system can let a narrower service identity appear and disappear while a wider management/history relation is defined at another scope. The useful conceptual point is only that **the lifetime of what is named for use need not be the lifetime of the retained evidence used to manage its substrate**.
+
+This is not a claim that an Endurance Group is a philosophical subject, a memory of memory, or an archive. It is an engineering constraint on any later interpretation of persistence across identity churn.
+
+---
+
+## Result
+
+The bounded Case-120 deepening establishes:
+
+```text
+namespace creation
+    -> host chooses NVMSETID
+    -> NVM Set has exactly one associated Endurance Group
+    -> Identify Namespace reports NVMSETID + ENDGID
+
+namespace deletion
+    -> namespace disappears / is detached
+    != specified Endurance Group deletion
+    != specified group-history reset
+```
+
+The remaining question is now narrower and better stated: **what interface or implementation establishes Endurance Group provisioning, reuse, and lifetime epochs themselves?** That belongs to later proposal/device archaeology, not to an inference from ordinary Namespace Management.
+"""
+          evidence_path.write_text(evidence, encoding='utf-8')
+
+          case_path = Path('cases/120-nvme14-endurance-group-scoped-health-history.md')
+          s = case_path.read_text(encoding='utf-8')
+          old = "Grounding record: [`../evidence/120-nvme14-2019-endurance-group-grounding.md`](../evidence/120-nvme14-2019-endurance-group-grounding.md)."
+          new = "Grounding records: [`../evidence/120-nvme14-2019-endurance-group-grounding.md`](../evidence/120-nvme14-2019-endurance-group-grounding.md) and [`../evidence/120-nvme14-2019-namespace-group-association-deepening.md`](../evidence/120-nvme14-2019-namespace-group-association-deepening.md)."
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          hist_marker = "### NVM Set and Endurance Group are different scopes"
+          hist_insert = """### Namespace Management selects an NVM Set; it does not provision an Endurance Group
+
+The bounded Namespace Management path adds an important lifecycle distinction. Revision 1.4 §4.9 says each NVM Set is associated with exactly one Endurance Group and that namespace creation supplies the target **NVM Set Identifier**. Section 5.20 Figure 262 confirms `NVMSETID` is host-specified during create; it does **not** list `ENDGID` as a host-specified create field. Figure 245 separately reports both `NVMSETID` and `ENDGID` for an existing namespace.
+
+Namespace deletion likewise removes the namespace and detaches it from controllers; the command does not specify Endurance Group deletion or reset of group-lifetime endurance information. Therefore this case now closes one narrow negative boundary:
+
+> **namespace lifecycle != automatically Endurance Group lifecycle.**
+
+and:
+
+> **reported Endurance Group association != direct Endurance Group provisioning through Namespace Management.**
+
+The fuller source record and stop conditions are in [`../evidence/120-nvme14-2019-namespace-group-association-deepening.md`](../evidence/120-nvme14-2019-namespace-group-association-deepening.md). Actual Endurance Group provisioning/reuse, controller replacement, NVM Set reprovisioning, and named-device behavior remain open."""
+          assert hist_marker in s
+          s = s.replace(hist_marker, hist_insert + "\n\n" + hist_marker, 1)
+
+          old_open = "Exact behavior under group deletion/recreation, controller replacement, namespace migration, subsystem reconfiguration, or identifier reuse remains open."
+          new_open = "Revision 1.4 now closes one narrower point: ordinary Namespace Management create/delete does not itself define Endurance Group provisioning or history reset. Exact behavior under Endurance Group creation/deletion/recreation, controller replacement, NVM Set reprovisioning, subsystem reconfiguration, identifier reuse, or namespace migration between management domains remains open."
+          assert old_open in s
+          s = s.replace(old_open, new_open, 1)
+
+          eng_marker = "### Host workload and media work are different historical quantities"
+          eng_insert = """### Namespace lifecycle is not Endurance Group lifecycle
+
+Namespace Management makes the scope difference operationally visible: create selects an NVM Set, not a new Endurance Group, and delete retires the namespace without defining group destruction. The case can therefore distinguish:
+
+> **namespace creation != Endurance Group creation**
+
+> **namespace deletion != Endurance Group deletion**
+
+> **host-selected `NVMSETID` != direct `ENDGID` provisioning in Namespace Management**
+
+> **`ENDGIDMAX` != group-lifetime generation counter**
+
+These are interface/lifetime boundaries, not claims that an Endurance Group necessarily survives every administrative operation. In particular, deleting all namespaces does not by itself prove either survival or destruction of every Endurance Group; the group-provisioning layer remains ungrounded here."""
+          assert eng_marker in s
+          s = s.replace(eng_marker, eng_insert + "\n\n" + eng_marker, 1)
+          case_path.write_text(s, encoding='utf-8')
+
+          roadmap_path = Path('ROADMAP.md')
+          r = roadmap_path.read_text(encoding='utf-8')
+          marker = "- [x] NVMe 1.4 Endurance Group scoped health-history / hidden-media-work boundary —"
+          pos = r.find(marker)
+          assert pos >= 0
+          end = r.find('\n', pos)
+          assert end >= 0
+          addition = "\n  - [x] Namespace-management association deepening — [`evidence/120-nvme14-2019-namespace-group-association-deepening.md`](evidence/120-nvme14-2019-namespace-group-association-deepening.md): Revision 1.4 namespace creation host-selects `NVMSETID`; each NVM Set has exactly one associated Endurance Group; Identify reports `ENDGID`, while Namespace Management does not directly provision it; namespace deletion is not specified as Endurance Group destruction or group-history reset. This closes only `namespace lifecycle != Endurance-Group lifecycle` at the Namespace Management boundary; actual group provisioning/reuse, controller replacement, NVM Set reprovisioning, named multi-group controllers, and underlying FTL/media behavior remain open."
+          assert '120-nvme14-2019-namespace-group-association-deepening.md' not in r
+          r = r[:end] + addition + r[end:]
+          roadmap_path.write_text(r, encoding='utf-8')
+
+          index_path = Path('CASE_INDEX.md')
+          idx = index_path.read_text(encoding='utf-8')
+          deep_link = "[`evidence/120-nvme14-2019-namespace-group-association-deepening.md`](evidence/120-nvme14-2019-namespace-group-association-deepening.md)"
+          assert '## Case 120 deepening — NVMe 1.4 namespace / NVM Set / Endurance Group lifecycle findings' not in idx
+          lines = idx.splitlines()
+          touched = False
+          for i, line in enumerate(lines):
+              if 'cases/120-nvme14-endurance-group-scoped-health-history.md' in line and 'evidence/120-nvme14-2019-endurance-group-grounding.md' in line:
+                  base_link = "[`evidence/120-nvme14-2019-endurance-group-grounding.md`](evidence/120-nvme14-2019-endurance-group-grounding.md)"
+                  assert base_link in line
+                  lines[i] = line.replace(base_link, base_link + " and deepened by " + deep_link, 1)
+                  touched = True
+                  break
+          assert touched
+          idx = '\n'.join(lines).rstrip() + "\n\n"
+          findings = """## Case 120 deepening — NVMe 1.4 namespace / NVM Set / Endurance Group lifecycle findings
+
+Evidence: [`evidence/120-nvme14-2019-namespace-group-association-deepening.md`](evidence/120-nvme14-2019-namespace-group-association-deepening.md)
+
+- **2800 — Revision-1.4 feature attribution != invention priority:** NVM Express's official change record attributes NVM Sets to TP4018b and Endurance Groups to TP4018b/TP4050, but without inspecting the proposal bodies this does not establish proposal-internal chronology, authorship, or invention priority. (`H/P`, `X`)
+- **2801 — namespace creation host-selects `NVMSETID`, not `ENDGID`:** Revision 1.4 §4.9 and Namespace Management Figure 262 make the target NVM Set a host-specified create field while `ENDGID` is absent from that host-specified field list. (`H/P`)
+- **2802 — selected NVM Set -> exactly one Endurance Group association:** §4.9 states each NVM Set is associated with exactly one Endurance Group, so namespace creation enters the endurance-management relation through the selected NVM Set. (`H/P`, `E`)
+- **2803 — Identify reports `NVMSETID` + `ENDGID` != direct provisioning of both:** Identify Namespace exposes both association levels even though Namespace Management create directly supplies only `NVMSETID` among them. (`H/P`, `E`)
+- **2804 — namespace creation != Endurance Group creation:** the inspected create command formats a namespace in a selected NVM Set; it does not define creation of a fresh group or a fresh group-history epoch. (`H/P`, `E`, `X`)
+- **2805 — namespace deletion != Endurance Group deletion:** §5.20 deletes the namespace and detaches it from controllers but does not define deletion of its NVM Set or Endurance Group. (`H/P`, `E`)
+- **2806 — delete-all-namespaces != demonstrated group-history reset:** the all-namespace delete form still supplies namespace-deletion semantics; inferring destruction/reset of wider Endurance Group history requires separate lifecycle evidence. (`H/P`, `E`, `X`)
+- **2807 — namespace lifetime != automatically Endurance Group lifetime:** a namespace is a narrower identity inside one NVM Set, while an Endurance Group may cover multiple NVM Sets; their lifecycle epochs must not be normalized. (`H/P`, `E`)
+- **2808 — narrower identity churn can be distinct from wider endurance-history scope:** group-scoped endurance information is not definitionally per-namespace history, so a namespace's creation/deletion event is not itself a demonstrated reset boundary for the group's cumulative relation. (`H/P`, `E`, `X`)
+- **2809 — group event selection/configuration != group creation:** §8.17.1 configures asynchronous events for a specified Endurance Group; selecting a group for an action does not establish how that group was provisioned. (`H/P`, `E`)
+- **2810 — `ENDGIDMAX` != current group count:** Identify Controller defines it as the maximum valid identifier and separately says the number of supported Endurance Groups is less than or equal to that value. (`H/P`)
+- **2811 — bounded `ENDGID` != lifecycle generation/epoch:** the inspected 16-bit identifier semantics do not define monotonic allocation, comparison, or reuse, so identifier value cannot be treated as retained chronology. (`H/P`, `E`, `X`)
+- **2812 — official TP attribution != proposal-body genealogy or shipped implementation:** the change record is enough to route later archaeology toward TP4018b/TP4050 but not enough to assign every subfield to a proposal or to infer a particular controller architecture. (`H/P`, `X`)
+- **2813 — namespace -> NVM Set -> Endurance Group ~= mapped-Flash indirection only functionally:** both can separate a higher-level designation from a lower management relation, but NVMe Endurance Groups are not FTL mappings and expose no physical NAND placement. (`A`, `X`)
+- **2814 — related-repository boundary:** fresh `tmzncty/computing-archaeology` searches for `Endurance Group`, `TP4018b`, and `TP4050` found no dedicated overlapping study; broader NVMe proposal/device provisioning history belongs there if developed, while Case 120 keeps the retention-specific scope/lifetime boundary. (`H/P` project-state record)
+"""
+          idx += findings
+          index_path.write_text(idx, encoding='utf-8')
+          PY
+
+          git diff --check
+          test -f evidence/120-nvme14-2019-namespace-group-association-deepening.md
+          grep -q 'namespace lifecycle != Endurance Group lifecycle' cases/120-nvme14-endurance-group-scoped-health-history.md
+          grep -q '2800 —' CASE_INDEX.md
+          grep -q '2814 —' CASE_INDEX.md
+          grep -q 'Namespace-management association deepening' ROADMAP.md
+          rm .github/workflows/_tmp_case120_namespace_group.yml
+          git config user.name 'technical-retention automation'
+          git config user.email 'technical-retention@users.noreply.github.com'
+          git add ROADMAP.md CASE_INDEX.md cases/120-nvme14-endurance-group-scoped-health-history.md evidence/120-nvme14-2019-namespace-group-association-deepening.md .github/workflows/_tmp_case120_namespace_group.yml
+          git diff --cached --check
+          git commit -m 'case120: deepen namespace-group lifecycle boundary'
+          git push origin HEAD:main
