@@ -240,7 +240,61 @@ A useful integrated technical reference is:
 
 ---
 
-## 7. Adjacent traditions to map later
+## 7. OAIS and PREMIS — digital preservation beyond simple bit survival
+
+### Why they matter
+
+The digital-preservation community already occupies an important part of this repository's conceptual territory. In particular, the **Open Archival Information System (OAIS)** reference model and **PREMIS** preservation-metadata work make it impossible to treat the following as novel claims here:
+
+- preserving bits is sufficient for long-term preservation;
+- a bitstream remains useful without retained representation/interpretation information;
+- software, hardware, and runtime environment can be ignored once content files survive;
+- fixity checking is the same thing as preserving meaning or authenticity;
+- preservation actions and their outcomes need not themselves become records.
+
+The source-controlled review is in [`../evidence/prior-art-oais-premis-2002-2024-grounding.md`](../evidence/prior-art-oais-premis-2002-2024-grounding.md).
+
+### Historical boundary
+
+The original OAIS issue, **CCSDS 650.0-B-1 (January 2002)**, explicitly says its long-term information-preservation/access function is being distinguished from simple `bit storage`. It already uses **Designated Community** and **Representation Information**, and its migration model permits controlled representation changes while attempting to preserve information content.
+
+The current **CCSDS 650.0-M-3 (December 2024)** preserves that broad architecture but its own document-control note says **Preservation Objectives** were introduced in Issue 3 to make `Independently Understandable` more consistently testable. Do not back-project that 2024 addition into the 2002 vocabulary.
+
+PREMIS Version 1.0's final report appeared in **May 2005**. It provides a practical data dictionary for preservation metadata but explicitly leaves detailed format-specific technical metadata and detailed media/hardware description to specialists. PREMIS 3.0 (2015) models fixity references, preservation Events and outcomes, and gives a richer environment/dependency model; the 3.0 text explicitly says its environment modeling changed from earlier versions.
+
+### What this changes for the repository
+
+OAIS/PREMIS are strong prior art for the general proposition:
+
+> **material or bit-level survival is not sufficient for long-term information preservation when representation knowledge, environmental dependencies, provenance/fixity evidence, and a future community's ability to interpret the object may change.**
+
+That is no longer a contribution opportunity for `technical-retention` by itself.
+
+The narrower opportunity is mechanism-level and comparative: trace those archival requirements downward into exact physical, controller, filesystem, protocol, and distributed relations. For example, OAIS Representation Information and PREMIS environment dependencies overlap functionally with [`SYNTHESIS_23_RETENTION_INTERPRETER_ACCESS_APPARATUS.md`](SYNTHESIS_23_RETENTION_INTERPRETER_ACCESS_APPARATUS.md), but they are not identical to its distinctions among material embodiment, restart legibility, software-format interpretation, physical reader capability, controller admission, and operation-specific service.
+
+Likewise PREMIS fixity/Event semantics are prior art for retaining integrity references and preservation-action outcomes, but they do not by themselves answer which replica is current, whether a NAND mapping is recoverable, whether a device admits a medium, or whether a successful repair restored redundancy and was later revalidated.
+
+The project should therefore preserve these stop conditions:
+
+- `bit survival != intelligibility`;
+- `fixity evidence != intelligibility`;
+- `fixity evidence != complete authenticity proof`;
+- `preservation metadata != preservation mechanism`;
+- `documented dependency != available dependency`;
+- `Representation Information != one concrete reader apparatus`;
+- `environment description != executable environment`;
+- `Designated Community relative understandability != timeless universal meaning`.
+
+### Sources
+
+- CCSDS, *Reference Model for an Open Archival Information System (OAIS)*, CCSDS 650.0-B-1, January 2002, preserved by UNT Libraries: <https://digital.library.unt.edu/ark:/67531/metadc123533/>.
+- CCSDS, *Reference Model for an Open Archival Information System (OAIS)*, CCSDS 650.0-M-3, Issue 3, December 2024: <https://ccsds.org/publications/allpubs/entry/3054/>.
+- PREMIS Working Group, *Data Dictionary for Preservation Metadata*, Version 1.0, May 2005: <https://www.loc.gov/standards/premis/v1/>.
+- PREMIS Editorial Committee, *PREMIS Data Dictionary for Preservation Metadata*, Version 3.0, 2015: <https://www.loc.gov/standards/premis/v3/index.html>.
+
+---
+
+## 8. Adjacent traditions to map later
 
 The first scaffold is incomplete. Later prior-art work should explicitly map:
 
@@ -250,9 +304,9 @@ The first scaffold is incomplete. Later prior-art work should explicitly map:
 - Jacques Derrida on archive / trace where technically relevant;
 - philosophy of information;
 - history of writing, notation, accounting, and administrative records;
-- archival science and preservation;
+- archival science and preservation beyond the bounded OAIS/PREMIS slice;
 - database history;
-- digital preservation and emulation;
+- digital preservation and emulation beyond the OAIS/PREMIS information-model and metadata boundary;
 - forensic computing;
 - infrastructure studies and maintenance studies;
 - histories of bookkeeping, indexing, cataloging, and filing.
@@ -267,8 +321,10 @@ The working novelty claim is **not** that nobody has connected technology and me
 
 That claim would be false.
 
+It is also not that digital preservation first learns here that bits, formats, software/hardware environments, and interpretive context can diverge. OAIS and PREMIS already occupy that archival-level territory.
+
 The narrower claim to test is:
 
-> There is room for a source-controlled research program that follows retained state from mechanical and pre-electronic configurations through computer memory and modern distributed storage, compares the mechanisms along shared dimensions such as refresh, addressability, erasure, failure, maintenance, and identity, and uses those mechanisms to discipline philosophical interpretation.
+> There is room for a source-controlled research program that follows retained state from mechanical and pre-electronic configurations through computer memory and modern distributed storage, compares the mechanisms along shared dimensions such as refresh, addressability, erasure, failure, maintenance, identity, currentness, integrity evidence, interpretation, and recovery apparatus, and uses those mechanisms to discipline philosophical interpretation while explicitly reusing rather than rediscovering archival digital-preservation prior art.
 
 If later literature proves that this program has already been done substantially better, this repository should become an annotated map to that work rather than duplicate it.

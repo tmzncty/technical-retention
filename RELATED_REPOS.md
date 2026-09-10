@@ -65,7 +65,31 @@ Examples of work that might belong there:
 
 ---
 
-## 4. Future links
+## 4. old-web-archaeology
+
+<https://github.com/tmzncty/old-web-archaeology>
+
+### Role
+
+Concrete historical web-preservation and reconstruction companion.
+
+Its scope is roughly:
+
+> What did the Chinese web of roughly 1995–2015 actually leave behind, why did parts disappear, and what can surviving captures, software, browser assumptions, screenshots, link structures, and other evidence justify reconstructing?
+
+This makes it especially relevant when `technical-retention` reaches long-term access problems involving file formats, character encodings, browser engines, plug-ins, scripts, network dependencies, missing resources, or reconstruction from incomplete captures.
+
+### Reuse rule
+
+If the research problem is primarily about a particular historical website, archived capture, browser/runtime environment, or reconstruction of missing web evidence, develop it in `old-web-archaeology` and cite it here.
+
+`technical-retention` should keep the cross-mechanism analytical question: which retained relations must survive or be reconstituted for a future operation to recover an object as usable/current/meaningful? The bounded OAIS/PREMIS prior-art review in [`docs/PRIOR_ART.md`](docs/PRIOR_ART.md) and [`evidence/prior-art-oais-premis-2002-2024-grounding.md`](evidence/prior-art-oais-premis-2002-2024-grounding.md) supplies the archival-information-model boundary; `old-web-archaeology` supplies concrete historical web cases when needed.
+
+Do not duplicate a capture history here merely to illustrate that old software becomes incompatible.
+
+---
+
+## 5. Future links
 
 Other repositories may become relevant when retention is studied as:
 
@@ -74,8 +98,9 @@ Other repositories may become relevant when retention is studied as:
 - network state;
 - archival practice;
 - encoding failure;
-- old-web preservation;
 - scholarly research protocol.
+
+Old-web preservation is no longer merely a future-link category: `old-web-archaeology` now has an explicit division of labor above.
 
 Add a cross-link only when there is an actual division of labor. Avoid building a decorative graph of every repository.
 
@@ -91,8 +116,10 @@ computing-archaeology
 technical-retention
     cross-mechanism comparison + philosophy of retention
                 │
-       ┌────────┴─────────┐
-       ▼                  ▼
-problem-history       mechanical-computing-playground
-anti-anachronism      reconstruction / experiment
+       ┌────────┼──────────────────────────┐
+       ▼        ▼                          ▼
+problem-history mechanical-computing-     old-web-archaeology
+anti-anachronism playground               historical captures /
+                 reconstruction /         browser-runtime /
+                 experiment               reconstruction cases
 ```
