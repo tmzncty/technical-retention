@@ -1,0 +1,395 @@
+name: case145-integrate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/case145-integrate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Integrate bounded Case 145 research
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          case_path = Path('cases/145-nvme14-persistent-event-log-retained-history.md')
+          evidence_path = Path('evidence/145-nvme-2019-persistent-event-log-grounding.md')
+          if case_path.exists() or evidence_path.exists():
+              raise SystemExit('Case 145 paths already exist; refusing to duplicate or overwrite')
+
+          case_path.write_text(r'''# Case 145 — NVMe 1.4 Persistent Event Log: retained device event history, bounded eviction, and reporting-context snapshot
+
+**Status:** `grounded`  
+**Historical anchor:** NVM Express Base Specification Revision 1.4, dated 10 June 2019; first-party public release announcement dated 23 July 2019  
+**Layer:** NVMe controller / NVM-subsystem diagnostic and maintenance history  
+**Grounding record:** [`../evidence/145-nvme-2019-persistent-event-log-grounding.md`](../evidence/145-nvme-2019-persistent-event-log-grounding.md)
+
+## Research question
+
+What exactly is retained when NVMe 1.4 defines a **Persistent Event Log** (PEL) that survives resets and power cycles? Does “persistent” mean complete, immutable, or archival history? How does a host obtain a stable view of a log that can continue to change, and what can a recorded maintenance event prove about the underlying operation?
+
+This case is deliberately narrower than a history of NVMe management or SSD telemetry. It studies one retention relation: a controller/NVM subsystem can preserve selected evidence of its own past across execution-boundary loss while also bounding, suppressing, reordering, or later removing portions of that evidence.
+
+## Historical record
+
+NVM Express Revision 1.4 is dated **10 June 2019**. Section 5.14.1.13 defines Log Identifier `0Dh`, Persistent Event Log. NVM Express, Inc. publicly announced the NVMe 1.4 Base Specification on **23 July 2019** and described the PEL as enabling “robust drive history for issue triage and debug at scale.”
+
+Those two dates are different claims: the document date is a specification anchor and 23 July is a first-party public-release announcement. Neither establishes invention priority, the first implementation, or the first product shipment.
+
+The 1.4 PEL event vocabulary includes SMART/Health Log Snapshot, Firmware Commit, Timestamp Change, Power-on or Reset, NVM Subsystem Hardware Error, Change Namespace, Format NVM Start/Completion, Sanitize Start/Completion, Set Feature, Telemetry Log Created, Thermal Excursion, and vendor-defined classes. The breadth matters: the PEL is not merely a self-test result ring or a user-data journal.
+
+## Engineering reconstruction
+
+### 1. Persistence retains diagnostic history, not namespace payload
+
+Section 5.14.1.13 says the PEL contains information about significant events not specific to a particular command and that its information is retained across power cycles and resets. It also recommends design for minimal event-information loss on power failure.
+
+That creates a controller/subsystem historical relation which can outlive one powered execution interval. It does **not** establish that user namespace writes survived the same event, nor is the PEL a second copy of namespace data.
+
+`PEL retention across reset/power cycle != user-payload durability`
+
+### 2. “Persistent” is not “complete”
+
+The same section sharply limits any archival reading of the word *persistent*.
+
+- the number of supported events is vendor specific;
+- maximum log size is bounded through the controller capability (`PELS`);
+- repeated events above a vendor-specific frequency threshold may be suppressed;
+- if size/count/category limits are reached, event deletion policy is vendor specific;
+- important older events may be retained while newer, less-important events are deleted;
+- sanitize is permitted to alter the PEL, with the set of removed events unspecified.
+
+Consequently a device may retain a useful cross-reset history without retaining an exhaustive history of everything that happened. Absence of an event from a later PEL cannot, by itself, prove that the event never occurred.
+
+`persistent event log != exhaustive event history`
+
+`event occurrence != indefinite event-record survival`
+
+`event suppression/eviction != proof of non-occurrence`
+
+`log persistence != immutability`
+
+### 3. Report ordering is not a universal causal chronology
+
+NVMe 1.4 says recent events should generally be reported before older ones, but the method by which the subsystem determines event order is vendor specific. A consumer can therefore use the PEL as a standardized event-history interface without upgrading report order into a universal causal clock or total-order theorem.
+
+`reported order != universal causal chronology`
+
+### 4. Stable reporting context and evolving underlying history are distinct states
+
+PEL retrieval has explicit actions to establish a reporting context, read from an existing context, and release it. The reporting context may be a copy of the page data or a set of pointers; its representation is vendor specific.
+
+The important semantic boundary is independent of representation. Events that occur while a reporting context exists are still logged, but they are not reported through that already-established context. The context can end on explicit release, reset, or a vendor-specific timeout. Thus the controller can continue to accumulate history while exposing one stable query view.
+
+`reporting-context snapshot != underlying Persistent Event Log`
+
+`reporting-context lifetime != PEL lifetime`
+
+`stable retrieval view != frozen device history`
+
+This is a useful retained-state layering example: a transient query context can preserve the membership of one observation while the longer-lived historical object keeps changing.
+
+### 5. SMART snapshot event is historical evidence, not the current SMART page
+
+A PEL SMART / Health Log Snapshot Event contains a snapshot of SMART/Health Information Log data. That retained copy is historical evidence about one observation point; it is not identical to the current SMART/Health page read later, nor does it replace cumulative counters that have their own semantics.
+
+`SMART snapshot event != current SMART/Health state != cumulative counter semantics`
+
+Case 55 supplies the older ATA/ATAPI self-test / health-history comparison and should remain a separate mechanism.
+
+### 6. Operation evidence is not operation effect
+
+NVMe 1.4 defines paired Format NVM Start/Completion and Sanitize Start/Completion event types. A Sanitize Start entry is recorded at operation start, while a Sanitize Completion entry records state at operation completion and carries sanitize status/progress information. The same start/completion separation appears for Format NVM.
+
+Therefore a retained event saying that an operation started is evidence that the command passed far enough to enter that operation; it is not evidence that the destructive or formatting effect completed successfully. Even a completion record reports the controller’s completion/status relation; it is not an independent forensic proof of lower-layer physical erasure.
+
+`maintenance-operation start evidence != completion evidence`
+
+`PEL evidence about sanitize != sanitize mechanism/effect`
+
+Case 44 remains the repository’s separate sanitization boundary.
+
+## Prior art and bounded comparison
+
+### ATA self-test logs — earlier bounded diagnostic-history prior art, not genealogy
+
+Case 55 already grounds ATA/ATAPI-5-era self-test logging by 1999. That is earlier functional prior art for retaining bounded device diagnostic history. It blocks any claim that NVMe 1.4 invented the general idea of a storage device preserving diagnostic evidence across time.
+
+The mechanisms and scopes are not identical. The ATA self-test log is centered on self-test execution/results, while NVMe 1.4 PEL defines a broader significant-event history, explicit cross-reset/power-cycle retention, suppression/eviction semantics, and a stable reporting-context interface. This case does not establish an ATA -> NVMe design genealogy.
+
+### Sanitize — history about an operation is not the operation
+
+Case 44 studies erase/sanitize authority and effect. Case 145 studies retained controller evidence that a sanitize operation started or completed. The same word appearing in both cases does not collapse the two retention relations.
+
+## Failure modes and limits
+
+The PEL relation can fail or become incomplete without user payload loss:
+
+- a power failure may still cause some event-information loss despite the design recommendation to minimize it;
+- high-frequency repeated events may be suppressed;
+- bounded capacity can trigger vendor-specific deletion;
+- sanitize may alter/remove events;
+- ordering is vendor specific;
+- reporting context can expire or be destroyed by reset;
+- a logged start event can survive even when the corresponding maintenance operation does not complete successfully.
+
+Conversely, losing or pruning a PEL entry does not prove that the underlying user payload was altered.
+
+## Philosophical interpretation — downstream only
+
+A narrow inference is justified after the mechanism is established: a technical system can retain **selected evidence of its own prior events** while also implementing rules that intentionally suppress, evict, or rewrite portions of that evidence. Persistence can therefore name a bounded relation to the past without naming total historical conservation.
+
+Do not inflate that observation into a claim that the PEL is human memory, an archive in the institutional sense, or Stieglerian tertiary retention. Those are optional interpretive comparisons, not engineering identities.
+
+## Stop conditions
+
+This case does **not** establish:
+
+- that NVMe 1.4 or NVM Express invented persistent device diagnostic logging;
+- the first proposal, ballot, implementation, or shipping SSD supporting PEL;
+- one universal vendor eviction algorithm or exact PEL capacity;
+- tamper evidence, authenticated logging, legal/compliance WORM behavior, or forensic completeness;
+- that a Sanitize Start/Completion event independently proves physical media erasure;
+- product-specific power-fail correctness or fault-injection behavior;
+- a direct ATA/SCSI -> NVMe genealogy.
+
+Those are follow-up work, not implicit conclusions.
+
+## Related-repository boundary
+
+A fresh search of `tmzncty/computing-archaeology` found no dedicated NVMe Persistent Event Log study to reuse. Broader NVMe log-page genealogy, controller-management history, standards-proposal archaeology, and product adoption belong there if developed. `technical-retention` keeps the narrower cross-reset history, bounded forgetting, reporting-context, and operation-evidence relations.
+
+## Sources
+
+- NVM Express, Inc., *NVM Express Base Specification*, Revision 1.4, 10 June 2019, especially §5.14.1.13 and §5.14.1.13.1: https://nvmexpress.org/wp-content/uploads/NVM-Express-1_4-2019.06.10-Ratified.pdf
+- NVM Express, Inc., “New NVM Express, Inc. Specifications Bolster Cloud and Enterprise Advancements,” 23 July 2019: https://nvmexpress.org/new-nvm-express-inc-specifications-bolster-cloud-and-enterprise-advancements/
+- Cross-case prior art: [`55-nvme-smart-health-endurance-telemetry.md`](55-nvme-smart-health-endurance-telemetry.md)
+- Sanitization boundary: [`44-storage-sanitize-deallocation-vs-erasure.md`](44-storage-sanitize-deallocation-vs-erasure.md)
+''', encoding='utf-8')
+
+          evidence_path.write_text(r'''# Evidence 145 — NVMe 1.4 Persistent Event Log grounding
+
+**Case:** [`../cases/145-nvme14-persistent-event-log-retained-history.md`](../cases/145-nvme14-persistent-event-log-retained-history.md)  
+**Evidence status:** primary standards/first-party organization evidence (`H/P`) plus bounded engineering reconstruction (`E`) and explicit functional comparison (`A`/`X`)  
+**Scope:** NVMe 1.4 Persistent Event Log (PEL), its persistence/completeness boundary, reporting context, and maintenance-operation event evidence
+
+## Source register
+
+### P1 — NVM Express Base Specification Revision 1.4
+
+- **Organization:** NVM Express, Inc.
+- **Document:** *NVM Express Base Specification*, Revision 1.4
+- **Document date:** 10 June 2019
+- **Origin:** NVM Express official site
+- **URL:** https://nvmexpress.org/wp-content/uploads/NVM-Express-1_4-2019.06.10-Ratified.pdf
+- **Primary locations:**
+  - title/front matter: revision/date;
+  - §5.14.1.13, Persistent Event Log (Log Identifier `0Dh`): retention across power cycles/resets, power-failure guidance, sanitize interaction, order, bounds, suppression/deletion, reporting context;
+  - §5.14.1.13.1 and event-type table: event vocabulary;
+  - §5.14.1.13.1.1: SMART / Health Log Snapshot Event;
+  - §5.14.1.13.1.7–.10: Format NVM and Sanitize Start/Completion events.
+- **Use:** normative mechanism and event-format evidence.
+
+### P2 — NVM Express 1.4 release announcement
+
+- **Organization:** NVM Express, Inc.
+- **Title:** “New NVM Express, Inc. Specifications Bolster Cloud and Enterprise Advancements”
+- **Date:** 23 July 2019
+- **Origin:** NVM Express official site
+- **URL:** https://nvmexpress.org/new-nvm-express-inc-specifications-bolster-cloud-and-enterprise-advancements/
+- **Use:** first-party public release chronology and contemporary purpose statement: PEL as robust drive history for triage/debug at scale.
+
+## Historical claims supported
+
+### H1 — 10 June 2019 is a document anchor, not a public-release or invention date
+
+P1 identifies itself as Revision 1.4 and is dated 10 June 2019. P2 publicly announces release on 23 July 2019. These are distinct chronology facts. This pass does not infer first proposal, first implementation, first shipment, or invention priority.
+
+### H2 — NVM Express publicly framed PEL as retained drive history
+
+P2 lists Persistent Event Log among NVMe 1.4 features and describes its purpose as robust drive history for issue triage/debug at scale. P1 supplies the normative semantics behind that first-party framing.
+
+## Mechanism claims supported
+
+### E1 — PEL history survives power cycles/resets, but this does not prove user-payload durability
+
+P1 §5.14.1.13 requires PEL information to be retained across power cycles and resets and recommends minimal event-information loss on power failure. The object retained is significant-event log information at NVM-subsystem scope. No clause turns the PEL into a second copy of namespace data.
+
+**Safe relation:** `PEL persistence != namespace-payload persistence`.
+
+### E2 — persistence is explicitly compatible with bounded forgetting
+
+P1 §5.14.1.13 makes event count vendor specific and reports maximum supported PEL size through `PELS`. It allows repeated high-frequency instances to be suppressed and permits vendor-specific event deletion when size/count/category limits are reached; an older important event may outlive a newer event. Sanitize may also remove or alter events.
+
+**Safe relations:**
+
+- `persistent log != exhaustive history`;
+- `event occurred != record survives indefinitely`;
+- `absence from a later PEL != proof of non-occurrence`;
+- `persistent != immutable`.
+
+This is the central counterexample against reading “persistent” as “complete archive.”
+
+### E3 — PEL report order is not a universal total-order clock
+
+P1 says newer events should generally be reported earlier, while the subsystem's method for deciding event order is vendor specific.
+
+**Safe relation:** `reported ordering != universal causal chronology`.
+
+### E4 — reporting context retains one observation membership while the underlying PEL continues changing
+
+P1 defines actions that establish/read/release a PEL reporting context. The implementation may retain page data itself or pointers; that representation is vendor specific. The normative behavioral boundary is that events occurring while the context exists are still logged but are excluded from the already-established context. Context lifetime ends independently through release, reset, or vendor timeout.
+
+**Safe relations:**
+
+- `reporting context != underlying PEL`;
+- `context lifetime != PEL lifetime`;
+- `stable read membership != frozen device history`.
+
+### E5 — a SMART snapshot event is historical evidence distinct from current SMART state
+
+P1 §5.14.1.13.1.1 defines event data as a snapshot of SMART/Health Information Log data. A later current SMART page and cumulative counters therefore answer different temporal questions.
+
+**Safe relation:** `SMART snapshot event != current SMART state != cumulative-counter semantics`.
+
+### E6 — operation-start evidence is weaker than completion evidence
+
+P1 defines separate Format NVM Start/Completion and Sanitize Start/Completion events. §5.14.1.13.1.9 records Sanitize Start at operation start; §5.14.1.13.1.10 records Sanitize Completion at operation completion and includes sanitize status/progress information. A start entry therefore cannot demonstrate completion. A completion entry still records controller-reported operation status rather than independently proving lower-media forensic erasure.
+
+**Safe relations:**
+
+- `operation-start record != operation-completion record`;
+- `PEL record about sanitize != sanitize implementation/effect`.
+
+## Event-vocabulary significance
+
+P1's event-type table includes, among other classes:
+
+- SMART / Health Log Snapshot;
+- Firmware Commit;
+- Timestamp Change;
+- Power-on or Reset;
+- NVM Subsystem Hardware Error;
+- Change Namespace;
+- Format NVM Start and Completion;
+- Sanitize Start and Completion;
+- Set Feature;
+- Telemetry Log Created;
+- Thermal Excursion;
+- vendor-specific / TCG-defined entries.
+
+This supports treating PEL as broader significant-device-event history rather than normalizing it to one self-test or one command journal.
+
+## Prior art and cross-case check
+
+### Case 55 — ATA/ATAPI self-test history
+
+`cases/55-nvme-smart-health-endurance-telemetry.md` already grounds ATA/ATAPI-5-era self-test logging by 1999. That is earlier functional prior art for bounded retained storage-device diagnostic history. It prevents an NVMe-origin claim for the general idea.
+
+The mechanisms remain distinct: the ATA self-test log is centered on self-test history/results, while NVMe 1.4 PEL standardizes broader event classes, reset/power-cycle persistence, suppression/eviction, and reporting context.
+
+**Classification:** functional prior art (`A`/`X`), not demonstrated genealogy.
+
+### Case 44 — sanitize effect
+
+Case 44 studies command/interface semantics for deallocation versus sanitize/erasure. PEL's Sanitize Start/Completion entries are retained evidence *about* such an operation, not the destructive mechanism itself.
+
+**Classification:** bounded functional comparison (`A`/`X`).
+
+### `computing-archaeology`
+
+A fresh repository search for `Persistent Event Log` / `NVMe` found no dedicated PEL case to reuse. Broader NVMe log-page history, standards-proposal genealogy, controller firmware evolution, and shipping-product adoption should be routed there if developed.
+
+## Counterclaims explicitly rejected
+
+This evidence does not support:
+
+1. “PEL stores every significant event forever.”
+2. “If no PEL entry is present, the event did not occur.”
+3. “Persistence across reset proves namespace payload durability.”
+4. “The PEL is append-only, immutable, authenticated, tamper evident, or compliance WORM.”
+5. “Report order is a universal causal ordering.”
+6. “A reporting context freezes the underlying device log.”
+7. “A Sanitize Start event proves sanitization completed.”
+8. “A Sanitize Completion record independently proves physical forensic erasure.”
+9. “NVMe 1.4 invented persistent device diagnostic logs.”
+10. “Earlier ATA diagnostic history demonstrates direct ATA -> NVMe genealogy.”
+
+## Follow-up evidence debt
+
+- recover and compare the exact NVMe technical proposal / ratification chain that introduced PEL;
+- trace changes from 1.4 through later Base Specification revisions;
+- add a named shipping SSD with documented `PELS`, event capacity, and support behavior;
+- test real eviction/suppression behavior where a safe repeatable setup exists;
+- test reporting-context behavior under concurrent events and resets;
+- test power-failure retention rather than inferring product compliance from the standard;
+- compare PEL with authenticated/tamper-evident audit logging without normalizing the categories;
+- characterize sanitize-induced event removal on named implementations.
+''', encoding='utf-8')
+
+          roadmap_path = Path('ROADMAP.md')
+          roadmap = roadmap_path.read_text(encoding='utf-8')
+          case145_roadmap = "- [x] Case 145 NVMe 1.4 Persistent Event Log retained-history / bounded-forgetting slice — [`cases/145-nvme14-persistent-event-log-retained-history.md`](cases/145-nvme14-persistent-event-log-retained-history.md) + [`evidence/145-nvme-2019-persistent-event-log-grounding.md`](evidence/145-nvme-2019-persistent-event-log-grounding.md): NVM Express Revision 1.4 (10-Jun-2019) grounds significant-event history retained across resets and power cycles while still permitting bounded capacity, repeated-event suppression, vendor-specific eviction, sanitize alteration, and vendor-specific ordering. Its reporting context stabilizes one retrieval membership while new events continue to enter the underlying PEL, and paired Format/Sanitize Start/Completion events ground `operation evidence != operation effect`. Case 55 supplies earlier ATA diagnostic-history prior art without genealogy; Case 44 remains the separate sanitize-effect boundary. Exact proposal genealogy, later-revision evolution, named-product PELS/eviction behavior, authenticated-log comparison, and power-fail/fault experiments remain open."
+          case145_follow = "- [ ] Case 145 follow-up — recover the PEL proposal/ratification chain, later NVMe revision changes, named-product `PELS`/capacity and eviction behavior, sanitize interactions, power-fail/fault experiments, and authenticated/tamper-evident event-log comparisons."
+          if 'Case 145 NVMe 1.4 Persistent Event Log retained-history' not in roadmap:
+              lines = roadmap.splitlines()
+              anchors = [i for i, line in enumerate(lines) if line.startswith('- [x] Case 144 ZooKeeper ephemeral-znode')]
+              if len(anchors) != 1:
+                  raise SystemExit(f'expected one Case 144 roadmap anchor, found {len(anchors)}')
+              at = anchors[0] + 1
+              lines[at:at] = [case145_roadmap, case145_follow]
+              roadmap_path.write_text('\n'.join(lines) + ('\n' if roadmap.endswith('\n') else ''), encoding='utf-8')
+
+          index_path = Path('CASE_INDEX.md')
+          index = index_path.read_text(encoding='utf-8')
+          if '## Case 145 — NVMe 1.4 Persistent Event Log findings' in index:
+              raise SystemExit('Case 145 index section already exists; refusing duplicate')
+          if '**3118 — related-repository boundary:**' not in index:
+              raise SystemExit('expected Case 144 finding 3118 anchor not found')
+          section = r'''
+
+## Case 145 — NVMe 1.4 Persistent Event Log findings
+
+Grounding record: [`evidence/145-nvme-2019-persistent-event-log-grounding.md`](evidence/145-nvme-2019-persistent-event-log-grounding.md).
+
+- **3119 — specification document date != public-release announcement != invention date:** NVM Express Revision 1.4 is dated 10 June 2019, while NVM Express, Inc. publicly announced release on 23 July 2019; neither date proves first proposal, implementation, shipment, or invention priority. (`H/P`, `X`)
+- **3120 — first-party `robust drive history` framing != unlimited archive claim:** the July 2019 NVM Express announcement describes PEL as robust drive history for triage/debug, while the normative specification supplies explicit limits and deletion/suppression rules. (`H/P`, `X`)
+- **3121 — PEL retention across power cycles/resets != user-payload durability:** the retained object is significant-event log information at NVM-subsystem scope, not another copy of namespace payload. (`H/P`, `E`)
+- **3122 — persistent event log != exhaustive event history:** supported count/size are bounded or vendor specific and repeated high-frequency events may be suppressed. (`H/P`, `E`)
+- **3123 — event occurrence != indefinite event-record survival:** when capacity/count/category bounds are reached the controller may delete events under vendor-specific policy, including cases where an important older event outlives a newer one. (`H/P`, `E`)
+- **3124 — absence from a later PEL != proof of non-occurrence:** suppression, bounded eviction, and sanitize-induced alteration provide explicit counterexamples to inference from missing record to missing historical event. (`H/P`, `E`, `X`)
+- **3125 — cross-reset persistence != immutability/tamper evidence:** the specification permits sanitize to alter/remove PEL entries and does not establish append-only, authenticated, compliance-WORM, or forensic-completeness properties. (`H/P`, `E`, `X`)
+- **3126 — reported order != universal causal chronology:** NVMe requests generally newer-first presentation but leaves the event-order determination method vendor specific. (`H/P`, `E`)
+- **3127 — reporting-context snapshot != underlying PEL:** Establish Context fixes the event information exposed through one retrieval relation without defining that context as the same object as the live log. (`H/P`, `E`)
+- **3128 — stable retrieval membership != frozen history:** events occurring while a reporting context exists are still logged but are excluded from that existing context. (`H/P`, `E`)
+- **3129 — reporting-context lifetime != PEL lifetime:** release, reset, or vendor timeout may retire the query context while the longer-lived Persistent Event Log relation remains conceptually distinct. (`H/P`, `E`)
+- **3130 — SMART snapshot event != current SMART/Health state != cumulative-counter semantics:** a PEL event preserves one SMART/Health snapshot, whereas Case 55 separately grounds current/cumulative health and self-test-history relations. (`H/P`, `E`, `A`)
+- **3131 — Sanitize/Format start evidence != completion evidence:** separate Start and Completion event types encode different operation phases, so a retained start record cannot prove destructive work completed. (`H/P`, `E`)
+- **3132 — sanitize completion record != independent physical-erasure proof:** PEL retains controller-reported completion/status evidence; Case 44 remains the separate command/effect/sanitization boundary. (`H/P`, `E`, `A`, `X`)
+- **3133 — ATA self-test logging is earlier diagnostic-history prior art != demonstrated NVMe genealogy:** Case 55 grounds ATA/ATAPI-5-era bounded self-test history by 1999, blocking an NVMe-origin shortcut for the general function without proving direct descent. (`H/P`, `A`, `X`)
+- **3134 — broader event history != one self-test-result log:** NVMe 1.4 PEL spans firmware, reset, hardware-error, namespace, format, sanitize, telemetry, thermal and other event classes, so shared diagnostic-history function does not normalize scope. (`H/P`, `E`, `A`)
+- **3135 — bounded retained history can preserve and forget selectively:** the mechanism supports the downstream observation that technical persistence may preserve selected evidence of the past while suppressing/evicting other evidence; this is not an engineering identity with archive, human memory, or tertiary retention. (`P`, `X`)
+- **3136 — related-repository boundary:** a fresh `tmzncty/computing-archaeology` search found no dedicated NVMe Persistent Event Log study; broad log-page/proposal/controller/product genealogy belongs there if developed, while Case 145 remains retention-specific. (`H/P` project-state record)
+'''
+          index_path.write_text(index.rstrip() + section + '\n', encoding='utf-8')
+          PY
+
+          git config user.name 'technical-retention automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f .github/workflows/case145-integrate.yml
+          git add -A
+          git diff --cached --check
+          test -n "$(git status --porcelain)"
+          git commit -m 'case145: ground NVMe persistent event-log retention'
+          git push origin HEAD:main
