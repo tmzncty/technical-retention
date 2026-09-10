@@ -33,6 +33,11 @@ jobs:
               raise SystemExit('index-link replacement marker missing')
           body = body.replace(old_replace, new_replace, 1)
           body = body.replace(
+              "grep -q 'namespace lifecycle != Endurance Group lifecycle' cases/120-nvme14-endurance-group-scoped-health-history.md",
+              "grep -q 'namespace creation != Endurance Group creation' cases/120-nvme14-endurance-group-scoped-health-history.md",
+              1,
+          )
+          body = body.replace(
               'rm .github/workflows/_tmp_case120_namespace_group.yml',
               'rm .github/workflows/_tmp_case120_namespace_group.yml .github/workflows/_tmp_case120_runner.yml',
               1,
