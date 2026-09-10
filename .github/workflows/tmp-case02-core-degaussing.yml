@@ -13,236 +13,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-      - name: Apply bounded research slice
+          fetch-depth: 2
+      - name: Apply previous bounded research payload
         shell: bash
         run: |
           set -euo pipefail
-          cat > evidence/02-1991-ncsc-core-clearing-purging-degaussing-deepening.md <<'EOF'
-          # Case 02 deepening — NCSC magnetic-core clearing, purging, and degaussing boundary, 1991
-
-          This evidence addendum deepens [`../cases/02-magnetic-core-destructive-read.md`](../cases/02-magnetic-core-destructive-read.md) without reopening the general history of magnetic-core memory.
-
-          **Bounded question:** the 1964 TCM-32 manual already shows a production core-memory `Memory Clear` operation that resets the whole stack to a defined `ZERO` state. Does that machine operation by itself establish security-grade forgetting, and how did a later period security source distinguish clearing, purging, overwriting, and degaussing for magnetic core memory?
-
-          The shared word `clear` is hazardous here. A product manual can use it for a concrete state-setting operation, while a security guideline can use `clearing` for an assurance category defined by what reconstruction capability must be defeated.
-
-          ---
-
-          ## Source A — NCSC-TG-025 Version 2, September 1991
-
-          **Document:** National Computer Security Center, *A Guide to Understanding Data Remanence in Automated Information Systems*, NCSC-TG-025, Library No. 5-236,082, Version 2, September 1991.
-
-          **Preserved transcription:** <https://irp.fas.org/nsa/rainbow/tg025-2.htm>
-
-          **Evidence class:** `H/P*` — a period U.S. National Computer Security Center technical guideline accessed through a later preservation/transcription host. FAS is not the historical author. The guide explicitly says it is guidance and should not replace policy.
-
-          Its foreword says Version 2 supersedes **CSC-STD-005-85, Department of Defense Magnetic Remanence Security Guideline, dated 15 November 1985**. That establishes a documentary predecessor floor, not invention priority. The guide retrospectively says storage-remanence risk had been recognized as early as 1960; because no direct 1960 source was inspected here, that date remains a retrospective claim rather than a new origin anchor.
-
-          ---
-
-          ## Historical record
-
-          ### H1. Data remanence is residual physical representation after erasure
-
-          NCSC-TG-025 defines data remanence as residual physical representation after storage media has been erased, where surviving physical characteristics may permit reconstruction. This blocks `not current through the ordinary machine interface = no residual physical representation remains`.
-
-          ### H2. `Clearing` and `purging` are different assurance categories
-
-          Section 2.2 defines **clearing** as removing sensitive data with assurance that it cannot be reconstructed through normal system capabilities — the guide frames this as the `keyboard` threat — while the secured physical environment remains controlled.
-
-          It defines **purging** as removing sensitive data with assurance that it cannot be reconstructed through open-ended laboratory techniques, and associates purging with release to a less secure environment.
-
-          Therefore:
-
-          ```text
-          TCM-32 `Memory Clear`
-              != automatically
-          NCSC security `clearing`
-              != automatically
-          NCSC security `purging`
-          ```
-
-          The first phrase names a documented 1964 product operation. The latter two name 1991 security-assurance categories.
-
-          ### H3. Overwriting and degaussing are distinct procedures
-
-          Section 5.1.1 describes overwriting as writing unclassified data to locations that previously contained sensitive data. The generic guidance permits a single overwrite pattern for clearing and describes stronger patterned overwrite procedures for purging where applicable.
-
-          The degaussing primer instead describes erasure through an applied magnetic field. It distinguishes AC erasure, using an alternating field reduced from an initially high value, from DC erasure/saturation using a unidirectional field or permanent magnet. These are physically different from a machine-level clear/write sequence.
-
-          ### H4. Magnetic core memory is named explicitly
-
-          Section 5.2.5 states that the DoD had approved both **overwriting** and **degaussing** as methods to clear or purge **magnetic core memory**, and says Type I degaussers and hand-held magnets can purge that medium, referring users to DoD 5200.28-M for the complete procedure.
-
-          This is a 1991 security-guidance witness. It does **not** establish that every earlier core-memory installation used these procedures, that TCM-32 `Memory Clear` had been evaluated as a purge procedure, or that NCSC invented core overwriting/degaussing.
-
-          ### H5. Erasure tooling needs its own assurance
-
-          The guide warns that degaussers can be misused, fail, or lose capability, and recommends periodic testing. It explicitly warns against assuming that a new or previously evaluated unit is necessarily still providing sufficient erasure.
-
-          Its 90 dB discussion concerns a special worst-case **tape** test signal used for degausser evaluation. This addendum does not transfer that number to a named core plane.
-
-          ---
-
-          ## Engineering reconstruction
-
-          Case 02 can now distinguish three closure conditions:
-
-          1. the old value is no longer the machine's current logical word;
-          2. the old value cannot be reconstructed through normal system capability;
-          3. the old value cannot be reconstructed under the stronger laboratory-oriented purge threat model.
-
-          A selected overwrite or whole-stack `Memory Clear` can establish the first at the product-interface level. The 1991 security vocabulary shows why the first alone cannot prove the second or third.
-
-          `Clear` therefore needs at least three qualifiers:
-
-          ```text
-          mechanism: ordinary overwrite / internal bulk reset / external degaussing
-          scope:     selected word / all addressable locations / physical magnetic medium
-          assurance: logical replacement / normal-interface clearing / laboratory-oriented purging
-          ```
-
-          An overwrite can only replace state it actually reaches. NCSC's broader overwrite discussion therefore makes addressability and coverage part of security erasure: `write command completed` is weaker than `all security-relevant retained locations were overwritten`.
-
-          Degaussing also changes the authority path. Ordinary overwrite relies on the memory's selection/write path; degaussing acts through an applied magnetic field and can bypass ordinary logical addressing. Yet `procedure selected`, `procedure executed correctly`, and `erasure effectiveness established` remain separate relations.
-
-          ---
-
-          ## Functional analogy — bounded only
-
-          Later Flash/NVMe cases likewise distinguish logical invalidation, physical erase, sanitization objective, operation completion, and verification. The safe comparison is only relational:
-
-          ```text
-          logical unavailability
-              !=
-          security sanitization
-              !=
-          verification that sanitization met its objective
-          ```
-
-          Core overwrite/degauss is not Flash block erase, FTL reclamation, or NVMe Sanitize, and no genealogy is claimed.
-
-          ---
-
-          ## Philosophical interpretation — deliberately narrow
-
-          A prior payload can cease to be current under the ordinary machine interface without thereby satisfying a stronger reconstruction-resistance criterion. The narrow interpretive result is: **technical forgetting can have operation-relative and reconstruction-relative closure conditions.** This does not make NCSC terminology a universal theory of human forgetting, cultural memory, or tertiary retention.
-
-          ---
-
-          ## Rejected / unsupported claims
-
-          - **X — `TCM-32 Memory Clear = NCSC clearing`.** Shared wording does not establish identical semantics.
-          - **X — `whole-stack ZERO reset = demonstrated security purge`.**
-          - **X — `degaussed = logical ZERO`.** The physical/control paths differ.
-          - **X — `DoD-approved in 1991 = standard practice in every early core-memory installation`.**
-          - **X — `1991 Version 2 = invention priority`.** It names a 1985 predecessor.
-          - **X — `90 dB tape-degausser test = measured core-memory erasure margin`.**
-          - **X — `procedure invoked = erasure assured`.**
-          - **X — `data remanence = current authoritative payload`.**
-
-          ---
-
-          ## Related-repository boundary
-
-          The broad core-memory mechanism and engineering history are already covered in [`tmzncty/computing-archaeology: Why Was Magnetic-Core Memory Worth Weaving by Hand?`](https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md).
-
-          A fresh repository search for `degauss`, `sanitization`, and magnetic-core remanence found no dedicated companion case to reuse. Broad degausser history, magnetic-security-policy genealogy, material/coercivity studies, and experimental remanence measurement belong primarily in `computing-archaeology` if developed.
-
-          The retention-specific result kept here is: **product-level state replacement, security clearing, laboratory-oriented purging, degaussing, and evidence that an erasure apparatus still works are separable relations even when they concern the same magnetic-core substrate.**
-
-          ---
-
-          ## Readiness assessment
-
-          This closes the bounded **magnetic-core security-erasure vocabulary / clear-versus-purge / overwrite-versus-degauss** seam left open after the 1964 TCM-32 addendum.
-
-          Still open are direct analog post-switch remanence measurements on a named core plane, exact 1960s/1970s classified-core degaussing genealogy, direct inspection of the 1985 predecessor, material-specific thresholds for named products, and post-degauss service consequences.
-          EOF
-
+          git show HEAD^:.github/workflows/tmp-case02-core-degaussing.yml > /tmp/previous.yml
           python - <<'PY'
           from pathlib import Path
-
-          case_path = Path('cases/02-magnetic-core-destructive-read.md')
-          case = case_path.read_text(encoding='utf-8')
-          link = "Security-erasure vocabulary deepening: [`../evidence/02-1991-ncsc-core-clearing-purging-degaussing-deepening.md`](../evidence/02-1991-ncsc-core-clearing-purging-degaussing-deepening.md). The 1991 NCSC source is a later security-assurance witness, not evidence that early MIT or the 1964 TCM-32 used the same policy vocabulary.\n"
-          if '02-1991-ncsc-core-clearing-purging-degaussing-deepening.md' not in case:
-              anchor = "Clear/write and bulk-reset semantics deepening: [`../evidence/02-1964-tcm32-clear-write-memory-clear-deepening.md`](../evidence/02-1964-tcm32-clear-write-memory-clear-deepening.md). The 1964 TCM-32 source is a later implementation/terminology witness, not a replacement for the case's 1950–1954 MIT anchor.\n"
-              if anchor not in case:
-                  raise SystemExit('Case 02 evidence-link anchor not found')
-              case = case.replace(anchor, anchor + '\n' + link, 1)
-
-          marker = '## Security-erasure deepening — machine clear, clearing, purging, and degaussing'
-          if marker not in case:
-              case += '''
-
-          ---
-
-          ## Security-erasure deepening — machine clear, clearing, purging, and degaussing
-
-          The 1964 TCM-32 evidence establishes a whole-stack reset to the machine-defined `ZERO` state; it does **not** by itself establish security-grade sanitization. September-1991 NCSC-TG-025 separately defines security `clearing` and stronger `purging`, explicitly names overwriting and degaussing for magnetic core memory, and treats degausser condition/testing as part of erasure assurance.
-
-          **Historical record:** `Memory Clear` is a product operation; NCSC `clearing` and `purging` are reconstruction-resistance objectives. The guide's magnetic-core section permits more than one procedure class rather than identifying sanitization with one physical operation.
-
-          **Engineering reconstruction:** `old value no longer current != normal-interface reconstruction resistance != laboratory-oriented purge resistance`. Ordinary overwrite/internal clear and external degaussing also use different authority paths.
-
-          **Functional analogy:** later Flash/SSD sanitization cases share only the relation-level distinction among logical invalidation, physical erasure, sanitization objective, completion, and verification; mechanism identity and genealogy are rejected.
-
-          **Philosophical interpretation:** technical forgetting can have operation-relative and reconstruction-relative closure conditions. This is not a universal theory of memory.
-
-          **Stop conditions:** `TCM-32 Memory Clear != NCSC clearing`; `whole-stack ZERO reset != demonstrated purge`; `degaussed != logical ZERO`; `procedure invoked != erasure assured`; and the NCSC tape-oriented 90 dB test is not a measured core-plane erasure margin.
-          '''
-          case_path.write_text(case, encoding='utf-8')
-
-          roadmap_path = Path('ROADMAP.md')
-          roadmap = roadmap_path.read_text(encoding='utf-8')
-          item = "- [x] Case 02 magnetic-core clearing / purging / degaussing boundary deepening — [`cases/02-magnetic-core-destructive-read.md`](cases/02-magnetic-core-destructive-read.md), deepened by [`evidence/02-1991-ncsc-core-clearing-purging-degaussing-deepening.md`](evidence/02-1991-ncsc-core-clearing-purging-degaussing-deepening.md): NCSC-TG-025 Version 2 (09/1991) separates security `clearing` from stronger `purging`, names overwriting and degaussing as approved magnetic-core procedures, and treats degausser testing/maintenance as separate assurance work. This closes the bounded `machine Memory Clear != security clearing != security purging`, `logical ZERO reset != degaussed-state assurance`, and `procedure invoked != erasure assured` seam without projecting 1991 policy vocabulary into 1950s/1960s operators. Named-core analog-remanence measurement, direct 1985 predecessor inspection, material-specific degaussing thresholds, and broader security-erasure genealogy remain open; broad history belongs primarily in `computing-archaeology`.\n\n"
-          if 'Case 02 magnetic-core clearing / purging / degaussing boundary deepening' not in roadmap:
-              anchor = '- [ ] DRAM evolution and refresh machinery beyond the bounded case'
-              if anchor not in roadmap:
-                  raise SystemExit('ROADMAP anchor not found')
-              roadmap = roadmap.replace(anchor, item + anchor, 1)
-          roadmap_path.write_text(roadmap, encoding='utf-8')
-
-          index_path = Path('CASE_INDEX.md')
-          index = index_path.read_text(encoding='utf-8')
-          if '02-1991-ncsc-core-clearing-purging-degaussing-deepening.md' not in index:
-              old = '[1951–1954 grounding record](evidence/02-magnetic-core-1951-1954-grounding.md) + [1964 TCM-32 clear/write + Memory Clear deepening](evidence/02-1964-tcm32-clear-write-memory-clear-deepening.md); analog post-switch remanence, degaussing, secure sanitization, and broader clear/overwrite genealogy remain open'
-              new = '[1951–1954 grounding record](evidence/02-magnetic-core-1951-1954-grounding.md) + [1964 TCM-32 clear/write + Memory Clear deepening](evidence/02-1964-tcm32-clear-write-memory-clear-deepening.md) + [1991 NCSC clearing/purging/degaussing deepening](evidence/02-1991-ncsc-core-clearing-purging-degaussing-deepening.md); named-core analog post-switch remanence, direct 1985 predecessor inspection, material-specific degaussing thresholds, and broader security-erasure genealogy remain open'
-              if old not in index:
-                  raise SystemExit('CASE_INDEX Case 02 row anchor not found')
-              index = index.replace(old, new, 1)
-
-          if '## Case 02 deepening — NCSC clearing / purging / degaussing findings' not in index:
-              index = index.rstrip() + '''
-
-          ## Case 02 deepening — NCSC clearing / purging / degaussing findings
-
-          - **2755 — product `Memory Clear` != security `clearing`:** 1964 TCM-32 names a whole-stack state-setting operation; NCSC-TG-025 uses `clearing` for assurance against normal-system reconstruction. Shared wording does not establish one historical concept. (`H/P`, `E`, `X`)
-          - **2756 — security clearing != security purging:** the 1991 guide distinguishes normal-system/keyboard resistance in a controlled environment from stronger open-ended-laboratory resistance. (`H/P`)
-          - **2757 — current logical replacement != demonstrated purge:** a new defined logical state does not by itself establish stronger reconstruction resistance. (`E`)
-          - **2758 — overwrite != degauss:** overwrite uses the storage write/address path; degaussing uses a physically different magnetic-field path. (`H/P`, `E`)
-          - **2759 — logical ZERO != degaussed-state assurance:** TCM-32 resets to defined ZERO; NCSC degaussing aims to suppress recoverable prior magnetic representation. (`H/P`, `E`)
-          - **2760 — magnetic-core purge can have multiple approved procedure classes:** NCSC-TG-025 §5.2.5 names both overwriting and degaussing for magnetic core memory. (`H/P`)
-          - **2761 — data remanence != current authoritative payload:** residual physical representation and ordinary current-value semantics are different relations. (`H/P`, `E`)
-          - **2762 — procedure selection != procedure effectiveness:** NCSC warns about misuse, equipment failure, reduced capability, and the need for testing. (`H/P`)
-          - **2763 — degausser test evidence != core-plane-specific erasure measurement:** the inspected 90 dB passage is a special tape test signal and cannot be promoted into a TCM-32 margin. (`H/P`, `X`)
-          - **2764 — overwrite request != demonstrated state-population coverage:** security erasure depends on reaching all relevant retained locations, not merely issuing writes. (`H/P`, `E`)
-          - **2765 — 1991 guidance != early-core deployment practice:** the source cannot be projected onto Whirlwind, TCM-32, or every earlier installation. (`H/P`, `X`)
-          - **2766 — NCSC-TG-025 Version 2 != invention priority:** it supersedes a 15-Nov-1985 predecessor and retrospectively mentions earlier awareness. (`H/P`, `X`)
-          - **2767 — guideline != policy:** NCSC-TG-025 says it should not replace DoD policy/manual procedures. (`H/P`, `X`)
-          - **2768 — core security-erasure analogy to Flash/NVMe is relational only:** logical invalidation / erasure / sanitization / verification can be compared, but mechanisms and genealogy are not identical. (`A`, `X`)
-          - **2769 — related-repository boundary:** current `computing-archaeology` search found no dedicated magnetic-core degaussing/sanitization case; broader degausser/material/security-policy history belongs there if developed. (`H/P` project-state record)
-          ''' + '\n'
-          index_path.write_text(index, encoding='utf-8')
-
-          assert Path('evidence/02-1991-ncsc-core-clearing-purging-degaussing-deepening.md').exists()
-          assert 'machine Memory Clear != security clearing != security purging' in roadmap_path.read_text(encoding='utf-8')
-          assert '**2769 — related-repository boundary:**' in index_path.read_text(encoding='utf-8')
-          assert marker in case_path.read_text(encoding='utf-8')
+          text = Path('/tmp/previous.yml').read_text(encoding='utf-8')
+          start = text.index('      - name: Apply bounded research slice\n')
+          start = text.index('        run: |\n', start) + len('        run: |\n')
+          end = text.index('      - name: Validate and commit\n', start)
+          lines = text[start:end].splitlines()
+          script = '\n'.join(line[10:] if line.startswith('          ') else line for line in lines) + '\n'
+          Path('/tmp/apply.sh').write_text(script, encoding='utf-8')
           PY
-
+          bash /tmp/apply.sh
+          python - <<'PY'
+          from pathlib import Path
+          for name in [
+              'CASE_INDEX.md',
+              'ROADMAP.md',
+              'cases/02-magnetic-core-destructive-read.md',
+              'evidence/02-1991-ncsc-core-clearing-purging-degaussing-deepening.md',
+          ]:
+              p = Path(name)
+              p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
       - name: Validate and commit
         shell: bash
         run: |
@@ -258,6 +56,9 @@ jobs:
             printf '%s\n' "$actual"
             exit 1
           fi
+          grep -q 'Case 02 magnetic-core clearing / purging / degaussing boundary deepening' ROADMAP.md
+          grep -q '2769 — related-repository boundary' CASE_INDEX.md
+          grep -q 'Security-erasure deepening — machine clear, clearing, purging, and degaussing' cases/02-magnetic-core-destructive-read.md
           git config user.name 'technical-retention research automation'
           git config user.email 'actions@users.noreply.github.com'
           git add -A
