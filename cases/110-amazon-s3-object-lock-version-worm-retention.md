@@ -9,7 +9,7 @@
 - **Object / system:** Amazon S3 general-purpose buckets using S3 Versioning and S3 Object Lock.
 - **Historical anchor:** AWS's public announcement of S3 Object Lock on **26 November 2018**.
 - **Later contract evidence:** current AWS User Guide documentation is used to clarify the presently documented semantics of per-version retention, Governance/Compliance modes, legal holds, simple versus version-specific deletion, and Lifecycle interaction. Those current details are not silently projected backward as exact 2018 wording.
-- **Prior-art floors:** ECMA-153's June 1994 second edition standardizes a magneto-optical WORM cartridge; Microsoft Azure Immutable Blob Storage then supplies a much closer cloud-service floor, with public preview on 19 June 2018 and general availability on 18 September 2018, before AWS's 26 November 2018 Object Lock launch. Neither chronology establishes invention priority or direct genealogy.
+- **Prior-art floors:** ECMA-153's June 1994 second edition standardizes a magneto-optical WORM cartridge; Microsoft Azure Immutable Blob Storage supplies a close cloud-service floor with public preview on 19 June 2018 and GA on 18 September 2018; Google Cloud Storage then records retention policies/object holds as available on 19 October 2018 and Bucket Lock GA on 24 October 2018, all before AWS's 26 November 2018 Object Lock launch. These chronology floors establish neither invention priority nor direct genealogy.
 - **Research question:** what exactly is retained when an object version is WORM-protected by service policy, and how can key currentness, delete markers, lifecycle policy, legal hold, and retention expiry change without being the same operation as deletion or physical erasure?
 
 This is **not** a history of S3 internals, physical media immutability, replica placement, encryption-key destruction, compliance law, cross-region replication, or the invention history of WORM media. It is a bounded continuation of Case 109's distinction between version history and immutable retention.
@@ -200,6 +200,84 @@ The Azure/S3 comparison is useful because both expose service-level WORM while r
 
 Full source mapping and chronology are in [`evidence/110-azure-2018-2026-immutable-blob-worm-deepening.md`](../evidence/110-azure-2018-2026-immutable-blob-worm-deepening.md).
 
+
+## Google Cloud Storage cross-provider deepening
+
+### H/P — Google Cloud Storage Bucket Lock: another October-2018 cloud-WORM floor
+
+Google Cloud Storage supplies a second named same-class prior-art boundary in 2018. Cloud Storage release notes say **retention policies and object holds were available on 19 October 2018**; a provider blog on **24 October 2018** explicitly announces **Bucket Lock** as generally available and frames it for `WORM (Write Once Read Many)-compliant or immutable storage`. The launch material describes bucket-scoped retention over current and future objects, a lock preventing reduction of the retention period, and object holds.
+
+Combined with the already-grounded Azure and AWS dates:
+
+```text
+Azure Immutable Blob Storage GA       — 18 Sep 2018
+GCS retention policy/holds available  — 19 Oct 2018
+GCS Bucket Lock GA announcement       — 24 Oct 2018
+S3 Object Lock public launch          — 26 Nov 2018
+```
+
+This further rejects `S3 Object Lock = first publicly documented hyperscale-cloud WORM service`. It still does **not** establish provider invention priority, private-development priority, copying, or implementation genealogy.
+
+### H/P — 2018 GCS Bucket Lock was bucket-scoped; per-object Object Retention Lock is later
+
+The October-2018 Google record describes policy at **bucket** scope. Google's release notes separately date **Object Retention Lock**, a per-object retention configuration, to **21 November 2023**.
+
+Therefore:
+
+```text
+GCS Bucket Lock in 2018
+    !=
+current GCS per-object Object Retention Lock silently projected backward
+```
+
+This is the same anti-anachronism discipline applied independently to Azure's later version-level WORM layer.
+
+### H/P/E — current GCS policy scope does not freeze object currentness or every metadata field
+
+Current Bucket Lock documentation says the bucket policy applies retroactively to existing objects as well as new ones. In a versioned bucket, a live object version can nevertheless become **noncurrent** while its retention expiration remains in the future. Editable object metadata is also outside the bucket retention policy's content-mutation barrier.
+
+So current GCS gives two useful counterexamples:
+
+```text
+retained/protected version
+    !=
+version must remain current
+
+payload overwrite/delete prohibition
+    !=
+all service-visible metadata frozen
+```
+
+These are current provider-contract facts, not claims about the October-2018 implementation.
+
+### H/P/E — GCS event-hold release can start/reset a different retention clock
+
+Current GCS documentation says an event-based hold prevents deletion while active and that removing it **resets the object's retention period**. Ending the hold is therefore not equivalent to making the object immediately deletable.
+
+```text
+hold removed
+    !=
+retention obligation ended
+```
+
+This should not be normalized into S3 or Azure legal-hold semantics merely because all providers use `hold` vocabulary.
+
+### H/P — the historical service promise had an account/project boundary
+
+Google's archived Service Specific Terms, last modified **19 October 2018**, contain a Bucket-Lock-specific clause requiring the account to remain in good standing and stating that project/account deletion or agreement termination could end related retention/hold periods and permit deletion.
+
+That historical contract grounds a narrow infrastructure-scale boundary:
+
+```text
+locked service retention policy
+    !=
+preservation independent of the provider/account relation
+```
+
+This is **contractual/service evidence**, not a claim about backend media or controller algorithms. Current documentation additionally describes a project lien around locked buckets; this pass does not establish when that lien behavior entered the service and does not project it backward into 2018.
+
+Full source mapping and limits are in [`evidence/110-gcs-2018-2026-bucket-lock-worm-deepening.md`](../evidence/110-gcs-2018-2026-bucket-lock-worm-deepening.md).
+
 ## Engineering reconstruction
 
 ### E — retained state decomposition
@@ -326,17 +404,17 @@ This bounded case does **not** establish:
 - full 2018→2026 Object Lock feature chronology;
 - historical changes to enabling Object Lock on pre-existing buckets;
 - regulatory/legal sufficiency for any particular customer;
-- provider-independent equivalence across Azure, GCS, or on-premises object-lock systems; this pass establishes only specific Azure/S3 chronology and contract contrasts, not implementation equivalence;
+- provider-independent equivalence across Azure, GCS, S3, or on-premises object-lock systems; these passes establish specific provider chronologies and contract contrasts, not implementation equivalence;
 - invention priority for WORM storage.
 
 ## Open work
 
 - Recover a revision-sensitive Object Lock contract chronology from 2018 onward rather than projecting today's options backward.
-- Extend the now-grounded Azure comparison to GCS and/or on-premises object-lock systems without flattening version scope, bypass authority, default retention, legal holds, or implementation lineage.
+- Extend the now-grounded Azure/GCS comparison to a named on-premises object-lock/WORM system without flattening scope, bypass authority, default retention, legal holds, or implementation lineage.
 - Add incident/fault evidence for governance bypass, policy misconfiguration, lifecycle interaction, or administrative recovery.
 - Connect service-level version retirement to independently documented lower-layer sanitization only where evidence permits.
 - Route the broader history of optical, tape, filesystem, and archival WORM mechanisms to `computing-archaeology` rather than duplicating it here.
 
 ## Sources
 
-See [`evidence/110-amazon-s3-2018-object-lock-grounding.md`](../evidence/110-amazon-s3-2018-object-lock-grounding.md) and [`evidence/110-azure-2018-2026-immutable-blob-worm-deepening.md`](../evidence/110-azure-2018-2026-immutable-blob-worm-deepening.md).
+See [`evidence/110-amazon-s3-2018-object-lock-grounding.md`](../evidence/110-amazon-s3-2018-object-lock-grounding.md), [`evidence/110-azure-2018-2026-immutable-blob-worm-deepening.md`](../evidence/110-azure-2018-2026-immutable-blob-worm-deepening.md), and [`evidence/110-gcs-2018-2026-bucket-lock-worm-deepening.md`](../evidence/110-gcs-2018-2026-bucket-lock-worm-deepening.md).
