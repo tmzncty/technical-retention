@@ -1,0 +1,41 @@
+name: Run Case 120 bounded integration
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Execute staged research script
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          src = Path('.github/workflows/_tmp_case120_namespace_group.yml').read_text(encoding='utf-8')
+          marker = '          set -euo pipefail\n'
+          if marker not in src:
+              raise SystemExit('staged script marker missing')
+          body = src[src.index(marker):]
+          body = '\n'.join(line[10:] if line.startswith('          ') else line for line in body.splitlines()) + '\n'
+          body = body.replace(
+              'rm .github/workflows/_tmp_case120_namespace_group.yml',
+              'rm .github/workflows/_tmp_case120_namespace_group.yml .github/workflows/_tmp_case120_runner.yml',
+              1,
+          )
+          body = body.replace(
+              'git add ROADMAP.md CASE_INDEX.md cases/120-nvme14-endurance-group-scoped-health-history.md evidence/120-nvme14-2019-namespace-group-association-deepening.md .github/workflows/_tmp_case120_namespace_group.yml',
+              'git add ROADMAP.md CASE_INDEX.md cases/120-nvme14-endurance-group-scoped-health-history.md evidence/120-nvme14-2019-namespace-group-association-deepening.md .github/workflows/_tmp_case120_namespace_group.yml .github/workflows/_tmp_case120_runner.yml',
+              1,
+          )
+          Path('/tmp/case120-run.sh').write_text(body, encoding='utf-8')
+          PY
+          bash /tmp/case120-run.sh
