@@ -1,0 +1,138 @@
+name: automation case141 integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.automation/case141-trigger.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Integrate Case141 navigation and status
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          case_path = Path('cases/141-postgresql-replication-slot-wal-retention-frontier.md')
+          evidence_path = Path('evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md')
+          if not case_path.exists() or not evidence_path.exists():
+              raise SystemExit('Case 141 canonical files are missing')
+
+          # ---- CASE_INDEX ----
+          index_path = Path('CASE_INDEX.md')
+          ci = index_path.read_text(encoding='utf-8')
+
+          row = '| [PostgreSQL Replication Slots: WAL Retention Frontier and Continuation Admission](cases/141-postgresql-replication-slot-wal-retention-frontier.md) | **grounded** | persistent replication-slot metadata + `restart_lsn` consumer-need frontier + retained WAL history + downstream continuation eligibility | separate primary current state, slot metadata persistence, replay-history liveness, current activity, WAL protection, physical availability, resource-bounded reclamation, and slot usability | [2014–2020 grounding](evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md); pre-2014 genealogy, physical/logical-slot evolution, archive/reinitialization paths, failover-slot semantics, production disk-pressure traces, and fault injection remain open |'
+
+          if row not in ci:
+              lines = ci.splitlines()
+              anchor_positions = [i for i, line in enumerate(lines)
+                                  if line.startswith('| [IBM Double-Disk-Failure Array Codes:')
+                                  and 'cases/140-ibm-double-disk-failure-array-codes.md' in line]
+              if not anchor_positions:
+                  raise SystemExit('Case 140 table row anchor not found')
+              lines.insert(anchor_positions[-1] + 1, row)
+              ci = '\n'.join(lines) + '\n'
+
+          heading = '## Case 141 — PostgreSQL replication-slot WAL-retention findings'
+          if heading not in ci:
+              nums = [int(x) for x in re.findall(r'(?m)^- \*\*(\d+) —', ci)]
+              if not nums:
+                  raise SystemExit('No existing finding numbers found')
+              n = max(nums) + 1
+              findings = [
+                  ('2014 mainline introduction != released-feature date', 'PostgreSQL commit `858ec118...` on 2014-02-01 explicitly introduces replication slots as crash-safe WAL-retention control state; PostgreSQL 9.4 release on 2014-12-18 is a separate chronology claim. (`H/P`, `X`)'),
+                  ('replication-slot control state != retained WAL corpus', 'the slot persists small stream/control metadata under `pg_replslot`; required WAL remains in the WAL store and is retained because the slot constrains reclamation. (`H/P`, `E`)'),
+                  ('`restart_lsn` frontier != replay history', 'PostgreSQL 9.4 defines `restart_lsn` as the oldest WAL that might still be required; the frontier summarizes a need relation but does not contain the intervening records. (`H/P`, `E`)'),
+                  ('one lagging slot can extend the global WAL-removal horizon', '`ReplicationSlotsComputeRequiredLSN()` takes the oldest valid slot `restart_lsn` and communicates that minimum requirement to the WAL subsystem. (`H/P`, `E`)'),
+                  ('inactive/disconnected consumer != discharged retention obligation', '9.4 documentation explicitly preserves required WAL for a standby even while disconnected; current slot activity and future continuation need are separate. (`H/P`, `E`)'),
+                  ('in-memory slot update != crash-surviving slot update', '9.4 source distinguishes dirty marking from explicit slot save/checkpoint persistence and restores on-disk slot state at startup before recomputing retention constraints. (`H/P`)'),
+                  ('crash-safe slot protocol != universal lower-layer fault proof', 'the PostgreSQL source documents save/fsync/rename/restart behavior, not empirical correctness of every filesystem, controller, or device under every power-loss fault. (`H/P`, `X`)'),
+                  ('precise needed-history retention != bounded retention cost', 'PostgreSQL 9.4 says slots retain WAL known to be needed while also stating there was then no slot mechanism to bound `pg_xlog` space. (`H/P`, `X`)'),
+                  ('PostgreSQL 13 makes primary-space survival an explicit competing authority', '`max_slot_wal_keep_size` was added after experience showed excessive slot-retained WAL could exhaust the primary; over-limit slots may be invalidated at checkpoint so storage can be released. (`H/P`, `E`)'),
+                  ('slot metadata survival != WAL survival != continuation admissibility', 'under the v13 cap a slot object can remain observable while required WAL becomes `lost` and the slot is no longer usable. (`H/P`, `E`)'),
+                  ('`unreserved` != `lost`', 'the v13 status refinement separates required WAL that is no longer protected but has not necessarily been removed from required WAL already removed so the slot is unusable. (`H/P`)'),
+                  ('physical WAL presence != protected future availability', 'an `unreserved` slot can still catch up before checkpoint removal, showing byte presence and reclamation protection are distinct relations. (`H/P`, `E`)'),
+                  ('history still needed != infrastructure will preserve it without limit', 'the configured v13 cap can deliberately prefer primary capacity over an otherwise valid downstream continuation need. (`H/P`, `E`)'),
+                  ('slot invalidation / WAL removal != secure erasure', 'withdrawal of replay protection and normal WAL recycling do not establish overwrite, block erase, crypto erase, or forensic disappearance. (`E`, `X`)'),
+                  ('primary current-state sufficiency != downstream replay-history sufficiency', 'old WAL may be unnecessary to serve the primary yet still required to let a lagging consumer continue. (`H/P`, `E`)'),
+                  ('Raft snapshot substitution != PostgreSQL slot-pinned history', 'Case 58 can retire an authoritative committed prefix after materialized state plus continuation metadata exists and use `InstallSnapshot`; Case 141 instead retains replay history until the slot advances or protection is withdrawn. (`A`, `X`)'),
+                  ('LevelDB reader-pinned liveness ~ PostgreSQL consumer-frontier liveness only functionally', 'Case 137 and Case 141 both show locally old objects remaining unreclaimable because another live relation still depends on them, but iterator/Version references and distributed replication slots are different mechanisms and histories. (`A`, `X`)'),
+                  ('2020 resource-bound vocabulary != 2014 slot semantics', '`max_slot_wal_keep_size` and `reserved`/`extended`/`unreserved`/`lost` are later PostgreSQL 13 history and must not be back-projected into the initial 9.4 design. (`H/P`, `X`)'),
+                  ('related-repository boundary', 'a fresh `tmzncty/computing-archaeology` search found no dedicated PostgreSQL replication-slot / `restart_lsn` study; broad PostgreSQL WAL/replication genealogy belongs there if developed, while Case 141 keeps the retention-frontier/resource-authority comparison. (`H/P` project-state record)')
+              ]
+              sec = [heading, '', 'Grounding record: [`evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md`](evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md).', '']
+              for title, body in findings:
+                  sec.append(f'- **{n} — {title}:** {body}')
+                  n += 1
+              ci = ci.rstrip() + '\n\n' + '\n'.join(sec) + '\n'
+
+          index_path.write_text(ci, encoding='utf-8')
+
+          # ---- ROADMAP ----
+          roadmap_path = Path('ROADMAP.md')
+          rm = roadmap_path.read_text(encoding='utf-8')
+
+          completed = '- [x] Case 141 PostgreSQL 9.4→13 replication-slot WAL-retention-frontier slice — [`cases/141-postgresql-replication-slot-wal-retention-frontier.md`](cases/141-postgresql-replication-slot-wal-retention-frontier.md) + [`evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md`](evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md): the 2014 implementation/release makes persistent slot state and `restart_lsn` a crash-surviving consumer-need frontier that can keep otherwise reclaimable WAL alive across disconnection, while the 9.4 docs explicitly expose the absence of a slot-space bound; PostgreSQL 13 then adds `max_slot_wal_keep_size` and `reserved`/`extended`/`unreserved`/`lost`, grounding `history needed != history protected != history physically present != continuation admissible`. This closes only the bounded retention-frontier/resource-authority relation; pre-2014 genealogy, detailed physical/logical-slot evolution, archive/reinitialization paths, failover-slot semantics, production disk-pressure traces, and fault injection remain open.'
+
+          if 'Case 141 PostgreSQL 9.4→13 replication-slot WAL-retention-frontier slice' not in rm:
+              marker = '\n- [x] Case 44 NIST Rev.-2 sanitization-assurance / logical-storage deepening'
+              if marker not in rm:
+                  # Stable alternative anchor used by current Phase-2 block.
+                  marker = '\n- [x] Case 41 historical-policy deepening'
+              if marker not in rm:
+                  raise SystemExit('ROADMAP completed-slice insertion anchor not found')
+              rm = rm.replace(marker, '\n' + completed + '\n' + marker, 1)
+
+          lines = rm.splitlines()
+          distributed_found = False
+          for i, line in enumerate(lines):
+              if line.startswith('- [ ] distributed replication and erasure coding beyond RADOS'):
+                  distributed_found = True
+                  if re.search(r'\b141\b', line.split('**.', 1)[0]) is None:
+                      line = line.replace(', and 73**.', ', 73, and 141**.', 1)
+                      if line == lines[i]:
+                          line = re.sub(r'(\*\*partially advanced by grounded Cases [^*]+)(\*\*)', r'\1, 141\2', line, count=1)
+                  case_sentence = ' Case 141 adds a different distributed-log liveness claimant: persistent PostgreSQL replication-slot state can keep primary WAL history alive for a lagging or disconnected consumer, while PostgreSQL 13 can withdraw that protection under a configured space cap and make continuation impossible after required WAL disappears; this is a replay-history retention frontier, not Raft snapshot substitution or Kafka commitment semantics.'
+                  if 'Case 141 adds a different distributed-log liveness claimant' not in line:
+                      phrase = ' The broad item stays unchecked because'
+                      if phrase not in line:
+                          raise SystemExit('Distributed roadmap tail marker not found')
+                      line = line.replace(phrase, case_sentence + phrase, 1)
+                  lines[i] = line
+                  break
+          if not distributed_found:
+              raise SystemExit('Distributed roadmap item not found')
+          rm = '\n'.join(lines) + '\n'
+          roadmap_path.write_text(rm, encoding='utf-8')
+          PY
+
+          test "$(grep -c '^| \[PostgreSQL Replication Slots: WAL Retention Frontier and Continuation Admission\]' CASE_INDEX.md)" -eq 1
+          test "$(grep -c '^## Case 141 — PostgreSQL replication-slot WAL-retention findings$' CASE_INDEX.md)" -eq 1
+          test "$(grep -c 'Case 141 PostgreSQL 9.4→13 replication-slot WAL-retention-frontier slice' ROADMAP.md)" -eq 1
+          test "$(grep -c 'Case 141 adds a different distributed-log liveness claimant' ROADMAP.md)" -eq 1
+          git diff --check
+
+          git rm -f --ignore-unmatch .automation/case141-trigger.txt .github/workflows/automation-case141.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CASE_INDEX.md ROADMAP.md
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo 'No Case141 navigation changes to commit'
+            exit 0
+          fi
+          git commit -m 'case141: integrate PostgreSQL WAL retention frontier'
+          git push origin HEAD:main
