@@ -397,3 +397,19 @@ Still open:
 - independent malformed/context-loss fault injection;
 - exact sanitize-time event-removal behavior on named devices;
 - ATA/SCSI and broader device-history genealogy.
+
+## 2026 deepening — precise 2019 release chronology and phase-qualified maintenance evidence
+
+### P10 — first-party public-release date
+
+NVM Express, Inc., **“New NVM Express, Inc. Specifications Bolster Cloud and Enterprise Advancements,” 23 July 2019**: <https://nvmexpress.org/new-nvm-express-inc-specifications-bolster-cloud-and-enterprise-advancements/>. The dateline says NVM Express announced release of the NVMe 1.4 Base Specification. This refines the older source register, which recorded only the year. Safe chronology: Revision 1.4 document date **10 June 2019**; first-party release announcement **23 July 2019**. Neither date establishes first proposal, invention, implementation, or shipment.
+
+### P11 — Format NVM Start / Completion phase boundary
+
+Revision 1.4 §5.14.1.13.1.7 requires a Format NVM Start event after successful parameter validation and **before modifying any contents of the NVM**. §5.14.1.13.1.8 records Completion when a Format NVM command that resulted in NVM-content modification completes; the event carries status fields that can represent incomplete or unsuccessful outcomes. Safe relation: `Format Start event != Format Completion event != proof of one universal physical rewrite/erase effect`.
+
+### P12 — Sanitize Start / Completion phase boundary
+
+Revision 1.4 §5.14.1.13.1.9 records Sanitize Start at the start of a sanitize operation. §5.14.1.13.1.10 records Sanitize Completion at completion and carries Sanitize Progress, Sanitize Status, and vendor-specific completion information. Safe relations: `Sanitize Start record != Sanitize Completion record`; `controller-recorded completion/status evidence != independent lower-layer forensic-erasure proof`. This is an engineering/evidentiary boundary, not a claim that successful sanitize is ineffective. Cases 44 and 47 remain the sanitize-effect/remanence cases.
+
+The retention-specific consequence is that PEL can preserve **which phase the controller recorded** after the live operation is gone. A surviving Start entry may outlive an interrupted operation; even a Completion entry remains controller evidence about the operation rather than the destructive mechanism itself. Still open: proposal genealogy, named-device power-loss traces between Start and Completion, and independent physical validation.

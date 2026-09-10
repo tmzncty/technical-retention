@@ -4208,3 +4208,16 @@ Grounding record: [`evidence/144-zookeeper-2009-2015-ephemeral-session-liveness-
 - **3116 — logical ephemeral deletion != media sanitization:** session expiration/close does not establish block overwrite, Flash erase, cryptographic erase, or forensic disappearance. (`E`, `X`)
 - **3117 — connection-independent relation has typed semantics:** ZooKeeper sessions and PostgreSQL replication slots can both outlive one connection, but one qualifies current coordination liveness while the other preserves future replay history. (`A`, `X`)
 - **3118 — related-repository boundary:** a fresh `tmzncty/computing-archaeology` search for `ZooKeeper ephemeral session` found no dedicated study; broad coordination-service/failure-detector genealogy belongs there, while this case keeps the session-scoped retention relation. (`H/P` project-state record)
+
+## Case 66 deepening — 2019 release chronology and maintenance-operation phase evidence
+
+Grounding record: [`evidence/66-nvme14-2019-persistent-event-log-grounding.md`](evidence/66-nvme14-2019-persistent-event-log-grounding.md).
+
+- **3119 — specification date != public-release announcement != invention date:** Revision 1.4 is dated 10-Jun-2019; NVM Express' first-party release announcement is dated 23-Jul-2019; neither proves first proposal, implementation, shipment, or invention priority. (`H/P`, `X`)
+- **3120 — Format NVM Start evidence precedes content modification:** the Start event is required after parameter validation but before modifying NVM contents, so it cannot by itself prove the intended format effect occurred. (`H/P`, `E`)
+- **3121 — Format NVM Completion evidence != generic success:** the Completion event follows a Format command that modified NVM contents and carries fields able to represent incomplete/unsuccessful outcomes. (`H/P`, `E`)
+- **3122 — Sanitize Start record != Sanitize Completion record:** distinct event types preserve operation phase rather than one undifferentiated `sanitize happened` fact. (`H/P`, `E`)
+- **3123 — Sanitize Completion record != independent physical-erasure proof:** PEL carries controller-reported progress/status/completion evidence; Cases 44/47 remain the separate command/effect/remanence boundary. (`H/P`, `E`, `A`, `X`)
+- **3124 — retained history can preserve process phase after live execution disappears:** Start/Completion pairing gives historical evidence whose meaning depends on recorded phase, not mere event presence. (`E`)
+- **3125 — phase evidence != operation mechanism:** PEL entries describe recorded transitions; they do not themselves perform format/sanitize work. (`E`, `X`)
+- **3126 — chronology/evidence deepening != genealogy claim:** tighter 2019 chronology and phase semantics do not establish PEL proposal ancestry, first implementation, or ATA/SCSI-to-NVMe descent. (`H/P`, `X`)

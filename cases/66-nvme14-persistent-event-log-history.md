@@ -524,3 +524,11 @@ A fresh repository search in this round found no dedicated NVMe Persistent Event
 5. `linux-nvme/nvme-cli`, `d7c2dd59633fb0485edb5f6093d87154b19ace72`, **“libnvme: core dump when running nvme persistent-event-log”**, 11 November 2021: <https://github.com/linux-nvme/nvme-cli/commit/d7c2dd59633fb0485edb5f6093d87154b19ace72>
 6. `linux-nvme/nvme-cli`, `303e03c6e228f9296b2fa70ec899db620f2e10f6`, **“nvme: PEL need to check gen number for verification of collected log”**, 15 November 2021: <https://github.com/linux-nvme/nvme-cli/commit/303e03c6e228f9296b2fa70ec899db620f2e10f6>
 7. `linux-nvme/nvme-cli`, `82ea68f15b5b5bb0426dc28185fee07baa3729bb`, **“Add New fields on PEL based on NVMe 2.0a”**, 15 November 2021: <https://github.com/linux-nvme/nvme-cli/commit/82ea68f15b5b5bb0426dc28185fee07baa3729bb>
+
+## 2019 public-release / operation-phase evidence deepening
+
+This bounded addendum closes two small evidence gaps without changing Case 66's mechanism scope. NVM Express' first-party announcement is precisely dated **23 July 2019**; the ratified Revision 1.4 document itself is dated **10 June 2019**. Therefore `specification document date != public-release announcement date != invention / first-implementation date`.
+
+Sections 5.14.1.13.1.7-10 sharpen the event-history/effect boundary. `Format NVM Start` is recorded after parameter validation but **before modifying any NVM contents**; `Format NVM Completion` is recorded after a Format command that modified NVM contents completes and carries status/incomplete-format information. `Sanitize Start` is recorded at operation start, while `Sanitize Completion` is recorded at completion and carries sanitize progress/status information.
+
+Therefore `retained operation-start evidence != evidence that the operation completed`, and `controller-reported completion/status evidence != independent proof of lower-layer physical erasure`. Case 66 concerns retained historical evidence; Cases 44 and 47 remain responsible for command-level sanitize semantics and empirical remanence. The Start/Completion pairing shows that a retained history can preserve **phase-qualified evidence** about one maintenance action rather than an undifferentiated fact that “format happened” or “sanitize happened.”
