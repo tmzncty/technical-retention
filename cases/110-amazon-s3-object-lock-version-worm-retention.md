@@ -9,7 +9,7 @@
 - **Object / system:** Amazon S3 general-purpose buckets using S3 Versioning and S3 Object Lock.
 - **Historical anchor:** AWS's public announcement of S3 Object Lock on **26 November 2018**.
 - **Later contract evidence:** current AWS User Guide documentation is used to clarify the presently documented semantics of per-version retention, Governance/Compliance modes, legal holds, simple versus version-specific deletion, and Lifecycle interaction. Those current details are not silently projected backward as exact 2018 wording.
-- **Prior-art floor:** ECMA-153's June 1994 second edition standardizes a magneto-optical Write Once, Read Multiple (WORM) cartridge. It is used only to block an S3-first/WORM-invention claim, not to assert a direct engineering genealogy.
+- **Prior-art floors:** ECMA-153's June 1994 second edition standardizes a magneto-optical WORM cartridge; Microsoft Azure Immutable Blob Storage then supplies a much closer cloud-service floor, with public preview on 19 June 2018 and general availability on 18 September 2018, before AWS's 26 November 2018 Object Lock launch. Neither chronology establishes invention priority or direct genealogy.
 - **Research question:** what exactly is retained when an object version is WORM-protected by service policy, and how can key currentness, delete markers, lifecycle policy, legal hold, and retention expiry change without being the same operation as deletion or physical erasure?
 
 This is **not** a history of S3 internals, physical media immutability, replica placement, encryption-key destruction, compliance law, cross-region replication, or the invention history of WORM media. It is a bounded continuation of Case 109's distinction between version history and immutable retention.
@@ -150,6 +150,56 @@ active Object Lock barrier has been overridden
 
 The retention relation and the lifecycle relation compose rather than collapse into one timer.
 
+## Cross-provider historical deepening
+
+### H/P — Azure Immutable Blob Storage: a closer same-class prior-art floor
+
+Microsoft announced **Immutable storage for Azure Storage Blobs** in public preview on **19 June 2018** and general availability on **18 September 2018**, before AWS's dated **26 November 2018** S3 Object Lock announcement. The Azure GA page explicitly uses WORM/immutable vocabulary, documents time-based retention and legal hold, and places the 2018 policy at **Blob Container** scope for existing and new blobs.
+
+This narrows the novelty boundary:
+
+```text
+S3 Object Lock public launch in November 2018
+    !=
+first publicly documented cloud Blob/object WORM service
+```
+
+It does **not** establish that Azure invented cloud WORM, that AWS copied Azure, or that the services share an implementation lineage.
+
+### H/P — current Azure version-level WORM is a later contract, not 2018 semantics
+
+Azure Blob versioning became generally available in **August 2020**. Microsoft's current REST documentation gives `2020-06-12` as the API-version floor for blob/snapshot/version immutability policy. Current version-level WORM therefore supplies a later comparison layer rather than a description of the September-2018 container-scoped launch.
+
+Today, Azure documents account/container/version policy scope, version-policy inheritance, legal hold, and a one-way `unlocked -> locked` policy transition. A locked policy can be extended but not shortened or deleted through that path; changing a container/account default does not retroactively rewrite already inherited version policies. Enabling version-level WORM support is also distinct from setting an active policy.
+
+These relations add several bounded comparisons:
+
+```text
+WORM capability enabled
+    !=
+active version retention policy
+
+current default policy
+    !=
+already inherited version policy
+
+retention deadline
+    !=
+policy mutability / lock state
+
+protected version identity
+    !=
+logical blob name frozen against later versions
+```
+
+Azure's `locked/unlocked` states are **not** normalized into S3's Governance/Compliance modes. Both are authority relations around retention, but the documented state machines and bypass semantics differ.
+
+### A — provider similarity is functional, not genealogical
+
+The Azure/S3 comparison is useful because both expose service-level WORM while revealing different policy granularity and control-state histories. It is not evidence for shared backend physical media, shared code, causal descent, or identical delete/version semantics. In particular, S3's delete-marker mechanism remains an S3-specific Case-109/110 relation; current Azure documentation describing a deleted current blob becoming a previous version is not evidence for an S3-style delete marker.
+
+Full source mapping and chronology are in [`evidence/110-azure-2018-2026-immutable-blob-worm-deepening.md`](../evidence/110-azure-2018-2026-immutable-blob-worm-deepening.md).
+
 ## Engineering reconstruction
 
 ### E — retained state decomposition
@@ -276,17 +326,17 @@ This bounded case does **not** establish:
 - full 2018→2026 Object Lock feature chronology;
 - historical changes to enabling Object Lock on pre-existing buckets;
 - regulatory/legal sufficiency for any particular customer;
-- provider-independent equivalence with Azure, GCS, or on-premises object-lock systems;
+- provider-independent equivalence across Azure, GCS, or on-premises object-lock systems; this pass establishes only specific Azure/S3 chronology and contract contrasts, not implementation equivalence;
 - invention priority for WORM storage.
 
 ## Open work
 
 - Recover a revision-sensitive Object Lock contract chronology from 2018 onward rather than projecting today's options backward.
-- Compare named provider/object-store WORM contracts without flattening version scope, bypass authority, default retention, and legal holds.
+- Extend the now-grounded Azure comparison to GCS and/or on-premises object-lock systems without flattening version scope, bypass authority, default retention, legal holds, or implementation lineage.
 - Add incident/fault evidence for governance bypass, policy misconfiguration, lifecycle interaction, or administrative recovery.
 - Connect service-level version retirement to independently documented lower-layer sanitization only where evidence permits.
 - Route the broader history of optical, tape, filesystem, and archival WORM mechanisms to `computing-archaeology` rather than duplicating it here.
 
 ## Sources
 
-See [`evidence/110-amazon-s3-2018-object-lock-grounding.md`](../evidence/110-amazon-s3-2018-object-lock-grounding.md).
+See [`evidence/110-amazon-s3-2018-object-lock-grounding.md`](../evidence/110-amazon-s3-2018-object-lock-grounding.md) and [`evidence/110-azure-2018-2026-immutable-blob-worm-deepening.md`](../evidence/110-azure-2018-2026-immutable-blob-worm-deepening.md).
