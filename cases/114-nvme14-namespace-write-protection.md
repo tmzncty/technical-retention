@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/114-nvme-1996-2019-namespace-write-protection-grounding.md`](../evidence/114-nvme-1996-2019-namespace-write-protection-grounding.md).
 
+Later standards deepening: [`../evidence/114-nvme-2021-2024-multidomain-power-cycle-deepening.md`](../evidence/114-nvme-2021-2024-multidomain-power-cycle-deepening.md).
+
 ## Scope
 
 - **Object / regime:** the optional `Namespace Write Protection` capability introduced in the NVM Express Base Specification revision 1.4, ratified in 2019.
@@ -156,6 +158,43 @@ So:
 > **administratively/protocol write protected ≠ media-health read-only failure state**.
 
 The same host-visible inability to modify data can therefore arise from importantly different causes.
+
+---
+
+## Later standards deepening — ECN119 and multi-domain power-cycle scope
+
+The 2019 bounded case defines `Write Protect Until Power Cycle` as surviving an NVMe Controller Level Reset but clearing on a power cycle, while one namespace protection state is enforced by every controller attached to the namespace. Later standards evolution exposes a topology assumption hidden inside that apparently simple lifetime rule.
+
+Revision 2.0 preserves the original four-state model. The inspected Revision 2.0c write-protection clauses likewise do not yet contain the later multi-domain prohibition. Revision 2.0d (11 January 2024), however, says `Write Protect Until Power Cycle` should not be used in a **multi-domain NVM subsystem** because clearing it requires a simultaneous power cycle of the namespace and all controllers to which that namespace is attached; its Set Features rule correspondingly says an attempt to enter that state in a multi-domain subsystem should be aborted with `Feature Not Changeable`.
+
+NVM Express's own Revision-2.1 change record attributes this change to **ECN119 (mandatory)** and classifies it as a **new requirement / incompatible change**. Revision 2.1 then uses the stronger normative formulation that the state **shall not be used** in multi-domain NVM subsystems.
+
+Historical/standards boundary (`H/P`):
+
+> **the multi-domain restriction is a later ECN119-era standards change; it must not be projected backward as if it were already explicit in NVMe 1.4.**
+
+Engineering reconstruction (`E`):
+
+> **a state whose expiry is named by an event such as `power cycle` can still need a topology-scoped definition of that event when the authority relation spans independently powerable entities.**
+
+The useful decomposition is now:
+
+```text
+feature capability
+!= transition authorization
+!= topology/context admissibility
+!= shared namespace authority state
+!= event scope needed to expire that state
+!= payload-retention physics
+```
+
+In particular, `power cycle` here is not equivalent to an NVMe Controller Level Reset; power-cycling one attached controller is not established as sufficient to expire the shared namespace state in a multi-domain topology; advertising support for WPUC does not make that state admissible in every topology; and the standards change says nothing about NAND charge lifetime, ECC margin, internal relocation, or sanitization.
+
+Functional comparison (`A`): Case 116's HDFS maintenance expiry also shows that control-state expiry and payload lifetime are distinct, but HDFS uses a time/policy expiry while ECN119 concerns a coordinated power-topology event. Case 120 separately demonstrates that namespace, NVM-Set, and Endurance-Group scopes differ; ECN119 adds an orthogonal power-domain/event-scope distinction. Neither comparison is a genealogy claim.
+
+Philosophical interpretation (`I`, bounded): `Until Power Cycle` illustrates how an apparently temporal label can hide infrastructure assumptions about **which components must participate in the event that ends the state**. The interpretation stops at that engineering relation; it is not a theory of memory in general.
+
+Primary deepening record: [`../evidence/114-nvme-2021-2024-multidomain-power-cycle-deepening.md`](../evidence/114-nvme-2021-2024-multidomain-power-cycle-deepening.md).
 
 ---
 
