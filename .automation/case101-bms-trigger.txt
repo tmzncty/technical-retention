@@ -1,1 +1,1 @@
-trigger Case101 BMS deepening integration
+trigger Case101 BMS deepening integration v2
