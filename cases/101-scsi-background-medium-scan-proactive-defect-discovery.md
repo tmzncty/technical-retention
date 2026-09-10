@@ -284,6 +284,26 @@ A fresh repository search found no dedicated `patrol read` / `background medium 
 
 ---
 
+## 2024 Western Digital cross-vendor product deepening
+
+A later named-product witness sharpens the control-state and repair-authority boundary without changing the 2005 origin/standardization claim above. Western Digital's *Ultrastar DC HC590 SAS Hard Disk Drive Specification*, Rev. 1.0 (31 October 2024), exposes current BMS status and `Medium Scan Progress` separately from counts of background scans and background-medium scans performed **over the life of the drive**. This gives a directly documented distinction between a current traversal state and a cumulative maintenance-history summary; the lifetime counter still is not a per-LBA ledger of successful verification.
+
+The same specification says that clearing `EN_BMS` during an active scan suspends the scan and that re-enabling it resumes from the suspended location. The bounded claim is therefore `maintenance execution lifetime != maintenance-control/progress lifetime`. The inspected text does **not** say where that suspended location is stored or that it survives arbitrary reset, power loss, firmware replacement, format, or sanitize, so `resume after disable/re-enable != demonstrated power-loss-persistent checkpoint`.
+
+Most importantly, the HC590 states that **reassignment during the background scan is not supported**. Its result states instead include cases where a defect is pending an application-client `REASSIGN` or write, where a rewrite succeeded, and where the application client successfully reassigned the block. Compared with the existing 2007 Seagate witness, which makes logging/reallocation depend on ARRE/AWRE policy, this blocks a universal `BMS = automatic in-scan relocation` reading:
+
+> **BMS support != automatic in-scan reassignment support.**
+
+and:
+
+> **standardized BMS control/reporting semantics != identical vendor repair policy.**
+
+The 2024 product document is later continuity/counterexample evidence, not evidence of T10's 2005 historical intent or a Seagate-to-Western-Digital implementation genealogy.
+
+Detailed record: [`../evidence/101-wd-2024-bms-progress-repair-policy-deepening.md`](../evidence/101-wd-2024-bms-progress-repair-policy-deepening.md).
+
+---
+
 ## Engineering reconstruction
 
 Case 101 adds these controlled relations:
