@@ -1,0 +1,35 @@
+name: Temporary Case110 GCS WORM deepening
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tmp-case110-gcs-worm-deepening.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Integrate bounded research slice
+        shell: bash
+        run: |
+          set -euo pipefail
+          git pull --ff-only origin main
+          python3 _automation_case110_gcs.py
+          git diff --check
+          test -f evidence/110-gcs-2018-2026-bucket-lock-worm-deepening.md
+          grep -q '3065 — feature-availability' CASE_INDEX.md
+          grep -q 'Google Cloud Storage cross-provider deepening' cases/110-amazon-s3-object-lock-version-worm-retention.md
+          grep -q 'Case 110 Google Cloud Storage 2018 Bucket Lock' ROADMAP.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "case110: deepen GCS Bucket Lock prior-art boundary"
+          git push origin main
