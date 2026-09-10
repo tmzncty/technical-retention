@@ -982,6 +982,8 @@ The **mechanism gate is now closed**. A synthesis pass may begin, but it must be
 
 **Grounded distributed-erasure-coding bridge:** [`cases/19-facebook-f4-erasure-coded-failure-domains.md`](cases/19-facebook-f4-erasure-coded-failure-domains.md) is `grounded`; see [`evidence/19-facebook-f4-2014-erasure-coding-grounding.md`](evidence/19-facebook-f4-2014-erasure-coding-grounding.md). The 2014 f4 production paper directly grounds immutable warm-BLOB data, Reed–Solomon `(10,4)` data/parity stripes, separately triple-replicated index files, rack-aware placement, online requested-BLOB reconstruction, offline full-block rebuilding, placement balancing after failure/reconstruction/replacement, and a geo-XOR layer whose inputs can themselves require local reconstruction. The bridge adds `erasure-code algebra ≠ failure-domain independence`, `requested-object availability ≠ completed repair`, `content reconstruction ≠ restored placement geometry`, and `reconstruction can compose across coding/failure-domain layers`, while f4’s own Related Work blocks a false erasure-code-invention narrative.
 
+| [Micron Automotive eMMC 5.1 Self-Refresh: Host Time, Selective Renewal, and Maintenance Evidence](cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md) | **grounded** | managed NAND/eMMC + host-supplied time/control + idle-gated selective self-refresh + retained progress/history | distinguish payload from maintenance eligibility, execution, and second-order evidence; compare only functionally with Flash/SSD renewal cases | [2021–2023 grounding record](evidence/135-micron-emmc-2021-2023-self-refresh-grounding.md); full Micron TN-FC-60 body, exact rewrite geometry, JEDEC/eMMC genealogy, and fault injection remain open |
+
 ## Case 56 — replicated-log committed-prefix findings
 
 575. **Physical record presence ≠ committed retention.** Kafka 0.8.2 can retain records above the high watermark in a local log while ordinary consumers remain bounded to the committed prefix.
@@ -3791,3 +3793,26 @@ Evidence: [`evidence/120-nvme14-2019-namespace-group-association-deepening.md`](
 - **2812 — official TP attribution != proposal-body genealogy or shipped implementation:** the change record is enough to route later archaeology toward TP4018b/TP4050 but not enough to assign every subfield to a proposal or to infer a particular controller architecture. (`H/P`, `X`)
 - **2813 — namespace -> NVM Set -> Endurance Group ~= mapped-Flash indirection only functionally:** both can separate a higher-level designation from a lower management relation, but NVMe Endurance Groups are not FTL mappings and expose no physical NAND placement. (`A`, `X`)
 - **2814 — related-repository boundary:** fresh `tmzncty/computing-archaeology` searches for `Endurance Group`, `TP4018b`, and `TP4050` found no dedicated overlapping study; broader NVMe proposal/device provisioning history belongs there if developed, while Case 120 keeps the retention-specific scope/lifetime boundary. (`H/P` project-state record)
+
+## Case 135 — Micron automotive eMMC self-refresh findings
+
+Grounding record: [`evidence/135-micron-emmc-2021-2023-self-refresh-grounding.md`](evidence/135-micron-emmc-2021-2023-self-refresh-grounding.md).
+
+- **2815 — 2021 Armadillo product-integration floor != invention priority:** Atmark Techno v1.0.0 publicly documents the bounded eMMC data-retention/self-refresh feature by 2021-12-09, but this does not establish Micron invention or first-shipment priority. (`H/P`, `X`)
+- **2816 — product `self refresh` != DRAM refresh:** the shared label names a managed-eMMC maintenance feature whose documented trigger/selection path differs from DRAM scheduled cell refresh. (`H/P`, `E`, `X`)
+- **2817 — OTP trigger policy != maintenance execution:** one-time selection of reset-every-time versus elapsed-time comparison configures when work becomes eligible; it is not itself a refresh run. (`H/P`, `E`)
+- **2818 — reset != refresh:** the bounded path still requires SET_TIME within Delay 1, bus-idle observation, Delay 2, selection, and execution after reset. (`H/P`, `E`)
+- **2819 — host time injection != maintenance completion:** `SET_TIME (CMD49)` supplies a control value used by the device; it does not prove that later renewal ran or completed. (`H/P`, `E`)
+- **2820 — one-day eligibility != NAND retention cliff:** the >=1-day comparison is a configured trigger interval, not evidence of unreadability after 24 hours. (`H/P`, `E`, `X`)
+- **2821 — maintenance due != immediately schedulable:** the controller waits for bus idle and a further Delay 2 before executing, so service opportunity is distinct from temporal eligibility. (`H/P`, `E`)
+- **2822 — selective ECC-threshold refresh != full-medium rewrite:** Atmark says only cells above error threshold 2 receive self refresh; exact raw-NAND rewrite/relocation geometry remains undisclosed. (`H/P`, `E`, `X`)
+- **2823 — ECC threshold != complete degradation history:** threshold evidence can authorize local renewal without preserving a chronology of charge loss or every corrected bit. (`E`)
+- **2824 — maintenance telemetry != payload:** self-refresh progress, loop/refresh counts, completion-related values, queue state, and power-loss counters are second-order operational state rather than user data. (`H/P`, `E`)
+- **2825 — current progress != maintenance history:** a current not-running/progress-zero state can coexist with retained counts from earlier renewal work. (`H/P`, `E`)
+- **2826 — retained maintenance evidence != complete history or future guarantee:** counts/progress expose bounded maintenance facts but do not establish every past event, every cell state, or a universal future-retention interval. (`E`, `X`)
+- **2827 — host assistance != host physical-target selection:** the host supplies reset/time input while the controller monitors idleness and local error evidence; inspected sources do not show the host choosing individual NAND targets. (`H/P`, `E`)
+- **2828 — Micron TN-FC-60 metadata != uninspected clause semantics:** the official 2023-04-11 catalog independently confirms the automotive eMMC 5.1 refresh-feature scope, but the login-gated body is not silently used for timing/threshold claims. (`H/P*`, `X`)
+- **2829 — Case 36/37/111 similarity != genealogy:** FCR, Samsung 840 EVO maintenance, enterprise-SSD shutdown runbooks, and this eMMC path are compared only as different retention-maintenance authority/trigger structures. (`A`, `X`)
+- **2830 — composite trigger adds a managed-NAND control example:** Case 135 combines reset, time evidence, idle opportunity, delay, and local error selection, refining Syntheses 24/26/27 without making those project categories historical vendor vocabulary. (`E/A`, `X`)
+- **2831 — related-repository boundary:** fresh `computing-archaeology` searches for `Micron eMMC` and `SET_TIME eMMC` found no dedicated module; broad eMMC/JEDEC/BKOPS/controller genealogy belongs there if developed. (`H/P` project-state record)
+

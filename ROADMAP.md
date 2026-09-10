@@ -531,4 +531,6 @@ Before marking a case `mature`, additionally require that it survive cross-case 
 
 ### Recent bounded evidence deepening
 
+- [x] **Case 135 Micron automotive eMMC self-refresh / retained-time control-state grounding** — Atmark Techno's 2021-12-09 G4 manual grounds the reset → `SET_TIME (CMD49)` → bus-idle/delay → selective ECC-threshold self-refresh path plus retained progress/history telemetry, while Micron's 2023-04-11 TN-FC-60 catalog entry independently confirms the automotive-eMMC-5.1 refresh-feature family. Treat one-day eligibility, reset, host time injection, execution, completion evidence, and physical retention limits as distinct; the secured Micron note body, JEDEC/eMMC genealogy, exact rewrite geometry, and fault injection remain open.
+
 - [x] **Case 111 NetApp rated-life / offline-retention telemetry deepening** — May-2021 ONTAP 9.9.1 and current NetApp docs now ground 90%/95%/>100% rated-life warnings, `storage disk show -ssd-wear`, and a replacement policy tied specifically to long powered-off retention. Treat wear telemetry as a future-retention admission signal, not a deterministic failure clock or an IBM/Dell-style periodic power-up cadence.
