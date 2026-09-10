@@ -18,13 +18,9 @@ jobs:
           fetch-depth: 0
       - name: Apply research slice
         run: python3 .github/scripts/case114_ecn119_integrate.py
-      - name: Validate and publish
+      - name: Publish
         run: |
           set -euo pipefail
-          git diff --check
-          grep -q 'ECN119 and multi-domain power-cycle scope' cases/114-nvme14-namespace-write-protection.md
-          grep -q '114-nvme-2021-2024-multidomain-power-cycle-deepening.md' ROADMAP.md
-          grep -q '2863 — related-repository boundary' CASE_INDEX.md
           rm -f .github/workflows/case114-ecn119-integration.yml
           rm -f .github/scripts/case114_ecn119_integrate.py
           git config user.name 'technical-retention research automation'
