@@ -1,0 +1,20 @@
+## Case 139 — LPDDR3→LPDDR4 per-bank refresh target-authority findings
+
+Grounding record: [`evidence/139-lpddr3-lpddr4-per-bank-refresh-target-authority-grounding.md`](evidence/139-lpddr3-lpddr4-per-bank-refresh-target-authority-grounding.md).
+
+- **2949 — externally issued `REFpb` != controller-chosen bank target:** the inspected LPDDR3 regime has the controller issue per-bank refresh while a bank counter in the memory device determines the next fixed-round-robin bank. (`H/P*`, `E`)
+- **2950 — device-scheduled target != controller ignorance of target:** LPDDR3 still requires the controller to track which bank is being refreshed even though target order is fixed by the device bank counter. (`H/P*`, `E`)
+- **2951 — LPDDR3 fixed bank order != absence of per-bank concurrency:** the selected bank is blocked during `tRFCpb` while other banks may remain active/readable/writable subject to timing. (`H/P*`, `E`)
+- **2952 — LPDDR4 `REFpb` carries controller-supplied bank identity:** the inspected LPDDR4 regime transfers BA0–BA2 on the command/address interface, allowing the controller to choose the next bank target. (`H/P*`)
+- **2953 — arbitrary bank order != arbitrary refresh coverage:** LPDDR4 permits nonsequential eight-bank order but forbids refreshing the same bank again until all eight have been covered. (`H/P*`, `E`)
+- **2954 — bank-target scheduling authority != refresh-row enumeration authority:** Micron's LPDDR4 table exposes separate bank-count and refresh/row-counter relations; controller bank choice does not establish controller choice of the internal refresh row. (`H/P*`, `E`)
+- **2955 — synchronized maintenance phase != complete maintenance history:** controller/device bank-count synchronization retains enough current-cycle state for legal coverage but not the sequence of all past refresh operations. (`H/P*`, `E`)
+- **2956 — bank-count re-synchronization != payload erasure:** reset/self-refresh-exit/REFab synchronization establishes a known bank-coverage phase; it does not by itself establish user-data clearing. (`H/P*`, `E`, `X`)
+- **2957 — per-command bank-target authority != recurring refresh authority:** Case 139 changes who chooses a target within externally issued `REFpb`; Case 21's AUTO-REFRESH/SELF-REFRESH boundary asks who generates recurring maintenance work. (`A`, `X`)
+- **2958 — target-order freedom != temporal refresh freedom:** LPDDR4 retains tREFI/deadline and postpone/pull-in accounting even when bank order is controller-selectable. (`H/P*`, `E`)
+- **2959 — partial service availability != zero maintenance interference:** target bank remains unavailable for `tRFCpb`, and non-target access remains subject to timing constraints. (`H/P*`, `E`)
+- **2960 — more controller scheduling freedom != guaranteed performance gain:** AMD's named LPDDR4 controller documentation says per-bank refresh can reduce refresh loss but can also perform worse depending on traffic and address mapping. (`H/P`, `E`, `X`)
+- **2961 — LPDDR4 `REFpb` != DDR5 `REFsb`:** Case 139 addresses one explicitly selected LPDDR4 bank, while Case 33's DDR5 Same Bank Refresh targets a correlated bank position across bank groups; similarity is functional maintenance localization only. (`A`, `X`)
+- **2962 — LPDDR3→LPDDR4 semantic change != invention genealogy:** the bounded standards/product comparison establishes a changed control partition, not the first proposal, ballot, patent, implementation, or direct descent. (`H/P*`, `X`)
+- **2963 — current controller documentation != retroactive historical implementation proof:** 2026 AMD and current Microchip material corroborate modern controller-visible refresh choices but cannot be projected into the exact 2013/2014 hardware or standards wording. (`H/P`, `X`)
+- **2964 — related-repository boundary:** a fresh `tmzncty/computing-archaeology` search for LPDDR per-bank refresh found no dedicated overlapping study; broad LPDDR/JEDEC/controller genealogy belongs there if developed, while Case 139 keeps the retention-specific bank-target-authority boundary. (`H/P` project-state record)
