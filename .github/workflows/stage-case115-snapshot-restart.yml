@@ -27,7 +27,7 @@ jobs:
         run: |
           set -euo pipefail
           git diff --check
-          mapfile -t changed < <(git diff --name-only | sort)
+          mapfile -t changed < <({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
           expected=(
             "CASE_INDEX.md"
             "ROADMAP.md"
