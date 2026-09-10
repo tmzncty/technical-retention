@@ -15,77 +15,59 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Patch navigation and finalize Case 138
+      - name: Patch Case138 navigation
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import base64
 
-          case_index = Path("CASE_INDEX.md")
-          ci = case_index.read_text(encoding="utf-8")
+          case_index = Path('CASE_INDEX.md')
+          ci = case_index.read_text(encoding='utf-8')
           case_row = '| [Redis 2.6 AOF Rewrite: Current-State Re-serialization, Concurrent Delta Capture, and Log Replacement](cases/138-redis26-aof-rewrite-current-state-reserialization.md) | **grounded** | replayable user-command AOF + current-dataset re-serialization + fork-time base + parent delta buffer + rename/file-descriptor authority handoff + separate fsync policy | separate retained operation history, current-state reconstructability, temporary concurrent-delta bridge state, replacement authority, maintenance trigger, and write-durability cadence; show rewrite can forget event-sequence identity without forgetting current recoverability | [2012 Redis 2.6 grounding](evidence/138-redis26-aof-rewrite-grounding.md); exact first AOF/BGREWRITEAOF/2.4 auto-rewrite genealogy, Redis 7 multipart evolution, cross-filesystem crash testing, and lower-media sanitization remain open |'
-          if "cases/138-redis26-aof-rewrite-current-state-reserialization.md" not in ci:
+          if 'cases/138-redis26-aof-rewrite-current-state-reserialization.md' not in ci:
               lines = ci.splitlines()
-              matches = [i for i, line in enumerate(lines)
-                         if line.startswith("| [") and "cases/137-leveldb-v17-manifest-current-recovery.md" in line]
-              if matches:
-                  lines.insert(matches[-1] + 1, case_row)
-              else:
-                  marker = next((i for i, line in enumerate(lines) if line.strip() == "---"), None)
-                  if marker is None:
-                      raise SystemExit("No Case table insertion point")
-                  lines.insert(marker, case_row)
-              ci = "\n".join(lines) + "\n"
+              positions = [i for i, line in enumerate(lines) if line.startswith('| [') and 'cases/137-leveldb-v17-manifest-current-recovery.md' in line]
+              if not positions:
+                  raise SystemExit('Case 137 table row not found')
+              lines.insert(positions[-1] + 1, case_row)
+              ci = '\n'.join(lines) + '\n'
+          heading = '## Case 138 — Redis 2.6 AOF rewrite / current-state re-serialization findings'
+          if heading not in ci:
+              payload = Path('.automation/case138-findings.md').read_text(encoding='utf-8').strip()
+              ci = ci.rstrip() + '\n\n' + payload + '\n'
+          case_index.write_text(ci, encoding='utf-8')
 
-          findings = base64.b64decode("IyMgQ2FzZSAxMzgg4oCUIFJlZGlzIDIuNiBBT0YgcmV3cml0ZSAvIGN1cnJlbnQtc3RhdGUgcmUtc2VyaWFsaXphdGlvbiBmaW5kaW5ncwoKR3JvdW5kaW5nIHJlY29yZDogW2BldmlkZW5jZS8xMzgtcmVkaXMyNi1hb2YtcmV3cml0ZS1ncm91bmRpbmcubWRgXShldmlkZW5jZS8xMzgtcmVkaXMyNi1hb2YtcmV3cml0ZS1ncm91bmRpbmcubWQpLgoKLSAqKjI5Mjkg4oCUIFJlZGlzIDIuNi4wIHJlbGVhc2UgZmxvb3IgIT0gaW52ZW50aW9uIHByaW9yaXR5OioqIHRoZSBhbm5vdGF0ZWQgYDIuNi4wYCB0YWcgZGF0ZWQgMjIgT2N0b2JlciAyMDEyIGFuY2hvcnMgdGhlIGluc3BlY3RlZCByZWxlYXNlZCBiZWhhdmlvciwgYnV0IGRvZXMgbm90IGVzdGFibGlzaCBmaXJzdCBpbnZlbnRpb24gb2YgQU9GLCBjb21tYW5kIGxvZ2dpbmcsIHJld3JpdGUsIG9yIGJhY2tncm91bmQgY29tcGFjdGlvbi4gKGBIL1BgLCBgWGA pCi0gKioyOTMwIOKAlCByZXBsYXlhYmxlIEFPRiBoaXN0b3J5ICE9IGN1cnJlbnQgaW4tbWVtb3J5IGRhdGFzZXQ6KiogdGhlIGFwcGVuZCBmaWxlIHJlY29yZHMgZXhlY3V0YWJsZSB3cml0ZSBjb21tYW5kcyB3aGlsZSB0aGUgbGl2ZSBkYXRhc2V0IGlzIHRoZWlyIGN1cnJlbnQgYWNjdW11bGF0ZWQgcmVzdWx0OyB0aGV5IGFyZSBkaWZmZXJlbnQgcmV0YWluZWQgcmVwcmVzZW50YXRpb25zIG9mIHJlbGF0ZWQgc3RhdGUuIChgSC9QYCwgYEVgKQotICoqMjkzMSDigJQgQU9GIHJlcGxheWFiaWxpdHkgIT0gY29tcGxldGUgZXZlbnQtaGlzdG9yeSBwcmVzZXJ2YXRpb246Kiogc3RhcnR1cCBjYW4gcmVidWlsZCBSZWRpcyBzdGF0ZSBieSBleGVjdXRpbmcgdGhlIHJldGFpbmVkIGNvbW1hbmQgc3RyZWFtLCBidXQgbGF0ZXIgcmV3cml0ZSBpcyBhbGxvd2VkIHRvIHJlcGxhY2UgdGhhdCBzdHJlYW0gd2l0aCBhIGRpZmZlcmVudCBzdGF0ZS1wcm9kdWNpbmcgc2VxdWVuY2UuIChgSC9QYCwgYEVgKQotICoqMjkzMiDigJQgQU9GIHJld3JpdGUgIT0gb2xkLWxvZyByZWNvcmQgZmlsdGVyaW5nOioqIFJlZGlzIDIuNiBgcmV3cml0ZUFwcGVuZE9ubHlGaWxlKClgIGl0ZXJhdGVzIHRoZSBjdXJyZW50IGRhdGFzZXQgYW5kIGVtaXRzIHJlY29uc3RydWN0aW9uIGNvbW1hbmRzIGluc3RlYWQgb2Ygc2Nhbm5pbmcgdGhlIG9sZCBBT0YgYW5kIHNlbGVjdGluZyBzdXJ2aXZpbmcgcmVjb3Jkcy4gKGBIL1BgLCBgRWA pCi0gKioyOTMzIOKAlCBjdXJyZW50LXN0YXRlIHJlY29uc3RydWN0YWJpbGl0eSAhPSBjb21tYW5kLXNlcXVlbmNlIGlkZW50aXR5OioqIG11bHRpcGxlIGhpc3RvcmljYWwgbXV0YXRpb25zIGNhbiBjb2xsYXBzZSBpbnRvIGEgc2hvcnRlciByZXBsYWNlbWVudCByZXByZXNlbnRhdGlvbiB3aGlsZSB0aGUgcmVzdWx0aW5nIGRhdGFzZXQgcmVtYWlucyByZWNvdmVyYWJsZS4gKGBIL1BgLCBgRWA pCi0gKioyOTM0IOKAlCBmb3JrLXRpbWUgZGF0YXNldCBpbWFnZSAhPSBmaW5hbCBjb25jdXJyZW50IHN0YXRlOioqIHRoZSByZXdyaXRlIGNoaWxkIHNlcmlhbGl6ZXMgaXRzIGZvcmstdGltZSB2aWV3IHdoaWxlIHRoZSBwYXJlbnQgcmVtYWlucyBhYmxlIHRvIHByb2Nlc3MgbGF0ZXIgbXV0YXRpb25zLiAoYEgvUGAsIGBFYCkKLSAqKjI5MzUg4oCUIHBvc3QtZm9yayByZXdyaXRlIGJ1ZmZlciAhPSByZXdyaXR0ZW4gYmFzZToqKiBwYXJlbnQtc2lkZSBkaWZmZXJlbmNlIGJ1ZmZlcmluZyBwcmVzZXJ2ZXMgY2hhbmdlcyB0aGF0IHRoZSBjaGlsZCBzbmFwc2hvdCBjYW5ub3QgY29udGFpbjsgdGhlIGJhc2UgYW5kIGRlbHRhIGhhdmUgY29tcGxlbWVudGFyeSBoYW5kb2ZmIHJvbGVzLiAoYEgvUGAsIGBFYCkKLSAqKjI5MzYg4oCUIHNhbWUgY29tbWFuZCBlbmNvZGluZyAhPSBzYW1lIHJldGVudGlvbiByb2xlOioqIGR1cmluZyBCR1JFV1JJVEVBT0YgYSBtdXRhdGlvbiBjYW4gZmVlZCBib3RoIHRoZSBvcmRpbmFyeSBBT0YgcGF0aCBhbmQgdGhlIHJld3JpdGUtZGlmZmVyZW5jZSBidWZmZXIsIGV2ZW4gdGhvdWdoIG9uZSBiZWxvbmdzIHRvIGN1cnJlbnQgYXBwZW5kIHBlcnNpc3RlbmNlIGFuZCB0aGUgb3RoZXIgdG8gdGVtcG9yYXJ5IHJlcGxhY2VtZW50IGNsb3N1cmUuIChgSC9QYCwgYEVgKQotICoqMjkzNyDigJQgY2hpbGQgcmV3cml0ZSBzdWNjZXNzICE9IGF1dGhvcml0YXRpdmUgcmVwbGFjZW1lbnQgQU9GOioqIHRoZSBwYXJlbnQgbXVzdCBzdGlsbCBhcHBlbmQgYWNjdW11bGF0ZWQgZGlmZmVyZW5jZXMgYW5kIGNvbXBsZXRlIHRoZSByZW5hbWUvZmlsZS1kZXNjcmlwdG9yIHN3aXRjaCBiZWZvcmUgdGhlIG5ldyBmaWxlIGJlY29tZXMgdGhlIGNvbmZpZ3VyZWQgYXBwZW5kIHRhcmdldC4gKGBIL1BgLCBgRWA pCi0gKioyOTM4IOKAlCBmYWlsZWQgcmV3cml0ZSAhPSBpbnRlbnRpb25hbCByZXBsYWNlbWVudCBvZiB0aGUgb2xkIHJlY292ZXJ5IHJlcHJlc2VudGF0aW9uOioqIGNoaWxkL21lcmdlL3JlbmFtZSBmYWlsdXJlIGZvbGxvd3MgY2xlYW51cC9lcnJvciBwYXRocyBpbnN0ZWFkIG9mIHByb21vdGluZyB0aGUgZmFpbGVkIHRlbXBvcmFyeSBwcm9kdWN0OyB0aGlzIGRvZXMgbm90IHByb3ZlIHVucmVsYXRlZCByZWNlbnQgd3JpdGVzIGR1cmFibGUuIChgSC9QYCwgYEVgLCBgWGA pCi0gKioyOTM5IOKAlCBCR1JFV1JJVEVBT0Ygc3RhcnQvc2NoZWR1bGluZyAhPSByZXdyaXRlIGNvbXBsZXRpb246KiogYWNjZXB0aW5nIG9yIHNjaGVkdWxpbmcgdGhlIG1haW50ZW5hbmNlIG9wZXJhdGlvbiBpcyBkaXN0aW5jdCBmcm9tIGxhdGVyIHN1Y2Nlc3NmdWwgcmVzdWx0IGluc3RhbGxhdGlvbi4gKGBIL1BgLCBgRWA pCi0gKioyOTQwIOKAlCBBT0YtZmlsZSBncm93dGggdHJpZ2dlciAhPSBwYXlsb2FkLXJldGVudGlvbiBkZWFkbGluZToqKiBhdXRvbWF0aWMgcmV3cml0ZSBpcyBkcml2ZW4gYnkgY3VycmVudCBBT0Ygc2l6ZSByZWxhdGl2ZSB0byByZW1lbWJlcmVkIHBvc3QtcmV3cml0ZS9zdGFydHVwIHNpemUgcGx1cyBhIG1pbmltdW0tc2l6ZSB0aHJlc2hvbGQsIG5vdCBieSBrZXkgYWdlIG9yIG1lZGl1bSBkZWNheS4gKGBIL1BgLCBgR WAsIGBYYCkKLSAqKjI5NDEg4oCUIIGFwcGVuZC1oaXN0b3J5IGdyb3d0aCAhPSBsb2dpY2FsLWRhdGFzZXQgZ3Jvd3RoOioqIHJlcGVhdGVkIHVwZGF0ZXMgdG8gZXhpc3Rpbmcgc3RhdGUgY2FuIGV4cGFuZCB0aGUgQU9GIHdpdGhvdXQgcHJvcG9ydGlvbmFsbHkgZXhwYW5kaW5nIHRoZSBjdXJyZW50IGRhdGFzZXQsIHdoaWNoIGlzIHdoeSBzdGF0ZS1iYXNlZCByZXdyaXRlIGNhbiByZWR1Y2UgdGhlIGNhcnJpZXIuIChgSC9QYCwgYEVgKQotICoqMjk0MiDigJQgcmV3cml0ZSBwb2xpY3kgIT0gZnN5bmMgZHVyYWJpbGl0eSBwb2xpY3k6KiogYGF1dG8tYW9mLXJld3JpdGU tKmAgZGVjaWRlcyB3aGVuIGhpc3RvcnkgaXMgcmUtc2VyaWFsaXplZCB3aGlsZSBgYXBwZW5kZnN5bmMgbm8vZXZlcnlzZWMvYWx3YXlzYCBzZXBhcmF0ZWx5IGNvbnRyb2xzIG9yZGluYXJ5IGFwcGVuZCBzeW5jaHJvbml6YXRpb24uIChgSC9QYCwgYEVgKQotICoqMjk0MyDigJQgYmFja2dyb3VuZCBtYWludGVuYW5jZSBjYW4gd2lkZW4gZm9yZWdyb3VuZCBkdXJhYmlsaXR5IGV4cG9zdXJlOioqIGBuby1hcHBlbmRmc3luYy1vbi1yZXdyaXRlYCBleHBsaWNpdGx5IGFsbG93cyBhIGxhdGVuY3kvdGhyb3VnaHB1dCB0cmFkZSBpbiB3aGljaCBmc3luYyBpcyBzdXBwcmVzc2VkIGR1cmluZyBCR1NBVkUvQkdSRVdSSVRFQU9GLCBzbyBtYWludGVuYW5jZSBpcyBub3QgYXV0b21hdGljYWxseSBuZXV0cmFsIHRvIGNvbmN1cnJlbnQgd3JpdGUtcmV0ZW50aW9uIGd1YXJhbnRlZXMuIChgSC9QYCwgYEVgKQotICoqMjk0NCDigJQgYWJzb2x1dGUgZXhwaXJhdGlvbiByZXByZXNlbnRhdGlvbiAhPSBvcmlnaW5hbCBUVEwtY29tbWFuZCBoaXN0b3J5OioqIFJlZGlzIHJld3JpdGVzL2ZlZWRzIHNldmVyYWwgZXhwaXJhdGlvbiBmb3JtcyBhcyBgUEVYUElSRUFUY CwgcmV0YWluaW5nIHRoZSBjdXJyZW50IGFic29sdXRlIGRlYWRsaW5lIHJlbGF0aW9uIHdpdGhvdXQgcmV0YWluaW5nIHRoZSBleGFjdCBlYXJsaWVyIHJlbGF0aXZlIGNvbW1hbmQgZm9ybS4gKGBIL1BgLCBgRWA pCi0gKioyOTQ1IOKAlCBzeW5jLXRlbXAgKyByZW5hbWUgc3dpdGNoICE9IHVuaXZlcnNhbCBjcmFzaC1kdXJhYmlsaXR5IHRoZW9yZW06KiogUmVkaXMgMi42IGRvY3VtZW50cyBhbmQgaW1wbGVtZW50cyBhbiBhdG9taWMtaW50ZW5kZWQgcmVwbGFjZW1lbnQgc2VxdWVuY2UsIHdoaWxlIENhc2UgMTI0IHByZXZlbnRzIHVwZ3JhZGluZyB0aGF0IGFwcGxpY2F0aW9uIHByb3RvY29sIGludG8gYSBjbGFpbSBhYm91dCBldmVyeSBmaWxlc3lzdGVtL2RldmljZS9wb3dlci1mYWlsdXJlIG1vZGVsLiAoYEgvUGAsIGBBYCwgYFhgKQotICoqMjk0NiDigJQgb2xkLUFPRiByZXRpcmVtZW50ICE9IG1lZGlhIHNhbml0aXphdGlvbjoqKiByZXBsYWNpbmcvdW5saW5raW5nL2Nsb3NpbmcgdGhlIGZvcm1lciBBT0YgZW5kcyBpdHMgUmVkaXMgcmVjb3ZlcnkgYXV0aG9yaXR5IGJ1dCBkb2VzIG5vdCBwcm92ZSBvdmVyd3JpdGUsIEZsYXNoIGVyYXNlLCBjcnlwdG8gZXJhc2UsIG9yIGZvcmVuc2ljIGRpc2FwcGVhcmFuY2UuIChgRWAsIGBYYCkKLSAqKjI5NDcg4oCUIFJlZGlzIEFPRiByZXdyaXRlICE9IEthZmthIGtleWVkIGNvbXBhY3Rpb24gIT0gTGV2ZWxEQiBNQU5JRkVTVCByZWNvdmVyeToqKiBhbGwgY2FuIHJlZHVjZSBkZXRhaWxlZCByZXRhaW5lZCBoaXN0b3J5IHdoaWxlIHByZXNlcnZpbmcgY29udGludWF0aW9uLCBidXQgUmVkaXMgMi42IHJlLXNlcmlhbGl6ZXMgY3VycmVudCBkYXRhc2V0IHN0YXRlLCBLYWZrYSAwLjguMSBmaWx0ZXJzIGtleWVkIGxvZyByZWNvcmRzIHdoaWxlIHByZXNlcnZpbmcgb2Zmc2V0cywgYW5kIExldmVsREIga2VlcHMgdXNlciBXQUwgc2VwYXJhdGUgZnJvbSBtZXRhZGF0YS1oaXN0b3J5L2N1cnJlbnQtZmlsZS1zZXQgcmVjb25zdHJ1Y3Rpb24uIChgQWAsIGBYYCkKLSAqKjI5NDgg4oCUIHJlbGF0ZWQtcmVwb3NpdG9yeSBib3VuZGFyeToqKiBmcmVzaCBgY29tcHV0aW5nLWFyY2hhZW9sb2d5YCBzZWFyY2hlcyBmb3IgUmVkaXMgQU9GIC8gQkdSRVdSSVRFQU9GIGZvdW5kIG5vIGRlZGljYXRlZCBvdmVybGFwOyBicm9hZCBSZWRpcyBwZXJzaXN0ZW5jZSBnZW5lYWxvZ3ksIGVhcmxpZXN0IGltcGxlbWVudGF0aW9ucywgUkRCL0FPRiBldm9sdXRpb24sIGFuZCBSZWRpcyA3IG11bHRpcGFydCBBT0YgYmVsb25nIHRoZXJlIGlmIGRldmVsb3BlZC4gKGBIL1BgIHByb2plY3Qtc3RhdGUgcmVjb3JkKQo=").decode("utf-8")
-          if "## Case 138 — Redis 2.6 AOF rewrite / current-state re-serialization findings" not in ci:
-              ci = ci.rstrip() + "\n\n" + findings.rstrip() + "\n"
-          case_index.write_text(ci, encoding="utf-8")
-
-          roadmap = Path("ROADMAP.md")
-          rm = roadmap.read_text(encoding="utf-8")
+          roadmap = Path('ROADMAP.md')
+          rm = roadmap.read_text(encoding='utf-8')
           bullet = '- [x] Case 138 Redis 2.6 AOF rewrite / current-state re-serialization slice — [`cases/138-redis26-aof-rewrite-current-state-reserialization.md`](cases/138-redis26-aof-rewrite-current-state-reserialization.md) + [`evidence/138-redis26-aof-rewrite-grounding.md`](evidence/138-redis26-aof-rewrite-grounding.md): the released 22-October-2012 `2.6.0` tree separates ordinary replayable AOF history, a fork-time current-dataset rewrite, parent-held concurrent differences, replacement-file authority handoff, size-growth rewrite scheduling, and independent `appendfsync` policy. This closes the bounded `append history != current dataset`, `AOF rewrite != old-log record filtering`, `fork snapshot != final concurrent state`, `rewrite trigger != retention deadline`, and `compaction policy != durability policy` seams without claiming invention priority, universal rename crash durability, or media sanitization. Exact AOF/BGREWRITEAOF/2.4 auto-rewrite genealogy, Redis 7 multipart-AOF evolution, and power-cut/fault validation remain open; broader Redis persistence history belongs primarily in `computing-archaeology`.'
-          if "Case 138 Redis 2.6 AOF rewrite / current-state re-serialization slice" not in rm:
+          if 'Case 138 Redis 2.6 AOF rewrite / current-state re-serialization slice' not in rm:
               lines = rm.splitlines()
-              candidates = [i for i, line in enumerate(lines)
-                            if line.startswith("- [x]") and "Case 137" in line and "LevelDB" in line]
-              if candidates:
-                  insert_at = candidates[-1] + 1
+              positions = [i for i, line in enumerate(lines) if line.startswith('- [x]') and 'Case 137' in line and 'LevelDB' in line]
+              if positions:
+                  lines.insert(positions[-1] + 1, bullet)
               else:
-                  candidates = [i for i, line in enumerate(lines)
-                                if line.startswith("- [ ]") and "append-log" in line and "current-state reconstruction" in line]
-                  if not candidates:
-                      raise SystemExit("No roadmap insertion point")
-                  insert_at = candidates[0]
-              lines.insert(insert_at, bullet)
-              rm = "\n".join(lines) + "\n"
-
-          replacements = [
-              ("partially advanced by grounded Cases 42, 57, 58, 63, and 64",
-               "partially advanced by grounded Cases 42, 57, 58, 63, 64, 137, and 138"),
-              ("grounded Cases 42, 57, 58, 63, and 64",
-               "grounded Cases 42, 57, 58, 63, 64, 137, and 138"),
-          ]
-          for old, new in replacements:
-              if old in rm and new not in rm:
-                  rm = rm.replace(old, new, 1)
+                  positions = [i for i, line in enumerate(lines) if line.startswith('- [ ]') and 'append-log' in line and 'current-state reconstruction' in line]
+                  if not positions:
+                      raise SystemExit('Roadmap insertion point not found')
+                  lines.insert(positions[0], bullet)
+              rm = '\n'.join(lines) + '\n'
+          for old in ('partially advanced by grounded Cases 42, 57, 58, 63, and 64', 'grounded Cases 42, 57, 58, 63, and 64'):
+              if old in rm:
+                  replacement = old.replace('42, 57, 58, 63, and 64', '42, 57, 58, 63, 64, 137, and 138')
+                  rm = rm.replace(old, replacement, 1)
                   break
-          roadmap.write_text(rm, encoding="utf-8")
+          roadmap.write_text(rm, encoding='utf-8')
           PY
 
-          test -f cases/138-redis26-aof-rewrite-current-state-reserialization.md
-          test -f evidence/138-redis26-aof-rewrite-grounding.md
-          grep -q 'Case 138 Redis 2.6 AOF rewrite' ROADMAP.md
           grep -q 'cases/138-redis26-aof-rewrite-current-state-reserialization.md' CASE_INDEX.md
           grep -q '2948 — related-repository boundary' CASE_INDEX.md
+          grep -q 'Case 138 Redis 2.6 AOF rewrite' ROADMAP.md
           git diff --check
 
-          rm -f .github/workflows/automation-case138.yml .automation/case138-trigger.txt
+          rm -f .github/workflows/automation-case138.yml .automation/case138-trigger.txt .automation/case138-findings.md
           rmdir .automation 2>/dev/null || true
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m "case138: finalize Redis AOF rewrite navigation"
+          git commit -m 'case138: finalize Redis AOF rewrite navigation'
           git push origin HEAD:main
