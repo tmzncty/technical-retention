@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/37-samsung-840-evo-2014-2015-performance-refresh-grounding.md`](../evidence/37-samsung-840-evo-2014-2015-performance-refresh-grounding.md).
 
+Restoration-transaction deepening: [`../evidence/37-samsung-2014-restoration-transaction-deepening.md`](../evidence/37-samsung-2014-restoration-transaction-deepening.md).
+
 Operational continuation: [`Case 111 — Enterprise SSD Extended Shutdown`](111-enterprise-ssd-extended-shutdown-maintenance.md) moves the powered-maintenance comparison outward from this named-product episode to IBM/Dell operator-facing shutdown schedules; the link is functional, not genealogical.
 
 ## Scope
@@ -99,6 +101,34 @@ The product episode contains at least two analytically distinct ways to preserve
 - **rewrite / refresh** data so that a newer physical embodiment is easier to read.
 
 The same logical object can benefit from either without those operations being historically or physically identical.
+
+### Restoration is a staged maintenance transaction, not an atomic “fix”
+
+The October 2014 Samsung-authored Performance Restoration guide, whose exact artifact identity is preserved in Samsung's current support ledgers and whose body survives through document mirrors, separates `Firmware Update` from `SSD Performance Restoration`. Its documented workflow passes through firmware update and `Restoration is in Progress` before a completed state. The same guide warns that disconnecting or abnormally terminating restoration can corrupt data, and that unplugging during firmware update may damage the device.
+
+Therefore:
+
+> **firmware update ≠ restoration completion**,
+
+> **maintenance started ≠ maintenance safely completed**,
+
+and
+
+> **maintenance-path interruption hazard ≠ the original old-data aging hazard**.
+
+The warnings establish an operation boundary, not a measured failure probability or the exact internal crash-consistency protocol.
+
+The guide also limits the supported maintenance path by attachment/interface, partition/filesystem, password/security, RAID, and some controller/driver conditions. Those constraints make maintenance availability relational at a different layer from NAND readability:
+
+> **payload remains readable ≠ official restoration path is admissible**,
+
+> **maintenance-interface compatibility ≠ NAND-cell condition**,
+
+and
+
+> **maintenance admissibility ≠ maintenance completion ≠ verified outcome**.
+
+A current Samsung support page still preserves the 2014 artifact ledger while marking the old v1.1 tool as not working. That present-day state is used only to distinguish **artifact/procedure metadata survival from current executability**; it is not projected backward as evidence that the utility failed historically.
 
 ### One-time restoration is not the same as a continuing maintenance policy
 
