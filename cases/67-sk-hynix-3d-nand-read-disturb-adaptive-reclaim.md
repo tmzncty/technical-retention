@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/67-sk-hynix-2009-2019-read-reclaim-grounding.md`](../evidence/67-sk-hynix-2009-2019-read-reclaim-grounding.md).
 
+Named-product telemetry deepening: [`../evidence/67-samsung-pm963-2016-2018-read-reclaim-telemetry-deepening.md`](../evidence/67-samsung-pm963-2016-2018-read-reclaim-telemetry-deepening.md).
+
 ## Scope
 
 This case asks a narrow question left open by Cases 52 and 65:
@@ -258,6 +260,28 @@ Distinct failure or policy-failure modes include:
 - a physical old embodiment survives after logical relocation, creating no implication of secure erasure.
 
 These are not one generic `bit rot` mechanism. Some concern the medium, others the adequacy and lifetime of controller-side maintenance evidence.
+
+## Named-product deepening — Samsung PM963 read-reclaim telemetry
+
+A later manufacturer-primary product witness now narrows one of this case's explicit evidence gaps. Samsung's *DC Toolkit 2.1 User Guide* (initial release October 2018) lists PM963 as a supported SSD and shows a PM963 reference output (`SAMSUNGNVMeSSDPM963`, firmware `CXV83M1Q`) whose Extended SMART fields include `Lifetime read Reclaim count`. Samsung separately describes PM963 as a data-center TLC V-NAND NVMe SSD and later states that the family launched in 2016.
+
+This establishes **named-product telemetry**, not identity with the SK hynix patent implementation. The inspected Samsung material does not disclose whether PM963 uses Case 67's grouped read-count proxy, adaptive threshold table, 3-D victim sampling, or power-off reset/requalification scheme.
+
+The evidence therefore adds three boundaries:
+
+> **`named product exposes read-reclaim telemetry != named product implements this patented reclaim algorithm`.**
+
+> **`lifetime read-reclaim count != per-block read-count proxy`.**
+
+> **`cumulative maintenance count != complete maintenance history`.**
+
+The PM963 field appears in Samsung's Extended SMART path and should not be silently normalized into the base NVMe SMART/Health log. Its example value is zero; that is one reference-output state, not proof that the operation/category is unsupported. Likewise, Samsung's later statement that PM963 launched in 2016 does not backdate the inspected telemetry field to launch day; the public field floor grounded here is October 2018.
+
+The result partially closes the earlier `named shipping product` gap at the **maintenance-vocabulary/telemetry** level. Exact shipped trigger logic, threshold values, counter persistence, relocation atomicity, and independent product validation remain open.
+
+See [`../evidence/67-samsung-pm963-2016-2018-read-reclaim-telemetry-deepening.md`](../evidence/67-samsung-pm963-2016-2018-read-reclaim-telemetry-deepening.md).
+
+---
 
 ## Historical record / engineering reconstruction / interpretation ledger
 
