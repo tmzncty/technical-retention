@@ -4,7 +4,7 @@
 
 **`grounded`** — bounded to the ratified **NVM Express Base Specification Revision 1.4 (10 June 2019)** and NVM Express's own Revision-1.4 change record. The case establishes an optional host-visible hierarchy in which namespaces belong to NVM Sets, each NVM Set belongs to exactly one Endurance Group, and endurance may be managed either within one NVM Set or across several NVM Sets. It also separates group-lifetime cumulative/estimated health information from current nonpersistent warning state and separates host-written bytes from controller/media writes. The case does **not** infer a particular Flash Translation Layer, erase-unit layout, wear-leveling algorithm, physical NAND partition, or invention priority for endurance pooling.
 
-Grounding record: [`../evidence/120-nvme14-2019-endurance-group-grounding.md`](../evidence/120-nvme14-2019-endurance-group-grounding.md).
+Grounding records: [`../evidence/120-nvme14-2019-endurance-group-grounding.md`](../evidence/120-nvme14-2019-endurance-group-grounding.md) and [`../evidence/120-nvme14-2019-namespace-group-association-deepening.md`](../evidence/120-nvme14-2019-namespace-group-association-deepening.md).
 
 ---
 
@@ -58,6 +58,20 @@ Primary sources:
 - NVM Express, **Base Specification Revision 1.4**, 10 June 2019: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_4-2019.06.10-Ratified.pdf>
 - NVM Express, **Changes in NVMe Revision 1.4**: <https://nvmexpress.org/changes-in-nvme-revision-1-4/>
 - NVM Express, **Specification Archives**: <https://nvmexpress.org/nvm-express-specification-archives/>
+
+### Namespace Management selects an NVM Set; it does not provision an Endurance Group
+
+The bounded Namespace Management path adds an important lifecycle distinction. Revision 1.4 §4.9 says each NVM Set is associated with exactly one Endurance Group and that namespace creation supplies the target **NVM Set Identifier**. Section 5.20 Figure 262 confirms `NVMSETID` is host-specified during create; it does **not** list `ENDGID` as a host-specified create field. Figure 245 separately reports both `NVMSETID` and `ENDGID` for an existing namespace.
+
+Namespace deletion likewise removes the namespace and detaches it from controllers; the command does not specify Endurance Group deletion or reset of group-lifetime endurance information. Therefore this case now closes one narrow negative boundary:
+
+> **namespace lifecycle != automatically Endurance Group lifecycle.**
+
+and:
+
+> **reported Endurance Group association != direct Endurance Group provisioning through Namespace Management.**
+
+The fuller source record and stop conditions are in [`../evidence/120-nvme14-2019-namespace-group-association-deepening.md`](../evidence/120-nvme14-2019-namespace-group-association-deepening.md). Actual Endurance Group provisioning/reuse, controller replacement, NVM Set reprovisioning, and named-device behavior remain open.
 
 ### NVM Set and Endurance Group are different scopes
 
@@ -224,6 +238,20 @@ endurance-management partition
 
 This is a functional relation inside one normative standard, not a claim about hidden silicon topology.
 
+### Namespace lifecycle is not Endurance Group lifecycle
+
+Namespace Management makes the scope difference operationally visible: create selects an NVM Set, not a new Endurance Group, and delete retires the namespace without defining group destruction. The case can therefore distinguish:
+
+> **namespace creation != Endurance Group creation**
+
+> **namespace deletion != Endurance Group deletion**
+
+> **host-selected `NVMSETID` != direct `ENDGID` provisioning in Namespace Management**
+
+> **`ENDGIDMAX` != group-lifetime generation counter**
+
+These are interface/lifetime boundaries, not claims that an Endurance Group necessarily survives every administrative operation. In particular, deleting all namespaces does not by itself prove either survival or destruction of every Endurance Group; the group-provisioning layer remains ungrounded here.
+
 ### Host workload and media work are different historical quantities
 
 Because `Data Units Written` excludes internal controller writes while `Media Units Written` includes them, one user-visible workload history does not exhaust the physical write work performed on behalf of that workload.
@@ -264,7 +292,7 @@ Therefore:
 
 The standard itself uses different lifetime anchors within the same group-scoped structure. This case preserves that wording instead of inventing one universal reset epoch.
 
-Exact behavior under group deletion/recreation, controller replacement, namespace migration, subsystem reconfiguration, or identifier reuse remains open.
+Revision 1.4 now closes one narrower point: ordinary Namespace Management create/delete does not itself define Endurance Group provisioning or history reset. Exact behavior under Endurance Group creation/deletion/recreation, controller replacement, NVM Set reprovisioning, subsystem reconfiguration, identifier reuse, or namespace migration between management domains remains open.
 
 ### Current warning, outstanding event, and underlying wear are different states
 
