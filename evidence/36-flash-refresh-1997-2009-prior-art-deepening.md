@@ -318,7 +318,7 @@ Therefore:
 
 Still open after this slice:
 
-1. pre-1997 nonvolatile-memory refresh prior art;
+1. pre-1978 nonvolatile-memory refresh genealogy and non-patent pre-1997 records; the bounded 1978–1994 public-patent floor is now handled in [`36-1978-1994-nonvolatile-flash-refresh-prior-art-deepening.md`](36-1978-1994-nonvolatile-flash-refresh-prior-art-deepening.md);
 2. exact prosecution/continuation genealogy and ownership history for the 1997 and 2000 patent families;
 3. non-patent academic/manufacturer records between 1997 and 2012;
 4. named commercial implementations of any inspected patent mechanism;

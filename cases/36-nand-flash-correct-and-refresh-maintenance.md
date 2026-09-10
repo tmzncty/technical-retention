@@ -2,9 +2,11 @@
 
 ## Status
 
-**`grounded`** — bounded to Yu Cai et al.'s peer-reviewed 2012 ICCD proposal and evaluation of **Flash Correct-and-Refresh (FCR)** for 3x-nm MLC NAND Flash, with later 2015 retention-characterization work used only as a boundary check on retention-age/read-recovery semantics. The historical novelty boundary is additionally deepened by pre-2012 nonvolatile-memory refresh patent records from 1997–2009; those records narrow what can safely be attributed to FCR without changing the case's bounded 2012 object.
+**`grounded`** — bounded to Yu Cai et al.'s peer-reviewed 2012 ICCD proposal and evaluation of **Flash Correct-and-Refresh (FCR)** for 3x-nm MLC NAND Flash, with later 2015 retention-characterization work used only as a boundary check on retention-age/read-recovery semantics. The historical novelty boundary is additionally deepened by pre-2012 nonvolatile-memory refresh patent records from 1978–2009; those records narrow what can safely be attributed to FCR without changing the case's bounded 2012 object.
 
 Grounding record: [`../evidence/36-cai-2012-flash-correct-refresh-grounding.md`](../evidence/36-cai-2012-flash-correct-refresh-grounding.md).
+
+Earlier prior-art deepening: [`../evidence/36-1978-1994-nonvolatile-flash-refresh-prior-art-deepening.md`](../evidence/36-1978-1994-nonvolatile-flash-refresh-prior-art-deepening.md).
 
 Prior-art deepening: [`../evidence/36-flash-refresh-1997-2009-prior-art-deepening.md`](../evidence/36-flash-refresh-1997-2009-prior-art-deepening.md).
 
@@ -206,6 +208,21 @@ This is a **combination/evaluation boundary**, not an invention-priority judgmen
 
 Nor does this project project the FCR term backward onto the earlier records. Their own terms — `refresh`, `dynamic refresh`, `refresh timer`, `address mapping`, `storage date`, and `rewrite refresh` — remain historical vocabulary. `FCR` is used historically only for the 2012 proposal and its later descendants/citations where explicitly sourced.
 
+### Earlier public refresh floor — 1978–1994
+
+A separate earlier-prior-art addendum, [`../evidence/36-1978-1994-nonvolatile-flash-refresh-prior-art-deepening.md`](../evidence/36-1978-1994-nonvolatile-flash-refresh-prior-art-deepening.md), closes the bounded `pre-1997 nonvolatile-memory refresh` debt. A 1978-filed / 1980-public Matsushita patent describes natural-decay warning plus capture/erase/rewrite for a specific MNOS nonvolatile-memory embodiment; it is **not** treated as Flash. A 1990-filed / 1993-public Intel patent then explicitly describes blocked Flash EPROM refresh after program/erase disturbance, including a margin-sensitive scan and same-location reprogramming. A 1992-filed / 1994-public Texas Instruments patent independently describes flash EEPROM refresh through two-level margin tests, restorative program pulses, optional sector capture/erase/rewrite, and erase-cycle/time triggers.
+
+This moves the conservative inspected public floor backward while adding counterexamples that matter more than the date itself:
+
+- **nonvolatile != drift-free**;
+- **Flash refresh != necessarily retention-age-triggered**;
+- **Flash refresh != necessarily relocation/remapping**;
+- **one word `refresh` != one physical rewrite geometry**;
+- **maintenance trigger state != payload state**;
+- **on-chip/interface-invisible maintenance != maintenance-free**.
+
+The earlier records do not establish commercial deployment, NAND/SSD identity, direct influence on FCR, or invention priority. FCR remains distinct as a 2012 measured/evaluated 3x-nm MLC NAND policy combination coupling storage time, P/E wear, ECC capability, hybrid renewal choices, and workload simulation.
+
 A 2015 follow-up by Cai et al. characterizes retention age in real 2y-nm MLC NAND and shows that optimal read-reference voltage changes with retention age. That later evidence deepens the general point that retained charge, readable interpretation, and controller recovery parameters can diverge over time. It is not used to rewrite either the pre-2012 patent mechanisms or the 2012 FCR mechanism, and it does not establish deployment.
 ## Named commercial-product deepening — IBM FlashSystem 840
 
@@ -289,6 +306,9 @@ It also separates proactive retention renewal from integrity scrubbing. ZFS/GFS 
 | Adaptive-rate FCR changes refresh frequency with P/E cycles and reuses per-block wear information | H/P | §IV.C–D |
 | More frequent remapping can reduce lifetime because it adds erase cycles | H/P/E | §IV.A + evaluation discussion |
 | FCR requires power and can be scheduled as background/idle work | H/P | §IV.D |
+| A 1978-filed / 1980-public record already describes natural-decay-triggered nonvolatile-memory renewal through warning, temporary capture, erase, and rewrite | H/P | US4218764A; specific embodiment is MNOS, not asserted as Flash |
+| A 1990-filed / 1993-public Intel record explicitly describes Flash EPROM refresh after high-voltage operation disturbance and can reprogram the same location | H/P | US5239505A |
+| A 1992-filed / 1994-public TI record independently describes flash EEPROM refresh, margin-sensitive restoration, sector reconstruction, and erase-cycle/time triggers | H/P | US5365486A |
 | Pre-2012 public records already describe periodic/deferred/power-up nonvolatile-memory refresh with error/ECC participation | H/P | US5909449A (1999 public record; 1997 filing) |
 | Pre-2012 public records already describe refresh that relocates data and changes logical-to-physical mapping | H/P | US6396744B1 / 2000 priority family |
 | Pre-2012 public records already describe age/timestamp-triggered in-place or out-of-place Flash refresh | H/P | US20050243626A1 / US7325090B2 |
@@ -323,3 +343,6 @@ Current inspection of [`tmzncty/computing-archaeology`](https://github.com/tmznc
 10. IBM, **`Flashsystem 840 Data Retention - External-6-6-14.pdf`**, product-era support attachment: <https://www.ibm.com/support/pages/system/files/support/ssg/ssgdocs.nsf/0/e02429f9c68ec7ea85257c0600743ccd/$FILE/Flashsystem%20840%20Data%20Retention%20-%20External-6-6-14.pdf>.
 11. Ilya Krutov, **`IBM FlashSystem 720 and IBM FlashSystem 820`**, IBM Redbooks Product Guide, published 11 April 2013, updated 13 October 2014: <https://www.redbooks.ibm.com/redbooks.nsf/5193609f3941e9cf85256bc300724cfc/c7d2bf380cb6304f85257b3c0051f4a3>.
 12. Karen Orlando et al., **`Implementing IBM FlashSystem 840`**, IBM Redbooks SG24-8189-02, published 9 July 2015: <https://www.redbooks.ibm.com/abstracts/sg248189.html>.
+13. Yukio Furuta and Tomisaburo Okumura, **“Non-volatile memory refresh control circuit,”** US 4,218,764 A, filed 3 October 1978, published/granted 19 August 1980, Matsushita Electric Industrial Co., Ltd.: <https://patents.google.com/patent/US4218764A/en>.
+14. Albert Fazio, Gregory E. Atwood, and Neal R. Mielke, **“Floating gate non-volatile memory with blocks and memory refresh,”** US 5,239,505 A, filed 28 December 1990, published/granted 24 August 1993, Intel Corporation: <https://patents.google.com/patent/US5239505A/en>.
+15. John F. Schreck, **“Method and circuitry for refreshing a flash electrically erasable, programmable read only memory,”** US 5,365,486 A, filed 16 December 1992, published/granted 15 November 1994, Texas Instruments Incorporated: <https://patents.google.com/patent/US5365486A/en>.
