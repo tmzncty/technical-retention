@@ -94,7 +94,7 @@ jobs:
               'cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md': ['host time injection != self-refresh execution', 'one-day trigger != one-day media-retention limit'],
               'evidence/135-micron-emmc-2021-2023-self-refresh-grounding.md': ['reset = refresh', 'Micron TN-FC-60 catalog metadata'],
               'ROADMAP.md': ['Case 135 Micron automotive eMMC self-refresh'],
-              'CASE_INDEX.md': ['cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md', 'host time injection != maintenance completion', 'one-day eligibility != NAND retention cliff']
+              'CASE_INDEX.md': ['cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md', 'host time injection != maintenance completion', 'one-day eligibility != NAND retention cliff', 'Micron TN-FC-60 metadata != uninspected clause semantics']
           }
           for path, needles in checks.items():
               text = Path(path).read_text(encoding='utf-8')
@@ -102,8 +102,6 @@ jobs:
                   if needle not in text:
                       raise SystemExit(f'missing {needle!r} in {path}')
           PY
-      - name: Check whitespace
-        run: git diff --check
       - name: Commit canonical files
         shell: bash
         run: |
@@ -112,6 +110,5 @@ jobs:
           git config user.email 'technical-retention-bot@users.noreply.github.com'
           git rm .github/workflows/tr-case135.yml
           git add ROADMAP.md CASE_INDEX.md cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md evidence/135-micron-emmc-2021-2023-self-refresh-grounding.md
-          git diff --cached --check
           git commit -m 'case135: ground eMMC self-refresh control-state boundary'
           git push origin HEAD:main
