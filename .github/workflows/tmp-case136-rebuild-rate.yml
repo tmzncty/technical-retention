@@ -1,0 +1,33 @@
+name: Case136 bounded integration
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/tmp-case136-rebuild-rate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply research patch
+        run: python .automation/case136_integrate.py
+      - name: Validate and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/tmp-case136-rebuild-rate.yml .automation/case136_integrate.py
+          git diff --check
+          git status --short
+          git config user.name "technical-retention automation"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CASE_INDEX.md ROADMAP.md cases/136-megaraid-perc-rebuild-rate-repair-priority.md evidence/136-lsi-2006-dell-perc-rebuild-rate-grounding.md .github/workflows/tmp-case136-rebuild-rate.yml .automation/case136_integrate.py
+          git commit -m "case136: ground rebuild-rate repair priority"
+          git push origin HEAD:main
