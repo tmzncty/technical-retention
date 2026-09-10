@@ -13,6 +13,8 @@ This is not a general history of ext4, POSIX filesystems, journaling, or atomic 
 
 The 2009 ext4 workaround is treated as a historically specific compatibility/safety intervention, not as a portable durability theorem.
 
+Application-level durability deepening: [2016 PostgreSQL `durable_rename` / WAL name-content deepening](../evidence/124-postgresql-2016-durable-rename-wal-name-content-deepening.md). It supplies a 2016 PostgreSQL production-source witness that durable file contents and durable namespace identity are separate recovery obligations.
+
 ---
 
 ## Historical vocabulary
@@ -247,6 +249,30 @@ The safe claim is narrower:
 - lower-layer cache/persistence failure outside the filesystem's assumed storage contract.
 
 These failures should not be collapsed into one phrase such as `rename was not atomic`.
+
+---
+
+## 2016 PostgreSQL application-level durability deepening
+
+The 2009 ext4 evidence explains why a filesystem added a compatibility heuristic around common unsynchronized replace-by-rename patterns. PostgreSQL's 2016 `durable_rename()` work supplies the complementary application-level witness: a program that actually requires crash durability can explicitly close both payload and namespace obligations rather than treating rename visibility as persistence.
+
+Commit `606e0f9841b820d826f837bf741a3e5e9cc62fa1` introduces a wrapper that fsyncs the source file, optionally syncs an existing target, performs the rename, then fsyncs the file under its new name and its containing directory. The implementation explicitly calls the pre-sync of an existing target conservative rather than strictly necessary, so the case does not universalize one exact syscall sequence.
+
+The follow-up commit `1d4a0ab19a7e45aa8b94d7f720d1d9cefb81ec40` supplies a stronger failure witness. During WAL recycling, new file contents had been `fdatasync`ed while the containing directory was not. A crash could therefore leave **new WAL contents under an old WAL filename**, causing recovery not to replay the intended segment. This fixes a concrete relation:
+
+```text
+file-content durability
+    !=
+name/content-binding durability
+    !=
+recovery closure
+```
+
+For this bounded workload, a filename is not merely presentation metadata: it participates in the recovery traversal that decides which durable bytes count as which WAL segment. The helper also explicitly excludes arbitrary cross-directory rename, so this evidence does not close the separate two-directory durability problem.
+
+This remains separate from lower-layer device compliance. PostgreSQL can issue `fsync`/`fdatasync`; Cases 15, 20, 31, and 87 remain responsible for whether lower persistence layers actually honor the requested contract.
+
+Detailed provenance and stop conditions are recorded in [2016 PostgreSQL `durable_rename` / WAL name-content deepening](../evidence/124-postgresql-2016-durable-rename-wal-name-content-deepening.md).
 
 ---
 
