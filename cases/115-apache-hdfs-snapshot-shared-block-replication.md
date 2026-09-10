@@ -18,7 +18,7 @@ This case is not:
 - a second HDFS placement/decommission case (Case 80);
 - a second HDFS integrity-scanner case (Case 83);
 - a claim that deleting a snapshot securely erases DataNode media;
-- a full account of NameNode FSImage/edit-log persistence for snapshots;
+- a full account of NameNode FSImage/edit-log persistence for snapshots beyond the bounded `saveNamespace` checkpoint + restart regression established below;
 - evidence that HDFS and ZFS snapshots share one implementation or genealogy.
 
 A repository search found no dedicated HDFS-snapshot case in `tmzncty/computing-archaeology`. Broader snapshot genealogy and HDFS implementation history belong there if developed.
@@ -223,7 +223,7 @@ Therefore:
 
 > **snapshot delete != block collection completion != physical sanitization.**
 
-The exact post-snapshot-deletion sequence through block invalidation, DataNode deletion, filesystem free-space reuse, device remapping, and media overwrite is outside this bounded slice.
+The deepening below now establishes the Hadoop 2.4.1 NameNode block-retirement → queued invalidation → heartbeat `DNA_INVALIDATE` → DataNode `FSDataset.invalidate(...)` path. Filesystem free-space reuse, device remapping, media overwrite, and secure sanitization remain outside this bounded slice.
 
 ## Time
 
@@ -287,6 +287,65 @@ Fourth:
 > **retained policy metadata can be constitutive of physical redundancy without itself containing payload bytes.**
 
 That fourth relation is especially important for this repository. Distributed retention is not only a question of how many payload copies happen to exist; it also depends on retained metadata defining how many copies the system still owes.
+
+## Checkpoint/restart and block-retirement deepening — Hadoop 2.4.1
+
+The companion evidence record [`evidence/115-hadoop-241-snapshot-restart-retirement-deepening.md`](../evidence/115-hadoop-241-snapshot-restart-retirement-deepening.md) closes two bounded implementation seams without turning this case into a generic HDFS lifecycle study.
+
+### H/P — explicit checkpoint/restart regression
+
+`release-2.4.1` `TestSnapshotBlocksMap.testReadSnapshotFileWithCheckpoint` creates a file and snapshot, deletes the current file, enters safe mode, calls `saveNamespace`, leaves safe mode, restarts the NameNode, and then reads the file through the snapshot path. The neighboring renamed-snapshot regression repeats the checkpoint/restart boundary across historical aliases.
+
+This establishes only the inspected path:
+
+> **snapshot-retained historical reachability can survive an explicit namespace checkpoint and NameNode restart.**
+
+It does not establish every crash/edit-log replay ordering, HA failover, or later-release behavior. In particular:
+
+> **`saveNamespace + restart` regression != arbitrary crash/edit-log-replay proof.**
+
+Since the 2.4.1 snapshot documentation independently states that DataNode blocks are not copied, checkpoint survival also does not imply a new snapshot payload embodiment:
+
+> **checkpoint-surviving snapshot authority != newly copied block embodiment.**
+
+### H/P + E — final-reference retirement is a staged control path
+
+The same release exposes a lower-layer sequence after snapshot deletion makes blocks collectable. `FSNamesystem` passes `collectedBlocks` to `removeBlocks(...)`; `BlockManager.removeBlock(...)` retires NameNode block-management state and queues invalidation; `InvalidateBlocks` moves bounded work to a DataNode descriptor; the heartbeat path sends `DNA_INVALIDATE`; and DataNode `BPOfferService` calls `FSDataset.invalidate(...)`.
+
+The important separation is temporal and authoritative:
+
+```text
+last retaining namespace/snapshot relation disappears
+        ->
+block becomes collectable at NameNode layer
+        ->
+NameNode block-management retirement + invalidation queue
+        ->
+heartbeat-carried DNA_INVALIDATE
+        ->
+DataNode dataset invalidate
+        ->
+(lower filesystem/device reuse or sanitization not established here)
+```
+
+Therefore:
+
+> **last-reference retirement != immediate DataNode invalidation completion.**
+
+> **NameNode block-map retirement != DataNode local deletion completion.**
+
+> **`DNA_INVALIDATE` / `FSDataset.invalidate` != demonstrated physical overwrite or secure sanitization.**
+
+This refines the earlier `snapshot delete != block collection completion != physical sanitization` boundary with a released implementation path rather than collapsing the stages.
+
+### Functional comparison only
+
+Mapped Flash Case 04 also separates authority/currentness retirement from later reclamation, but HDFS namespace/block-management references are not an FTL mapping table and no genealogy is implied. Magnetic-core Case 02 separately shows why ordinary logical clearing/retirement should not be promoted into a stronger sanitization claim.
+
+### Remaining bounded debt
+
+Still open: arbitrary crash/edit-log replay and HA-failover semantics for snapshots; lower `FSDataset`/filesystem reuse behavior; block-device remapping/discard/sanitize composition; fault-injected timing between retirement, invalidation dispatch, DataNode execution, and restart; and evolution of this path across later Hadoop releases. Broader HDFS persistence/deletion history remains a `computing-archaeology` task.
+
 
 ## Prior art and genealogy boundary
 
