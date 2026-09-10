@@ -1,0 +1,1 @@
+trigger LPDDR per-bank refresh Case139 navigation integration
