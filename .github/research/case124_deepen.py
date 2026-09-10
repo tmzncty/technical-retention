@@ -1,0 +1,329 @@
+from pathlib import Path
+import re
+
+EVIDENCE_PATH = Path('evidence/124-postgresql-2016-durable-rename-wal-name-content-deepening.md')
+EVIDENCE = r'''# Case 124 deepening — PostgreSQL 2016 `durable_rename`: file contents, namespace durability, and WAL recovery identity
+
+## Scope
+
+This evidence slice deepens Case 124 with one bounded application-level witness: PostgreSQL's March 2016 introduction and deployment of `durable_rename()` / `durable_link_or_rename()`.
+
+The question is deliberately narrow:
+
+> When an application uses rename to install or recycle a file, what additional retention relation must survive a crash beyond the file's bytes themselves?
+
+The primary record is PostgreSQL commits `606e0f9841b820d826f837bf741a3e5e9cc62fa1` and `1d4a0ab19a7e45aa8b94d7f720d1d9cefb81ec40`, both committed 9 March 2016 (mailing-list publication 10 March UTC). Current PostgreSQL source is used only to check that the helper's same-directory durability structure remains recognizable; it is not projected backward as independent 2016 wording.
+
+This slice is not a general PostgreSQL WAL history, a proof of ext4/XFS crash behavior for every version/mount mode, or a portable theorem that one syscall sequence closes every storage stack. Broader filesystem and database durability genealogy belongs in `tmzncty/computing-archaeology` if developed.
+
+---
+
+## Historical vocabulary
+
+The 2016 PostgreSQL sources themselves use:
+
+- `rename(2)`;
+- `durable` / `durability`;
+- `fsync` / `fdatasync`;
+- `containing directory`;
+- `checkpoint`;
+- `WAL files`;
+- `recycled`;
+- `WAL replay`;
+- `data loss`.
+
+The following are project engineering terms:
+
+- **namespace durability**;
+- **name/content binding**;
+- **durability closure**;
+- **recovery identity**;
+- **pre-rename payload closure**.
+
+They summarize relations visible in the source record; they are not attributed to PostgreSQL developers as period terminology.
+
+---
+
+## Historical record
+
+### H/P — PostgreSQL introduced an explicit durable-rename wrapper in March 2016
+
+PostgreSQL commit [`606e0f9841b820d826f837bf741a3e5e9cc62fa1`](https://github.com/postgres/postgres/commit/606e0f9841b820d826f837bf741a3e5e9cc62fa1), `Introduce durable_rename() and durable_link_or_rename()`, states that `rename(2)` is not guaranteed to be durable across crashes and calls out XFS and ext4 with `data=writeback` as important examples.
+
+The commit describes the wrapper sequence for its bounded replace-in-place use case as:
+
+```text
+fsync old/source file
+    -> fsync existing target if present
+    -> rename
+    -> fsync file under the new name
+    -> fsync containing directory
+```
+
+The implementation comment says the routine is intended to make the effect of the rename survive a crash and to leave either the pre-existing or moved file rather than a mixed/truncated replacement.
+
+This is application source history, not an ext4 specification. PostgreSQL is documenting the durability assumptions it needs from the filesystem interface.
+
+### H/P — the existing-target pre-sync was explicitly conservative
+
+The same commit says syncing an already-existing target before replacement is **not strictly necessary**, but makes crash reasoning easier by ensuring that either the source or target file has persisted contents.
+
+Therefore:
+
+```text
+implemented conservative fsync step
+    !=
+proof that every durable-rename protocol requires exactly that step
+```
+
+### H/P — the helper deliberately excludes arbitrary cross-directory rename
+
+The 2016 source comment explicitly says `durable_rename()` does not support renaming across arbitrary directories, noting that such paths may reside on different filesystems.
+
+The bounded evidence therefore supports a containing-directory closure for the helper's intended same-directory uses. It does **not** establish that syncing one parent directory is sufficient for every cross-directory rename pattern.
+
+### H/P — the follow-up commit tied missing directory durability to a concrete WAL recovery failure
+
+The immediately following commit [`1d4a0ab19a7e45aa8b94d7f720d1d9cefb81ec40`](https://github.com/postgres/postgres/commit/1d4a0ab19a7e45aa8b94d7f720d1d9cefb81ec40), `Avoid unlikely data-loss scenarios due to rename() without fsync`, replaced ordinary rename/link sequences at multiple PostgreSQL call sites with the new durable wrappers.
+
+Its strongest concrete example occurs at checkpoint/WAL recycling. The commit explains that recycled old WAL files had their new **contents** `fdatasync`ed, but their containing directory was not fsynced. After an OS/hardware crash, a file could therefore retain its **old WAL filename while containing new WAL content**. Recovery would then fail to replay the content under the name by which it should have been discovered.
+
+This is stronger than a generic statement that `rename` may be lost. It shows a real application invariant whose two components can diverge:
+
+```text
+persisted file bytes
+    + stale persisted filename
+    -> recovery-visible identity mismatch
+```
+
+### H/P — the 2016 change was intentionally backpatched
+
+The commit messages state `Backpatch: All supported branches`; PostgreSQL's commit mail archive records corresponding branch-specific hashes. This shows the developers treated the durability issue as applicable to supported released branches, not merely as a feature for one future release.
+
+That backpatch policy does not rewrite earlier historical behavior: deployments before the fix may still have used ordinary rename sequences.
+
+---
+
+## Engineering reconstruction
+
+### E — file-content durability != name/content-binding durability
+
+The WAL example directly demonstrates that the bytes of a recycled file can have crossed a durability boundary while the namespace binding that gives those bytes their recovery meaning has not.
+
+For this bounded application, the retained object is therefore not adequately modeled as `byte string survived`. Recovery depends on a relation:
+
+```text
+WAL segment identity / filename
+        -> intended segment contents
+        -> recovery traversal/replay
+```
+
+A stale first edge can make durable bytes operationally absent from the recovery sequence.
+
+### E — pre-rename payload closure and post-rename namespace closure answer different failure windows
+
+Syncing the source before rename protects against a crash after the in-memory rename has taken effect but before later flushes complete: the newly installed name should not expose an embodiment whose contents were never made durable.
+
+Syncing the post-rename file and containing directory answers a later question: whether the new file state and directory entry survive the crash as the intended replacement relation.
+
+Therefore:
+
+> **pre-rename payload durability != post-rename namespace durability.**
+
+### E — `fdatasync` of WAL contents != checkpoint/recovery closure
+
+The follow-up commit's failure scenario is especially useful because the new WAL contents had already been `fdatasync`ed. A checkpoint-related durability protocol can still be incomplete if the naming relation that recovery uses is not also durable.
+
+So:
+
+> **durable component payload != durable recovery graph.**
+
+### E — syscall success and filesystem ordering heuristics remain different evidence classes
+
+Case 124's ext4 `auto_da_alloc` evidence shows a filesystem heuristic that narrows a common replace-by-rename crash window. PostgreSQL's 2016 wrapper is an application-level explicit durability protocol. Neither should be silently substituted for the other:
+
+```text
+filesystem compatibility heuristic
+    != application-issued durability closure
+```
+
+### E — lower-layer compliance remains an external premise
+
+PostgreSQL can issue `fsync`/`fdatasync` and structure ordering around their interface contract. This source set does not independently prove that every controller, cache, drive, virtualized stack, or power-loss path honors those requests correctly.
+
+Cases 15, 20, 31, and 87 remain the lower persistence-domain / device-contract comparisons.
+
+---
+
+## Functional comparisons and limits
+
+### A — Case 16 soft updates
+
+Both cases show that a filesystem-visible current relation can outrun the crash-surviving relation and that explicit synchronization closes a stronger target. PostgreSQL adds an application witness in which the desired target is specifically a **name/content pairing used by recovery**.
+
+No genealogy from BSD soft updates to PostgreSQL is asserted.
+
+### A — Case 25 mutable EC currentness
+
+Swift's fragment timestamp / `.durable` relation and PostgreSQL's WAL filename/content relation both demonstrate that materially present bytes need enough control/currentness evidence to be admitted as the intended version. Their protocols and failure domains are otherwise different.
+
+### A — Cases 15/20/31/87
+
+These cases show why the application-level protocol still composes with lower persistence semantics. A successful `fsync` request is evidence at the filesystem interface boundary, not transistor-level proof of NAND/platter persistence.
+
+---
+
+## Philosophical interpretation
+
+### I — technical persistence can depend on a durable identity edge
+
+The narrow interpretive result is that later recovery may require a durable relation between **what survived** and **under which name/position it is to be retrieved**. The WAL example makes this unusually concrete: new bytes under an old segment name can survive materially while failing the intended recovery identity.
+
+This does not imply that every filename is intrinsically part of every object's identity, nor that namespace metadata should be redescribed as human memory. It is a system-specific continuation rule.
+
+---
+
+## Claim ledger
+
+| Claim | Label | Support | Limit |
+| --- | --- | --- | --- |
+| PostgreSQL introduced `durable_rename()` in March 2016 because ordinary rename was not assumed crash-durable | `H/P` | commit `606e0f9841...` | application implementation record, not a universal filesystem theorem |
+| bounded wrapper syncs source, optionally existing target, performs rename, then syncs new file and containing directory | `H/P` | commit diff/comment | same-directory helper; not arbitrary cross-directory closure |
+| existing-target pre-sync was described as conservative rather than strictly necessary | `H/P` | commit comment | does not identify the unique minimal portable sequence |
+| missing directory fsync could leave an old WAL name attached to new fdatasynced content | `H/P` | commit `1d4a0ab19...` | concrete PostgreSQL failure scenario, not every rename workload |
+| durable bytes can still be unusable for intended recovery when naming/currentness metadata is stale | `E` | WAL scenario | project reconstruction |
+| application durability protocol != ext4 `auto_da_alloc` heuristic | `E/A` | Case 124 + PostgreSQL evidence | no genealogy claimed |
+| helper semantics != lower-layer device compliance | `E/A` | interface layering | requires separate device/fault evidence |
+
+---
+
+## Sources
+
+1. PostgreSQL commit `606e0f9841b820d826f837bf741a3e5e9cc62fa1`, **“Introduce durable_rename() and durable_link_or_rename().”**, 9 March 2016.
+   - <https://github.com/postgres/postgres/commit/606e0f9841b820d826f837bf741a3e5e9cc62fa1>
+   - official commit-mail record: <https://www.postgresql.org/message-id/E1adrE0-0001Or-CA%40gemulon.postgresql.org>
+
+2. PostgreSQL commit `1d4a0ab19a7e45aa8b94d7f720d1d9cefb81ec40`, **“Avoid unlikely data-loss scenarios due to rename() without fsync.”**, 9 March 2016.
+   - <https://github.com/postgres/postgres/commit/1d4a0ab19a7e45aa8b94d7f720d1d9cefb81ec40>
+   - official commit-mail record: <https://www.postgresql.org/message-id/E1adrE1-0001PP-Vx%40gemulon.postgresql.org>
+
+3. PostgreSQL current source, `src/backend/storage/file/fd.c`, `durable_rename()`; later implementation witness only.
+   - <https://github.com/postgres/postgres/blob/master/src/backend/storage/file/fd.c>
+
+## Open work kept outside this slice
+
+- crash/fault-injection reproduction across named ext4/XFS versions and mount modes;
+- cross-directory rename and explicit source/destination-directory durability obligations;
+- complete PostgreSQL rename/fsync genealogy before 2016 and later changes to the helper;
+- comparison with SQLite, RocksDB, LMDB, XFS, btrfs, ZFS, APFS, and NTFS durable replacement protocols;
+- lower-layer controller/device compliance with flush/fsync persistence contracts;
+- general WAL/checkpoint history.
+'''
+
+EVIDENCE_PATH.write_text(EVIDENCE, encoding='utf-8')
+
+case_path = Path('cases/124-linux-ext4-rename-fsync-durability-closure.md')
+case = case_path.read_text(encoding='utf-8')
+evidence_link = '[2016 PostgreSQL `durable_rename` / WAL name-content deepening](../evidence/124-postgresql-2016-durable-rename-wal-name-content-deepening.md)'
+if evidence_link not in case:
+    anchor = 'The 2009 ext4 workaround is treated as a historically specific compatibility/safety intervention, not as a portable durability theorem.\n'
+    if anchor not in case:
+        raise SystemExit('Case124 scope anchor missing')
+    case = case.replace(anchor, anchor + '\nApplication-level durability deepening: ' + evidence_link + '. It supplies a 2016 PostgreSQL production-source witness that durable file contents and durable namespace identity are separate recovery obligations.\n', 1)
+    section = '''## 2016 PostgreSQL application-level durability deepening
+
+The 2009 ext4 evidence explains why a filesystem added a compatibility heuristic around common unsynchronized replace-by-rename patterns. PostgreSQL's 2016 `durable_rename()` work supplies the complementary application-level witness: a program that actually requires crash durability can explicitly close both payload and namespace obligations rather than treating rename visibility as persistence.
+
+Commit `606e0f9841b820d826f837bf741a3e5e9cc62fa1` introduces a wrapper that fsyncs the source file, optionally syncs an existing target, performs the rename, then fsyncs the file under its new name and its containing directory. The implementation explicitly calls the pre-sync of an existing target conservative rather than strictly necessary, so the case does not universalize one exact syscall sequence.
+
+The follow-up commit `1d4a0ab19a7e45aa8b94d7f720d1d9cefb81ec40` supplies a stronger failure witness. During WAL recycling, new file contents had been `fdatasync`ed while the containing directory was not. A crash could therefore leave **new WAL contents under an old WAL filename**, causing recovery not to replay the intended segment. This fixes a concrete relation:
+
+```text
+file-content durability
+    !=
+name/content-binding durability
+    !=
+recovery closure
+```
+
+For this bounded workload, a filename is not merely presentation metadata: it participates in the recovery traversal that decides which durable bytes count as which WAL segment. The helper also explicitly excludes arbitrary cross-directory rename, so this evidence does not close the separate two-directory durability problem.
+
+This remains separate from lower-layer device compliance. PostgreSQL can issue `fsync`/`fdatasync`; Cases 15, 20, 31, and 87 remain responsible for whether lower persistence layers actually honor the requested contract.
+
+Detailed provenance and stop conditions are recorded in ''' + evidence_link + '''.
+
+---
+
+'''
+    marker = '## Related repositories\n'
+    if marker not in case:
+        raise SystemExit('Case124 Related repositories marker missing')
+    case = case.replace(marker, section + marker, 1)
+    case_path.write_text(case, encoding='utf-8')
+
+roadmap_path = Path('ROADMAP.md')
+roadmap = roadmap_path.read_text(encoding='utf-8')
+if '124-postgresql-2016-durable-rename-wal-name-content-deepening.md' not in roadmap:
+    pat = re.compile(r'^- \*\*unsafe filesystem dependency ordering or incomplete durability closure:\*\*.*$', re.M)
+    m = pat.search(roadmap)
+    if not m:
+        raise SystemExit('ROADMAP durability-closure taxonomy entry missing')
+    repl = '- **unsafe filesystem dependency ordering or incomplete durability closure:** partially advanced by grounded Case 124 and [`evidence/124-postgresql-2016-durable-rename-wal-name-content-deepening.md`](evidence/124-postgresql-2016-durable-rename-wal-name-content-deepening.md): ext4 2009 separates data-before-rename ordering from explicit `fsync`, while PostgreSQL 2016 supplies a concrete application/WAL witness that `fdatasync`ed contents can survive under a stale filename when containing-directory durability is not closed. Cross-directory rename, modern fast-commit interaction, named-filesystem fault injection, and lower-device compliance remain open.'
+    roadmap = roadmap[:m.start()] + repl + roadmap[m.end():]
+    roadmap_path.write_text(roadmap, encoding='utf-8')
+
+index_path = Path('CASE_INDEX.md')
+index = index_path.read_text(encoding='utf-8')
+if '124-postgresql-2016-durable-rename-wal-name-content-deepening.md' not in index:
+    lines = index.splitlines(True)
+    for i, line in enumerate(lines):
+        if 'cases/124-linux-ext4-rename-fsync-durability-closure.md' in line:
+            stripped = line.rstrip('\n')
+            if not stripped.endswith(' |'):
+                raise SystemExit('Case124 index row shape changed')
+            lines[i] = stripped[:-2] + '; [2016 PostgreSQL durable-rename / WAL name-content deepening](evidence/124-postgresql-2016-durable-rename-wal-name-content-deepening.md) |\n'
+            break
+    else:
+        raise SystemExit('Case124 index row missing')
+    index = ''.join(lines)
+
+    nums = [int(x) for x in re.findall(r'(?m)^(\d+)\. \*\*', index)]
+    if not nums:
+        raise SystemExit('Finding ledger missing')
+    n = max(nums) + 1
+    findings = [
+        ('rename visibility atomicity != crash durability', 'PostgreSQL introduced an explicit durable wrapper because ordinary `rename(2)` success did not establish the crash-surviving replacement relation required by the application'),
+        ('file-content durability != namespace durability', 'the WAL failure witness had new contents already `fdatasync`ed while the containing-directory entry could still revert across a crash'),
+        ('durable bytes != durable recovery identity', 'new WAL contents under an old filename can survive materially yet be omitted by the recovery traversal that discovers segments by name'),
+        ('pre-rename payload closure != post-rename namespace closure', 'syncing the source before rename and syncing the new file/parent afterward cover different crash windows'),
+        ('containing-directory `fsync` != redundant metadata work', 'in the bounded WAL example it closes a relation that file `fdatasync` alone demonstrably leaves open'),
+        ('implemented conservative step != universal minimal theorem', 'PostgreSQL explicitly says syncing an existing target before replacement is not strictly necessary but simplifies crash reasoning'),
+        ('same-directory durable helper != arbitrary cross-directory rename closure', 'the 2016 source explicitly excludes arbitrary cross-directory operation, leaving source/destination-parent obligations separate'),
+        ('filesystem compatibility heuristic != application durability protocol', 'ext4 `auto_da_alloc` narrows a common unsafe pattern while PostgreSQL `durable_rename()` explicitly issues synchronization for an application invariant'),
+        ('checkpoint completion work != namespace/recovery closure', 'completing and syncing recycled WAL contents did not by itself ensure that post-crash replay would find those contents under the intended segment name'),
+        ('name metadata can be constitutive without being payload', 'for PostgreSQL WAL recovery the filename participates in selecting/replaying the retained segment even though it is not the WAL record bytes'),
+        ('backpatch policy != retroactive historical behavior', 'applying the 2016 fix to all then-supported PostgreSQL branches shows perceived severity but does not prove pre-fix deployments already had the new durability relation'),
+        ('`fsync` protocol != physical-media proof', 'the application can request filesystem durability while controller/cache/device compliance remains a separate lower-layer evidence question'),
+        ('PostgreSQL durable-rename evidence != general database/filesystem genealogy', 'SQLite/RocksDB/LMDB and broader XFS/btrfs/ZFS/APFS/NTFS histories remain separate slices and are routed to `computing-archaeology` when historical rather than retention-specific'),
+    ]
+    block = '\n' + ''.join(f'{n+j}. **{title}** — {body};\n' for j, (title, body) in enumerate(findings)) + '\n'
+    marker = '\nThese are provisional cross-case findings, not final philosophical conclusions.'
+    pos = index.rfind(marker)
+    if pos < 0:
+        raise SystemExit('CASE_INDEX findings terminator missing')
+    index = index[:pos] + block + index[pos:]
+    index_path.write_text(index, encoding='utf-8')
+
+for p in [
+    Path('.github/workflows/zz-case124-postgres-durable-rename.yml'),
+    Path('.github/workflows/zz-case124-run2.yml'),
+    Path('.github/research/case124_deepen.py'),
+]:
+    if p.exists():
+        p.unlink()
+
+assert EVIDENCE_PATH.exists()
+assert '1d4a0ab19a7e45aa8b94d7f720d1d9cefb81ec40' in EVIDENCE_PATH.read_text(encoding='utf-8')
+assert '124-postgresql-2016-durable-rename-wal-name-content-deepening.md' in case_path.read_text(encoding='utf-8')
+assert '124-postgresql-2016-durable-rename-wal-name-content-deepening.md' in roadmap_path.read_text(encoding='utf-8')
+assert '124-postgresql-2016-durable-rename-wal-name-content-deepening.md' in index_path.read_text(encoding='utf-8')
