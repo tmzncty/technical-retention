@@ -1,0 +1,26 @@
+name: Case124 bounded integration
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/zz-case124-run2.yml
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Apply research slice
+        run: python .github/research/case124_deepen.py
+      - name: Validate and commit
+        run: |
+          git diff --check
+          git config user.name 'technical-retention research automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --stat
+          git commit -m 'case124: deepen application durable-rename boundary'
+          git push origin HEAD:main
