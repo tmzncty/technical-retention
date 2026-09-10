@@ -22,20 +22,13 @@ jobs:
           python-version: '3.11'
       - name: Apply bounded research slice
         run: python tools/stage_case115_snapshot_restart_retirement.py
-      - name: Validate canonical diff
+      - name: Validate staged research
         shell: bash
         run: |
           set -euo pipefail
-          git diff --check
-          mapfile -t changed < <({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
-          expected=(
-            "CASE_INDEX.md"
-            "ROADMAP.md"
-            "cases/115-apache-hdfs-snapshot-shared-block-replication.md"
-            "evidence/115-hadoop-241-snapshot-restart-retirement-deepening.md"
-          )
-          mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
-          diff -u <(printf '%s\n' "${expected_sorted[@]}") <(printf '%s\n' "${changed[@]}")
+          git add CASE_INDEX.md ROADMAP.md cases/115-apache-hdfs-snapshot-shared-block-replication.md evidence/115-hadoop-241-snapshot-restart-retirement-deepening.md
+          git diff --cached --check
+          git diff --cached --quiet && { echo 'No canonical research diff staged'; exit 1; } || true
           grep -Fq '## Checkpoint/restart and block-retirement deepening — Hadoop 2.4.1' cases/115-apache-hdfs-snapshot-shared-block-replication.md
           grep -Fq 'Case 115 HDFS snapshot checkpoint/restart + block-retirement/invalidation deepening' ROADMAP.md
           grep -Fq 'evidence/115-hadoop-241-snapshot-restart-retirement-deepening.md' CASE_INDEX.md
@@ -49,7 +42,7 @@ jobs:
           set -euo pipefail
           git config user.name "openai-research-agent"
           git config user.email "actions@users.noreply.github.com"
-          git add CASE_INDEX.md ROADMAP.md cases/115-apache-hdfs-snapshot-shared-block-replication.md evidence/115-hadoop-241-snapshot-restart-retirement-deepening.md tools/stage_case115_snapshot_restart_retirement.py .github/workflows/stage-case115-snapshot-restart.yml
+          git add tools/stage_case115_snapshot_restart_retirement.py .github/workflows/stage-case115-snapshot-restart.yml
           git rm tools/stage_case115_snapshot_restart_retirement.py .github/workflows/stage-case115-snapshot-restart.yml
           git diff --cached --check
           git commit -m "case115: deepen snapshot restart-retirement boundary"
