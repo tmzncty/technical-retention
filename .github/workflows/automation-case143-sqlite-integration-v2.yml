@@ -1,0 +1,93 @@
+name: automation case143 sqlite navigation integration v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/automation-case143-sqlite-integration-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Integrate Case143 navigation and clean temporary workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          for p in [Path('cases/143-sqlite3-rollback-journal-hot-recovery-authority.md'), Path('evidence/143-sqlite3-rollback-journal-hotness-grounding.md')]:
+              if not p.exists(): raise SystemExit(f'missing {p}')
+
+          ip = Path('CASE_INDEX.md')
+          ci = ip.read_text(encoding='utf-8')
+          if 'cases/143-sqlite3-rollback-journal-hot-recovery-authority.md' in ci or '## Case 143 — SQLite rollback-journal findings' in ci:
+              raise SystemExit('Case143 already indexed; refusing duplicate integration')
+          nums = [int(x) for x in re.findall(r'(?m)^- \*\*(\d+) —', ci)]
+          if max(nums) != 3030:
+              raise SystemExit(f'unexpected finding max {max(nums)}')
+
+          row = '| [SQLite 3 Rollback Journals: Hot Recovery Evidence, Commit Invalidation, and Paired-State Identity](cases/143-sqlite3-rollback-journal-hot-recovery-authority.md) | **grounded** | main database pages + rollback page images + journal validity/hotness + optional super-journal reference graph | separate physical trace survival, rollback admissibility, crash-recovery obligation, commit currentness, multi-file coordination, recovery pairing, and later reclamation | [2004–2008 SQLite grounding](evidence/143-sqlite3-rollback-journal-hotness-grounding.md); frozen 2004 source comparison, exact super-journal/PERSIST/TRUNCATE check-in genealogy, WAL-mode comparison, and power-cut/VFS fault validation remain open |'
+          ls = ci.splitlines()
+          a = next((i for i,x in enumerate(ls) if x.startswith('| [Ceph Reef Capacity-Gated Recovery:')), None)
+          if a is None: raise SystemExit('Case142 table anchor missing')
+          ls.insert(a+1, row)
+          ci = '\n'.join(ls).rstrip() + '\n'
+
+          fs = [
+            ('2004 SQLite-3 anchor != frozen-current-document chronology', "3.0.0 is dated 2004-06-18 and the maintained locking document says it was originally created in early 2004, but today's maintained design pages are not proof that every described detail was unchanged in 3.0.0. (`H/P`, `X`)"),
+            ('rollback journal retains pre-update page state before destructive main-file update', 'SQLite documents copying original page images and original size into the journal before overwriting corresponding database state. (`H/P`, `E`)'),
+            ('rollback journal != redo/WAL history', 'rollback mode retains selected prior page images for undo; SQLite WAL mode is a later distinct protocol. (`H/P`, `E`, `X`)'),
+            ('journal physical presence != hot-journal recovery authority', 'hotness also depends on valid header/size, super-journal relation, and lock state. (`H/P`, `E`)'),
+            ('hot journal can suspend ordinary read admissibility until rollback', 'SQLite checks and rolls back a hot journal before ordinary reading continues. (`H/P`, `E`)'),
+            ('main database-file presence != authoritative readable current state after interrupted write', 'physically newer partial page state can be rejected in favor of the pre-transaction state reconstructed from the hot journal. (`H/P`, `E`)'),
+            ('default DELETE-mode commit != universal physical-delete theorem', "journal removal is SQLite's commit transition under its interface/storage assumptions, not proof of one physically atomic erasure mechanism across every lower layer. (`H/P`, `X`)"),
+            ('PERSIST file survival != rollback-authority survival', '2008 persistent journal mode can leave the file while zeroing/invalidation of the header prevents rollback. (`H/P`, `E`)'),
+            ('DELETE/TRUNCATE/PERSIST physical difference != different high-level commit objective', 'deletion, zero-length truncation, and header invalidation can all retire the old rollback path. (`H/P`, `E`)'),
+            ('2008 journal modes != 2004 vocabulary', 'PERSIST/TRUNCATE chronology must not be back-projected into the SQLite 3.0.0 historical record. (`H/P`, `X`)'),
+            ('super-journal reference state != payload replica', 'it coordinates a multi-database transaction by retaining journal names rather than another copy of database pages. (`H/P`, `E`)'),
+            ('super-journal deletion can commit while individual rollback journals still physically remain', 'named journals cease to be hot when the super-journal relation required by the hotness test disappears. (`H/P`, `E`)'),
+            ('stale super-journal physical presence != operational liveness', 'no-longer-referenced coordination metadata may persist until later cleanup. (`H/P`, `E`)'),
+            ('database+journal byte survival != recovery-pairing survival', 'SQLite warns that separating, mismatching, renaming, or copying a database without its hot journal can defeat recovery. (`H/P`, `E`)'),
+            ('commit/journal invalidation != sanitization', 'retiring rollback authority does not establish overwrite, block erase, cryptographic erase, or forensic disappearance of prior page bytes. (`E`, `X`)'),
+            ('LevelDB current reconstruction != SQLite rollback undo authority', 'both use retained control evidence to govern currentness, but their direction of recovery and historical mechanisms differ. (`A`, `X`)'),
+            ('namespace durability relation ~ recovery pairing only functionally', 'Case 124 and Case 143 both show that byte survival can be insufficient when the required naming/identity relation is lost, without implying genealogy. (`A`, `X`)'),
+            ('related-repository boundary', 'no dedicated SQLite path was found in the fresh `computing-archaeology` recursive-tree check; broader pager/VFS/source genealogy belongs there if developed, while this case keeps recovery-authority semantics. (`H/P` project-state record)'),
+          ]
+          out = ['', '## Case 143 — SQLite rollback-journal findings', '', 'Grounding record: [`evidence/143-sqlite3-rollback-journal-hotness-grounding.md`](evidence/143-sqlite3-rollback-journal-hotness-grounding.md).', '']
+          for n,(t,b) in enumerate(fs, start=3031): out.append(f'- **{n} — {t}:** {b}')
+          ip.write_text(ci.rstrip() + '\n' + '\n'.join(out) + '\n', encoding='utf-8')
+
+          rp = Path('ROADMAP.md')
+          rm = rp.read_text(encoding='utf-8')
+          key = 'Case 143 SQLite 3 rollback-journal hot-recovery / commit-invalidation slice'
+          if key in rm: raise SystemExit('Case143 already in ROADMAP')
+          bullet = "- [x] Case 143 SQLite 3 rollback-journal hot-recovery / commit-invalidation slice — [`cases/143-sqlite3-rollback-journal-hot-recovery-authority.md`](cases/143-sqlite3-rollback-journal-hot-recovery-authority.md) + [`evidence/143-sqlite3-rollback-journal-hotness-grounding.md`](evidence/143-sqlite3-rollback-journal-hotness-grounding.md): SQLite's first-party Version-3 documentation and 3.0.0 release anchor rollback-journal recovery in 2004, while later 3.5.9 PERSIST and 3.6.4 TRUNCATE provide explicit counterexamples in which transaction commit retires rollback authority through different physical operations. Hotness depends on journal validity, lock state, and super-journal reference relations; a multi-database commit can make still-present individual journals non-hot when the super-journal disappears. This closes the bounded `trace survival vs recovery admissibility vs commit currentness vs pairing` bridge without treating current maintained docs as frozen 2004 source, commit as sanitization, or SQLite's filesystem assumptions as universal crash proof. Exact 2004 pager/super-journal genealogy, WAL-mode comparison, and VFS/power-cut validation remain open; broader engineering history belongs primarily in `computing-archaeology`."
+          h = '## Phase 2 — Build missing technical bridges\n'
+          p = rm.find(h)
+          if p < 0: raise SystemExit('Phase2 heading missing')
+          p += len(h)
+          rp.write_text(rm[:p] + '\n' + bullet + '\n' + rm[p:].lstrip('\n'), encoding='utf-8')
+          PY
+
+          git rm -f .github/workflows/automation-case143-sqlite-integration.yml .github/workflows/automation-case143-sqlite-integration-v2.yml
+          test "$(grep -c '^## Case 143 — SQLite rollback-journal findings$' CASE_INDEX.md)" -eq 1
+          test "$(grep -c 'cases/143-sqlite3-rollback-journal-hot-recovery-authority.md' CASE_INDEX.md)" -eq 1
+          test "$(grep -c 'Case 143 SQLite 3 rollback-journal hot-recovery / commit-invalidation slice' ROADMAP.md)" -eq 1
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CASE_INDEX.md ROADMAP.md
+          git diff --cached --check
+          git commit -m 'case143: integrate SQLite rollback-journal navigation'
+          git push origin HEAD:main
