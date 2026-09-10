@@ -1,0 +1,75 @@
+name: Fix Case135 Navigation
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tr-case135-navfix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Reposition Case 135 in main case table
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('CASE_INDEX.md')
+          text = p.read_text(encoding='utf-8')
+          row = "| [Micron Automotive eMMC 5.1 Self-Refresh: Host Time, Selective Renewal, and Maintenance Evidence](cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md) | **grounded** | managed NAND/eMMC + host-supplied time/control + idle-gated selective self-refresh + retained progress/history | distinguish payload from maintenance eligibility, execution, and second-order evidence; compare only functionally with Flash/SSD renewal cases | [2021–2023 grounding record](evidence/135-micron-emmc-2021-2023-self-refresh-grounding.md); full Micron TN-FC-60 body, exact rewrite geometry, JEDEC/eMMC genealogy, and fault injection remain open |"
+          if text.count(row) != 1:
+              raise SystemExit(f'expected exactly one Case 135 row, found {text.count(row)}')
+          text = text.replace(row + '\n', '')
+          lines = text.splitlines()
+          cases_i = lines.index('## Cases')
+          sep_i = next(i for i in range(cases_i + 1, len(lines)) if lines[i].startswith('| ---'))
+          insert_i = sep_i + 1
+          while insert_i < len(lines) and lines[insert_i].startswith('|'):
+              insert_i += 1
+          lines.insert(insert_i, row)
+          text = '\n'.join(lines).rstrip() + '\n'
+          old = 'currently ninety-five active canonical bounded cases'
+          new = 'currently ninety-six active canonical bounded cases'
+          if old in text:
+              text = text.replace(old, new, 1)
+          p.write_text(text, encoding='utf-8')
+          PY
+      - name: Validate navigation and status
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path('CASE_INDEX.md').read_text(encoding='utf-8')
+          row_start = '| [Micron Automotive eMMC 5.1 Self-Refresh:'
+          lines = text.splitlines()
+          cases_i = lines.index('## Cases')
+          sep_i = next(i for i in range(cases_i + 1, len(lines)) if lines[i].startswith('| ---'))
+          table_end = sep_i + 1
+          while table_end < len(lines) and lines[table_end].startswith('|'):
+              table_end += 1
+          positions = [i for i, line in enumerate(lines) if line.startswith(row_start)]
+          assert len(positions) == 1, positions
+          assert sep_i < positions[0] < table_end
+          assert '**2815 — 2021 Armadillo product-integration floor != invention priority:**' in text
+          assert '**2831 — related-repository boundary:**' in text
+          assert 'currently ninety-six active canonical bounded cases' in text
+          PY
+      - name: Commit canonical navigation fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'technical-retention-bot'
+          git config user.email 'technical-retention-bot@users.noreply.github.com'
+          git rm .github/workflows/tr-case135-navfix.yml
+          git add CASE_INDEX.md
+          git commit -m 'case135: fix index navigation and case count'
+          git push origin HEAD:main
