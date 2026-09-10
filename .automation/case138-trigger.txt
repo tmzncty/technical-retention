@@ -1,1 +1,1 @@
-trigger Redis 2.6 AOF rewrite integration
+trigger Redis 2.6 AOF rewrite integration retry 2
