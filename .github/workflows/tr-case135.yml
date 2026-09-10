@@ -23,7 +23,6 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re, subprocess
-
           old = subprocess.check_output(['git','show','6980a9618f56d4078929cbe01679e94fc3c84e42:.github/workflows/tr-case135.yml'], text=True)
           m = re.search(r"          case = r'''(.*?)'''\n\n          evidence = r'''(.*?)'''\n\n          case_path", old, re.S)
           if not m:
@@ -84,19 +83,29 @@ jobs:
               index = index.rstrip() + '\n' + ''.join(lines) + '\n'
               index_path.write_text(index, encoding='utf-8')
           PY
-
-      - name: Validate and commit
+      - name: Validate research content
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          checks = {
+              'cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md': ['host time injection != self-refresh execution', 'one-day trigger != one-day media-retention limit'],
+              'evidence/135-micron-emmc-2021-2023-self-refresh-grounding.md': ['reset = refresh', 'Micron TN-FC-60 catalog metadata'],
+              'ROADMAP.md': ['Case 135 Micron automotive eMMC self-refresh'],
+              'CASE_INDEX.md': ['cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md', 'host time injection != maintenance completion', 'one-day eligibility != NAND retention cliff']
+          }
+          for path, needles in checks.items():
+              text = Path(path).read_text(encoding='utf-8')
+              for needle in needles:
+                  if needle not in text:
+                      raise SystemExit(f'missing {needle!r} in {path}')
+          PY
+      - name: Check whitespace
+        run: git diff --check
+      - name: Commit canonical files
         shell: bash
         run: |
           set -euo pipefail
-          test -s cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md
-          test -s evidence/135-micron-emmc-2021-2023-self-refresh-grounding.md
-          grep -Fq 'Case 135 Micron automotive eMMC self-refresh' ROADMAP.md
-          grep -Fq 'cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md' CASE_INDEX.md
-          grep -Fq 'host time injection != maintenance completion' CASE_INDEX.md
-          grep -Fq 'one-day eligibility != NAND retention cliff' CASE_INDEX.md
-          grep -Fq 'Micron TN-FC-60 metadata != uninspected clause semantics' CASE_INDEX.md
-          git diff --check
           git config user.name 'technical-retention-bot'
           git config user.email 'technical-retention-bot@users.noreply.github.com'
           git rm .github/workflows/tr-case135.yml
