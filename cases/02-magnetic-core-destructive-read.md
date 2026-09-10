@@ -6,6 +6,8 @@ Grounding record: [`../evidence/02-magnetic-core-1951-1954-grounding.md`](../evi
 
 Clear/write and bulk-reset semantics deepening: [`../evidence/02-1964-tcm32-clear-write-memory-clear-deepening.md`](../evidence/02-1964-tcm32-clear-write-memory-clear-deepening.md). The 1964 TCM-32 source is a later implementation/terminology witness, not a replacement for the case's 1950–1954 MIT anchor.
 
+Security-erasure vocabulary deepening: [`../evidence/02-1991-ncsc-core-clearing-purging-degaussing-deepening.md`](../evidence/02-1991-ncsc-core-clearing-purging-degaussing-deepening.md). The 1991 NCSC source is a later security-assurance witness, not evidence that early MIT or the 1964 TCM-32 used the same policy vocabulary.
+
 ## Scope
 
 - **Object / system:** classic coincident-current magnetic-core memory, with MIT Project Whirlwind / Memory Test Computer as the principal historical anchor;
@@ -492,3 +494,20 @@ Widrow's M-2383 memorandum is primary operational evidence tied to an actual 32 
 The Lincoln Laboratory page is a later institutional history. It is useful for chronology and system-level impact, but primary reports take precedence when they differ.
 
 [^tcm32]: Computer Control Company, Inc., *Instruction Manual: Magnetic Core Memory Systems, Series TCM-32*, Document No. 71-218, May 1964, especially §§3-1.4–3-1.5, Clear/Write operating-cycle description, Memory Clear option, and S-103 Memory Clear Driver PAC description; preserved scan: https://bitsavers.org/pdf/computerControlCompany/71-218_3C_TCM-32_Core_Memory_Maint_May64.pdf. Detailed claim decomposition is in the Case 02 deepening evidence record.
+
+
+---
+
+## Security-erasure deepening — machine clear, clearing, purging, and degaussing
+
+The 1964 TCM-32 evidence establishes a whole-stack reset to the machine-defined `ZERO` state; it does **not** by itself establish security-grade sanitization. September-1991 NCSC-TG-025 separately defines security `clearing` and stronger `purging`, explicitly names overwriting and degaussing for magnetic core memory, and treats degausser condition/testing as part of erasure assurance.
+
+**Historical record:** `Memory Clear` is a product operation; NCSC `clearing` and `purging` are reconstruction-resistance objectives. The guide's magnetic-core section permits more than one procedure class rather than identifying sanitization with one physical operation.
+
+**Engineering reconstruction:** `old value no longer current != normal-interface reconstruction resistance != laboratory-oriented purge resistance`. Ordinary overwrite/internal clear and external degaussing also use different authority paths.
+
+**Functional analogy:** later Flash/SSD sanitization cases share only the relation-level distinction among logical invalidation, physical erasure, sanitization objective, completion, and verification; mechanism identity and genealogy are rejected.
+
+**Philosophical interpretation:** technical forgetting can have operation-relative and reconstruction-relative closure conditions. This is not a universal theory of memory.
+
+**Stop conditions:** `TCM-32 Memory Clear != NCSC clearing`; `whole-stack ZERO reset != demonstrated purge`; `degaussed != logical ZERO`; `procedure invoked != erasure assured`; and the NCSC tape-oriented 90 dB test is not a measured core-plane erasure margin.
