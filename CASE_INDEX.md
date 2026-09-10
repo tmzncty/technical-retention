@@ -3752,3 +3752,23 @@ Evidence: [`docs/SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md`
 - **2783 — HDFS block retirement != security purge:** Case 02's clearing/purging boundary applies only as a relational warning; `DNA_INVALIDATE` cannot be promoted into a secure-sanitization claim without lower-layer evidence. (`A`, `X`)
 - **2784 — broader HDFS checkpoint/deletion genealogy remains a related-repository task:** a fresh `computing-archaeology` search found no dedicated HDFS snapshot/checkpoint/invalidation study; edit-log evolution, filesystem/device deletion, and cross-release genealogy belong there if pursued. (`H/P` project-state record)
 
+## Synthesis 27 — retention-policy evidence validity findings
+
+Evidence: [`docs/SYNTHESIS_27_RETENTION_POLICY_EVIDENCE_VALIDITY.md`](docs/SYNTHESIS_27_RETENTION_POLICY_EVIDENCE_VALIDITY.md), synthesized only from already-grounded Cases 10, 34, 35, 40, 43, 93, and 133.
+
+- **2785 — maintenance-policy evidence != protected payload/condition:** a leak monitor, temperature status, row profile, or ECC event can influence preservation without being the state it protects. (`E`)
+- **2786 — useful proxy != physical identity with the protected condition:** Case 10's deliberately conservative leak monitor and Case 34's environmental sensor are separate physical states whose value lies in a bounded relation to payload retention. (`H/P`, `E`)
+- **2787 — sensor availability != sufficient representativeness:** an observation can exist and be numerically valid while failing to represent the retention-relevant location or condition. (`H/P`, `E`)
+- **2788 — spatial representativeness != sensor accuracy:** Case 133's sensor-to-hot-spot gradient shows that calibration/accuracy at one location does not prove knowledge of a hotter coupled location. (`H/P`, `E`)
+- **2789 — policy-evidence freshness deadline != payload refresh deadline:** `tTSI`, host polling, and response latency constrain how current the control observation is, while physical refresh remains a separate preservation obligation. (`H/P`, `E`)
+- **2790 — representation persistence != represented-relation validity:** a saved retention profile can survive correctly while VRT/DPD or later lifecycle conditions make it non-conservative. (`H/P`, `E`)
+- **2791 — context-qualified measurement != universal future minimum:** data pattern, profiling duration, temperature, lifecycle stage, and operating mode can qualify what a retention measurement means. (`H/P`, `E`, `X`)
+- **2792 — declared operating envelope != measured environmental condition:** Case 34's later `SRT` / `ASR` split shows that a conservative configured policy and automatic measurement-driven policy are distinct ways to cover a retention envelope. (`H/P`, `E`)
+- **2793 — interface-field presence != effective software authority:** Case 35's documented but ineffective TCSR programming bits block inference from register names to actual control locus. (`H/P`, `X`)
+- **2794 — current/change status != history:** LPDDR TUF and row-policy classes can support current decisions without preserving the full sequence of environmental samples, transitions, or profiling events. (`H/P`, `E`)
+- **2795 — approximation safety depends on error direction:** RAIDR Bloom-filter false positives can cause conservative over-refresh, while unsafe omissions/underclassification are categorically different. (`H/P`, `E`)
+- **2796 — conservative upgrade authority != downgrade authority:** AVATAR can react to a correctable error by spending more refresh work, while later reduction of that work requires separate retention testing/revalidation. (`H/P`, `E`)
+- **2797 — correction capability != observation coverage:** demand-time ECC can correct an observed error without covering cold memory; proactive scrub extends observation but remains distinct from refresh. (`H/P`, `E`)
+- **2798 — valid policy input != maintenance execution != future-safety proof:** evidence qualification, policy selection, refresh command generation/restoration, and later recoverability are separate stages. (`E`, `X`)
+- **2799 — cross-case comparison is relational, not genealogical:** leak-monitor, temperature-sensor, retention-profile, ECC/scrub, and MR4/thermal-offset mechanisms are compared by evidence/authority roles only; broader DRAM/JEDEC/controller history remains routed to `computing-archaeology`. (`A`, `X`, `H/P` project-state record)
+
