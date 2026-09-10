@@ -4161,3 +4161,26 @@ Deepening record: [`evidence/110-gcs-2018-2026-bucket-lock-worm-deepening.md`](e
 - **3080 — 2023 Object Retention Lock != 2018 Bucket Lock:** Google dates per-object Object Retention Lock availability to 21 November 2023; current per-object semantics must not be projected back into the 2018 bucket-scoped service. (`H/P`, `X`)
 - **3081 — current GCS Object Retention Lock != S3 Object Lock by name alone:** similar names and WORM function do not establish identical versioning dependency, lock states, bypass authority, deletion semantics, or genealogy. (`A`, `X`)
 - **3082 — related-repository boundary:** fresh `tmzncty/computing-archaeology` searches for `Bucket Lock` and `Google Cloud Storage retention policy` found no dedicated study; broader cloud-WORM/provider history belongs there if developed, while this deepening stays with retention-policy chronology and authority relations. (`H/P` project-state record)
+
+## Case 110 deepening — NetApp SnapLock on-premises disk-WORM findings
+
+Deepening record: [`evidence/110-netapp-2003-2026-snaplock-onprem-worm-deepening.md`](evidence/110-netapp-2003-2026-snaplock-onprem-worm-deepening.md).
+
+- **3083 — fiscal-2003 introduction floor != exact launch day:** Network Appliance's 10-K says SnapLock was introduced during the fiscal year ended 25 April 2003; it does not supply a precise public-release date. (`H/P`, `X`)
+- **3084 — managed disk WORM predates 2018 cloud WORM:** the period filing puts WORM nonerasability/nonrewritability on NearStore roughly fifteen years before the Azure/GCS/S3 service launches already grounded in Case 110. (`H/P`)
+- **3085 — earlier SnapLock chronology != disk-WORM invention priority or cloud genealogy:** the dated floor blocks a cloud-origin shortcut without proving first invention, market priority, copying, or causal descent. (`H/P`, `X`)
+- **3086 — rewritable disk embodiment != rewrite-authorized retained object:** Data ONTAP-era documentation explicitly describes SnapLock as disk-based while enforcing non-rewritable file state through the storage system. (`H/P*`, `E`)
+- **3087 — file-level WORM != S3 object-version WORM != 2018 bucket/container WORM:** shared category language does not normalize the protected identity or currentness relation. (`H/P*`, `A`, `X`)
+- **3088 — WORM state != payload:** the retained prohibition/commit state that controls later operations is a relation about a file, not another copy of the file's user bytes. (`E`)
+- **3089 — retention deadline != authoritative retention clock:** ComplianceClock is separately retained/maintained control state used to decide whether time-based protection has expired. (`H/P*`, `P`, `E`)
+- **3090 — current SnapLock `atime` retention semantics != access-history retention:** current ONTAP stores explicit retention time in the file's `atime`; that field carries a future-admission boundary here, not a complete history of prior accesses. (`H/P`, `E`, `X`)
+- **3091 — retention expiry != automatic deletion:** current NetApp says operators remain responsible for deleting WORM files after their retention period. (`H/P`, `E`)
+- **3092 — retention expiry != ordinary in-place mutability restored:** current SnapLock says a committed WORM file remains non-modifiable even after the retention period expires. (`H/P`, `E`)
+- **3093 — post-commit extension authority != shortening authority:** current retention time/period may be extended but not shortened after WORM commit. (`H/P`, `E`)
+- **3094 — license/capability state != already-established protection state:** preserved Data ONTAP documentation says existing SnapLock volume/file WORM properties remain enforced regardless of licensing state. (`H/P*`, `E`)
+- **3095 — ability to create new WORM state != lifetime of existing WORM state:** for the documented Data ONTAP generation, removal of creation capability does not dissolve already committed protection. (`H/P*`, `E`)
+- **3096 — SnapLock Compliance/Enterprise != S3 Compliance/Governance:** similar names and stronger/weaker policy roles do not establish identical bypass authority, object scope, request semantics, audit behavior, or genealogy. (`A`, `X`)
+- **3097 — current NetApp `disk-level` Compliance protection != physically write-once medium:** current ONTAP also supports SSDs and describes an integrated hardware/software solution; product protection-level vocabulary is not proof of immutable cells. (`H/P`, `E`, `X`)
+- **3098 — ComplianceClock semantics must be versioned:** current NetApp explicitly distinguishes ONTAP 9.13.1-and-earlier initialization behavior from the restricted reinitialization path beginning in 9.14.1. (`H/P`, `X`)
+- **3099 — WORM expiry/deletion != media sanitization:** allowing/deleting an expired file does not establish block overwrite, Flash erase, key destruction, or forensic disappearance. (`E`, `X`)
+- **3100 — related-repository boundary:** a fresh `tmzncty/computing-archaeology` search found no dedicated SnapLock study; broad compliant-storage/WAFL/EMC-Centera/release genealogy belongs there if developed, while this deepening stays with retention-policy, time-authority, and prior-art relations. (`H/P` project-state record)

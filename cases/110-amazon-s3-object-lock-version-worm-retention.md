@@ -278,6 +278,88 @@ This is **contractual/service evidence**, not a claim about backend media or con
 
 Full source mapping and limits are in [`evidence/110-gcs-2018-2026-bucket-lock-worm-deepening.md`](../evidence/110-gcs-2018-2026-bucket-lock-worm-deepening.md).
 
+## NetApp SnapLock on-premises WORM deepening
+
+### H/P — fiscal-2003 SnapLock supplies a much earlier managed disk-WORM floor
+
+Network Appliance's Form 10-K for the fiscal year ended **25 April 2003** says SnapLock was introduced during fiscal 2003 and provided WORM nonerasability/nonrewritability for data stored on NearStore. A later 2003 Form 10-Q records SnapLock Compliance and SnapLock Enterprise on FAS systems in addition to NearStore. This moves the nearest named non-optical prior-art floor for this case back roughly fifteen years before the 2018 cloud-service comparison.
+
+The conclusion is deliberately narrow:
+
+```text
+2018 cloud Object/Blob WORM
+    !=
+invention of managed WORM semantics on rewritable disk storage
+```
+
+It does **not** establish that SnapLock was the first disk WORM product or that Azure, Google, or AWS descended from it.
+
+### H/P* / E — disk-based file WORM separates carrier mutability from operation authority
+
+Data ONTAP 7-generation NetApp documentation preserved on a University of Wollongong mirror explicitly calls SnapLock a **disk-based, open-protocol** feature providing storage-enforced WORM through CIFS/NFS at individual-file granularity. Current ONTAP documentation independently preserves the file-level WORM model.
+
+That gives a closer functional counterexample than optical WORM:
+
+```text
+physical carrier can be rewrite-capable
+    while
+retained file/control state refuses rewrite/delete operations
+```
+
+`service/storage-enforced WORM` is therefore not evidence of physically write-once disk or Flash cells.
+
+### H/P* / P-current — retention depends on retained time authority as well as a deadline
+
+The historical Data ONTAP 7 documentation exposes **ComplianceClock** as a protected time base, while current ONTAP documentation separates system and volume Compliance Clocks and says the volume clock controls file-retention decisions. Current documentation also says an explicit retention time is stored in the file's `atime` and can be extended but not shortened after WORM commit.
+
+This permits a bounded decomposition:
+
+```text
+file payload
+    !=
+WORM state
+    !=
+retention deadline
+    !=
+authoritative clock for evaluating that deadline
+    !=
+deletion authority
+```
+
+The `atime` usage is a current SnapLock contract, not proof that every historical or non-NetApp WORM system uses access-time metadata this way.
+
+### P-current / E — expiry changes deletion admission without restoring ordinary mutability
+
+Current NetApp documentation says expired WORM files are not automatically deleted: operators must delete those no longer required. It also says a file committed to WORM cannot be modified even after the retention period expires.
+
+Thus SnapLock sharpens a relation already present in the cloud cases:
+
+```text
+retention expiry
+    !=
+automatic deletion
+    !=
+ordinary write mutability restored
+    !=
+physical sanitization
+```
+
+### H/P* / E — licensing lifetime can differ from existing-protection lifetime
+
+The preserved Data ONTAP documentation states that already established SnapLock volume/file WORM properties remain enforced regardless of licensing state; the license controls creation of new SnapLock volumes/commits rather than dissolving prior protection. For that documented generation, `ability to create new protected state != lifetime of already-committed protection`.
+
+### A / X — similar mode names do not create a provider-independent state machine
+
+NetApp and AWS both use `Compliance` vocabulary, but current SnapLock Compliance/Enterprise and S3 Compliance/Governance have separately defined scopes and bypass paths. NetApp Enterprise privileged delete is not silently renamed S3 Governance bypass, and SnapLock Compliance is not assumed to share S3's object-version model.
+
+The comparison is functional only. No SnapLock -> S3/Azure/GCS genealogy is claimed.
+
+### Anti-anachronism boundary
+
+Current ONTAP documentation explicitly records a ComplianceClock-management change beginning with **ONTAP 9.14.1**, permitting reinitialization only when protected SnapLock/locking state is absent and other conditions hold. That is enough to reject an invariant `SnapLock clock semantics never changed` story. The fiscal-2003 launch, Data ONTAP 7-generation mirror, and current ONTAP contract remain three distinct evidence layers.
+
+Full source mapping and limits are in [`evidence/110-netapp-2003-2026-snaplock-onprem-worm-deepening.md`](../evidence/110-netapp-2003-2026-snaplock-onprem-worm-deepening.md).
+
 ## Engineering reconstruction
 
 ### E — retained state decomposition
