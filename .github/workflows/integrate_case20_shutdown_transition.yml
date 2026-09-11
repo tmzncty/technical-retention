@@ -1,0 +1,377 @@
+name: Integrate Case 20 shutdown-transition deepening
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/integrate_case20_shutdown_transition.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Integrate bounded research slice
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          evidence_path = Path('evidence/20-nvme10-2011-shutdown-state-machine-deepening.md')
+          if evidence_path.exists():
+              raise SystemExit(f'{evidence_path} already exists')
+
+          evidence = r'''# Case 20 evidence deepening — NVMe 1.0 shutdown notification, completion, and unsafe-shutdown telemetry (2011)
+
+**Status:** `grounded`
+
+**Case:** [Case 20 — NVM Express 1.0 Volatile Write Cache and FUA](../cases/20-nvme10-fua-flush-persistence-ordering.md)
+
+**Scope:** the original NVM Express Revision 1.0 shutdown state machine and its SMART/Health `Unsafe Shutdowns` counter. This slice asks how a host's declaration that power-off is imminent, the controller's completion of shutdown processing, the later loss of power, and retained telemetry about that transition are separated at the interface. It does **not** claim that NVMe invented orderly shutdown, that a shutdown-status bit proves application/database commit, that `Unsafe Shutdowns` directly counts data-loss incidents, or that the interface reveals the controller's capacitor/FTL/NAND implementation.
+
+## Research question
+
+Case 20 already separates generic command completion, volatile-cache state, Flush/FUA persistence, and AWUPF power-fail atomicity. A remaining transition question is narrower:
+
+> **When power-off is imminent, does NVMe treat “the host requested shutdown,” “the controller finished shutdown processing,” and “later telemetry calls the event unsafe” as one fact?**
+
+Revision 1.0 answers no. It exposes three different pieces of state:
+
+```text
+CC.SHN          host-written shutdown notification / requested path
+CSTS.SHST       controller-reported shutdown-processing state
+Unsafe Shutdowns
+                cumulative telemetry keyed to whether CC.SHN was received before power loss
+```
+
+That makes the bounded retention result:
+
+```text
+shutdown intent/request
+    != shutdown processing complete
+    != power actually removed
+    != unsafe-shutdown telemetry classification
+    != demonstrated data-loss outcome
+```
+
+## Primary source
+
+NVMHCI Workgroup / NVM Express, **_NVM Express Revision 1.0_**, ratified **1 March 2011**, official NVM Express-hosted Gold PDF:
+
+<https://nvmexpress.org/wp-content/uploads/NVM-Express-1_0-Gold.pdf>
+
+Primary anchors inspected directly:
+
+- printed p. 35, Controller Configuration `CC.SHN` — normal versus abrupt shutdown notification and the requirement to consult `CSTS.SHST` for completion;
+- printed p. 36, Controller Status `CSTS.SHST` — normal/no-shutdown, processing, and processing-complete states;
+- printed p. 66, SMART / Health Information — `Unsafe Shutdowns` counter definition;
+- §7.6.2, printed p. 112 — separate normal and abrupt host shutdown procedures.
+
+The document is an interface specification. It can ground host/controller transition semantics, but not the internal persistence mechanism of a named SSD.
+
+## Historical record
+
+### H1 — `CC.SHN` expresses a host notification and selects a shutdown path
+
+Controller Configuration bits 15:14 are **Shutdown Notification (SHN)**. Revision 1.0 assigns:
+
+- `00b` — no notification / no effect;
+- `01b` — normal shutdown notification;
+- `10b` — abrupt shutdown notification;
+- `11b` — reserved.
+
+The field description says a normal notification expects that the controller is given time to process shutdown, whereas for an abrupt notification the host may not wait for shutdown processing to complete before power is lost. It explicitly directs software to `CSTS.SHST` to determine when processing is complete.
+
+This is direct historical evidence that:
+
+> **`CC.SHN written != shutdown processing complete`.**
+
+The distinction is in the 2011 interface itself; it is not a later project abstraction.
+
+### H2 — `CSTS.SHST` is a separate controller-reported progress/completion state
+
+Controller Status bits 3:2 report **Shutdown Status (SHST)**:
+
+- `00b` — normal operation / no shutdown requested;
+- `01b` — shutdown processing occurring;
+- `10b` — shutdown processing complete;
+- `11b` — reserved.
+
+Thus the controller exposes an intermediate state between host intent and completed transition work. A notification may have been issued while the controller still reports processing rather than completion.
+
+### H3 — normal and abrupt shutdown are distinct procedures, not synonyms
+
+Section 7.6.2 gives separate sequences.
+
+For a **normal shutdown**, the host is told to stop issuing new I/O, allow outstanding commands to complete, delete the I/O Submission Queues, delete the I/O Completion Queues, then set `CC.SHN=01b`; the controller reports completion with `CSTS.SHST=10b`.
+
+For an **abrupt shutdown**, the host stops new I/O and sets `CC.SHN=10b`; the controller again reports completed processing through `CSTS.SHST=10b`.
+
+The same completion code does not erase the fact that the requested path and pre-shutdown host work differ.
+
+So:
+
+> **`normal shutdown request != abrupt shutdown request`, even though both can eventually reach the same reported shutdown-complete state.**
+
+### H4 — `Unsafe Shutdowns` is keyed to missing notification before power loss
+
+The SMART / Health Information log defines **Unsafe Shutdowns** as a lifetime-style counter incremented when a shutdown notification (`CC.SHN`) is **not received before loss of power**.
+
+The definition is important for what it does *not* say. It does not define the counter as:
+
+- number of writes lost;
+- number of torn writes;
+- number of filesystems requiring recovery;
+- number of shutdowns for which `CSTS.SHST` failed to reach complete;
+- number of application transactions lost.
+
+It records a protocol-observed transition condition: power was lost without prior shutdown notification.
+
+### H5 — notification telemetry and completion telemetry are therefore different observables
+
+Revision 1.0 provides a live `CSTS.SHST` progress/completion field but defines `Unsafe Shutdowns` only in terms of whether `CC.SHN` was received before loss of power. The latter definition does not say it records whether `SHST=10b` had been reached.
+
+Therefore a later SMART/Health reader must not silently reinterpret the counter as a historical log of completed-versus-incomplete controller shutdown processing.
+
+This yields the bounded historical relation:
+
+```text
+prior SHN receipt
+    != proof that SHST had reached shutdown complete
+```
+
+and conversely:
+
+```text
+Unsafe Shutdowns increment
+    == evidence for the specification's no-prior-SHN condition
+    != direct evidence for a particular payload-loss outcome
+```
+
+## Engineering reconstruction
+
+The following terms are project reconstructions, not NVMe Revision 1.0 vocabulary.
+
+### E1 — intent-to-transition and completed transition work are separate retention states
+
+The `SHN` / `SHST` split is a clean example of a transition contract with at least two moments:
+
+```text
+host declares imminent transition
+        -> controller performs shutdown work
+        -> controller reports transition work complete
+```
+
+The first edge does not collapse into the third state. For retention analysis this matters because a storage system may require time/work to move from ordinary service into a state admissible for power removal.
+
+### E2 — `power-off imminent != already safe to remove power`
+
+A shutdown notification exists precisely because the host can know that power loss is approaching before controller-side processing has necessarily finished. The interface exposes `SHST` so completion can be observed separately.
+
+This is an interface-level statement about transition sequencing. It does not specify which internal bytes are copied, which NAND pages are programmed, whether a journal is replayed, or whether stored energy is used.
+
+### E3 — unsafe-shutdown telemetry is not a data-loss oracle
+
+The `Unsafe Shutdowns` counter classifies one condition: lack of prior SHN at power loss. The specification does not make actual payload loss a condition for incrementing it.
+
+Therefore:
+
+```text
+Unsafe Shutdowns count
+    != count of data-loss incidents
+    != count of lost host writes
+    != count of torn writes
+```
+
+A power loss without notification may increment the counter even when no application-visible payload is ultimately lost; conversely, a notification being received is not proof that every higher-layer semantic obligation had already been made durable.
+
+### E4 — shutdown completion participates in a persistence boundary but is not a filesystem/database commit
+
+The existing Case 20 evidence from NVMe 1.1b shows that volatile-cache writes lacking FUA/Flush can be exposed to older-value reappearance when the specified shutdown procedure is not completed. That later clause makes shutdown procedure completion relevant to the device-level persistence contract.
+
+But the interface still cannot prove:
+
+- a filesystem ordered its metadata correctly;
+- a database transaction log was flushed at the correct semantic point;
+- an application issued every required persistence operation;
+- every downstream replica acknowledged a higher-level commit.
+
+So:
+
+> **`controller shutdown complete != higher-layer semantic commit`.**
+
+### E5 — protocol-level shutdown semantics do not identify the physical mechanism
+
+Nothing in `CC.SHN`, `CSTS.SHST`, or the SMART/Health counter demonstrates a particular power-loss-protection design. A conforming interface does not by itself prove the presence of capacitors, batteries, a specific FTL journal, copy-on-write mapping, NAND program granularity, or one exact firmware sequence.
+
+`interface transition contract != named internal mechanism`
+
+## Functional comparisons — bounded
+
+### Case 15 — ATA / Intel SSD power-loss protection
+
+[Case 15](../cases/15-intel-ssd320-power-loss-protection.md) contains earlier ATA durability semantics plus a named Intel SSD implementation path. It is useful only as a functional comparison: both cases involve persistence obligations around power transition, but the NVMe `SHN/SHST` state machine is not evidence that Intel's ATA-era controller used the same protocol or implementation.
+
+No ATA→NVMe shutdown genealogy is claimed here.
+
+### Case 55 — NVMe SMART / Health telemetry
+
+[Case 55](../cases/55-nvme-smart-health-endurance-telemetry.md) treats host-visible health counters as retained reporting state. `Unsafe Shutdowns` fits that reporting family, while this slice adds a sharper warning: a cumulative counter may encode a **protocol classification** rather than a complete causal record of physical damage or payload loss.
+
+`telemetry category != complete physical event history`
+
+This is functional comparison only; it does not turn the counter into the NVMe 1.4 Persistent Event Log or imply identical retention policy.
+
+## Project interpretation — bounded
+
+**Project interpretation only:** retention is not always a steady-state property of a medium. A system can expose a temporary interval in which one actor has declared an impending transition while another actor still owes work before the transition is considered complete.
+
+That makes a useful project-level distinction:
+
+> **transition intent is not transition admissibility.**
+
+The phrase is not historical NVMe terminology. It is a way to compare this interface with other cases where quiescent retention, transition safety, current control state, or maintenance completion must be kept separate.
+
+## Stop conditions / anti-overclaim
+
+This record does **not** establish any of the following:
+
+- `SHN received => SHST complete`;
+- `SHST complete => every application/database transaction is durable`;
+- `abrupt SHN => zero data loss`;
+- `Unsafe Shutdowns increment => actual payload loss occurred`;
+- `Unsafe Shutdowns unchanged => no payload loss occurred`;
+- `shutdown complete => sanitization or verified erasure`;
+- a particular PLP capacitor, battery, FTL journal, or NAND recovery design;
+- NVMe invention priority for orderly shutdown, abrupt shutdown, shutdown notification, or persistent power-loss telemetry.
+
+Broader ATA/SCSI shutdown-command genealogy, proposal chronology, and named-product power-cut validation remain open. A search of `tmzncty/computing-archaeology` found no existing dedicated NVMe shutdown-history module at the time of this slice; any broad interface genealogy should be routed there rather than duplicated here.
+
+## Bounded result
+
+The 2011 NVMe interface supports the following compact model:
+
+```text
+CC.SHN = host intent / requested shutdown class
+        !=
+CSTS.SHST = controller processing/completion state
+        !=
+loss of power = external transition event
+        !=
+Unsafe Shutdowns = retained no-prior-SHN telemetry
+        !=
+actual payload / application-semantic loss outcome
+```
+
+This deepens Case 20 without replacing its existing Flush/FUA or AWUPF results. The case now has three distinct power-failure axes:
+
+1. **persistence control** — volatile cache, Flush, FUA;
+2. **failure atomicity** — AWUPF / torn-write result envelope;
+3. **power-transition protocol** — SHN request, SHST completion, and retained unsafe-shutdown classification.
+'''
+          evidence_path.write_text(evidence + '\n')
+
+          case_path = Path('cases/20-nvme10-fua-flush-persistence-ordering.md')
+          case = case_path.read_text()
+          marker = "See [`../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md`](../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md) for the bounded 1.1b evidence ledger and anti-overclaim notes.\n\n---\n\n## Retained state"
+          if marker not in case:
+              raise SystemExit('Case 20 insertion marker not found')
+          deepening = r'''See [`../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md`](../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md) for the bounded 1.1b evidence ledger and anti-overclaim notes.
+
+### H/P — shutdown notification, shutdown completion, and unsafe-shutdown telemetry are separate states
+
+Revision 1.0 already exposes a distinct **power-transition state machine** in addition to Flush/FUA persistence controls. Host-written `CC.SHN` selects no notification, normal shutdown, or abrupt shutdown; controller-read `CSTS.SHST` separately reports normal/no-request, shutdown processing, or shutdown-processing complete. Section 7.6.2 gives different host procedures for normal and abrupt shutdown even though both can eventually reach `CSTS.SHST=10b`.
+
+The SMART / Health log then adds a third retained observable: **Unsafe Shutdowns** increments when power is lost without a shutdown notification having been received first. The counter definition is keyed to prior `CC.SHN`, not to demonstrated payload loss and not explicitly to historical attainment of `CSTS.SHST=10b`.
+
+That grounds three additional boundaries:
+
+```text
+shutdown request / intent
+        != controller shutdown-processing completion
+        != retained unsafe-shutdown telemetry classification
+        != demonstrated data-loss outcome
+```
+
+The 2014 Revision 1.1b volatile-cache exception already makes completion of the specified shutdown procedure relevant to newest-value persistence under its stated conditions. That device-level relation must still not be promoted into a filesystem/database semantic commit or into evidence for a particular PLP/FTL mechanism.
+
+See [`../evidence/20-nvme10-2011-shutdown-state-machine-deepening.md`](../evidence/20-nvme10-2011-shutdown-state-machine-deepening.md) for the bounded 2011 shutdown/telemetry ledger, source anchors, and anti-overclaim notes.
+
+---
+
+## Retained state'''
+          case = case.replace(marker, deepening, 1)
+
+          primary_marker = "Grounding details for the 2011 slice remain in [`../evidence/20-nvme10-2011-flush-fua-grounding.md`](../evidence/20-nvme10-2011-flush-fua-grounding.md). The 2014 deepening is recorded in [`../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md`](../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md)."
+          if primary_marker not in case:
+              raise SystemExit('Case 20 evidence-navigation marker not found')
+          primary_repl = primary_marker + " The 2011 power-transition deepening is recorded in [`../evidence/20-nvme10-2011-shutdown-state-machine-deepening.md`](../evidence/20-nvme10-2011-shutdown-state-machine-deepening.md)."
+          case = case.replace(primary_marker, primary_repl, 1)
+          case_path.write_text(case)
+
+          roadmap_path = Path('ROADMAP.md')
+          roadmap = roadmap_path.read_text()
+          roadmap_marker = "### Recent bounded evidence deepening\n\n"
+          if roadmap_marker not in roadmap:
+              raise SystemExit('ROADMAP insertion marker not found')
+          roadmap_item = "- [x] **Case 20 deepening — NVMe 1.0 shutdown notification/completion/unsafe-shutdown telemetry boundary** — [`cases/20-nvme10-fua-flush-persistence-ordering.md`](cases/20-nvme10-fua-flush-persistence-ordering.md), deepened by [`evidence/20-nvme10-2011-shutdown-state-machine-deepening.md`](evidence/20-nvme10-2011-shutdown-state-machine-deepening.md): ground the 2011 `CC.SHN` host request, separate `CSTS.SHST` processing/completion state, normal-versus-abrupt shutdown procedures, and SMART/Health `Unsafe Shutdowns` counter keyed to missing prior notification; separate shutdown intent, controller completion, power removal, telemetry classification, and actual data-loss outcome. Keep the later 1.1b volatile-cache shutdown exception as a device-level persistence relation without promoting shutdown completion into filesystem/database commit, a named PLP mechanism, sanitization, or invention priority. Broader ATA/SCSI shutdown genealogy and named-product power-cut validation remain open and should be coordinated with `computing-archaeology`.\n"
+          roadmap = roadmap.replace(roadmap_marker, roadmap_marker + roadmap_item, 1)
+          roadmap_path.write_text(roadmap)
+
+          index_path = Path('CASE_INDEX.md')
+          index = index_path.read_text()
+          ids = [int(x) for x in re.findall(r'\*\*(\d{4}) —', index)]
+          if not ids or max(ids) != 3466:
+              raise SystemExit(f'CASE_INDEX expected max finding 3466, got {max(ids) if ids else None}')
+          section = r'''
+
+## Case 20 deepening — NVMe 1.0 shutdown notification / completion / unsafe-shutdown telemetry
+
+Grounding: [`cases/20-nvme10-fua-flush-persistence-ordering.md`](cases/20-nvme10-fua-flush-persistence-ordering.md) and [`evidence/20-nvme10-2011-shutdown-state-machine-deepening.md`](evidence/20-nvme10-2011-shutdown-state-machine-deepening.md).
+
+- **3467 — H/P:** NVM Express Revision 1.0 (ratified 2011-03-01) exposes host-written `CC.SHN` as a shutdown notification with distinct no-notification, normal, and abrupt encodings; this is a 2011 interface witness, not an invention-priority claim.
+- **3468 — H/P:** The `CC.SHN` definition explicitly directs software to the separate controller-read `CSTS.SHST` field to determine when shutdown processing is complete, so notification and completion are distinct normative states.
+- **3469 — H/P:** `CSTS.SHST` separately reports normal/no-request (`00b`), shutdown processing (`01b`), and shutdown-processing complete (`10b`), exposing an intermediate state between host request and completed controller work.
+- **3470 — H/P:** NVMe 1.0 §7.6.2 gives different normal and abrupt host procedures: the normal path drains/deletes I/O queues before `CC.SHN=01b`, whereas the abrupt path stops new I/O and uses `CC.SHN=10b`; both may later report `CSTS.SHST=10b`.
+- **3471 — H/P:** SMART/Health `Unsafe Shutdowns` increments when power is lost without prior receipt of a shutdown notification (`CC.SHN`); its normative trigger is missing notification before power loss, not demonstrated payload loss.
+- **3472 — H/P:** The `Unsafe Shutdowns` definition is not a historical `CSTS.SHST`-completion log: the specification keys the counter to prior SHN receipt and does not state that increment/non-increment records whether shutdown processing reached `SHST=10b`.
+- **3473 — E:** `shutdown notification / intent != controller shutdown-processing completion`; the host may declare an imminent power transition while controller-side transition work remains in progress.
+- **3474 — E:** `power-off imminent != controller already ready for power removal`; the separate SHST progress/completion state is an interface-level transition boundary, not evidence for one internal drain algorithm.
+- **3475 — E:** `Unsafe Shutdowns count != data-loss incident count != lost-write count != torn-write count`; the counter classifies a protocol condition rather than directly measuring application-visible damage.
+- **3476 — E:** `prior SHN receipt != proof of shutdown completion`; a telemetry definition based on notification cannot be silently upgraded into evidence that the controller had reached `CSTS.SHST=10b` before power loss.
+- **3477 — E:** The existing NVMe 1.1b completed-write volatile-cache exception makes proper shutdown-procedure completion relevant to a bounded device-level persistence contract, but `controller shutdown complete != filesystem/database semantic commit`.
+- **3478 — E:** `SHN/SHST interface semantics != demonstrated PLP/FTL mechanism`; the standard does not identify capacitors, batteries, journals, copy-on-write metadata, NAND program geometry, or a unique firmware sequence.
+- **3479 — A:** Case 15 is a bounded functional comparison for power-transition durability mechanisms and earlier ATA durability semantics; it is not evidence that ATA and NVMe share the same shutdown state machine or a proven direct genealogy.
+- **3480 — A/P-I:** Case 55 supplies a bounded telemetry analogy: retained health counters can classify operational history without being a complete physical-event history. Project interpretation only: `transition intent != transition admissibility`; this is not NVMe historical vocabulary.
+- **3481 — X:** No claim is made that NVMe invented orderly/abrupt shutdown protocols, that abrupt SHN guarantees zero loss, that unchanged Unsafe Shutdowns proves no loss, that shutdown completion proves higher-layer commit, or that any shutdown state constitutes sanitization/verified physical erasure.
+'''
+          index_path.write_text(index.rstrip() + section + '\n')
+          PY
+
+      - name: Validate bounded integration
+        shell: bash
+        run: |
+          test -f evidence/20-nvme10-2011-shutdown-state-machine-deepening.md
+          grep -Fq '### H/P — shutdown notification, shutdown completion, and unsafe-shutdown telemetry are separate states' cases/20-nvme10-fua-flush-persistence-ordering.md
+          grep -Fq 'Case 20 deepening — NVMe 1.0 shutdown notification/completion/unsafe-shutdown telemetry boundary' ROADMAP.md
+          grep -Fq '## Case 20 deepening — NVMe 1.0 shutdown notification / completion / unsafe-shutdown telemetry' CASE_INDEX.md
+          grep -Fq '**3481 — X:**' CASE_INDEX.md
+          git diff --check
+
+      - name: Commit research and remove one-shot scaffolding
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm -f .github/workflows/integrate_case20_shutdown_transition.yml
+          git add CASE_INDEX.md ROADMAP.md cases/20-nvme10-fua-flush-persistence-ordering.md evidence/20-nvme10-2011-shutdown-state-machine-deepening.md
+          git commit -m 'case20: deepen NVMe shutdown transition semantics [skip ci]'
+          git push origin HEAD:main
