@@ -211,6 +211,21 @@ For staged comparison of logical/reference retirement, reclamation eligibility, 
 3324. The direct 1.0→1.1→1.3 revision comparison is a specification-history boundary, not a claim that NVMe invented zeroing, deallocation, TRIM-like semantics, or controller-side optimization.
 3325. Cross-case comparisons to JFFS2 explicit zero nodes or distributed negative state are functional only: negative/retirement relations and positive zero-value representations answer different questions and do not imply shared genealogy.
 
+### Case 02 magnetic-core power-transition retention deepening
+
+3326. IBM 1401 Operator's Guide A24-3144-2 (Major Revision, March 1965) prescribes `ALTER` mode for controlled power transitions and states that information in core storage is retained across the documented power-off/power-on procedure.
+3327. The IBM 1401 evidence is a named-machine operating contract, not a universal guarantee for arbitrary outages; `core nonvolatility != every power-failure path is harmless`.
+3328. DEC PDP-7 Maintenance Manual F-77A (1966) delays memory energization on turn-on until AC transients decay and de-energizes memory immediately on turn-off while logic power remains for about five seconds.
+3329. DEC explicitly gives preservation of information stored in core memory as the reason for the PDP-7 power sequencing: switching-transient current surges could otherwise destroy retained information.
+3330. `quiescent unpowered retention != power-transition immunity`: a nonvolatile magnetic state can survive without refresh yet remain vulnerable to unintended currents while supply/control circuits cross transitional states.
+3331. PDP-7 turn-on logic clears RUN and memory-control flip-flops and initializes peripheral control while protecting core contents, grounding `retained core payload != retained processor-control state`.
+3332. `stored program remains != exact execution automatically resumes`; useful restart continuity composes retained payload, safe re-entry, initialized control state, and operator/software restart procedure.
+3333. `no periodic refresh obligation != no system-level retention obligation`; PDP-7 retention work is concentrated at a power boundary rather than repeated on a refresh deadline.
+3334. The IBM and DEC witnesses are complementary but not identical implementations: shared outcome-level retention concerns do not establish common circuit design or direct genealogy.
+3335. Functional comparison to later persistent-memory or crash-recovery systems is limited to `durable payload + reconstructed/reinitialized volatile control state`; substrates, protocols, failure models, and historical vocabulary remain distinct.
+3336. The deepening does not claim IBM/DEC invention priority for power-safe core sequencing and leaves earlier 1950s power-control genealogy and Whirlwind/MTC startup-shutdown evidence open.
+3337. The companion `computing-archaeology` core-memory history already covers nonvolatility and cautions that power loss does not imply perfect resume; this slice adds machine-specific retention-boundary evidence instead of duplicating the general engineering history.
+
 ## Comparison matrix — provisional
 
 This matrix should become more precise as cases mature.

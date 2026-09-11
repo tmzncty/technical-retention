@@ -8,6 +8,8 @@ Clear/write and bulk-reset semantics deepening: [`../evidence/02-1964-tcm32-clea
 
 Security-erasure vocabulary deepening: [`../evidence/02-1991-ncsc-core-clearing-purging-degaussing-deepening.md`](../evidence/02-1991-ncsc-core-clearing-purging-degaussing-deepening.md). The 1991 NCSC source is a later security-assurance witness, not evidence that early MIT or the 1964 TCM-32 used the same policy vocabulary.
 
+Power-transition retention deepening: [`../evidence/02-1965-1966-core-power-transition-retention-deepening.md`](../evidence/02-1965-1966-core-power-transition-retention-deepening.md). This later IBM/DEC machine evidence grounds `unpowered retention != transition immunity != whole-machine restart continuity`; it does not replace the case's 1950–1954 MIT anchor.
+
 ## Scope
 
 - **Object / system:** classic coincident-current magnetic-core memory, with MIT Project Whirlwind / Memory Test Computer as the principal historical anchor;
@@ -210,6 +212,36 @@ Therefore:
 - **core clear ≠ Flash erase ≠ secure sanitization**.
 
 The TCM-32 is a 1964 implementation witness. It does not establish that the early MIT system used the same optional Memory Clear hardware, nor that 3C invented the operation.
+
+---
+
+## Power-off retention is not power-transition immunity
+
+Later named-machine manuals sharpen the case's warning that core nonvolatility is not a whole-machine restart contract.
+
+IBM's March-1965 **1401 Operator's Guide** tells operators to place the mode switch in `ALTER` for controlled power transitions. In that procedure, information in core storage is retained when power is turned off and is retained when power is turned on again. This is operating-procedure evidence, not a universal promise about arbitrary outages.
+
+DEC's **1966 PDP-7 Maintenance Manual** exposes the electrical reason the boundary matters. Its power-control logic delays energizing memory on turn-on until AC transients have decayed; on turn-off it de-energizes the memory supplies immediately while leaving computer logic powered for about five seconds. DEC states that this sequencing prevents switching-transient current surges from destroying information stored in core memory. During turn-on, other power-clear logic deliberately resets RUN and memory-control flip-flops and initializes peripheral control so the stored program is not accidentally started or disturbed.
+
+Therefore:
+
+```text
+core remanence while unpowered
+    !=
+power-transition immunity
+
+retained core payload
+    !=
+retained control state
+
+stored program remains
+    !=
+exact execution resumes
+```
+
+The retention work here is not periodic refresh. It is **boundary control**: preventing the active support circuitry from disturbing a medium that otherwise retains its magnetic state without power. This is a later system-level witness and does not change the early MIT chronology that grounds the main case.
+
+See the dedicated deepening record for sources, limits, and the division of labor with `computing-archaeology`.
 
 ---
 
