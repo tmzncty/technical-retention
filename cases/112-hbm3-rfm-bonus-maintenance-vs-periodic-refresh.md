@@ -2,9 +2,11 @@
 
 ## Status
 
-**`grounded`** — bounded to the public HBM3 `JESD238` / `JESD238A` Refresh Management (`RFM`) contract, especially the separation between periodic `REF` coverage and activity-triggered `RFM`, and the HBM3-specific difference between rolling `REFpb` coverage and targeted `RFMpb`.
+**`grounded`** — bounded to the public HBM3 `JESD238` / `JESD238A` Refresh Management (`RFM`) contract, especially the separation between periodic `REF` coverage and activity-triggered `RFM`, the HBM3-specific difference between rolling `REFpb` coverage and targeted `RFMpb`, and the optional Adaptive Refresh Management (`ARFM`) policy-level contract already present in the January-2022 standard.
 
 Grounding record: [`../evidence/112-jedec-hbm3-2022-2023-rfm-grounding.md`](../evidence/112-jedec-hbm3-2022-2023-rfm-grounding.md).
+
+ARFM chronology/policy deepening: [`../evidence/112-jedec-hbm3-2022-2023-arfm-deepening.md`](../evidence/112-jedec-hbm3-2022-2023-arfm-deepening.md).
 
 ## Scope
 
@@ -122,6 +124,66 @@ That is an accounting reset under a maintenance-qualified regime, not evidence t
 
 > **RAA reset after sustained self-refresh ≠ periodic-REF obligation erased**
 
+
+## 8. Adaptive RFM adds policy-level state above per-bank RAA
+
+The original Case-112 pass left `ARFM/later HBM evolution` in open work. Direct reinspection of the same January-2022 JESD238 source shows that this wording was too loose: **Adaptive Refresh Management is already specified in HBM3 §6.3.2.8.** The correction is chronological and semantic; it is not a new invention-priority claim.
+
+### H/P — capability, default requirement, and selected level are distinct
+
+HBM3 exposes separate `ARFM` and `RFM` bits in the IEEE1500 `DEVICE_ID` WDR. `ARFM` says whether adaptive-level selection is supported; the default `RFM` bit says whether refresh management is required at the default level. The same device record supplies read-only default and A/B/C `RAAIMT`, `RAAMMT`, and `RAADEC` profiles, while `MR8 OP[5:4]` selects the active RFM level.
+
+Therefore:
+
+```text
+ARFM capability
+    != default RFM requirement
+    != selected RFM level
+    != per-bank RAA value
+```
+
+The device publishes an allowed policy menu; the controller selects among those vendor-defined profiles. This is a more precise split-authority relation than treating “the threshold” as one immutable constant.
+
+### H/P — a level transition must retire outstanding accounted pressure first
+
+JESD238 requires the host to decrement RAA to **0** using RFM or pending REF commands before changing the ARFM level, and requires the same RFM level on all channels of the HBM3 DRAM.
+
+Engineering reconstruction:
+
+```text
+old policy level
+    + outstanding bank-local RAA pressure
+    -> maintenance / REF until accounted RAA = 0
+    -> level transition
+    -> new vendor-defined threshold/decrement profile
+```
+
+So:
+
+> **policy change != arbitrary reinterpretation of an outstanding RAA balance under new thresholds**.
+
+The standard gives a transition rule for the accounted state. It does **not** say that RAA=0 erases physical disturbance history or reveals the hidden mitigation state.
+
+### H/P — default “RFM not required” is not an immutable lifetime property
+
+ARFM can also make RFM operative on an ARFM-capable HBM3 DRAM whose default `RFM` bit says `RFM not required`: selecting a non-default level makes the device treat RFM commands as RFM rather than RNOP.
+
+Thus:
+
+> **default RFM requirement != immutable lifetime RFM requirement**.
+
+Conversely, a device without ARFM support cannot treat the non-default level field as a generic tuning knob; those combinations are illegal/RFU.
+
+### E — “adaptive” does not prove autonomous DRAM policy selection
+
+The public contract gives the **controller** flexibility to choose Levels A/B/C. The inspected standard does not demonstrate that the DRAM autonomously chooses a level from workload, temperature, or observed faults.
+
+> **ARFM != demonstrated autonomous self-tuning of the selected level**.
+
+This distinction matters because Case 112 already separates public controller-side RAA bookkeeping from opaque in-DRAM management. ARFM adds a policy-selection layer; it does not disclose the hidden victim-selection algorithm.
+
+Full source mapping and limits are recorded in [`../evidence/112-jedec-hbm3-2022-2023-arfm-deepening.md`](../evidence/112-jedec-hbm3-2022-2023-arfm-deepening.md).
+
 ## Cross-case comparison
 
 ### Case 54 — DDR5 RFM
@@ -189,7 +251,7 @@ It does **not** prove that HBM3 RFM derives from that paper, implements PARA, or
 
 ## Open work
 
-Pre-2022 committee/patent genealogy; named HBM3 stack and controller behavior; independent HBM3 command traces; hidden victim selection; ARFM and later HBM evolution; threshold/fault injection; performance/energy validation.
+Pre-2022 committee/patent genealogy; named HBM3 stack and controller behavior; independent HBM3 command traces; hidden victim selection; commercial ARFM level-selection policy and later HBM evolution beyond the inspected 2022–2023 contract; threshold/fault injection; performance/energy validation.
 
 ## Sources
 

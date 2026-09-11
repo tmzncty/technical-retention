@@ -273,6 +273,22 @@ For staged comparison of logical/reference retirement, reclamation eligibility, 
 3376. **Philosophical interpretation:** The project may interpret persistent hint-window state as remembering that a temporary retention budget has already been consumed, while the 4.1.5 correction shows that this memory must itself become forgettable when no longer authoritative.
 3377. **Security boundary:** Hint generation expiry, hint replay, or coordinator-side hint deletion does not establish media sanitization or physical erasure of all mutation embodiments in the cluster.
 
+
+3378. **Historical correction:** January-2022 JESD238 already contains Adaptive Refresh Management (`ARFM`) in §6.3.2.8; Case 112 no longer leaves ARFM ambiguously as a later-HBM-only item.
+3379. **Historical record:** HBM3 exposes separate read-only `ARFM` capability and default `RFM`-required bits in the IEEE1500 `DEVICE_ID` WDR; support for adaptive level selection and the default requirement for RFM are different properties.
+3380. **Historical record:** An ARFM-capable device exposes vendor-set default plus Level A/B/C `RAAIMT`, `RAAMMT`, and `RAADEC` parameter profiles, while the controller selects the active level through `MR8 OP[5:4]`.
+3381. **Historical record:** JESD238 states that Levels A/B/C require RFM and that increasing the RFM level increases the need for RFM commands, with Level C the highest level.
+3382. **Historical record:** Before changing ARFM level, the host must decrement the Rolling Accumulated ACT count to zero with RFM or pending REF commands.
+3383. **Historical record:** JESD238 requires the same selected RFM level on all channels of one HBM3 DRAM even though RAA accounting remains per bank.
+3384. **Historical record:** An ARFM-capable HBM3 DRAM whose default `RFM` bit is 0 can make RFM operative by programming a non-default adaptive level; default `RFM not required` is therefore not an immutable lifetime requirement state.
+3385. **Historical record:** HBM3 devices without ARFM support treat non-default ARFM level selections as unsupported/illegal rather than exposing a universal controller tuning knob.
+3386. **Engineering reconstruction:** `ARFM capability != default RFM requirement != selected RFM level != per-bank RAA`; these are distinct pieces of retained/control state that compose in the maintenance protocol.
+3387. **Engineering reconstruction:** Vendor-published read-only threshold/decrement profiles plus controller level selection constitute split authority; the controller chooses among allowed profiles rather than supplying arbitrary hidden-DRAM thresholds.
+3388. **Engineering reconstruction:** Requiring RAA=0 before a level transition creates an explicit maintenance-state normalization boundary: policy change does not arbitrarily reinterpret a nonzero accounted activation balance under a new threshold regime.
+3389. **Engineering boundary:** `RAA = 0` for an ARFM transition does not prove that physical disturbance history is absent or that hidden victim-selection state has been erased.
+3390. **Engineering boundary / terminology:** `Adaptive Refresh Management` in the public HBM3 interface does not demonstrate autonomous DRAM choice of Level A/B/C; the inspected contract gives the controller the level-selection action.
+3391. **Functional analogy / security boundary:** Case 54 DDR5 RFM and Case 112 HBM3 ARFM both expose device/controller split maintenance authority, but command geometry, encodings, policies, and genealogy remain distinct; selecting or completing RFM likewise does not establish sanitization of stored payload.
+
 ## Comparison matrix — provisional
 
 This matrix should become more precise as cases mature.

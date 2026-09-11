@@ -8,6 +8,8 @@ This record grounds one narrow relation:
 
 It does not reconstruct hidden in-DRAM mitigation, establish commercial-controller behavior, or claim invention priority.
 
+ARFM chronology/policy deepening: [`112-jedec-hbm3-2022-2023-arfm-deepening.md`](112-jedec-hbm3-2022-2023-arfm-deepening.md). Direct reinspection shows that ARFM is already part of JESD238 (January 2022), so it is no longer left as a generic later-HBM evidence item.
+
 ## Source 1 — JESD238, January 2022
 
 **Document:** JEDEC, _High Bandwidth Memory DRAM (HBM3)_, JESD238, January 2022.  
@@ -177,4 +179,4 @@ Searches in `tmzncty/computing-archaeology` for `HBM`, `HBM3`, and `HBM3 RFM` fo
 
 ## Open evidence
 
-Pre-2022 committee drafts/patents; named HBM3 RFM parameter values; controller bookkeeping/scheduling; independent command traces; hidden internal mitigation; ARFM/later HBM revisions; threshold and missed-RFM fault injection.
+Pre-2022 committee drafts/patents; named HBM3 RFM parameter values; controller bookkeeping/scheduling; independent command traces; hidden internal mitigation; commercial ARFM policy and later HBM revisions beyond the inspected 2022–2023 contract; threshold and missed-RFM fault injection.
