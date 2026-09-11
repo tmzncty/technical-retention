@@ -1,0 +1,29 @@
+name: deepen-case44-write-zeroes
+
+on:
+  push:
+    paths:
+      - '.github/workflows/deepen-case44-write-zeroes.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: technical-retention-research
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Deepen Case 44 Write Zeroes semantics
+        run: |
+          bash scripts/deepen_case44_write_zeroes.sh
