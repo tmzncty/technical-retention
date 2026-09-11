@@ -256,6 +256,23 @@ For staged comparison of logical/reference retirement, reclamation eligibility, 
 3361. **Philosophical interpretation:** The project may describe AWUPF as preserving a coherent admissible-state boundary rather than guaranteed recency; this is interpretive vocabulary, not NVMe historical terminology.
 3362. **Security boundary:** Atomic-write / anti-torn semantics do not establish sanitization of superseded physical embodiments.
 
+
+3363. **Historical record:** CASSANDRA-14309 was integrated by ASF commit `b2ccd0f3` on 2021-10-22 for Cassandra 4.1 under the explicit goal of making the hint window persistent across node restarts.
+3364. **Historical record:** The Cassandra 4.1 NEWS entry states that the pre-change hint window could be reopened by repeated node restarts before hint delivery completed, allowing hints to accumulate indefinitely and consume increasing disk space.
+3365. **Historical record:** Cassandra 4.1 adds `hint_window_persistent_enabled`, defaulting to true, so endpoint downtime alone is not always sufficient to admit a new hint.
+3366. **Historical record:** Cassandra 4.1.0 `StorageProxy.shouldHint()` first tests current endpoint downtime and, when persistent windows are enabled, also tests whether the destination already has an outstanding hint older than `maxHintWindow`.
+3367. **Historical record:** Cassandra 4.1.0 `HintsService.getEarliestHintForHost()` derives earliest outstanding-hint age from both the first persisted hint descriptor and in-memory hint buffers.
+3368. **Engineering reconstruction:** A retention timer is not fully specified by its duration: the event that starts/resets the clock and the state that carries age across restart/liveness transitions are part of the retention mechanism.
+3369. **Engineering reconstruction:** `endpoint downtime <= max hint window` is not equivalent to `oldest unresolved hint obligation <= max hint window` once persistent-window admission is enabled.
+3370. **Engineering reconstruction:** Rejecting generation of another hint because the window is exhausted does not prove prior hints were delivered and does not prove replica convergence; hint admission, handoff completion, and anti-entropy repair remain separate states.
+3371. **Historical record:** CASSANDRA-19495, resolved 2024-04-05 and fixed for 4.1.5, reports that stale earliest-hint state from a completed earlier outage could suppress hints during a later outage; the issue marks the regression as present since 4.1.0.
+3372. **Historical record:** ASF commit `5fb562d7` clears earliest-hint buffer state as hint dispatch / host excision advances, making the control relation retire with the obligation it summarized.
+3373. **Engineering reconstruction:** CASSANDRA-19495 shows that control metadata retained to enforce bounded retention has its own currentness requirement: retained too briefly it can reopen the budget, retained too long it can block a new obligation.
+3374. **Functional analogy:** Case 48 repair-state metadata and Case 41 persistent hint-window metadata both alter future maintenance eligibility, but they govern different state machines and must not be collapsed.
+3375. **Method / prior art:** Case 23 Amazon Dynamo (2007) remains earlier primary prior art for generic hinted handoff; Cassandra 4.1 is treated only as a later operational refinement of hint-window scope, not an invention claim.
+3376. **Philosophical interpretation:** The project may interpret persistent hint-window state as remembering that a temporary retention budget has already been consumed, while the 4.1.5 correction shows that this memory must itself become forgettable when no longer authoritative.
+3377. **Security boundary:** Hint generation expiry, hint replay, or coordinator-side hint deletion does not establish media sanitization or physical erasure of all mutation embodiments in the cluster.
+
 ## Comparison matrix — provisional
 
 This matrix should become more precise as cases mature.

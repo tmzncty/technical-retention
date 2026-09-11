@@ -2,7 +2,7 @@
 
 ## Scope
 
-- **Bounded system:** Apache Cassandra 3.x operational semantics remain the principal behavior layer, with bounded historical floors from Apache Incubator Cassandra in 2009 and Cassandra 1.2.19 in 2014, plus a narrowly bounded Cassandra 4.1.0–4.1.6 Paxos-v2 defect/fix deepening; the older and later artifacts are used only where they directly change deletion-evidence retention, reclamation, or resurrection boundaries.
+- **Bounded system:** Apache Cassandra 3.x operational semantics remain the principal behavior layer, with bounded historical floors from Apache Incubator Cassandra in 2009 and Cassandra 1.2.19 in 2014, plus narrowly bounded Cassandra 4.1.0–4.1.5 persistent-hint-window and 4.1.0–4.1.6 Paxos-v2 defect/fix deepenings; the older and later artifacts are used only where they directly change deletion-evidence retention, reclamation, or resurrection boundaries.
 - **Bounded mechanism:** deletion tombstones, `gc_grace_seconds`, compaction-time tombstone purging, repair, hinted handoff, and the `only_purge_repaired_tombstones` safety option.
 - **Primary source base:** Apache Cassandra 3.11 official documentation; Apache Cassandra source/tests and release records; exact Apache git history for the 17 April 2009 GC-grace configurability change and the 11 August 2015 repaired-tombstone purge option; plus bounded 1.2.19 implementation evidence.
 - **Research question:** why can a distributed system need to retain evidence of deletion, and why can forgetting that evidence too early cause older positive data to become current again?
@@ -309,6 +309,63 @@ stale positive Paxos commit
 Therefore `replicas repaired enough for ordinary tombstone retirement` and `every auxiliary mechanism can no longer re-authorize older positive state` are not the same proposition.
 
 This is a bounded engineering reconstruction from one Apache defect class, not a universal theorem about Paxos or distributed deletion.
+
+
+## Historical deepening — Cassandra 4.1 persistent hint windows and the 4.1.5 stale-window correction
+
+Case 41 already distinguishes the **hint retention / delivery window** from `gc_grace_seconds`: hints are a bounded best-effort missed-mutation path, while tombstone grace constrains how long negative deletion evidence remains eligible for reclamation. Cassandra 4.1 adds a further retention boundary inside the hint path itself.
+
+### H/P — 4.1 makes the hint-generation window survive repeated restart episodes
+
+ASF commit [`b2ccd0f3f588a34cd68222bdacd1914478914ac9`](https://github.com/apache/cassandra/commit/b2ccd0f3f588a34cd68222bdacd1914478914ac9), committed **22 October 2021** for **CASSANDRA-14309** and shipped with Cassandra 4.1, is titled `ensure hint window is persistent across restarts of a node`. Its NEWS entry explains the defect in the older window scope: repeated node restarts could make the destination appear newly eligible for hints before existing handoff completed, so a nominally bounded hint window could in practice admit hints indefinitely and consume increasing disk space.
+
+The change adds `hint_window_persistent_enabled`, defaulting to `true`. In Cassandra 4.1.0, `StorageProxy.shouldHint()` first checks current endpoint downtime and, when the persistent-window policy is enabled, also compares `maxHintWindow` with the age of the destination's **earliest still-outstanding hint**. `HintsService.getEarliestHintForHost()` derives that age from persisted hint descriptors plus in-memory buffers.
+
+The resulting bounded relation is:
+
+```text
+current down-episode duration
+    !=
+age of oldest unresolved hint obligation
+```
+
+A configured duration alone therefore does not fully specify a retention policy; the scope and reset conditions of its clock are part of the mechanism.
+
+Apache announced Cassandra 4.1 GA on **13 December 2022**. That release date is used only as the shipping boundary for this behavior, not as the invention date of hinted handoff.
+
+### H/P — CASSANDRA-19495 shows that the retained window state can itself become stale
+
+ASF issue [CASSANDRA-19495](https://issues.apache.org/jira/browse/CASSANDRA-19495), resolved **5 April 2024** and fixed for 4.1.5, reports the converse failure. After one outage's hints had been replayed, stale earliest-hint state could survive long enough that a later, distinct outage was treated as already beyond the persistent hint window and **new hints were not recorded**.
+
+Commit [`5fb562d7efbad7bf9c2297a62991d36da90589e9`](https://github.com/apache/cassandra/commit/5fb562d7efbad7bf9c2297a62991d36da90589e9), `Fix hints delivery for a node going down repeatedly`, adds explicit clearing of earliest-hint buffer state as dispatch / excision advances.
+
+This is direct implementation evidence for a maintenance-state currentness rule:
+
+```text
+retained oldest-hint state
+    can enforce a bounded generation window
+but
+stale oldest-hint state
+    can incorrectly suppress a later maintenance obligation
+```
+
+### E — retained maintenance history needs its own retirement condition
+
+The 4.1 feature and 4.1.5 correction together show both sides of the same retention problem. Forget the oldest-hint relation too readily and repeated restarts can reopen a supposedly bounded window forever; retain it after the corresponding outstanding obligation is gone and a future outage can be misclassified.
+
+So:
+
+```text
+retention-window enforcement
+    may require retained control history
+
+retained control history
+    != permanently authoritative control history
+```
+
+This is functionally analogous to Case 48's repair-state currentness problem, but the mechanisms must remain separate: `repairedAt` / pending-repair status selects future repair inputs, while the persistent hint-window relation selects whether another deferred mutation may be admitted.
+
+The complete source ledger, version boundaries, and CASSANDRA-19495 correction are recorded in [`../evidence/41-cassandra-2021-2024-persistent-hint-window-deepening.md`](../evidence/41-cassandra-2021-2024-persistent-hint-window-deepening.md).
 
 ---
 
