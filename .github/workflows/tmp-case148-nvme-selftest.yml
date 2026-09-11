@@ -1,0 +1,52 @@
+name: Temporary Case148 NVMe self-test integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tmp-case148-nvme-selftest.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Integrate bounded Case148 research slice
+        shell: bash
+        run: |
+          set -euo pipefail
+          git pull --ff-only origin main
+          python3 _automation_case148_nvme13_selftest.py
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in [
+              'CASE_INDEX.md',
+              'ROADMAP.md',
+              'cases/148-nvme13-device-self-test-reset-surviving-maintenance.md',
+              'evidence/148-nvme13-2017-device-self-test-reset-resume-grounding.md',
+          ]:
+              p = Path(name)
+              p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
+          rm -f _automation_case148_nvme13_selftest.py .github/workflows/tmp-case148-nvme-selftest.yml
+          git diff --check
+          test -f cases/148-nvme13-device-self-test-reset-surviving-maintenance.md
+          test -f evidence/148-nvme13-2017-device-self-test-reset-resume-grounding.md
+          grep -q '3196 — 26-Apr-2017 ratification != 1-May-2017 document date' CASE_INDEX.md
+          grep -q '3215 — related-repository boundary' CASE_INDEX.md
+          grep -q 'Case 148 NVMe 1.3 Device Self-test reset/power-surviving maintenance slice' ROADMAP.md
+          grep -q 'extended device self-test operation shall persist across any Controller Level Reset' cases/148-nvme13-device-self-test-reset-surviving-maintenance.md || true
+          test ! -e _automation_case148_nvme13_selftest.py
+          test ! -e .github/workflows/tmp-case148-nvme-selftest.yml
+          git config user.name 'technical-retention automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'case148: ground NVMe self-test reset-resume state'
+          git push origin HEAD:main
