@@ -36,6 +36,13 @@ jobs:
           Path('/tmp/integrate_case141.py').write_text(body + '\n')
           PY
           python /tmp/integrate_case141.py
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('cases/141-postgresql-replication-slot-wal-retention-frontier.md')
+          text = p.read_text()
+          text = text.replace('and PostgreSQL 17 logical failover-slot synchronization (2024)  \n', 'and PostgreSQL 17 logical failover-slot synchronization (2024)\n', 1)
+          p.write_text(text)
+          PY
 
       - name: Validate bounded integration
         shell: bash
