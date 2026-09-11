@@ -136,6 +136,12 @@ That is a standards-development floor, not an origin date. The later July 2020 f
 
 A complete genealogy would require the underlying ballot/proposal history before this compiled draft, revision-by-revision comparison through published JESD79-5 versions, earlier vendor or research proposals, cross-vendor device documentation, and memory-controller implementations. That broader historical engineering work belongs primarily in `computing-archaeology` if pursued comprehensively.
 
+## Coverage relationship with Case 33 and LPDDR controls
+
+This case is intentionally narrower than [`Case 33`](33-micron-ddr5-same-bank-refresh-localization.md), not a second independent claim that DDR5 introduced localized refresh. Case 33 carries Micron's 2019–2023 manufacturer-primary evidence for target idleness, lockout, residual timing, and service interference. Case 106 carries the earlier **2017 proposed-spec floor** plus explicit bank-index synchronization and coverage accounting. The two should be cited together when both chronology and operational geometry matter.
+
+Earlier per-bank refresh is already bounded separately in [`Case 105`](105-micron-lpddr2-per-bank-refresh-maintenance-granularity.md), while [`Case 139`](139-lpddr3-lpddr4-per-bank-refresh-target-authority.md) isolates the LPDDR3→LPDDR4 migration of bank-target selection authority. Chronology across these cases is not treated as direct genealogy.
+
 ## Functional analogy and philosophical limit
 
 A functional analogy to rotating maintenance crews working on the same numbered unit in several independent sections can make the target geometry intuitive. The analogy stops there. Bank groups are not archival departments, REFsb is not cultural selection, and the synchronization counter is not human memory.

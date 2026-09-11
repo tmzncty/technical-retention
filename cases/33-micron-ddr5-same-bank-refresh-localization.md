@@ -237,6 +237,18 @@ Likewise, `maintenance-interference geometry`, `maintenance localization`, and `
 
 The phrase `per-bank refresh` should remain a broader comparative bucket until a specific historical standard/product regime is separately grounded. DDR5 `REFsb` is not retroactively assigned to earlier DRAMs merely because both can be described as localized refresh.
 
+## Coverage consolidation
+
+Case 33 now serves as the **manufacturer-primary service/interference-geometry** entry for DDR5 Same Bank Refresh. It should be read together with, rather than duplicated by:
+
+- [`Case 106`](106-ddr5-same-bank-refresh-parallel-target-set.md), which carries the earlier **December 2017 proposed-spec draft** and the stronger bank-index synchronization / coverage-accounting evidence;
+- [`Case 105`](105-micron-lpddr2-per-bank-refresh-maintenance-granularity.md), which grounds the earlier LPDDR2 one-bank `REFpb` product regime and prevents a DDR5 invention-priority reading;
+- [`Case 139`](139-lpddr3-lpddr4-per-bank-refresh-target-authority.md), which isolates the LPDDR3→LPDDR4 change in **who selects the next per-bank target**.
+
+These are complementary slices, not an invention ladder. The shared functional relation is that refresh work can be spatially localized while broader retention obligations remain; target geometry, target-selection authority, coverage accounting, and service interference must still be kept distinct.
+
+A later Case 151 repeated these already-grounded relations without adding a new retention axis and has therefore been retired from the active case set instead of being maintained as a separate duplicate.
+
 ## Functional analogy and philosophical limit
 
 A bounded functional analogy can compare DDR5 Same Bank Refresh with other technologies that narrow the scope of maintenance interference: the object is not to eliminate maintenance but to prevent one maintenance event from monopolizing every service resource.
