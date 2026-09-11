@@ -1,0 +1,34 @@
+name: Case 70 Papian integration
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Apply bounded Case 70 patch
+        run: python3 .github/retention_case70_integrate.py
+      - name: Validate research tree
+        run: |
+          git diff --check
+          test -f evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md
+          grep -Fq 'Papian 1952 direct-facsimile' CASE_INDEX.md
+          grep -Fq 'Case 70 deepening — Papian 1952 direct-facsimile' ROADMAP.md
+          grep -Fq 'Direct Papian facsimile deepening (1952)' cases/70-magnetic-core-half-select-disturbance.md
+      - name: Commit and push research integration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/retention_case70_integrate.py .github/workflows/case70-papian-integrate.yml
+          git add CASE_INDEX.md ROADMAP.md cases/70-magnetic-core-half-select-disturbance.md evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md
+          git commit -m 'case70: deepen Papian half-select facsimile [skip ci]'
+          git push origin HEAD:main
