@@ -1,0 +1,29 @@
+name: deepen-case104-low-power-retention
+
+on:
+  push:
+    paths:
+      - '.github/workflows/deepen-case104-low-power-retention.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: technical-retention-research
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Deepen Case 104 low-power retention boundary
+        run: |
+          bash scripts/deepen_case104_low_power_retention_boundary.sh
