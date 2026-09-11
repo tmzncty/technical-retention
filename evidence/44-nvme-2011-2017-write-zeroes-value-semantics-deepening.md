@@ -231,7 +231,7 @@ unique physical embodiment
 
 FUA-qualified command completion
     !=
-sanitation / prior-data-unrecoverability proof
+sanitization / prior-data-unrecoverability proof
 
 zero-valued future read
     !=

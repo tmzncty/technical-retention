@@ -111,7 +111,7 @@ allocation/deallocation state
     !=
 physical embodiment
     !=
-sanitation state
+sanitization state
 ```
 
 So **zero-valued future reads do not prove physical erase or sanitization**. Conversely, deallocation does not, by itself, promise the zero-valued result that `Write Zeroes` does. Revision 1.3 can couple the two relations in one command without making them conceptually identical.
