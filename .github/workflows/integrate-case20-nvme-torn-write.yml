@@ -1,0 +1,20 @@
+name: Integrate Case20 NVMe torn-write deepening
+
+on:
+  push:
+    branches:
+      - __case20_torn_write_disabled__
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: ${{ github.actor == github.repository_owner && !contains(github.event.head_commit.message, 'case20: deepen NVMe torn-write atomicity') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply Case20 research slice
+        run: bash scripts/integrate-case20-nvme-torn-write.sh
