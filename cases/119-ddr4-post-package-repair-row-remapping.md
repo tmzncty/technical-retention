@@ -4,7 +4,7 @@
 
 **`grounded`** — bounded to DDR4-era Post-Package Repair (`PPR`) semantics evidenced by Micron DDR4 product documentation, Intel platform documentation, Lenovo ThinkSystem service behavior, and an Intel hard-PPR power-failure disclosure. A 1979-filed semiconductor-memory redundancy patent supplies an earlier spare-row/address-substitution prior-art floor. The case does **not** claim a complete JEDEC PPR genealogy or a universal internal implementation for all DDR4 devices.
 
-Grounding record: [`../evidence/119-ddr4-1979-2023-post-package-repair-grounding.md`](../evidence/119-ddr4-1979-2023-post-package-repair-grounding.md).
+Grounding records: [`../evidence/119-ddr4-1979-2023-post-package-repair-grounding.md`](../evidence/119-ddr4-1979-2023-post-package-repair-grounding.md) + [`../evidence/119-micron-ddr4-ppr-payload-retention-resource-exhaustion-deepening.md`](../evidence/119-micron-ddr4-ppr-payload-retention-resource-exhaustion-deepening.md).
 
 ## Scope
 
@@ -25,6 +25,48 @@ This case is deliberately narrow. It is **not**:
 - a proof that a 1979 spare-row design directly evolved into DDR4 PPR.
 
 Broader semiconductor-memory redundancy history belongs primarily in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) if developed there. Current searches found no dedicated PPR case to reuse.
+
+---
+
+## Payload-retention and repair-resource deepening
+
+Micron's DDR4 PPR sequence documentation closes two evidence debts left by the original grounding; see [`../evidence/119-micron-ddr4-ppr-payload-retention-resource-exhaustion-deepening.md`](../evidence/119-micron-ddr4-ppr-payload-retention-resource-exhaustion-deepening.md).
+
+First, **persistent row repair does not by itself define payload preservation across the repair transition**. In Micron's documented `sPPR` path, the bank is expected to retain array data except for the seed row and associated row addresses; if those contents must survive the repair, they are explicitly backed up before sPPR and restored afterwards. Micron's `hPPR` documentation likewise exposes two command-sequence envelopes: one supports data retention under its stated refresh conditions, while the other does not support data retention for the target DRAM.
+
+Second, **repair support does not imply that a repair resource is still available**. Micron states that once the hPPR resource for a bank is used up, the bank should be treated as lacking sPPR resources as well; a repair sequence issued when no repair resource is available is ignored.
+
+The engineering reconstruction can therefore be sharpened to:
+
+```text
+logical row-address continuity
+!=
+repair-mapping persistence
+!=
+payload preservation across repair
+
+PPR capability
+!=
+repair resource available now
+
+repair sequence issued
+!=
+new repair mapping installed
+```
+
+For the bounded sPPR path, data-preserving maintenance is a compound workflow:
+
+```text
+back up affected seed / associated rows
+    -> perform repair/remap transition
+    -> restore payload
+```
+
+That is not evidence for a universal DDR4 migration algorithm. It is evidence that **mapping continuity and payload continuity are distinct obligations even inside one vendor's documented PPR procedure**.
+
+Repair-resource exhaustion also makes future maintainability stateful: consuming a finite repair resource changes which later defect-repair transitions remain admissible. This is a repository-level engineering reconstruction, not Micron's historical terminology and not a claim that every DDR4 vendor exposes the same spare topology or count.
+
+Finally, none of these transitions establishes sanitization. Backing up/restoring data, redirecting a row address, retiring a defective row, or consuming a spare does not prove that data remaining in the old physical embodiment has been securely erased or made forensically inaccessible.
 
 ---
 
@@ -299,10 +341,10 @@ The useful conclusion is narrower:
 - establish the exact JEDEC revision/ballot chronology by which `hPPR` and `sPPR` entered DDR4 rather than assuming initial JESD79-4 already contained both;
 - obtain a stable official Micron-hosted archive or page-preserving facsimile for the bounded 2020 DDR4 product documentation;
 - compare Samsung/SK hynix/Micron internal repair-resource and fuse/antifuse implementations without projecting one vendor's mechanism onto another;
-- establish exact target-row data-preservation/destruction semantics for each PPR sequence and product;
+- extend the now-grounded Micron target-row/associated-row preservation semantics to JEDEC text and Samsung/SK hynix products before making any cross-vendor rule;
 - inspect how ECC/patrol scrub/error thresholds hand off row-defect evidence to firmware repair decisions on named platforms;
 - test hard-PPR power-failure behavior and recovery on sacrificial hardware where safe and practical;
-- characterize repair-resource exhaustion and telemetry on named DIMMs;
+- characterize physical repair-resource topology/counts, exhaustion telemetry, and success/failure reporting on named DIMMs without projecting the bounded Micron behavior across vendors;
 - investigate interactions among manufacturing-time redundancy, post-package repair, internal address scrambling/remapping, RowHammer mitigation, and later DDR5 repair features.
 
 These are future bounded slices. They are not blockers for the present `logical address vs physical row vs repair-state lifetime` result.
