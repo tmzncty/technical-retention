@@ -37,6 +37,11 @@ jobs:
           Path('/tmp/integrate_case20_shutdown.py').write_text(body + '\n')
           PY
           python /tmp/integrate_case20_shutdown.py
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('CASE_INDEX.md')
+          p.write_text(p.read_text().rstrip() + '\n')
+          PY
 
       - name: Validate bounded integration
         shell: bash
