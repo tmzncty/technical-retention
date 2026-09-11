@@ -1,0 +1,29 @@
+name: add-synthesis-28-reclamation-authority
+
+on:
+  push:
+    paths:
+      - '.github/workflows/add-synthesis-28-reclamation-authority.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: technical-retention-research
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Add reclamation-authority synthesis
+        run: |
+          bash scripts/add_synthesis_28_reclamation_authority.sh
