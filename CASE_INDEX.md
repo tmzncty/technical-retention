@@ -4383,3 +4383,24 @@ Grounding record: [`evidence/150-crucial-2014-2024-active-garbage-collection-gro
 - **3251 — Case145 JFFS2 GC != managed-SSD hidden GC:** both relocate live data before erase, but JFFS2 exposes filesystem node/version/reuse evidence while a managed SSD hides mapping/reclaim state behind firmware. (`A`, `X`)
 - **3252 — Case84 ZNS authority shift != proof that all GC disappears:** ZNS changes the host/device placement-reclamation boundary and can reduce hidden GC pressure, but it is not the same state machine as M550 Active GC. (`A`, `X`)
 - **3253 — related-repository boundary:** fresh `tmzncty/computing-archaeology` search found no dedicated SSD-GC study; broad FTL/commercial-GC genealogy belongs there while Case150 retains the bounded reclamation relation. (`H/P` project-state record)
+### Case 151 — DDR5 Same Bank Refresh: Partitioned Refresh Scope
+
+3254. **[H]** JEDEC publicly announced publication of JESD79-5 DDR5 SDRAM on 2020-07-14; this is a public-standard boundary, not an invention date.
+3255. **[H]** Micron documents DDR5 `REFsb` as refreshing a bank in each bank group rather than requiring an all-bank refresh episode.
+3256. **[E]** `same-bank wording != exactly one physical bank total`; the public DDR5 command scope is the same bank number across bank groups.
+3257. **[H]** Micron states that non-targeted banks need not all be idle during `REFsb` and remain available subject to the applicable timing restrictions.
+3258. **[E]** `refresh obligation != whole-array unavailability`; mandatory retention maintenance does not require every bank to be blocked by every refresh episode.
+3259. **[E]** `maintenance scope != retention scope`; a bank-partitioned operation can contribute to a device-wide periodic retention obligation.
+3260. **[E]** `some bank scope under maintenance != all banks unavailable`; accessibility is scoped by the refresh command and timing contract.
+3261. **[E]** `foreground service continuity != absence of refresh maintenance`; useful accesses can coexist with restorative work on another bank scope.
+3262. **[H]** A Micron-origin 2014 LPDDR2 manual documents `REFpb` per-bank refresh on a named product family, with other banks accessible during the target bank's refresh cycle.
+3263. **[E]** DDR5 `REFsb` must not be described as the global invention of bank-scoped DRAM refresh given the earlier LPDDR2 product record.
+3264. **[E]** `LPDDR2 REFpb != DDR5 REFsb`; similar bank-scoped goals do not establish an identical targeting/state machine.
+3265. **[E]** `earlier chronology != direct genealogy`; the 2014 prior-art floor blocks novelty overclaim without proving LPDDR2-to-DDR5 descent.
+3266. **[E]** `controller-visible refresh granularity != per-row individualized retention profiling`; bank-scoped commands do not prove row-specific leakage measurement.
+3267. **[E]** `interface capability != shipped controller scheduling policy`; the existence of `REFsb` does not establish when a concrete CPU/controller chooses to issue it.
+3268. **[E]** refresh command/timing state is control/maintenance state, not a payload replica and not a complete history of previous refresh events.
+3269. **[E]** bank-scoped refresh is not by itself ECC scrub or an integrity proof; those operations answer different failure/authority questions.
+3270. **[E]** DRAM refresh is restorative retention maintenance, not sanitization or evidence that prior data has become irrecoverable.
+3271. **[A]** Interpretation only: persistence obligations can be spatially decomposed so that one scope is temporarily withdrawn for maintenance while other scopes remain serviceable.
+3272. **[E]** Related-repository boundary: broad DDR/LPDDR refresh genealogy and controller adoption belong in `computing-archaeology`; Case 151 retains only the bounded retention relation.
