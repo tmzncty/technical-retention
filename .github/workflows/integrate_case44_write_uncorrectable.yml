@@ -40,7 +40,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git rm tools/integrate_case44_write_uncorrectable.py .github/workflows/integrate_case44_write_uncorrectable.yml
+          git rm -f tools/integrate_case44_write_uncorrectable.py .github/workflows/integrate_case44_write_uncorrectable.yml
           git add CASE_INDEX.md ROADMAP.md cases/44-nvme13-deallocate-sanitize-forgetting.md evidence/44-nvme10-2011-write-uncorrectable-logical-unreadability-deepening.md
           git commit -m 'case44: deepen Write Uncorrectable semantics [skip ci]'
           git push
