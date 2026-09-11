@@ -4590,3 +4590,21 @@ Grounding: [`cases/55-nvme-smart-health-endurance-telemetry.md`](cases/55-nvme-s
 - **3434 — E:** `persistent != immutable`; ordinary diagnostic-history retention may yield to a stronger sanitization/forgetting policy.
 - **3435 — H/P/A:** ATA/ATAPI-5's grounded 1999 21-entry circular self-test log is earlier prior art for bounded retained device diagnostic history; PEL is a later heterogeneous standardized event-history interface, with no direct ATA→NVMe genealogy asserted.
 - **3436 — X:** PEL does not by itself prove complete/lossless device history, hidden NAND/FTL algorithm, proposal-level invention priority, direct ATA→NVMe lineage, or independent verification that a recorded sanitize completion made every prior embodiment unrecoverable.
+## Case 44 deepening — NVMe 1.0 Write Uncorrectable / logical unreadability without deallocation
+
+Grounding: [`cases/44-nvme13-deallocate-sanitize-forgetting.md`](cases/44-nvme13-deallocate-sanitize-forgetting.md) and [`evidence/44-nvme10-2011-write-uncorrectable-logical-unreadability-deepening.md`](evidence/44-nvme10-2011-write-uncorrectable-logical-unreadability-deepening.md).
+
+- **3437 — H/P:** The original NVM Express 1.0 specification was ratified on March 1, 2011 and includes optional `Write Uncorrectable` in the NVM command set; this is a standards-version boundary, not an invention date.
+- **3438 — H/P:** NVMe 1.0 §6.10 defines `Write Uncorrectable` as marking an LBA invalid so that later reads fail with `Unrecovered Read Error`.
+- **3439 — H/P:** A later successful write to the affected logical blocks clears the invalid-LBA status, making the host-visible error condition explicitly reversible through ordinary write service.
+- **3440 — H/P:** NVMe 1.0's Identify Namespace allocation semantics say a logical block is allocated when written by either `Write` or `Write Uncorrectable`, while Dataset Management is the operation that may deallocate it.
+- **3441 — H/P/E:** NVMe 1.0 excludes `Write Uncorrectable` from SMART/Health `Data Units Written` while separately treating it as an allocation event; allocation/error-validity state change is not identical to ordinary host-payload write accounting.
+- **3442 — E:** `readability / validity state != allocation / deallocation state`; an LBA can be host-visible as invalid/unreadable while remaining allocated.
+- **3443 — E:** `error-marked allocated != deallocated`; a read-error contract cannot be substituted for Dataset Management deallocation semantics.
+- **3444 — E:** `reversible invalid-LBA marking != sanitization`; a later successful write clearing the condition is an interface-level counterexample to treating the mark itself as a permanent forgetting proof.
+- **3445 — X:** `Unrecovered Read Error` after `Write Uncorrectable` does not prove physical NAND erase, overwrite of every older embodiment, key destruction, or forensic unrecoverability; NVMe 1.0 does not specify the controller/NAND realization of the invalid state.
+- **3446 — H/P:** T10/05-374 revision 0 (October 3, 2005) records that some SCSI/SAS host controllers used `WRITE LONG` to intentionally create unrecoverable errors and calls them intentionally created “pseudo uncorrectable errors.”
+- **3447 — H/P:** The same T10 proposal's proposed `COR_DIS` behavior would return a medium error for an LBA marked bad by the application client and retain that condition until a later write/formatting action changed it.
+- **3448 — A:** T10 `WRITE LONG` pseudo-uncorrectable behavior and NVMe `Write Uncorrectable` support only a bounded functional comparison—host-triggered later read failure plus a rewrite/replace clearing path—not a claim of identical encoding, medium action, controller implementation, or direct genealogy.
+- **3449 — P/I:** Project interpretation only: **interface-level unreadability is not physical absence**; denying a successful read relation and eliminating all material embodiments are different forgetting claims. This is not NVMe or T10 historical vocabulary.
+- **3450 — X:** No claim is made that NVMe originated host-triggered pseudo-uncorrectable behavior, that T10/05-374r0 was itself final normative standard text, or that any particular SSD implements `Write Uncorrectable` by a specific NAND/ECC/remap mechanism.

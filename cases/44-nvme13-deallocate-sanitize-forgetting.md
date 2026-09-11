@@ -6,7 +6,10 @@
 
 Grounding record: [`../evidence/44-nvme12-13-deallocate-sanitize-grounding.md`](../evidence/44-nvme12-13-deallocate-sanitize-grounding.md).
 
-Deepening record: [`../evidence/44-nvme-2011-2017-write-zeroes-value-semantics-deepening.md`](../evidence/44-nvme-2011-2017-write-zeroes-value-semantics-deepening.md).
+Deepening records:
+
+- [`../evidence/44-nvme-2011-2017-write-zeroes-value-semantics-deepening.md`](../evidence/44-nvme-2011-2017-write-zeroes-value-semantics-deepening.md)
+- [`../evidence/44-nvme10-2011-write-uncorrectable-logical-unreadability-deepening.md`](../evidence/44-nvme10-2011-write-uncorrectable-logical-unreadability-deepening.md)
 
 ## Scope
 
@@ -117,6 +120,48 @@ sanitization state
 So **zero-valued future reads do not prove physical erase or sanitization**. Conversely, deallocation does not, by itself, promise the zero-valued result that `Write Zeroes` does. Revision 1.3 can couple the two relations in one command without making them conceptually identical.
 
 This addendum makes no invention claim for zero-fill operations or deallocation and no device-internal claim about how a particular SSD realizes zeroes. Exact proposal chronology, ATA/SCSI genealogy, named-product implementation, and physical-NAND validation remain separate work, primarily for `computing-archaeology` or a future validation case.
+
+## Intervening semantic branch — NVMe 1.0 Write Uncorrectable separates unreadability from deallocation
+
+The original NVM Express 1.0 specification, ratified **March 1, 2011**, already contains the optional `Write Uncorrectable` command. Section 6.10 defines it as marking an LBA invalid: later reads of the marked range fail with `Unrecovered Read Error`, and a later successful write to those logical blocks clears the invalid status.
+
+That visible read failure is not a deallocation contract. The same original specification's Identify Namespace allocation semantics say that a logical block is **allocated** when written with either `Write` or `Write Uncorrectable`; `Dataset Management` is the operation that may deallocate it. The command can therefore establish an error-marked logical state while the LBA is still counted in the allocation relation.
+
+This gives another independent axis inside the same interface family:
+
+```text
+readability / validity state
+    !=
+allocation / deallocation state
+    !=
+physical embodiment
+    !=
+sanitization state
+```
+
+In particular:
+
+> **error-marked / unreadable != deallocated**
+
+and:
+
+> **host-visible read failure != proof of physical erase, overwrite, or sanitization**.
+
+The reversibility is important. A normal successful write clears the invalid-LBA status. That makes `Write Uncorrectable` unsuitable as evidence that an old physical embodiment was made forensically unrecoverable. The interface specifies the logical failure contract and its clearing event; it does not specify whether a controller realizes that contract with metadata, ECC manipulation, remapping, a medium write, or another internal technique.
+
+The original specification also excludes `Write Uncorrectable` from the SMART/Health `Data Units Written` accounting while separately treating the command as an allocation event. This is a useful historical counterexample to collapsing all host-visible state change into payload-write accounting: allocation/error-validity control state can change even though the command is not counted as ordinary written data units.
+
+### Earlier functional prior-art touchpoint — T10 `WRITE LONG` pseudo-uncorrectable use
+
+A T10 committee proposal, **T10/05-374 revision 0, October 3, 2005**, documents that some SCSI/SAS host controllers used `WRITE LONG` to intentionally create unrecoverable errors and calls these intentionally created cases **“pseudo uncorrectable errors.”** The proposal's `COR_DIS` behavior would suppress normal recovery/reallocation for the marked logical block, return a medium error identifying an LBA marked bad by the application client, and keep that condition until a later write/formatting action replaced it.
+
+This is earlier **proposal-level primary evidence for the functional idea of a host deliberately creating a later read-error condition**. It is not used here as proof of a finalized SCSI standard clause, direct SCSI→NVMe genealogy, identical implementation, or common physical mechanism. In fact the proposal explicitly describes `WRITE LONG` as writing a logical block to the medium, whereas NVMe 1.0 `Write Uncorrectable` only specifies the host-visible invalid/read-error contract and allocation semantics. The comparison therefore stops at functional outcome and reversibility.
+
+The bounded prior-art conclusion is:
+
+> **NVMe 1.0 standardizes a distinct invalid-LBA/read-error command, but it does not establish invention priority for host-triggered pseudo-uncorrectable behavior.**
+
+The companion `computing-archaeology` repository currently has no dedicated `Write Uncorrectable` / `WRITE LONG` history to reuse. A full SCSI/ATA error-injection genealogy, final-standard clause tracing, named-controller implementation study, and physical-NAND experiment remain separate future work rather than being inferred here.
 
 ## Mechanism 2 — Sanitization scopes beyond the currently allocated LBA set
 
