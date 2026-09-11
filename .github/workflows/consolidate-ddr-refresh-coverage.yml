@@ -1,0 +1,29 @@
+name: consolidate-ddr-refresh-coverage
+
+on:
+  push:
+    paths:
+      - '.github/workflows/consolidate-ddr-refresh-coverage.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  consolidate:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: technical-retention-research
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Consolidate duplicate DDR refresh coverage
+        run: |
+          bash scripts/consolidate_ddr_refresh_coverage.sh
