@@ -188,6 +188,7 @@ A claim may have more than one label, for example `H/P` or `E/A`.
 
 
 | [NVM Express 1.3 Device Self-test: Reset-Surviving Diagnostic Work, Resume State, and Bounded Result History](cases/148-nvme13-device-self-test-reset-surviving-maintenance.md) | **grounded** | optional NVMe background diagnostic operation + reset/power-surviving extended-work relation + current progress + newest-20 result history | distinguish command completion from maintenance completion; short-reset abort from extended reset/power resume; operation identity from exact checkpoint microstate; current work from bounded result evidence | [2017 NVMe 1.3 grounding + 2005 prior-art guardrail](evidence/148-nvme13-2017-device-self-test-reset-resume-grounding.md); TP001a public chronology, named-product embodiment, result-log persistence boundaries, and hardware fault validation remain open |
+| [Micron NAND OTP Data Protect: Programmable-Then-Irreversible Authority, No-Erase Payload, and Readable Permanence](cases/149-micron-nand-otp-data-protect-irreversible-authority.md) | **grounded** | raw-NAND OTP sub-area + one-way 1→0 payload programming + irreversible protect state + continuing read authority | distinguish nonvolatile from protected; unprotected from erasable; OTP from one literal program command; payload from mutation authority; protection from confidentiality/sanitize | [2004–2006 Micron patent/product grounding + 1999/2003 flash-OTP prior-art guardrail](evidence/149-micron-2004-2006-nand-otp-data-protect-grounding.md); exact shipped control embodiment, ONFI genealogy, archival-origin datasheet, and hardware validation remain open |
 ## Comparison matrix — provisional
 
 This matrix should become more precise as cases mature.
@@ -4335,3 +4336,25 @@ Grounding record: [`evidence/148-nvme13-2017-device-self-test-reset-resume-groun
 - **3213 — later NVMe 1.4 self-test changes != original 1.3 wording:** sanitize-driven abort and Format NVM clarifications are later revision evidence and must not be back-projected. (`H/P`, `E`, `X`)
 - **3214 — extended diagnostic continuity != host-write power-loss protection or sanitize proof:** survival of maintenance-operation identity says nothing by itself about outstanding host-write durability or forensic erasure. (`E`, `X`)
 - **3215 — related-repository boundary:** fresh `tmzncty/computing-archaeology` searches found no dedicated NVMe Device Self-test study; broad ATA/SCSI/NVMe diagnostic genealogy belongs there while Case148 retains the persistence-horizon relation. (`H/P` project-state record)
+## Case 149 — Micron NAND OTP Data Protect findings
+
+Grounding record: [`evidence/149-micron-2004-2006-nand-otp-data-protect-grounding.md`](evidence/149-micron-2004-2006-nand-otp-data-protect-grounding.md).
+
+- **3216 — 2006 product-document floor != invention date:** Micron Rev. D 12/06 documents a raw-NAND OTP area with separate program/protect/read operations; earlier flash OTP prior art rejects an invention-priority reading. (`H/P*`, `X`)
+- **3217 — OTP != exactly one program command:** the product allows whole-page or multiple partial-page programming before final protection, so `one-time programmable` describes bounded transition semantics rather than one host invocation. (`H/P*`, `E`)
+- **3218 — unprotected != erasable:** the OTP area cannot be erased whether protected or not; erase authority is absent before final protect. (`H/P*`, `E`)
+- **3219 — no erase authority != no remaining program authority:** unprotected OTP pages can still accept permitted `1 -> 0` programming even though they cannot be erased. (`H/P*`, `E`)
+- **3220 — programmed != protected:** program/verify and protect are discrete operations, so payload can already exist while further permitted programming remains admissible. (`H/P*`, `E`)
+- **3221 — protection is an irreversible authority transition:** after successful `OTP DATA PROTECT`, pages are no longer programmable and cannot be unprotected through the documented interface. (`H/P*`, `E`)
+- **3222 — protect command issue != protected-state confirmation:** the product reports busy/status and documents protection following good status confirmation. (`H/P*`, `E`)
+- **3223 — protected != unreadable:** OTP data remains readable whether or not the area is protected; write-authority retirement does not retire read authority. (`H/P*`, `E`)
+- **3224 — payload state != protection-authority state:** identical programmed bits can exist before and after protection while the set of permitted future operations differs. (`E`)
+- **3225 — OTP protection != confidentiality:** continued read authority means permanent write prohibition is not, by itself, secrecy or encryption. (`H/P*`, `E`, `X`)
+- **3226 — OTP protection != sanitization:** the operation intentionally retains readable data rather than making prior data unrecoverable. (`H/P*`, `E`, `X`)
+- **3227 — 2004 filing/priority != 2004 public disclosure:** Micron's patent family is anchored to a 2-Sep-2004 filing/priority date but lists `US20060044893A1` publication on 2-Mar-2006. (`H/P`, `X`)
+- **3228 — patent mechanism family != exact shipped-product embodiment:** Micron's patent includes erasable-before-lock flash-block embodiments, while the 2006 product OTP area is non-erasable even before protect; the sources must not be collapsed. (`H/P`, `H/P*`, `E`, `X`)
+- **3229 — device-local OTP sub-area != whole-device OTP:** a NAND package can contain ordinary main-array storage and a separately governed OTP area with different admissible transitions. (`H/P*`, `E`)
+- **3230 — AMD/Fujitsu 1999-filed/2003-published flash OTP prior art != direct genealogy:** `US6662262B1` predates the Micron filing and uses persistent write-protect/lock CAM state, defeating invention priority without proving design descent. (`H/P`, `A`, `X`)
+- **3231 — Case11 EPROM erase route != NAND OTP no-erase contract:** both retain nonvolatile charge state, but their deliberate forgetting authorities differ. Functional comparison only. (`A`, `X`)
+- **3232 — Case110/Case114 mutation restrictions != raw-NAND OTP state machine:** cloud WORM and NVMe namespace write protection constrain future mutation at different layers and with different authority/expiry semantics. (`A`, `X`)
+- **3233 — related-repository boundary:** fresh `tmzncty/computing-archaeology` searches found no dedicated Micron NAND OTP study; broader flash-OTP/ONFI/security-register genealogy belongs there while Case149 retains the bounded persistence/authority relation. (`H/P` project-state record)
