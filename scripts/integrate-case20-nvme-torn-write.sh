@@ -183,3 +183,137 @@ A repository search of [`tmzncty/computing-archaeology`](https://github.com/tmzn
 ## Status
 
 **`grounded`** as a bounded Case 20 evidence deepening for the 2014 normative torn-write / atomicity-versus-durability distinction.
+EOF
+
+python3 - <<'PY'
+from pathlib import Path
+import re
+
+case_path = Path('cases/20-nvme10-fua-flush-persistence-ordering.md')
+text = case_path.read_text()
+if '20-nvme-2014-atomic-write-torn-write-deepening.md' in text:
+    raise SystemExit('Case20 deepening already integrated')
+
+hist_anchor = '\n---\n\n## Retained state\n'
+hist_insert = r'''
+
+### H/P — Revision 1.1b makes the interrupted-write contract explicit
+
+A later official NVM Express witness, **Revision 1.1b dated 2 July 2014**, sharpens the distinction already exposed by Revision 1.0. Its Identify Controller text says AWUN applies to normal-operation atomicity and is not the power-fail/error guarantee; AWUPF is reported separately for power-fail/error conditions and is constrained to be no larger than AWUN.
+
+Section 6.4 then names **torn writes** as the failure AWUPF is meant to constrain. For an interrupted write no larger than AWUPF, later reads of the affected range are constrained to one coherent endpoint — all old data or all new data — rather than an old/new mixture. Above AWUPF, that result guarantee is not provided.
+
+This later wording deepens the semantics of the already-present 2011 AWUPF field. It is **not** used here as an invention date or as evidence for one internal controller mechanism.
+
+### H/P — completed write and power-loss persistence remain different predicates
+
+Revision 1.1b also states a bounded exception to completed-write currentness: older data may reappear after shutdown when volatile write cache is supported and enabled, the write did not use FUA, no relevant Flush successfully completed before shutdown, and the controller shut down without completing the specified normal or abrupt shutdown procedure.
+
+That clause makes the retention boundary unusually clear:
+
+```text
+command completed
+        !=
+newest value guaranteed to survive every qualifying power-loss path
+```
+
+See [`../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md`](../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md) for the bounded 1.1b evidence ledger and anti-overclaim notes.
+'''
+if hist_anchor not in text:
+    raise SystemExit('Case20 historical insertion anchor not found')
+text = text.replace(hist_anchor, hist_insert + hist_anchor, 1)
+
+eng_anchor = '\n---\n\n## Functional analogies\n'
+eng_insert = r'''
+
+### E — failure atomicity ≠ newest-value durability
+
+Revision 1.1b's all-old/all-new rule supplies a stronger reconstruction than the bare fact that AWUPF exists. Within the covered interrupted-write size, **version coherence** is protected while **recency** is not guaranteed: both the predecessor and successor are admissible, while a torn hybrid is not.
+
+```text
+coherent admissible state after interruption
+        !=
+newest attempted state must survive
+```
+
+AWUN, AWUPF, FUA/Flush, and host-enforced ordering therefore describe different axes: normal-operation command atomicity, failure atomicity, volatile-to-nonvolatile commitment, and cross-command order.
+
+### E — interface anti-torn guarantee ≠ internal recovery mechanism
+
+The normative result does not identify whether a controller obtains it through stored energy, a journal, copy-on-write metadata, NAND program geometry, firmware replay, or another mechanism. Those are implementation questions requiring named-product or implementation evidence. AWUPF also says nothing about sanitization of superseded physical embodiments.
+'''
+if eng_anchor not in text:
+    raise SystemExit('Case20 engineering insertion anchor not found')
+text = text.replace(eng_anchor, eng_insert + eng_anchor, 1)
+
+source_anchor = 'Grounding details and direct facsimile checks are recorded in [`../evidence/20-nvme10-2011-flush-fua-grounding.md`](../evidence/20-nvme10-2011-flush-fua-grounding.md).'
+source_insert = '''- NVM Express, **_NVM Express Revision 1.1b_**, 2 July 2014, official archived PDF: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_1b-1.pdf>.\n  - Identify Controller pp. 91–92 — AWUN normal-operation boundary, AWUPF power-fail/error boundary, and `AWUPF <= AWUN`;\n  - §6.4, printed pp. 120–122 — atomic operations, torn-write definition, all-old/all-new AWUPF result, and completed-write volatile-cache exception.\n\nGrounding details for the 2011 slice remain in [`../evidence/20-nvme10-2011-flush-fua-grounding.md`](../evidence/20-nvme10-2011-flush-fua-grounding.md). The 2014 deepening is recorded in [`../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md`](../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md).'''
+if source_anchor not in text:
+    raise SystemExit('Case20 source anchor not found')
+text = text.replace(source_anchor, source_insert, 1)
+case_path.write_text(text)
+
+road_path = Path('ROADMAP.md')
+road = road_path.read_text()
+road_marker = '**Case 20 atomicity-vs-durability deepening (NVMe 1.1b):**'
+if road_marker not in road:
+    phase = '## Phase 2 — Evidence-backed expansion with comparison discipline\n'
+    if phase not in road:
+        raise SystemExit('ROADMAP Phase 2 anchor not found')
+    item = ('\n- [x] **Case 20 atomicity-vs-durability deepening (NVMe 1.1b):** added first-party 2014 normative evidence that AWUN does not cover power-fail errors, AWUPF is a separate no-larger envelope, AWUPF-sized interrupted writes resolve all-old or all-new rather than torn, and a completed write may still lose newest-value persistence under the specified volatile-cache/no-FUA/no-Flush/improper-shutdown conjunction. Kept interface guarantee separate from internal FTL/PLP mechanism, made no atomic-write invention claim, and left broader pre-NVMe genealogy to `computing-archaeology`.\n')
+    road = road.replace(phase, phase + item, 1)
+    road_path.write_text(road)
+
+idx_path = Path('CASE_INDEX.md')
+idx = idx_path.read_text()
+if 'NVMe 1.1b explicitly separates AWUN normal-operation atomicity' in idx:
+    raise SystemExit('CASE_INDEX Case20 deepening already integrated')
+nums = [int(m.group(1)) for m in re.finditer(r'(?m)^(\d+)\.\s', idx)]
+if not nums:
+    raise SystemExit('No numbered CASE_INDEX findings found')
+mx = max(nums)
+if mx < 3349:
+    raise SystemExit(f'Unexpected CASE_INDEX tail: {mx}')
+last = list(re.finditer(rf'(?m)^{mx}\.\s.*$', idx))
+if not last:
+    raise SystemExit('Could not locate final numbered finding')
+pos = last[-1].end()
+next_heading = idx.find('\n## ', pos)
+if next_heading == -1:
+    next_heading = len(idx)
+start = mx + 1
+findings = [
+    ('Historical record', 'NVMe 1.1b (2014-07-02) explicitly separates AWUN normal-operation atomicity from power-fail/error behavior; AWUN is not the applicable power-fail guarantee.'),
+    ('Historical record', 'NVMe 1.1b reports AWUPF separately for power-fail/error conditions and requires `AWUPF <= AWUN`.'),
+    ('Historical record', 'NVMe 1.1b defines a torn write as an interrupted contiguous write that leaves a mixture of original and new logical-block contents.'),
+    ('Historical record', 'For an interrupted write no larger than AWUPF, NVMe 1.1b constrains later reads to a coherent endpoint: all old data or all new data, rather than a torn mixture.'),
+    ('Historical record', 'For a write larger than AWUPF, NVMe 1.1b does not provide the same post-failure data-result guarantee.'),
+    ('Engineering reconstruction', '`all-old or all-new` failure coherence does not imply newest-value durability; an older coherent predecessor remains an admissible result.'),
+    ('Historical record', 'NVMe 1.1b permits older data after shutdown under the stated conjunction of enabled volatile write cache, no FUA, no successful relevant Flush, and shutdown without completing the specified normal/abrupt procedure.'),
+    ('Engineering reconstruction', 'Generic command completion therefore remains distinct from guaranteed persistence of the newest value when the volatile-cache exception applies.'),
+    ('Engineering reconstruction', 'AWUN inter-command atomicity, AWUPF interrupted-write atomicity, FUA/Flush persistence, and host-enforced ordering are separate interface relations.'),
+    ('Method / prior art', 'The 2014 text is used as a later explicit normative witness, not as an invention-priority claim for atomic writes or torn-write protection; broader genealogy remains open.'),
+    ('Functional analogy', 'Case 15 named-product PLP and Case 39 FTL recovery may constrain related failure outcomes, but AWUPF alone does not establish either implementation mechanism.'),
+    ('Philosophical interpretation', 'The project may describe AWUPF as preserving a coherent admissible-state boundary rather than guaranteed recency; this is interpretive vocabulary, not NVMe historical terminology.'),
+    ('Security boundary', 'Atomic-write / anti-torn semantics do not establish sanitization of superseded physical embodiments.')
+]
+block = '\n\n' + '\n'.join(f'{start+i}. **{kind}:** {body}' for i, (kind, body) in enumerate(findings)) + '\n'
+idx = idx[:next_heading] + block + idx[next_heading:]
+idx_path.write_text(idx)
+print(f'CASE_INDEX findings added: {start}-{start+len(findings)-1}')
+PY
+
+git config user.name 'github-actions[bot]'
+git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+git add cases/20-nvme10-fua-flush-persistence-ordering.md "$EVIDENCE" CASE_INDEX.md ROADMAP.md
+rm -f scripts/integrate-case20-nvme-torn-write.sh .github/workflows/integrate-case20-nvme-torn-write.yml
+git add -A
+
+if git diff --cached --quiet; then
+  echo 'No changes to commit' >&2
+  exit 1
+fi
+
+git commit -m 'case20: deepen NVMe torn-write atomicity'
+git push origin HEAD:main
