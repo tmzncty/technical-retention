@@ -41,7 +41,7 @@ jobs:
           grep -q '3234 — 2014 named-product floor != invention date' CASE_INDEX.md
           grep -q '3253 — related-repository boundary' CASE_INDEX.md
           grep -q 'Case 150 Crucial M550 Active Garbage Collection / managed-SSD reclaim slice' ROADMAP.md
-          grep -q 'logical retirement != physical reclamation' cases/150-crucial-m550-active-garbage-collection.md
+          grep -q 'TRIM/deallocation indication != garbage-collection execution' cases/150-crucial-m550-active-garbage-collection.md
           test ! -e _automation_case150_crucial_m550_gc.py
           test ! -e .github/workflows/tmp-case150-crucial-m550-gc.yml
           git config user.name 'technical-retention automation'
