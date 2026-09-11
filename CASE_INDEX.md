@@ -187,6 +187,7 @@ A claim may have more than one label, for example `H/P` or `E/A`.
 ---
 
 
+| [NVM Express 1.3 Device Self-test: Reset-Surviving Diagnostic Work, Resume State, and Bounded Result History](cases/148-nvme13-device-self-test-reset-surviving-maintenance.md) | **grounded** | optional NVMe background diagnostic operation + reset/power-surviving extended-work relation + current progress + newest-20 result history | distinguish command completion from maintenance completion; short-reset abort from extended reset/power resume; operation identity from exact checkpoint microstate; current work from bounded result evidence | [2017 NVMe 1.3 grounding + 2005 prior-art guardrail](evidence/148-nvme13-2017-device-self-test-reset-resume-grounding.md); TP001a public chronology, named-product embodiment, result-log persistence boundaries, and hardware fault validation remain open |
 ## Comparison matrix — provisional
 
 This matrix should become more precise as cases mature.
@@ -4310,3 +4311,27 @@ Grounding record: [`evidence/147-s3-2010-2016-multipart-preobject-retention-grou
 - **3193 — prospective S3 parts != SQLite rollback journal despite shared non-final payload:** Case 143 retains prior pages for undo while Case 147 retains prospective parts for future construction; comparison is functional only. (`A`, `X`)
 - **3194 — unfinished-work continuity != one universal checkpoint mechanism:** S3 retains distributed service payload/identity across client gaps while Case 146 retains device operation state across erase suspension. (`A`, `X`)
 - **3195 — related-repository boundary:** fresh `tmzncty/computing-archaeology` search for `multipart` found no dedicated study; broad transfer/S3/API genealogy belongs there, while Case 147 keeps the retention-specific pre-object/admission/cleanup relation. (`H/P` project-state record)
+## Case 148 — NVMe 1.3 Device Self-test findings
+
+Grounding record: [`evidence/148-nvme13-2017-device-self-test-reset-resume-grounding.md`](evidence/148-nvme13-2017-device-self-test-reset-resume-grounding.md).
+
+- **3196 — 26-Apr-2017 ratification != 1-May-2017 document date:** NVMe 1.3 states both dates; keep ratification and published-document chronology distinct. (`H/P`)
+- **3197 — new optional NVMe 1.3 feature != global invention:** NVM Express lists Device Self-Test as a new optional Revision-1.3 capability tied to TP001a, but this is an intra-NVMe chronology claim. (`H/P`, `X`)
+- **3198 — 2005 ATA/SCSI self-test prior art != proven direct genealogy:** T10/05-245r1 already maps SCSI short/extended tests to ATA SMART routines and a results log, so NVMe invention priority is rejected without inferring direct lineage. (`H/P`, `A`, `X`)
+- **3199 — command completion != self-test completion:** NVMe 1.3 Figure 68 starts short/extended background work and then completes the Device Self-test command. (`H/P`, `E`)
+- **3200 — current maintenance execution != retained result history:** Log 06h separately exposes current operation/progress and newest completed/aborted result structures. (`H/P`, `E`)
+- **3201 — short-test reset boundary != extended-test reset boundary:** short self-test shall abort on any Controller Level Reset; extended self-test shall persist across reset. (`H/P`, `E`)
+- **3202 — extended maintenance obligation crosses power restoration:** NVMe 1.3 requires extended self-test to resume after reset or restoration of power, establishing a failure-boundary persistence contract for unfinished diagnostic work. (`H/P`, `E`)
+- **3203 — resume continuity != exact microstate preservation:** resume segment is vendor specific and tests within the last segment may be repeated; operation identity can survive without a standardized exact internal checkpoint. (`H/P`, `E`, `X`)
+- **3204 — percentage complete != byte/block-exact durable cursor:** the log reports percentage progress but the specification does not equate that value with a precise persistent physical restart position. (`H/P`, `E`, `X`)
+- **3205 — background suspension != abort:** §8.11 requires suspend/process/resume around commands that cannot run concurrently, so temporarily inactive execution can remain current maintenance work. (`H/P`, `E`)
+- **3206 — current-operation retirement != immediate loss of outcome evidence:** completion/abort creates a Self-test Result Data Structure before current operation is set to no-operation. (`H/P`, `E`)
+- **3207 — aborted != failed:** result codes distinguish explicit/reset/namespace/format aborts from fatal test errors and completed tests with failed segments. (`H/P`, `E`)
+- **3208 — newest-20 result history != complete device history:** Log 06h retains a bounded 20-result window rather than an unlimited diagnostic archive. (`H/P`, `E`)
+- **3209 — self-test result != payload replica or complete media-error trace:** result structures store selected diagnostic metadata and at most one failing LBA when multiple blocks fail. (`H/P`, `E`)
+- **3210 — Case146 powered suspend continuity != NVMe reset/power continuity:** Flash erase-suspend sources did not prove power-loss survival; NVMe extended self-test explicitly crosses reset/power restoration. Functional comparison only. (`A`, `X`)
+- **3211 — Case101 BMS disable/re-enable continuation != reset/power-persistent diagnostic work:** the WD BMS witness resumes after control toggling but leaves power-cycle persistence open; NVMe 1.3 states a stronger extended-test boundary. (`A`, `X`)
+- **3212 — self-test result log != NVMe 1.4 Persistent Event Log:** Case66 PEL has separate subsystem-global persistence/deletion/sanitize/reporting-context semantics; the 1.3 self-test log is a current-operation + newest-20 outcome interface. (`A`, `X`)
+- **3213 — later NVMe 1.4 self-test changes != original 1.3 wording:** sanitize-driven abort and Format NVM clarifications are later revision evidence and must not be back-projected. (`H/P`, `E`, `X`)
+- **3214 — extended diagnostic continuity != host-write power-loss protection or sanitize proof:** survival of maintenance-operation identity says nothing by itself about outstanding host-write durability or forensic erasure. (`E`, `X`)
+- **3215 — related-repository boundary:** fresh `tmzncty/computing-archaeology` searches found no dedicated NVMe Device Self-test study; broad ATA/SCSI/NVMe diagnostic genealogy belongs there while Case148 retains the persistence-horizon relation. (`H/P` project-state record)
