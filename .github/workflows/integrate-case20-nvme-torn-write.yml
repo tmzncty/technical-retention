@@ -3,7 +3,7 @@ name: Integrate Case20 NVMe torn-write deepening
 on:
   push:
     branches:
-      - __case20_torn_write_disabled__
+      - main
 
 permissions:
   contents: write
