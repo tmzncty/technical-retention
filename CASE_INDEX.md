@@ -241,6 +241,21 @@ For staged comparison of logical/reference retirement, reclamation eligibility, 
 3348. **magnetic-core power-off retention and LPDDR low-power retention are only functional counterpoints.** Case 02 supplies named-machine evidence for unpowered core payload survival plus transition hazards; Case 104 instead shows powered refresh-dependent survival and deliberate DPD retention withdrawal. No shared mechanism or genealogy follows. (`A`, `X`)
 3349. **2014 named-product semantics != invention chronology.** This deepening fixes a product-level contract and does not claim that Micron invented Power-Down, SELF REFRESH, or DPD; broader standards and low-power-memory genealogy remain outside this repository slice. (`X`)
 
+
+3350. **Historical record:** NVMe 1.1b (2014-07-02) explicitly separates AWUN normal-operation atomicity from power-fail/error behavior; AWUN is not the applicable power-fail guarantee.
+3351. **Historical record:** NVMe 1.1b reports AWUPF separately for power-fail/error conditions and requires `AWUPF <= AWUN`.
+3352. **Historical record:** NVMe 1.1b defines a torn write as an interrupted contiguous write that leaves a mixture of original and new logical-block contents.
+3353. **Historical record:** For an interrupted write no larger than AWUPF, NVMe 1.1b constrains later reads to a coherent endpoint: all old data or all new data, rather than a torn mixture.
+3354. **Historical record:** For a write larger than AWUPF, NVMe 1.1b does not provide the same post-failure data-result guarantee.
+3355. **Engineering reconstruction:** `all-old or all-new` failure coherence does not imply newest-value durability; an older coherent predecessor remains an admissible result.
+3356. **Historical record:** NVMe 1.1b permits older data after shutdown under the stated conjunction of enabled volatile write cache, no FUA, no successful relevant Flush, and shutdown without completing the specified normal/abrupt procedure.
+3357. **Engineering reconstruction:** Generic command completion therefore remains distinct from guaranteed persistence of the newest value when the volatile-cache exception applies.
+3358. **Engineering reconstruction:** AWUN inter-command atomicity, AWUPF interrupted-write atomicity, FUA/Flush persistence, and host-enforced ordering are separate interface relations.
+3359. **Method / prior art:** The 2014 text is used as a later explicit normative witness, not as an invention-priority claim for atomic writes or torn-write protection; broader genealogy remains open.
+3360. **Functional analogy:** Case 15 named-product PLP and Case 39 FTL recovery may constrain related failure outcomes, but AWUPF alone does not establish either implementation mechanism.
+3361. **Philosophical interpretation:** The project may describe AWUPF as preserving a coherent admissible-state boundary rather than guaranteed recency; this is interpretive vocabulary, not NVMe historical terminology.
+3362. **Security boundary:** Atomic-write / anti-torn semantics do not establish sanitization of superseded physical embodiments.
+
 ## Comparison matrix — provisional
 
 This matrix should become more precise as cases mature.

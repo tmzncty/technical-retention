@@ -111,6 +111,29 @@ The specification separately requires that after a write has completed, later-co
 
 **Primary anchors:** §6.3, printed p. 88; controller command-processing discussion around printed p. 100.
 
+
+### H/P — Revision 1.1b makes the interrupted-write contract explicit
+
+A later official NVM Express witness, **Revision 1.1b dated 2 July 2014**, sharpens the distinction already exposed by Revision 1.0. Its Identify Controller text says AWUN applies to normal-operation atomicity and is not the power-fail/error guarantee; AWUPF is reported separately for power-fail/error conditions and is constrained to be no larger than AWUN.
+
+Section 6.4 then names **torn writes** as the failure AWUPF is meant to constrain. For an interrupted write no larger than AWUPF, later reads of the affected range are constrained to one coherent endpoint — all old data or all new data — rather than an old/new mixture. Above AWUPF, that result guarantee is not provided.
+
+This later wording deepens the semantics of the already-present 2011 AWUPF field. It is **not** used here as an invention date or as evidence for one internal controller mechanism.
+
+### H/P — completed write and power-loss persistence remain different predicates
+
+Revision 1.1b also states a bounded exception to completed-write currentness: older data may reappear after shutdown when volatile write cache is supported and enabled, the write did not use FUA, no relevant Flush successfully completed before shutdown, and the controller shut down without completing the specified normal or abrupt shutdown procedure.
+
+That clause makes the retention boundary unusually clear:
+
+```text
+command completed
+        !=
+newest value guaranteed to survive every qualifying power-loss path
+```
+
+See [`../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md`](../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md) for the bounded 1.1b evidence ledger and anti-overclaim notes.
+
 ---
 
 ## Retained state
@@ -271,6 +294,23 @@ AWUN and AWUPF make power-fail behavior a separate reported capability. An appli
 
 A later-completing read must see a completed write at that location, while §6.3 still makes higher-level ordering the host/application's responsibility. `Which value may answer now?` and `In what durable order do several updates become safe?` are different questions.
 
+
+### E — failure atomicity ≠ newest-value durability
+
+Revision 1.1b's all-old/all-new rule supplies a stronger reconstruction than the bare fact that AWUPF exists. Within the covered interrupted-write size, **version coherence** is protected while **recency** is not guaranteed: both the predecessor and successor are admissible, while a torn hybrid is not.
+
+```text
+coherent admissible state after interruption
+        !=
+newest attempted state must survive
+```
+
+AWUN, AWUPF, FUA/Flush, and host-enforced ordering therefore describe different axes: normal-operation command atomicity, failure atomicity, volatile-to-nonvolatile commitment, and cross-command order.
+
+### E — interface anti-torn guarantee ≠ internal recovery mechanism
+
+The normative result does not identify whether a controller obtains it through stored energy, a journal, copy-on-write metadata, NAND program geometry, firmware replay, or another mechanism. Those are implementation questions requiring named-product or implementation evidence. AWUPF also says nothing about sanitization of superseded physical embodiments.
+
 ---
 
 ## Functional analogies
@@ -358,7 +398,11 @@ A search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computi
   - printed p. 97 — Write FUA and explicit no-ordering clause;
   - printed p. 100 — controller processing/reordering boundary.
 
-Grounding details and direct facsimile checks are recorded in [`../evidence/20-nvme10-2011-flush-fua-grounding.md`](../evidence/20-nvme10-2011-flush-fua-grounding.md).
+- NVM Express, **_NVM Express Revision 1.1b_**, 2 July 2014, official archived PDF: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_1b-1.pdf>.
+  - Identify Controller pp. 91–92 — AWUN normal-operation boundary, AWUPF power-fail/error boundary, and `AWUPF <= AWUN`;
+  - §6.4, printed pp. 120–122 — atomic operations, torn-write definition, all-old/all-new AWUPF result, and completed-write volatile-cache exception.
+
+Grounding details for the 2011 slice remain in [`../evidence/20-nvme10-2011-flush-fua-grounding.md`](../evidence/20-nvme10-2011-flush-fua-grounding.md). The 2014 deepening is recorded in [`../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md`](../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md).
 
 ---
 
