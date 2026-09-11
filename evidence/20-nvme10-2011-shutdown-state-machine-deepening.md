@@ -187,7 +187,7 @@ Nothing in `CC.SHN`, `CSTS.SHST`, or the SMART/Health counter demonstrates a par
 
 ### Case 15 — ATA / Intel SSD power-loss protection
 
-[Case 15](../cases/15-intel-ssd320-power-loss-protection.md) contains earlier ATA durability semantics plus a named Intel SSD implementation path. It is useful only as a functional comparison: both cases involve persistence obligations around power transition, but the NVMe `SHN/SHST` state machine is not evidence that Intel's ATA-era controller used the same protocol or implementation.
+[Case 15](../cases/15-intel-ssd320-power-loss-durability.md) contains earlier ATA durability semantics plus a named Intel SSD implementation path. It is useful only as a functional comparison: both cases involve persistence obligations around power transition, but the NVMe `SHN/SHST` state machine is not evidence that Intel's ATA-era controller used the same protocol or implementation.
 
 No ATA→NVMe shutdown genealogy is claimed here.
 
