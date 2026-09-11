@@ -284,6 +284,40 @@ The selected bit is read correctly but the required rewrite fails. This remains 
 
 ---
 
+## Direct Papian facsimile deepening (1952)
+
+The original grounding used MIT's preserved abstract to establish repeated `nonselecting` disturbance as a retention criterion. Direct inspection of the article facsimile now closes that evidence debt; see [`../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md`](../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md).
+
+The full article adds three boundaries that the abstract alone could not safely support:
+
+- Papian's disturbed-ONE test inserts a large number of **half-amplitude nonselecting pulses** between write and read, while pulse **amplitude, length, spacing, and count are independently variable**;
+- repeated nonselecting excitation can move a satisfactory core toward an **asymptotic** disturbed operating point, but the same paper separately requires adequate **disturbed-signal ratio**, so bounded excursion does not itself prove safe readout;
+- disturbance can make the ONE output smaller and the ZERO output larger; an over-large magnetizing amplitude can drive their disturbed-signal ratio close to one.
+
+The engineering reconstruction is therefore stricter than `half-select count causes bit flips`:
+
+```text
+half-select exposure
+!=
+one scalar access count
+
+asymptotic disturbed state
+!=
+adequate discrimination margin
+
+state not fully reversed
+!=
+state unaffected
+!=
+symbol reliably recoverable
+```
+
+Papian's best metallic test core is reported with disturbed-signal ratio `13`, nonselecting-signal ratio `16`, and about `25 µs` ONE response time. These are bounded experimental results for that tested material and pulse regime, **not universal production-machine limits**.
+
+This direct facsimile strengthens the existing functional analogy to RowHammer/NAND disturbance only at the abstract level of `non-target operation can burden retained state`; it does not establish mechanism identity, quantitative portability, or genealogy.
+
+---
+
 ## Historical record
 
 ### Primary / contemporary evidence
@@ -408,6 +442,9 @@ Manufacturing, economics, Whirlwind chronology, and the broader reason core disp
 | --- | --- | --- |
 | Separate coordinate excitation can produce partial response while coincidence drives selected stable-state switching | H/P | direct in Forrester patent claims |
 | Repeated nonselecting disturbance was treated as an information-retention criterion | H/P | direct in Papian 1952 abstract preserved by MIT |
+| Papian's disturbance test independently varied pulse amplitude, length, spacing, and pulse count | H/P | direct in 1952 facsimile; detailed in Case-70 facsimile evidence |
+| Repeated disturbance approaching an asymptotic operating point does not by itself establish adequate read discrimination | H/P + E | facsimile asymptote discussion plus disturbed-signal-ratio criterion |
+| A too-large magnetizing amplitude can drive disturbed ONE/ZERO outputs toward a ratio close to one | H/P | direct in 1952 facsimile |
 | Half-selected cores can contribute disturbance voltage to a shared sense winding | H/P | direct in Bauer/Haynes patent |
 | Sense cancellation addresses readout disturbance rather than restoring payload state | E | reconstruction from IBM circuit purpose and operation |
 | Logical nonselection does not imply zero physical excitation | E | reconstruction from Forrester/Papian mechanisms |
@@ -446,4 +483,4 @@ The central bounded claims are supported by three contemporary primary-source li
 - Papian: retention under repetitive nonselecting disturbance;
 - Bauer/Haynes: half-select sense disturbance, cancellation, and inhibit/readout effects.
 
-The case is deliberately narrower than Case 02 and the `computing-archaeology` core-memory history. Remaining work is archival deepening: direct line-by-line facsimile inspection of the full Papian article and additional named-machine quantitative margin measurements if later synthesis requires exact pulse/amplitude numbers.
+The case is deliberately narrower than Case 02 and the `computing-archaeology` core-memory history. Direct line-by-line Papian facsimile inspection is now recorded in [`../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md`](../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md). Remaining work is narrower archival/production deepening: named-machine quantitative margins, deployed-material distributions, temperature dependence, and invention-priority genealogy if later synthesis requires them.
