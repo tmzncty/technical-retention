@@ -4530,3 +4530,23 @@ The former Case 151 duplicated already-grounded coverage and has been retired. U
 3311. **[C]** Case 147 S3 multipart abort and Case 153 both show authority retirement can precede confirmed storage cleanup; the retained payload directions differ because S3 parts are prospective pre-object state while Ceph clones are historical versions.
 3312. **[P]** Interpretation only: distributed forgetting can require additional retained control state—queues, mappings, logs, and recovery obligations—to complete forgetting safely; this is not historical Ceph vocabulary.
 3313. **[E]** Related-repository boundary: broad Ceph snapshot chronology, snap-collection→`SnapMapper` and `snapdir`→whiteout transitions, PG-state genealogy, and cross-system snapshot-GC history belong primarily in `computing-archaeology`; Case 153 keeps only the bounded retention/reclamation relation.
+
+## Case 135 deepening — e.MMC BKOPS maintenance opportunity vs vendor self-refresh
+
+Grounding: [`cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md`](cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md) and [`evidence/135-jedec-emmc51-bkops-maintenance-opportunity-deepening.md`](evidence/135-jedec-emmc51-bkops-maintenance-opportunity-deepening.md).
+
+- **3392 — H/P:** JESD84-B51 (February 2015) defines Background Operations as device-internal maintenance executed when the host is not being serviced; this is a public standard boundary, not an invention-priority claim.
+- **3393 — H/P:** `BKOPS_START[164]` manually opens background processing and the device remains busy until no more background processing is needed.
+- **3394 — H/P:** `MANUAL_EN` tells the device that the host expects periodic BKOPS windows, allowing some maintenance to be deferred to those windows.
+- **3395 — H/P:** `BKOPS_STATUS[246]` reports four urgency levels: none required, non-critical outstanding, performance-impacting outstanding, and critical outstanding.
+- **3396 — H/P:** Levels 2/3 can surface `URGENT_BKOPS`; level 3 may stretch foreground timeouts because maintenance can no longer be delayed.
+- **3397 — H/P:** JESD84-B51 requires Background Operations support for the specification; capability does not itself mean work is currently outstanding.
+- **3398 — H/P:** With `AUTO_EN`, an e.MMC may start or stop background operations during idle time without host notification; the host is advised to keep device power active.
+- **3399 — E:** `BKOPS supported != work outstanding != urgent != execution opportunity != execution != no more currently needed work`.
+- **3400 — E:** BKOPS exposes maintenance control/opportunity but not the hidden algorithm; generic BKOPS alone does not prove garbage collection, wear leveling, or retention refresh.
+- **3401 — E:** `BKOPS_STATUS = 0` means no background operations currently required under the interface, not a universal media-health or future-retention guarantee.
+- **3402 — E:** Micron/Armadillo reset/time/ECC-conditioned self-refresh eligibility is not interchangeable with generic BKOPS urgency: `vendor self-refresh due != generic BKOPS urgency`.
+- **3403 — A:** Both may depend on powered idle opportunity, but `shared idle opportunity != shared mechanism`; the comparison is functional only.
+- **3404 — E:** Manual versus autonomous BKOPS changes maintenance scheduling authority while physical target selection remains hidden; host participation and target authority are separate axes.
+- **3405 — H/E:** JESD84-B51 defines `SANITIZE_START[165]` separately from `BKOPS_START[164]`, supporting `BKOPS completion != sanitize completion`.
+- **3406 — X:** Neither completed BKOPS nor zero BKOPS urgency proves verified physical erasure or sanitization; stronger implementation/sanitization evidence is required.

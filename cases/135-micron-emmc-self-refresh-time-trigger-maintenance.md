@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/135-micron-emmc-2021-2023-self-refresh-grounding.md`](../evidence/135-micron-emmc-2021-2023-self-refresh-grounding.md).
 
+Deepening record: [`../evidence/135-jedec-emmc51-bkops-maintenance-opportunity-deepening.md`](../evidence/135-jedec-emmc51-bkops-maintenance-opportunity-deepening.md).
+
 ## Scope
 
 This case asks a narrow managed-Flash retention question:
@@ -280,11 +282,34 @@ Fresh searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/c
 
 A broad genealogy of eMMC maintenance commands, JEDEC revision history, BKOPS, controller architecture, read reclaim, and Micron firmware generations belongs primarily in `computing-archaeology` if developed. This case keeps only the retention-specific relation among time evidence, execution opportunity, selective renewal, and retained maintenance state.
 
+## Deepening — standard BKOPS is a maintenance-opportunity interface, not a synonym for vendor self refresh
+
+JESD84-B51 (February 2015) gives e.MMC a standard **Background Operations** control surface. Manual BKOPS uses `BKOPS_START[164]`; `MANUAL_EN` lets the host advertise periodic service windows; `BKOPS_STATUS[246]` reports urgency from no work required through critical outstanding work. With `AUTO_EN`, the device may start or stop background work during idle time without notifying the host, while the host is advised to keep device power active.
+
+That surface must stay separate from the Micron/Armadillo retention path documented above. BKOPS exposes **maintenance support, urgency, and scheduling opportunity**; the vendor path exposes **reset/time eligibility, bus-idle gating, ECC-threshold selection, and self-refresh telemetry**. The inspected sources do not establish that either state machine drives the other.
+
+```text
+BKOPS supported
+    != BKOPS work outstanding
+    != BKOPS urgent
+    != BKOPS executing
+    != a particular hidden Flash algorithm demonstrated
+
+vendor self-refresh due != generic BKOPS urgency
+shared powered-idle opportunity != shared mechanism
+```
+
+JESD84-B51 also defines `SANITIZE_START[165]` separately from `BKOPS_START[164]`. Accordingly, `BKOPS_STATUS = 0` or completed BKOPS is not evidence of sanitize completion, secure erasure, or elimination of stale physical embodiments.
+
+The bounded evidence and chronology ledger is in [`../evidence/135-jedec-emmc51-bkops-maintenance-opportunity-deepening.md`](../evidence/135-jedec-emmc51-bkops-maintenance-opportunity-deepening.md). February 2015 is used only as the public floor for the inspected e.MMC 5.1 control semantics, not as an invention date for Flash background maintenance or manual BKOPS.
+
+
 ## Open research debt
 
 - obtain and directly inspect the full Micron TN-FC-60 body;
 - identify the exact Micron eMMC part/firmware revision in the bounded Armadillo configuration and any product errata;
 - trace `SET_TIME (CMD49)` and the relevant vendor extension against official JEDEC eMMC revision history without assuming command-number identity across contexts;
+- trace pre-5.1 manual BKOPS and the later background-operation-control genealogy directly in JEDEC revisions; do not infer the full genealogy from JESD84-B51 alone;
 - obtain independent fault-injection evidence for interrupted self-refresh and time-source faults;
 - determine the exact physical rewrite/relocation and ECC-codeword geometry only from appropriate implementation evidence;
 - test whether the exposed maintenance statistics survive specific power/reset/firmware transitions and what their reset semantics are.
