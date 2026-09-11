@@ -4404,3 +4404,24 @@ Grounding record: [`evidence/150-crucial-2014-2024-active-garbage-collection-gro
 3270. **[E]** DRAM refresh is restorative retention maintenance, not sanitization or evidence that prior data has become irrecoverable.
 3271. **[A]** Interpretation only: persistence obligations can be spatially decomposed so that one scope is temporarily withdrawn for maintenance while other scopes remain serviceable.
 3272. **[E]** Related-repository boundary: broad DDR/LPDDR refresh genealogy and controller adoption belong in `computing-archaeology`; Case 151 retains only the bounded retention relation.
+### Case 152 — SQLite WAL Checkpoint: Committed-but-Unbackfilled State, Reader End Marks, and Reuse Authority
+3273. **[H]** SQLite 3.7.0 was released on 2010-07-21 and its first-party release record says it added write-ahead logging; this is a SQLite public-release boundary, not a general WAL invention date.
+3274. **[H/E]** Frozen `version-3.7.0/src/wal.c` documents WAL frames containing revised database-page contents and transaction commit when a frame carrying a commit marker is written.
+3275. **[E]** `transaction commit != checkpoint`: SQLite can establish a committed transaction in the WAL before revised pages are copied into the main database file.
+3276. **[E]** `committed current state != main-database-file-only state`: while relevant WAL frames remain, a reader may need the base database plus eligible committed WAL frames to reconstruct current content.
+3277. **[E]** A 3.7.0 reader fixes an `mxFrame` boundary (maintained docs call the analogous boundary an end mark) and uses it for the read transaction, so snapshot identity is a retained cut relation rather than another payload replica.
+3278. **[E]** `later global commit != visibility to every existing reader`: frames appended after an older reader's cut are deliberately ignored by that reader.
+3279. **[E]** Active reader marks constrain checkpoint progress; a checkpointer cannot freely overwrite base-database state that an older reader still relies on.
+3280. **[E]** `nBackfill` in the 3.7.0 wal-index records how many WAL frames have been copied into the database, making checkpoint progress distinct from commit state and from checkpoint completion.
+3281. **[E]** `all frames backfilled != immediate WAL reuse authority`: 3.7.0 resets/reuses the WAL only when `nBackfill == mxFrame` and no readers are using the WAL.
+3282. **[E]** WAL frame validity is generational: salts/checksums/counters distinguish current frames from leftovers after checkpoint/reset, so physical survival of an old frame does not make it current.
+3283. **[E]** `WAL reset/reuse != media sanitization`: logical invalidation/overwrite eligibility does not prove old magnetic/flash embodiments are forensically irrecoverable.
+3284. **[E]** The 3.7.0 source explicitly calls the wal-index transient and reconstructible from the original WAL after crash.
+3285. **[E]** `persistent WAL evidence != reconstructible wal-index coordination state`: payload/commit records and lookup/checkpoint/read-mark metadata have different required lifetimes.
+3286. **[H]** IBM Research's 1992 ARIES publication explicitly uses write-ahead logging, providing a conservative prior-art floor well before SQLite 3.7.0.
+3287. **[A]** `earlier WAL literature != direct SQLite genealogy`: chronology blocks a novelty overclaim but does not establish ARIES -> SQLite implementation descent.
+3288. **[E]** Case 143 and Case 152 form a documented SQLite-internal contrast: rollback journaling retains older page images before overwrite, while WAL retains revised page images outside the base file until later checkpoint/backfill.
+3289. **[E]** `rollback authority retirement != WAL reuse authority`: the two SQLite journal directions retire different retained state under different transition conditions.
+3290. **[A]** GC/reclamation cases are only functional analogies: both may delay reuse until a retained relation retires, but SQLite checkpoint, JFFS2 erase-block GC, and other reclamation state machines are not genealogically interchangeable.
+3291. **[E]** Current SQLite documentation treats the WAL file as part of persistent database state while relevant; separating it from the database can lose committed transactions or corrupt the usable pair. This is a maintained operational witness, not a frozen 2010 syscall trace.
+3292. **[P]** Interpretation only: technical currentness can be compositional across a base image, retained deltas, and observer-specific cut relations; this is not SQLite historical vocabulary or a universal model of memory.

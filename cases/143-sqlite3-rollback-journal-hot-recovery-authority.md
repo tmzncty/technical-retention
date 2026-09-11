@@ -371,7 +371,7 @@ If developed later, the following belong primarily there:
 - recover a frozen early-2004/3.0.x source/document snapshot for exact line-level comparison against maintained documentation;
 - identify the exact introduction genealogy of the super-journal implementation rather than relying only on the Version-3 maintained design record and 3.0.0 release note;
 - deepen the PERSIST introduction from release note into source/check-in history if a later argument depends on exact implementation chronology;
-- compare rollback-journal and WAL-mode currentness only in a separate bounded case;
+- rollback-journal versus WAL-mode currentness is now addressed separately in [`Case 152`](152-sqlite-wal-checkpoint-backfill-reader-retention.md); keep further WAL genealogy and experiments out of this rollback-journal case;
 - run controlled power-cut / VFS fault experiments for DELETE/PERSIST/TRUNCATE;
 - test database+journal rename/copy/mispairing failure modes in an isolated experiment;
 - keep filesystem and device durability claims routed through Cases 124/15/31 rather than silently assuming `fsync` closes every lower layer.
