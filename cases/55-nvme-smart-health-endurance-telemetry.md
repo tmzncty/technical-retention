@@ -2,9 +2,11 @@
 
 ## Status
 
-**`grounded`** — bounded to the NVMe 1.0/1.0e/1.3 SMART / Health Information interface and a 2014 Intel DC P3700 product witness. The spare-exhaustion deepening uses the original 2011 Gold specification to separate spare-threshold warning, reserve exhaustion, and actual command failure without inferring a hidden SSD remapping algorithm. A prior-art pass adds a bounded 1995–1997 ATA SMART floor for retained drive-health state, while explicitly refusing to equate ATA vendor-specific attributes with the later NVMe SMART / Health schema or to claim a direct ATA→NVMe genealogy. A further ATA/ATAPI-5 pass adds a bounded 1999 diagnostic-history relation: off-line data collection, short/extended self-test, off-line versus captive execution, current progress/status, and a finite circular self-test log are kept distinct. The case establishes that an SSD can retain cumulative health/endurance evidence across power cycles and expose it to host software without that evidence being the user payload or a complete physical wear history.
+**`grounded`** — bounded to the NVMe 1.0/1.0e/1.3 SMART / Health Information interface and a 2014 Intel DC P3700 product witness. The spare-exhaustion deepening uses the original 2011 Gold specification to separate spare-threshold warning, reserve exhaustion, and actual command failure without inferring a hidden SSD remapping algorithm. A prior-art pass adds a bounded 1995–1997 ATA SMART floor for retained drive-health state, while explicitly refusing to equate ATA vendor-specific attributes with the later NVMe SMART / Health schema or to claim a direct ATA→NVMe genealogy. A further ATA/ATAPI-5 pass adds a bounded 1999 diagnostic-history relation: off-line data collection, short/extended self-test, off-line versus captive execution, current progress/status, and a finite circular self-test log are kept distinct. The case establishes that an SSD can retain cumulative health/endurance evidence across power cycles and expose it to host software without that evidence being the user payload or a complete physical wear history. A further NVMe 1.4 deepening adds Persistent Event Log as a later, explicitly selective event-history layer and separates log persistence from completeness, immutability, lossless abrupt-power-failure capture, and sanitization verification.
 
 Grounding record: [`../evidence/55-nvme10-13-smart-health-endurance-grounding.md`](../evidence/55-nvme10-13-smart-health-endurance-grounding.md).
+
+Persistent-event-log deepening: [`../evidence/55-nvme14-2019-persistent-event-log-deepening.md`](../evidence/55-nvme14-2019-persistent-event-log-deepening.md).
 
 ## Scope
 
@@ -19,9 +21,10 @@ The object is the NVMe `SMART / Health Information` log, especially:
 - `Data Units Written`;
 - `Power Cycles`, `Power On Hours`, and `Unsafe Shutdowns`;
 - `Media and Data Integrity Errors` / `Media Errors`;
-- the distinction between cumulative/lifetime information and the current `Critical Warning` state.
+- the distinction between cumulative/lifetime information and the current `Critical Warning` state;
+- NVMe 1.4 `Persistent Event Log` as selected typed history, including persistence, suppression/deletion, reporting-context, periodic SMART-snapshot, and sanitize-modification boundaries.
 
-This is not a general history of SMART, NAND endurance, wear leveling, SSD failure prediction, or enterprise fleet management. It also does not claim that the standardized host-visible counters expose the controller's complete internal P/E-cycle distribution, write amplification, bad-block map, ECC history, or physical degradation model.
+This is not a general history of SMART, NAND endurance, wear leveling, SSD failure prediction, persistent logging, or enterprise fleet management. It also does not claim that the standardized host-visible counters expose the controller's complete internal P/E-cycle distribution, write amplification, bad-block map, ECC history, or physical degradation model.
 
 ## Historical record
 
@@ -159,6 +162,22 @@ The same P3700 product specification also says that a small portion of physical 
 
 The surviving copy used here is an Intel-authored document preserved through manual/document mirrors rather than a current Intel-hosted PDF. The document identity, order number, July 2014 revision, and page transcript are preserved in the grounding record; this provenance is not silently upgraded to a current-vendor URL.
 
+### NVMe 1.4 adds a persistent but explicitly selective event-history layer
+
+The **NVM Express Base Specification Revision 1.4, 10 June 2019** adds a distinct historical interface to the health/endurance state already covered above. NVM Express's own `Changes in NVMe Revision 1.4` page lists **Persistent Event Log (PEL)** as a new optional feature, and normative §5.14.1.13 defines Log Identifier `0Dh`. This is a revision boundary, not an invention claim: Case 55 already grounds a bounded ATA/ATAPI-5 self-test history in 1999.
+
+PEL significant-event information is required to persist across **power cycles and resets**, and the log is global to the NVM subsystem. The immediately following power-failure wording is weaker: implementations **should** be designed for minimal event-information loss upon power failure. The source therefore supports `reset/power-cycle persistence != guaranteed lossless abrupt-power-failure capture`.
+
+The history is explicitly selective. Event count and maximum size are vendor-specific; repeated same events may be suppressed above a vendor-specific frequency threshold; and deletion policy is vendor-specific when size/count/category bounds are reached. The specification even permits an older important event to be retained while a newer event is deleted. PEL is therefore persistent history under retention policy, not a complete FIFO archive.
+
+Revision 1.4 defines heterogeneous events including SMART/Health snapshots, firmware commits, timestamp changes, power-on/reset, subsystem hardware errors, namespace changes, separate Format NVM and Sanitize **start/completion** events, feature changes, telemetry creation, thermal excursions, and vendor/TCG events. When PEL is supported, SMART/Health snapshot events are created at least once every **24 power-on hours** for the controller scope specified by the virtualization rules. A historical SMART snapshot still remains an interface/model snapshot rather than a raw NAND/FTL event history.
+
+PEL retrieval has its own read-consistency boundary. A host may establish a reporting context, read the data associated with it, and release it. Events occurring while that context exists are still logged but are not reported in the existing context. Thus `reporting context != frozen underlying log`.
+
+Finally, Revision 1.4 explicitly permits **sanitize** to remove or modify PEL events to prevent derivation of user data, with removed events unspecified. Persistence therefore does not mean immutability. Conversely, a PEL `Sanitize Completion` event records an interface-visible episode; it is not independent forensic verification that every stale physical embodiment became unrecoverable.
+
+Deepening record: [`../evidence/55-nvme14-2019-persistent-event-log-deepening.md`](../evidence/55-nvme14-2019-persistent-event-log-deepening.md).
+
 ## Retained states and their different meanings
 
 ### 1. User payload
@@ -192,6 +211,10 @@ This is reserve/maintenance state, not filesystem free space and not application
 ### 6. Current warning state
 
 By NVMe 1.3, `Critical Warning` is explicitly current and nonpersistent. A device can therefore expose a present warning that differs categorically from its cumulative counters and endurance estimate even though they share one log page.
+
+### 7. Selected persistent event history
+
+NVMe 1.4 PEL retains typed evidence about selected device/subsystem events across resets and power cycles. Unlike a cumulative counter, an entry can retain an event category, timestamp, and event-specific data; unlike a complete audit archive, the log remains subject to vendor-specific capacity, repeated-event suppression, and deletion policy. Periodic SMART/Health snapshot events add a historical form of the health interface without exposing a complete physical-media history.
 
 ## Engineering reconstruction
 
@@ -357,6 +380,14 @@ Therefore:
 
 The field records/updates a model output; it does not itself perform the physical retention work.
 
+### Persistent event history is not complete or immutable event history
+
+PEL is persistent across named reset/power-cycle boundaries, but the same specification permits repeated-event suppression, vendor-specific deletion under bounds, and sanitize-driven removal/modification. Therefore **`persistent event history != complete event history`** and **`persistent != immutable`**. A reporting context stabilizes a selected read view while newer events continue to be logged, so retrieval-view stability and ongoing history accumulation are separate relations.
+
+The periodic SMART/Health snapshot is also not a raw-media ledger. It does not disclose every ECC correction, FTL move, NAND program/erase, garbage-collection copy, read-reclaim decision, or per-cell threshold state. Therefore **`historical SMART snapshot != complete physical-media history`** and **`snapshot cadence != media-maintenance cadence`**.
+
+The separate Sanitize Start and Sanitize Completion event types fix another boundary: **`operation start != operation completion != independent verification of physical forgetting`**. The event record documents interface state; it does not become a forensic audit of every physical embodiment.
+
 ## Relation to existing cases
 
 ### Case 36 — NAND correct-and-refresh
@@ -393,9 +424,12 @@ Several forms of failure remain distinct:
 - a current `Critical Warning` may clear while cumulative lifetime counters remain;
 - a controller can retain aggregated history while forgetting the sequence of events that produced the aggregate;
 - the health log itself can be unavailable if the controller cannot operate, even though some NAND embodiments physically survive;
-- a healthy-looking interface report does not independently verify hidden physical wear distribution or future failure time.
+- a healthy-looking interface report does not independently verify hidden physical wear distribution or future failure time;
+- PEL persistence does not imply every event survives every abrupt power failure;
+- repeated-event suppression and bounded-log deletion mean retained event history may be intentionally incomplete;
+- sanitize may deliberately remove or modify some persistent-event history.
 
-The repository should therefore reject `SMART says healthy` as a synonym for `all retained payload is safe indefinitely`.
+The repository should therefore reject `SMART says healthy` as a synonym for `all retained payload is safe indefinitely`, and reject `persistent log` as a synonym for `complete immutable archive`.
 
 ## Prior art and anti-anachronism
 
@@ -411,6 +445,8 @@ The prior-art boundary is now narrower. Official July 1995 T10/SFF evidence esta
 
 It is **not** a full ATA SMART genealogy. The original SFF-8035i facsimile/revision chain, pre-SFF vendor implementations, ATA-4 evolution, proposal-level facsimile archaeology for the 1999 self-test-log changes, later selective/conveyance self-test evolution, named-product diagnostic behavior, and any direct ATA→NVMe design genealogy remain separate work. The December 1999 ATA/ATAPI-5 Revision 2 text closes only a bounded diagnostic-history/interface relation; `proposal submission`, `working-draft incorporation`, `standards publication`, `first implementation`, and `invention` are not treated as synonyms.
 
+NVMe 1.4 adds a later standards-history boundary: NVM Express's own revision ledger identifies Persistent Event Log as a new optional NVMe feature by June 2019. That does not make NVMe 1.4 the invention of retained drive history. The already-grounded 1999 ATA/ATAPI-5 21-entry circular self-test log is an explicit earlier counterexample. The useful comparison is narrower: ATA retains bounded self-test diagnostic records, whereas NVMe 1.4 standardizes a heterogeneous event-history interface with explicit suppression/deletion, reporting-context, periodic SMART-snapshot, and sanitize-modification rules. No direct ATA→NVMe genealogy is asserted, and TP4007a/4042a proposal chronology remains open until those proposals are independently inspected.
+
 ## Philosophical interpretation — bounded
 
 This case permits one narrow formulation:
@@ -419,7 +455,9 @@ This case permits one narrow formulation:
 
 The interesting point is not anthropomorphic `the SSD remembers its age`. Technically, the device retains counters, reserve state, and a model-derived estimate that make past use relevant to future decisions. Some of this history is durable across power cycles; some nearby warning state is explicitly current and nonpersistent.
 
-The case therefore sharpens a distinction between **retaining the thing** and **retaining evidence about the remaining conditions of retention**.
+NVMe 1.4 adds a second bounded conceptual problem: retained history itself is governed by admission, suppression, finite capacity, retrieval context, priority/deletion, and sanitization rules. A device can preserve a history of its operation while also being authorized to forget selected parts of that history.
+
+The case therefore sharpens a distinction between **retaining the thing**, **retaining evidence about the remaining conditions of retention**, and **retaining a selected history of operations/events**.
 
 That is a project-level interpretation. It is not terminology attributed to NVM Express or Intel.
 
@@ -451,6 +489,12 @@ That is a project-level interpretation. It is not terminology attributed to NVM 
 | a SMART percentage proves exact remaining lifetime for every physical NAND cell | `X` | rejected by vendor-specific-estimate wording |
 | NVMe 1.3 invented SSD health/endurance telemetry | `X` | contradicted by NVMe 1.0e and 2014 P3700 evidence |
 | NVMe health telemetry is historically/technically identical to Cassandra repair state or DDR5 RAA | `X` | rejected; functional analogy only |
+| NVMe 1.4 adds Persistent Event Log as a new optional NVMe feature | `H/P` | first-party revision/spec boundary; not invention proof |
+| PEL persists across power cycles/resets while power-failure language only recommends minimizing event-information loss | `H/P/E` | modal distinction; not a lossless-abrupt-failure guarantee |
+| PEL may suppress repeated events and delete entries under vendor-specific bounded-history policy | `H/P/E` | `persistent event history != complete event history` |
+| PEL reporting context excludes newly occurring events from its existing view while those events continue to be logged | `H/P/E` | `reporting context != frozen underlying log` |
+| sanitize may remove/modify PEL events to prevent user-data derivation | `H/P/E` | `persistent != immutable` |
+| a PEL Sanitize Completion event independently verifies physical media sanitization | `X` | rejected; event history is not forensic verification |
 
 ## Sources
 
@@ -465,7 +509,9 @@ That is a project-level interpretation. It is not terminology attributed to NVM 
 8. X3T13, **AT Attachment-3 Interface (ATA-3), Working Draft X3T13/2008D Revision 7b**, 27 January 1997; period draft text/transcription used for §6.6 and §7.31 semantics and revision history: <https://paperzz.com/doc/7545036/at-attachment-3-interface--ata-3--working-draft>
 9. Technical Committee T13, **1999 document index**, official metadata for `d99105r0` (10 February 1999) and `d99108r0` (22 February 1999), plus the **Expired Standards** ledger identifying project 1321D / ATA/ATAPI-5 and its 28 February 2000 submission date: <https://t13.org/documents?created%5Bmax%5D=1999-12-31&created%5Bmin%5D=1999-01-01&order=field_document_number&page=1&sort=desc> and <https://www.t13.org/standards-expired>
 10. T13, **AT Attachment with Packet Interface - 5 (ATA/ATAPI-5), Working Draft T13/1321D Revision 2**, 13 December 1999; period draft transcription/mirror used for revision history and §§8.41.4–8.41.6: <https://studylib.net/doc/25730948/ata-atapi-5>
+11. NVM Express, **NVM Express Base Specification, Revision 1.4**, 10 June 2019, especially §5.14.1.13 and §5.14.1.13.1: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_4-2019.06.10-Ratified.pdf>
+12. NVM Express, **Changes in NVMe Revision 1.4**, first-party revision summary: <https://nvmexpress.org/changes-in-nvme-revision-1-4/>
 
 ## Related repositories
 
-A fresh repository search found no dedicated NVMe SMART/endurance or ATA SMART/SFF-8035i/ATA5 self-test case in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology). Broader SMART/ATA/NVMe health-monitoring genealogy and disk/SSD engineering chronology should remain there if developed; this case keeps only the retention-specific state/history, diagnostic-history, and interface-boundary distinctions.
+A fresh repository search found no dedicated NVMe SMART/endurance, Persistent Event Log, or ATA SMART/SFF-8035i/ATA5 self-test case in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology). Broader SMART/ATA/NVMe health-monitoring and event-log genealogy, proposal history, product adoption, and disk/SSD engineering chronology should remain there if developed; this case keeps only the retention-specific state/history, diagnostic-history, and interface-boundary distinctions.

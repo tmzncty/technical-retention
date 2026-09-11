@@ -4569,3 +4569,24 @@ Grounding: [`cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md`](ca
 - **3418 — A:** Generic BKOPS and Micron/Armadillo self refresh share only a functional powered-idle maintenance-opportunity boundary; `shared idle opportunity != shared mechanism`.
 - **3419 — P:** Project interpretation only: a maintenance obligation can exist independently of who is authorized to schedule the next execution window; this is not JEDEC or vendor historical vocabulary.
 - **3420 — X:** No direct normative A44→A441 clause diff, JEDEC ballot genealogy, or pre-eMMC background-maintenance genealogy is established here; first-introduction/invention claims remain prohibited pending stronger primary evidence.
+
+## Case 55 deepening — NVMe 1.4 Persistent Event Log / selected device history
+
+Grounding: [`cases/55-nvme-smart-health-endurance-telemetry.md`](cases/55-nvme-smart-health-endurance-telemetry.md) and [`evidence/55-nvme14-2019-persistent-event-log-deepening.md`](evidence/55-nvme14-2019-persistent-event-log-deepening.md).
+
+- **3421 — H/P:** NVM Express Base Specification Revision 1.4 is dated 10 June 2019, and NVM Express's first-party Revision-1.4 change ledger identifies Persistent Event Log as a new optional feature in that revision; this is a revision boundary, not an invention date.
+- **3422 — H/P:** PEL significant-event information is retained across power cycles and resets and the log is global to the NVM subsystem.
+- **3423 — H/P/E:** Revision 1.4 separately says subsystems `should` be designed for minimal event-information loss upon power failure, so `retained across reset/power cycle != guaranteed lossless abrupt-power-failure capture`.
+- **3424 — H/P:** PEL event count and maximum supported size are vendor-specific.
+- **3425 — H/P:** Repeated occurrences of the same supported event may be suppressed after a vendor-specific frequency threshold is exceeded.
+- **3426 — H/P:** When size/count/category bounds are reached, deletion policy is vendor-specific; an older important event may be retained while a newer event is deleted.
+- **3427 — E:** `persistent event history != complete event history`; persistence does not remove admission, suppression, capacity, and deletion policy.
+- **3428 — H/P:** Standard PEL categories include SMART/Health snapshot, firmware commit, timestamp change, power-on/reset, subsystem hardware error, namespace change, separate Format/Sanitize start and completion, Set Features, telemetry creation, thermal excursion, and vendor/TCG events.
+- **3429 — H/P:** When PEL is supported, Revision 1.4 requires SMART/Health snapshot events at least once every 24 power-on hours under the specified controller/virtualization scope.
+- **3430 — E:** `periodic SMART snapshot != complete raw-media history != media-maintenance cadence`; a historical snapshot retains the standardized health abstraction rather than hidden NAND/FTL events.
+- **3431 — H/P:** A host can establish/read/release a PEL reporting context; events occurring while that context exists continue to be logged but are excluded from the existing context.
+- **3432 — E:** `reporting context != frozen underlying log`; retrieval-view stability and ongoing event accumulation are separate relations.
+- **3433 — H/P:** Sanitize may remove or modify PEL events to prevent derivation of user data, and which events are removed is unspecified.
+- **3434 — E:** `persistent != immutable`; ordinary diagnostic-history retention may yield to a stronger sanitization/forgetting policy.
+- **3435 — H/P/A:** ATA/ATAPI-5's grounded 1999 21-entry circular self-test log is earlier prior art for bounded retained device diagnostic history; PEL is a later heterogeneous standardized event-history interface, with no direct ATA→NVMe genealogy asserted.
+- **3436 — X:** PEL does not by itself prove complete/lossless device history, hidden NAND/FTL algorithm, proposal-level invention priority, direct ATA→NVMe lineage, or independent verification that a recorded sanitize completion made every prior embodiment unrecoverable.
