@@ -1,0 +1,39 @@
+name: Integrate Case 44 Write Uncorrectable deepening
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - tools/integrate_case44_write_uncorrectable.py
+      - .github/workflows/integrate_case44_write_uncorrectable.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Integrate canonical research changes
+        run: python tools/integrate_case44_write_uncorrectable.py
+
+      - name: Validate bounded integration
+        run: |
+          test -f evidence/44-nvme10-2011-write-uncorrectable-logical-unreadability-deepening.md
+          grep -Fq 'NVMe 1.0 Write Uncorrectable separates unreadability from deallocation' cases/44-nvme13-deallocate-sanitize-forgetting.md
+          grep -Fq 'Case 44 deepening — NVMe 1.0 Write Uncorrectable logical unreadability boundary' ROADMAP.md
+          grep -Fq '**3450 — X:**' CASE_INDEX.md
+          git diff --check
+
+      - name: Commit research and remove one-shot integration scaffolding
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm tools/integrate_case44_write_uncorrectable.py .github/workflows/integrate_case44_write_uncorrectable.yml
+          git add CASE_INDEX.md ROADMAP.md cases/44-nvme13-deallocate-sanitize-forgetting.md evidence/44-nvme10-2011-write-uncorrectable-logical-unreadability-deepening.md
+          git commit -m 'case44: deepen Write Uncorrectable semantics [skip ci]'
+          git push
