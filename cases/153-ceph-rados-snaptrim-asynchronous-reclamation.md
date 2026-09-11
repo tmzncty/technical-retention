@@ -451,7 +451,7 @@ This case does not establish:
    - <https://github.com/ceph/ceph/blob/main/doc/dev/osd_internals/snaps.rst>
    - rendered stable-release witness: <https://docs.ceph.com/en/reef/dev/osd_internals/snaps/>
 4. Ceph, **Placement Group States**, for current `snaptrim`, `snaptrim_wait`, `snaptrim_error` vocabulary:
-   - <https://docs.ceph.com/en/nautilus/rados/operations/pg-states/>
+   - <https://docs.ceph.com/en/latest/rados/operations/pg-states/>
 
 ### Prior-art guardrail / repository comparison
 

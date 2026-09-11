@@ -210,6 +210,6 @@ should primarily move to `computing-archaeology`.
 4. Ceph Reef rendered snapshot-internals documentation:
    <https://docs.ceph.com/en/reef/dev/osd_internals/snaps/>
 5. Ceph Placement Group States:
-   <https://docs.ceph.com/en/nautilus/rados/operations/pg-states/>
+   <https://docs.ceph.com/en/latest/rados/operations/pg-states/>
 6. Hitz, Lau, Malcolm, USENIX Winter 1994, *File System Design for an NFS File Server Appliance*:
    <https://www.usenix.org/conference/usenix-winter-1994-technical-conference/file-system-design-nfs-file-server-appliance>
