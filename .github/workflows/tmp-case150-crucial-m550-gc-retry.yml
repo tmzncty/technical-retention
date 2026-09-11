@@ -1,0 +1,55 @@
+name: Temporary Case150 Crucial M550 GC integration retry
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tmp-case150-crucial-m550-gc-retry.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Integrate bounded Case150 research slice
+        shell: bash
+        run: |
+          set -euo pipefail
+          git pull --ff-only origin main
+          python3 _automation_case150_crucial_m550_gc.py
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in [
+              'CASE_INDEX.md',
+              'ROADMAP.md',
+              'cases/150-crucial-m550-active-garbage-collection.md',
+              'evidence/150-crucial-2014-2024-active-garbage-collection-grounding.md',
+          ]:
+              p = Path(name)
+              p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
+          rm -f _automation_case150_crucial_m550_gc.py \
+                .github/workflows/tmp-case150-crucial-m550-gc.yml \
+                .github/workflows/tmp-case150-crucial-m550-gc-retry.yml
+          git diff --check
+          test -f cases/150-crucial-m550-active-garbage-collection.md
+          test -f evidence/150-crucial-2014-2024-active-garbage-collection-grounding.md
+          grep -q '3234 — 2014 named-product floor != invention date' CASE_INDEX.md
+          grep -q '3253 — related-repository boundary' CASE_INDEX.md
+          grep -q 'Case 150 Crucial M550 Active Garbage Collection / managed-SSD reclaim slice' ROADMAP.md
+          grep -q 'TRIM/deallocation indication != garbage-collection execution' cases/150-crucial-m550-active-garbage-collection.md
+          test ! -e _automation_case150_crucial_m550_gc.py
+          test ! -e .github/workflows/tmp-case150-crucial-m550-gc.yml
+          test ! -e .github/workflows/tmp-case150-crucial-m550-gc-retry.yml
+          git config user.name 'technical-retention automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'case150: ground managed-SSD garbage collection retention'
+          git push origin HEAD:main
