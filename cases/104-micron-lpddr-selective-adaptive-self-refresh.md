@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/104-micron-2009-2014-lpddr-tcsr-pasr-grounding.md`](../evidence/104-micron-2009-2014-lpddr-tcsr-pasr-grounding.md).
 
+Low-power-state retention-boundary deepening: [`../evidence/104-micron-2014-lpddr-low-power-retention-boundary-deepening.md`](../evidence/104-micron-2014-lpddr-low-power-retention-boundary-deepening.md). This product-level slice separates ordinary Power-Down, SELF REFRESH, and DPD without turning DPD content loss into a sanitization claim.
+
 ## Scope
 
 Cases 03, 09, 10, 21, and 69 already establish why DRAM requires refresh, how refresh addressing/scheduling can move on-chip, how SDRAM hands recurring refresh responsibility between controller and device, and how DDR4 permits bounded scheduling elasticity. This case asks a narrower question left open by Case 21:
@@ -60,6 +62,27 @@ PASR therefore cannot be collapsed into DPD:
 
 - PASR continues refresh work for a selected subset;
 - DPD removes the array-power condition needed for dynamic retention.
+
+### H/P* — Power-Down, SELF REFRESH, and DPD expose different retention contracts
+
+A second January-2014 Micron Mobile LPDDR datasheet tightens the low-power boundary. Ordinary **Power-Down** disables most interface activity, but the manufacturer explicitly limits its duration by the device refresh requirement; it is therefore not an indefinite retention mode and it is not equivalent to removing power. **SELF REFRESH** instead keeps the dynamic payload current by scheduling refresh internally without an external clock. **Deep Power-Down** crosses a different boundary: Micron says memory-array power is eliminated, prior data are not retained, and exit requires a full DRAM initialization sequence.
+
+The bounded state relation is therefore:
+
+```text
+ordinary Power-Down
+    -> no refresh while resident; duration bounded by refresh deadline
+
+SELF REFRESH
+    -> internal refresh continues; selected payload remains under the documented conditions
+
+Deep Power-Down
+    -> retention support withdrawn; data not retained; full reinitialization on exit
+```
+
+This supports `Power-Down != powered off`, `SELF REFRESH != passive nonvolatility`, and `DPD exit != retained-state resume`. The source is a vendor-origin Micron datasheet preserved on a Texas Instruments site, so these claims are recorded as `H/P*` rather than current-origin `H/P`.
+
+The content-loss statement is still not a sanitization guarantee. The datasheet does not establish the cell-level remanence horizon, laboratory recoverability, or verified physical erasure after DPD.
 
 ## Retained state and control state
 
@@ -165,6 +188,10 @@ This is a functional comparison. It is not a claim of one linear invention genea
 | PASR can select full, 1/2, 1/4, 1/8, or 1/16 array coverage | H/P | Micron extended-mode-register/PASR text, pp. 55–56 |
 | data in PASR-excluded regions are not retained by self refresh | H/P | Micron p. 56 |
 | DPD eliminates array power and does not retain payload | H/P | Micron command/general-description text |
+| ordinary Power-Down duration is bounded by refresh requirements rather than providing indefinite retention | H/P* | Micron Mobile LPDDR Rev. I 01/14 pp. 90–93 |
+| SELF REFRESH retains payload through internally scheduled refresh without external clocking | H/P* | Micron Mobile LPDDR Rev. I 01/14 pp. 89–90 |
+| exit from DPD requires a full DRAM initialization sequence | H/P* | Micron Mobile LPDDR Rev. I 01/14 pp. 93–94 |
+| DPD content loss is equivalent to verified sanitization | X | not established; no remanence / recovery / erase-assurance evidence |
 | retention coverage and ordinary addressable capacity can differ | E | bounded reconstruction from PASR semantics |
 | maintenance rate and maintenance scope are independent comparison axes | E/A | bounded cross-feature comparison |
 | PASR exclusion is equivalent to secure erase | X | not established; no sanitization or exact decay-completion semantics are specified |
@@ -181,3 +208,4 @@ A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty
 1. Micron Technology, Inc., _512Mb: x16, x32 Automotive LPDDR SDRAM_, `t67m_embedded_lpddr_512mb.pdf`, Rev. D, February 2014, especially pp. 34, 55–56, and 90. Preserved manufacturer document via DigiKey/device-report mirrors: <https://media.digikey.com/pdf/Data%20Sheets/Micron%20Technology%20Inc%20PDFs/MT46H16M32LF%28LG%29_MT46H32M16LF.pdf> and <https://device.report/m/ee2b8a56e871864419dcf093c9a7d59531ea90387f192f2bd45316bda78a9f79>.
 2. Lionel S. White, Jr. and G. R. Mohan Rao, Texas Instruments, US4207618A, _On-chip refresh for dynamic memory_, filed 26 June 1978, published 10 June 1980: <https://patents.google.com/patent/US4207618A/en>.
 3. Takayasu Sakurai and Tetsuya Iizuka, Toshiba Corp., US4682306A, _Self-refresh control circuit for dynamic semiconductor memory device_, Japanese priority 20 August 1984, US publication 21 July 1987: <https://patents.google.com/patent/US4682306A/en>.
+4. Micron Technology, Inc., _512Mb: x16, x32 Mobile LPDDR SDRAM_, `t67m_512mb_mobile_lpddr.pdf`, Rev. I, January 2014, especially pp. 90–94; vendor-origin datasheet preserved via Texas Instruments: <https://e2e.ti.com/cfs-file/__key/telligent-evolution-components-attachments/00-791-00-00-00-38-27-14/T67M_5F00_512Mb_5F00_mobile_5F00_lpddr_5F00_sdram.pdf>.
