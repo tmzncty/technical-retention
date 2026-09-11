@@ -16,7 +16,13 @@ jobs:
         with:
           fetch-depth: 1
       - name: Apply bounded Case 70 patch
-        run: python3 .github/retention_case70_integrate.py
+        run: |
+          python3 .github/retention_case70_integrate.py
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('CASE_INDEX.md')
+          p.write_text(p.read_text().rstrip() + '\n')
+          PY
       - name: Validate research tree
         run: |
           git diff --check
