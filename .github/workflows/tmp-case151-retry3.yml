@@ -1,0 +1,57 @@
+name: temporary-case151-retry3
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tmp-case151-retry3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: technical-retention-research
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Patch integration harness and run Case151
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('scripts/integration_151.sh')
+          s = p.read_text(encoding='utf-8')
+          pull_block = 'git fetch origin main\ngit pull --rebase origin main\n'
+          if pull_block not in s:
+              raise SystemExit('expected fetch/pull block not found')
+          s = s.replace(pull_block, ': # actions/checkout already provided current main\n', 1)
+          old = "grep -q 'LPDDR2 REFpb != DDR5 REFsb' \"$case_path\""
+          new = "grep -q 'LPDDR2.*REFpb.*DDR5.*REFsb' \"$case_path\""
+          if old not in s:
+              raise SystemExit('expected validation line not found')
+          s = s.replace(old, new, 1)
+          old_rm = 'git rm -f scripts/integration_151.sh .github/workflows/integrate-case151.yml'
+          new_rm = 'git rm -f scripts/integration_151.sh .github/workflows/integrate-case151.yml .github/workflows/tmp-case151-retry.yml .github/workflows/tmp-case151-retry2.yml .github/workflows/tmp-case151-retry3.yml'
+          if old_rm not in s:
+              raise SystemExit('expected cleanup line not found')
+          s = s.replace(old_rm, new_rm, 1)
+          bad = '''if grep -Eq '(^|/)integration_151\\.sh$|integrate-case151\\.yml$' <<<"$changed"; then
+            echo "Temporary integration scaffolding is still staged as a surviving file change." >&2
+            exit 1
+          fi
+          '''
+          if bad not in s:
+              raise SystemExit('expected temporary-file assertion not found')
+          s = s.replace(bad, '', 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+          bash scripts/integration_151.sh
