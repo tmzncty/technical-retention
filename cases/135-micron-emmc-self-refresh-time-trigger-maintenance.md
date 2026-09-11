@@ -319,3 +319,20 @@ The bounded evidence and chronology ledger is in [`../evidence/135-jedec-emmc51-
 - Atmark Techno, **Armadillo-IoT Gateway G4 Product Manual, version 1.0.0**, 9 December 2021. eMMC data-retention section 9.9: <https://manual.atmark-techno.com/armadillo-iot-g4/armadillo-iotg-g4_product_manual_ja-1.0.0/ch09.html>. Versioned PDF cover/date: <https://armadillo.atmark-techno.com/files/downloads/armadillo-iot-g4/document/armadillo-iotg-g4_product_manual_ja-1.0.0.pdf?v=1639041210>.
 - Atmark Techno, **Armadillo-IoT Gateway G4 Product Manual, current maintained HTML**, eMMC data-retention section (later editions preserve the mechanism with section renumbering): <https://manual.atmark-techno.com/armadillo-iot-g4/armadillo-iotg-g4_product_manual_ja/ch06.html>.
 - Micron Technology, **eMMC software / technical-note catalog**, entry for `TN-FC-60: Refresh Features for Micron e.MMC Automotive 5.1 Devices`, dated 11 April 2023: <https://www.micron.com/sales-support/downloads/software-drivers/emmc-software>.
+
+## Prior-art follow-up — manual BKOPS is publicly grounded by e.MMC 4.41
+
+A bounded follow-up moves the repository's conservative public standardized floor for **generic manual BKOPS** earlier than the 2015 e.MMC 5.1 witness. JESD84-A441's public record is dated **1 March 2010** and names `Background Operation` in the e.MMC 4.41 title; period SanDisk (25 February 2010) and Kingston Solutions (June 2011) e.MMC 4.41 product documents expose `BKOPS_START[164]` / `BKOPS_EN[163]`, with the Kingston document also exposing `BKOPS_SUPPORT[502]` and `BKOPS_STATUS[246]`.
+
+This is a lower-bound correction, not an invention claim:
+
+```text
+public standardized generic manual-BKOPS floor <= e.MMC 4.41 / 2010
+e.MMC 5.1 witness != origin of generic manual BKOPS
+manual host-granted opportunity != later inspected AUTO_EN device scheduling
+scheduling authority != physical-target authority != hidden algorithm identity
+```
+
+The 2009 e.MMC 4.4 public title lacks the later `Background Operation` phrase, but title metadata is not a clause-level A44→A441 diff and therefore cannot prove a first-introduction event. Direct normative diffing and the 4.41→4.5→4.51→5.0→5.1 genealogy remain evidence debt, with broader pre-eMMC maintenance history routed to `computing-archaeology`.
+
+Prior-art deepening: [`../evidence/135-emmc441-2010-manual-bkops-prior-art-deepening.md`](../evidence/135-emmc441-2010-manual-bkops-prior-art-deepening.md).

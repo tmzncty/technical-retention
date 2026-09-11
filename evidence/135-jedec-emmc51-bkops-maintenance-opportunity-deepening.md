@@ -151,3 +151,9 @@ BKOPS completion != sanitization
 - obtain a named Micron part/firmware record exposing both BKOPS fields and the vendor self-refresh feature;
 - gather fault-injection or telemetry evidence for interrupted vendor self-refresh/BKOPS interaction;
 - keep host-tooling one-time-programmable warnings separate unless the exact field semantics are directly verified for the target revision/device.
+
+## Prior-art follow-up — e.MMC 4.41
+
+A later bounded pass supersedes the **lower-bound uncertainty** of this 5.1-only slice without changing its control-semantics findings. Public JESD84-A441 metadata and period e.MMC 4.41 manufacturer documentation now ground generic manual `BKOPS_START` / `BKOPS_EN` by at least **2010**. Accordingly, e.MMC 5.1 remains the inspected witness for the richer manual-versus-`AUTO_EN` scheduling split, but it is **not** treated as the origin of generic manual BKOPS.
+
+See [`135-emmc441-2010-manual-bkops-prior-art-deepening.md`](135-emmc441-2010-manual-bkops-prior-art-deepening.md). Exact A44→A441 clause introduction and the intermediate 4.5/4.51/5.0 sequence remain open and must not be inferred from endpoint titles.

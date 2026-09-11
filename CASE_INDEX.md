@@ -4550,3 +4550,22 @@ Grounding: [`cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md`](ca
 - **3404 — E:** Manual versus autonomous BKOPS changes maintenance scheduling authority while physical target selection remains hidden; host participation and target authority are separate axes.
 - **3405 — H/E:** JESD84-B51 defines `SANITIZE_START[165]` separately from `BKOPS_START[164]`, supporting `BKOPS completion != sanitize completion`.
 - **3406 — X:** Neither completed BKOPS nor zero BKOPS urgency proves verified physical erasure or sanitization; stronger implementation/sanitization evidence is required.
+
+## Case 135 prior-art deepening — e.MMC 4.41 manual BKOPS floor
+
+Grounding: [`cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md`](cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md), [`evidence/135-emmc441-2010-manual-bkops-prior-art-deepening.md`](evidence/135-emmc441-2010-manual-bkops-prior-art-deepening.md), and the existing e.MMC 5.1 follow-up [`evidence/135-jedec-emmc51-bkops-maintenance-opportunity-deepening.md`](evidence/135-jedec-emmc51-bkops-maintenance-opportunity-deepening.md).
+
+- **3407 — H/P:** The public standards record for JESD84-A441:2010 is dated 1 March 2010 and includes `Background Operation and High Priority Interrupt` in the e.MMC 4.41 title; this is a public document/version boundary, not an invention date.
+- **3408 — H/P/X:** The public JESD84-A44:2009 title lacks that phrase, but title metadata is not a clause-level A44→A441 diff and cannot prove that no related mechanism existed before A441.
+- **3409 — H/P:** A June-2011 Kingston Solutions e.MMC 4.41 datasheet states JESD84-A441 compatibility and explicitly lists Background Operations as part of the 4.41 feature set.
+- **3410 — H/P:** The same period 4.41 document says the host writes `BKOPS_START[164]` to manually start background operations and the device remains busy until no more background processing is needed.
+- **3411 — H/P:** Period 4.41 product documentation exposes `BKOPS_SUPPORT[502]`, `BKOPS_STATUS[246]`, `BKOPS_START[164]`, and `BKOPS_EN[163]`, separating capability/status/control fields rather than one undifferentiated maintenance flag.
+- **3412 — H/P:** A SanDisk iNAND e.MMC 4.41 datasheet dated 25 February 2010 independently exposes `BKOPS_START[164]` and `BKOPS_EN[163]`, providing a second period manufacturer witness.
+- **3413 — E:** The repository's conservative public standardized floor for **generic manual BKOPS** therefore moves to at least e.MMC 4.41 / 2010; this does not establish first invention, first ballot, or first shipment.
+- **3414 — E:** `BKOPS capability != current maintenance obligation != host-granted manual execution opportunity != hidden maintenance algorithm`.
+- **3415 — E:** The useful 4.41→inspected-5.1 comparison is scheduling authority: manual host-granted BKOPS opportunity is not the same control mode as later `AUTO_EN` device-autonomous idle-time scheduling.
+- **3416 — E:** `scheduling authority != physical-target authority`; changing who opens the service window does not disclose or prove who/what selects physical NAND targets.
+- **3417 — E:** `standardized maintenance opportunity/control != standardized hidden Flash maintenance algorithm`; generic BKOPS alone does not prove garbage collection, wear leveling, read reclaim, retention refresh, or block retirement.
+- **3418 — A:** Generic BKOPS and Micron/Armadillo self refresh share only a functional powered-idle maintenance-opportunity boundary; `shared idle opportunity != shared mechanism`.
+- **3419 — P:** Project interpretation only: a maintenance obligation can exist independently of who is authorized to schedule the next execution window; this is not JEDEC or vendor historical vocabulary.
+- **3420 — X:** No direct normative A44→A441 clause diff, JEDEC ballot genealogy, or pre-eMMC background-maintenance genealogy is established here; first-introduction/invention claims remain prohibited pending stronger primary evidence.
