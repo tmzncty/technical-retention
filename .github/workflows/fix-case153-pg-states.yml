@@ -1,0 +1,29 @@
+name: fix-case153-pg-states
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-case153-pg-states.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: technical-retention-research
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Correct Case153 PG-state source
+        run: |
+          bash scripts/fix_case153_pg_states.sh
