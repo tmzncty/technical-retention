@@ -2,8 +2,11 @@
 
 **Status:** grounded  
 **Claim layer:** historical record + engineering reconstruction + bounded functional analogy + bounded philosophical interpretation  
-**Primary regime:** PostgreSQL 9.4 replication-slot introduction/release (2014), with PostgreSQL 13 resource-bound evolution (2020)  
-**Evidence:** [`../evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md`](../evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md)
+**Primary regime:** PostgreSQL 9.4 replication-slot introduction/release (2014), PostgreSQL 13 resource-bound evolution (2020), and PostgreSQL 17 logical failover-slot synchronization (2024)
+**Evidence records:**
+
+- [`../evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md`](../evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md)
+- [`../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md`](../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md)
 
 ## Summary
 
@@ -165,6 +168,66 @@ The intermediate state blocks two collapses at once:
 and
 
 `protection withdrawal != completed physical disappearance`
+
+## 2024 deepening — failover-slot synchronization makes the retention frontier itself cross-node state
+
+PostgreSQL 17, released **26 September 2024**, adds an explicit logical-slot failover regime. The implementation history usefully separates several steps that the final feature can otherwise make look like one operation.
+
+On **25 January 2024**, commit `c393308b69d229b664391ac583b9e07418d411b6` added the logical-slot `failover` property. Its own commit message explicitly says that this property indicates a slot is intended to be synchronized to standbys while the commit **does not yet contain the synchronization capability**. Commit `93db6cbda037f1be9544932bd9a785dabf3ff712` on **22 February 2024** then added the periodic slot sync worker and `sync_replication_slots` on the standby. A separate **8 March 2024** commit, `bf279ddd1c28ce0251446ee90043a4cb96e5db0f`, added the wait relation that keeps logical subscribers from outrunning selected physical failover candidates; its development name `standby_slot_names` was renamed `synchronized_standby_slots` on **1 July 2024** by `0f934b0739ad28e8e20d8ad22ca80538544ce28a`.
+
+The released documentation then adds the admission boundary. A standby can persist a synchronized logical slot only if the WAL and system-catalog rows required by the primary slot are still available on that standby; otherwise synchronization is refused because persisting the slot could admit a continuation state with missing history. At failover time, resumability depends on a **persistent** synchronized slot whose `pg_replication_slots.synced` value reached true before promotion.
+
+That yields a new decomposition for this case:
+
+```text
+slot exists on primary
+    != `failover = true`
+    != standby copy/update mechanism enabled
+    != synchronized slot admitted/persisted on standby
+    != required WAL/catalog substrate available there
+    != subscriber state/currentness
+    != successful post-promotion continuation
+```
+
+### Engineering reconstruction — the claimant on history becomes history-bearing distributed control state
+
+The original 9.4 case showed a compact retained claimant (`restart_lsn` and related slot state) constraining reclamation of a much larger WAL corpus. PostgreSQL 17 adds a second-order retention requirement: if another node may inherit publisher authority, the **claimant itself must survive and remain admissibly current on that future primary**.
+
+So:
+
+> **replicated retention frontier != replicated replay substrate**
+
+and:
+
+> **`failover = true` != `synced = true` != guaranteed subscriber currentness**.
+
+The second distinction is directly bounded by PostgreSQL's own documentation: a logical slot knows nothing about receiver state. Slot synchronization preserves/qualifies the server-side continuation relation; it is not a complete subscriber-application checkpoint.
+
+### Future failover readiness can constrain present progress
+
+When `synchronized_standby_slots` is configured, logical WAL senders wait until the named physical standby slots confirm receipt/flush before exposing corresponding changes. The possible **future** role of a standby therefore creates a **present** scheduling constraint on logical replication.
+
+This is a configured relation, not an assertion that all PostgreSQL logical replication is synchronous or that it shares the same semantics as synchronous transaction commit.
+
+### Earlier ecosystem prior-art boundary
+
+EDB's open-source `pg_failover_slots` extension was publicly announced on **18 April 2023** and already described copying logical slots to standbys, periodically synchronizing positions, and preventing logical consumers from advancing beyond selected failover standbys. This is earlier PostgreSQL-ecosystem **functional prior art** for the bounded failover-continuation problem.
+
+No direct extension→core code ancestry or invention claim is made. Establishing such genealogy would require separate patch/mailing-list/source-history evidence.
+
+### Philosophical interpretation — bounded
+
+Project interpretation only: sometimes retaining old history is not enough; the system must also retain and transfer the **claim that says which old history remains live**, then revalidate that claim against the substrate available at a new authority node. Once that claim can move, it acquires its own persistence/currentness problem.
+
+This is not PostgreSQL historical vocabulary and does not equate replication slots with human memory, archival promises, or tertiary retention.
+
+### Forgetting stop condition
+
+Failure to synchronize a slot, refusal to persist it, slot invalidation, slot drop, or WAL reclamation changes replay/continuation authority. None of these protocol events proves secure erasure of all old filesystem, device, backup, or forensic embodiments.
+
+`continuation no longer admissible != media sanitization`
+
+The source-controlled evidence and claim ledger are in [`../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md`](../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md).
 
 ## Retained state and mechanism
 
@@ -369,7 +432,7 @@ The bounded case is grounded, while these remain open:
 1. exact pre-2014 proposal/review lineage and precursor implementations;
 2. physical-slot versus logical-slot advancement semantics in release-by-release detail;
 3. the interaction with WAL archiving, base backup, and reinitialization when required slot WAL is lost;
-4. later failover-slot/synchronized-slot mechanisms and promotion semantics;
+4. post-17 failover-slot fixes, multi-standby/cascading evolution, promotion fault injection, and production failover traces;
 5. named production incidents or measurements of WAL accumulation and primary disk-pressure failure;
 6. controlled checkpoint/slot-loss fault injection;
 7. lower-layer filesystem and device persistence testing for the slot save/rename/fsync protocol;
@@ -388,6 +451,7 @@ If the broad history of PostgreSQL WAL, streaming replication, logical decoding,
 ## Evidence links
 
 - [Evidence 141 — PostgreSQL 2014–2020 replication-slot WAL-retention grounding](../evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md)
+- [Evidence 141 deepening — PostgreSQL 17 failover-slot synchronization](../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md)
 - [Case 58 — Raft snapshot/log compaction](58-raft-snapshot-log-compaction.md)
 - [Case 57 — Bigtable tablet log/memtable recovery](57-google-bigtable-tablet-log-memtable-recovery.md)
 - [Case 137 — LevelDB MANIFEST/CURRENT](137-leveldb-v17-manifest-current-recovery.md)
