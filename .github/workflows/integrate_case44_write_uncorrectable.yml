@@ -22,6 +22,11 @@ jobs:
         run: |
           sed -i 's/### Optional deepening/### Recent bounded evidence deepening/' tools/integrate_case44_write_uncorrectable.py
           python tools/integrate_case44_write_uncorrectable.py
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('CASE_INDEX.md')
+          p.write_text(p.read_text().rstrip() + '\n')
+          PY
 
       - name: Validate bounded integration
         run: |
