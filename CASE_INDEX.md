@@ -196,6 +196,21 @@ A claim may have more than one label, for example `H/P` or `E/A`.
 
 For staged comparison of logical/reference retirement, reclamation eligibility, retained cleanup obligations, preservation of still-live state, cleanup completion, reuse admission, and the separate sanitization boundary across Cases 73, 125, 145, 147, 150, and 153, see [`Synthesis 28`](docs/SYNTHESIS_28_RECLAMATION_AUTHORITY_AFTER_RETIREMENT.md). This routing note adds no numbered historical findings; source claims remain in the cases and evidence ledgers.
 
+### Case 44 Write Zeroes value-semantics deepening
+
+3314. NVM Express 1.0 (1-Mar-2011) lists its standard NVM command set without `Write Zeroes`; unlisted opcodes are reserved, so the inspected 1.0 interface predates the later standardized command without implying invention priority for zero-fill operations.
+3315. NVM Express 1.1 (11-Oct-2012) exposes `Write Zeroes` as an optional command through a distinct ONCS capability bit; interface support therefore does not imply universal controller implementation.
+3316. Revision-1.1 Deallocate permits deterministic reads returning all zeroes, all ones, or the last data written, while Revision-1.1 Write Zeroes requires subsequent reads to return zero until another write.
+3317. `deallocated != guaranteed-zero-on-read` and `guaranteed-zero-on-read != necessarily deallocated`; allocation state and logical value contract are separate interface relations.
+3318. Revision-1.1 Write Zeroes `FUA` requires the resulting data to reach nonvolatile media before completion when asserted, but that persistence boundary does not establish sanitization of previous embodiments.
+3319. Revision-1.3 Write Zeroes adds `DEAC` behavior conditioned on the namespace ability to return zeroes for deallocated logical blocks; zero-read semantics can therefore coexist with a deallocated state.
+3320. Revision-1.3 forbids using deallocation for Write Zeroes when the namespace cannot provide the required zero-valued deallocated reads, proving that deallocation is an implementation/admission path under a stronger visible value contract rather than the value contract itself.
+3321. A later read of zero does not uniquely identify the lower-layer realization: compliant interface semantics permit value replacement and, under defined conditions, zero-reading deallocation.
+3322. `zero-valued future read != proof of physical erase != proof of sanitization`; Case 44 now separates value replacement from allocation retirement and subsystem-wide prior-data-unrecoverability.
+3323. The NVM Express Revision-1.3 change summary attributes deallocated-value and Write-Zeroes/deallocation coupling to TP019, but the member-only proposal chronology is not treated as independently inspected evidence.
+3324. The direct 1.0→1.1→1.3 revision comparison is a specification-history boundary, not a claim that NVMe invented zeroing, deallocation, TRIM-like semantics, or controller-side optimization.
+3325. Cross-case comparisons to JFFS2 explicit zero nodes or distributed negative state are functional only: negative/retirement relations and positive zero-value representations answer different questions and do not imply shared genealogy.
+
 ## Comparison matrix — provisional
 
 This matrix should become more precise as cases mature.

@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/44-nvme12-13-deallocate-sanitize-grounding.md`](../evidence/44-nvme12-13-deallocate-sanitize-grounding.md).
 
+Deepening record: [`../evidence/44-nvme-2011-2017-write-zeroes-value-semantics-deepening.md`](../evidence/44-nvme-2011-2017-write-zeroes-value-semantics-deepening.md).
+
 ## Scope
 
 This case addresses one open edge left by mapped Flash Case 04:
@@ -81,6 +83,40 @@ And a stronger interface-level form:
 > **host no-longer-needs hint ≠ proof that old bytes are gone**.
 
 This extends Case 04 rather than repeating it. Case 04 grounds logical invalidation, physical relocation, and deferred reclamation in mapped Flash. Case 44 shows a later host/controller interface whose deallocation contract deliberately permits a value relation weaker than sanitization.
+
+## Intervening semantic branch — NVMe 1.1 Write Zeroes separates value replacement from deallocation
+
+A bounded look one revision earlier sharpens the deallocation argument. NVM Express 1.0 (March 1, 2011) lists its standard NVM commands without `Write Zeroes`; NVM Express 1.1 (October 11, 2012) adds optional `Write Zeroes` support, exposed independently from Dataset Management in the `ONCS` capability field.
+
+Revision 1.1 already gives the two operations different visible contracts. A deallocated LBA may read as all zeroes, all ones, or the last data written. `Write Zeroes`, by contrast, requires subsequent reads of the affected range to return zero until another write occurs.
+
+Therefore:
+
+> **deallocated != guaranteed-zero-on-read**
+
+and:
+
+> **guaranteed-zero-on-read != necessarily deallocated**.
+
+This matters for retention because a new logical value can become authoritative without establishing that an earlier physical embodiment has been sanitized. `Write Zeroes` also includes `FUA`; when set, command completion requires the resulting write to have reached nonvolatile media, but that is a persistence boundary for the new operation, not a subsystem-wide prior-data-unrecoverability guarantee.
+
+Revision 1.3 then makes the separation more explicit by adding `DEAC` behavior to `Write Zeroes`. Where a namespace can guarantee zero-valued reads from deallocated LBAs, a `Write Zeroes` command may satisfy its zero-read contract while deallocating the range. Where that zero-read property is unavailable, the controller must not use deallocation for the `Write Zeroes` range. NVM Express's own Revision-1.3 change summary identifies this as a deallocated-value / Write-Zeroes change associated with TP019.
+
+The resulting engineering reconstruction is:
+
+```text
+logical read-value contract
+    !=
+allocation/deallocation state
+    !=
+physical embodiment
+    !=
+sanitation state
+```
+
+So **zero-valued future reads do not prove physical erase or sanitization**. Conversely, deallocation does not, by itself, promise the zero-valued result that `Write Zeroes` does. Revision 1.3 can couple the two relations in one command without making them conceptually identical.
+
+This addendum makes no invention claim for zero-fill operations or deallocation and no device-internal claim about how a particular SSD realizes zeroes. Exact proposal chronology, ATA/SCSI genealogy, named-product implementation, and physical-NAND validation remain separate work, primarily for `computing-archaeology` or a future validation case.
 
 ## Mechanism 2 — Sanitization scopes beyond the currently allocated LBA set
 
