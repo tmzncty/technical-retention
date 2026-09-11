@@ -1,0 +1,51 @@
+name: Temporary Case147 S3 multipart integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tmp-case147-s3-multipart.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Integrate bounded Case147 research slice
+        shell: bash
+        run: |
+          set -euo pipefail
+          git pull --ff-only origin main
+          python3 _automation_case147_s3_multipart.py
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in [
+              'CASE_INDEX.md',
+              'ROADMAP.md',
+              'cases/147-s3-multipart-upload-preobject-retention.md',
+              'evidence/147-s3-2010-2016-multipart-preobject-retention-grounding.md',
+          ]:
+              p = Path(name)
+              p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
+          rm -f _automation_case147_s3_multipart.py .github/workflows/tmp-case147-s3-multipart.yml
+          git diff --check
+          test -f cases/147-s3-multipart-upload-preobject-retention.md
+          test -f evidence/147-s3-2010-2016-multipart-preobject-retention-grounding.md
+          grep -q '3175 — 10-Nov-2010 public launch != invention priority' CASE_INDEX.md
+          grep -q '3195 — related-repository boundary' CASE_INDEX.md
+          grep -q 'Case 147 S3 Multipart Upload pre-object retention / completion / abort slice' ROADMAP.md
+          test ! -e _automation_case147_s3_multipart.py
+          test ! -e .github/workflows/tmp-case147-s3-multipart.yml
+          git config user.name 'technical-retention automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'case147: ground S3 multipart pre-object retention'
+          git push origin HEAD:main
