@@ -134,6 +134,25 @@ newest value guaranteed to survive every qualifying power-loss path
 
 See [`../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md`](../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md) for the bounded 1.1b evidence ledger and anti-overclaim notes.
 
+### H/P — shutdown notification, shutdown completion, and unsafe-shutdown telemetry are separate states
+
+Revision 1.0 already exposes a distinct **power-transition state machine** in addition to Flush/FUA persistence controls. Host-written `CC.SHN` selects no notification, normal shutdown, or abrupt shutdown; controller-read `CSTS.SHST` separately reports normal/no-request, shutdown processing, or shutdown-processing complete. Section 7.6.2 gives different host procedures for normal and abrupt shutdown even though both can eventually reach `CSTS.SHST=10b`.
+
+The SMART / Health log then adds a third retained observable: **Unsafe Shutdowns** increments when power is lost without a shutdown notification having been received first. The counter definition is keyed to prior `CC.SHN`, not to demonstrated payload loss and not explicitly to historical attainment of `CSTS.SHST=10b`.
+
+That grounds three additional boundaries:
+
+```text
+shutdown request / intent
+        != controller shutdown-processing completion
+        != retained unsafe-shutdown telemetry classification
+        != demonstrated data-loss outcome
+```
+
+The 2014 Revision 1.1b volatile-cache exception already makes completion of the specified shutdown procedure relevant to newest-value persistence under its stated conditions. That device-level relation must still not be promoted into a filesystem/database semantic commit or into evidence for a particular PLP/FTL mechanism.
+
+See [`../evidence/20-nvme10-2011-shutdown-state-machine-deepening.md`](../evidence/20-nvme10-2011-shutdown-state-machine-deepening.md) for the bounded 2011 shutdown/telemetry ledger, source anchors, and anti-overclaim notes.
+
 ---
 
 ## Retained state
@@ -402,7 +421,7 @@ A search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computi
   - Identify Controller pp. 91–92 — AWUN normal-operation boundary, AWUPF power-fail/error boundary, and `AWUPF <= AWUN`;
   - §6.4, printed pp. 120–122 — atomic operations, torn-write definition, all-old/all-new AWUPF result, and completed-write volatile-cache exception.
 
-Grounding details for the 2011 slice remain in [`../evidence/20-nvme10-2011-flush-fua-grounding.md`](../evidence/20-nvme10-2011-flush-fua-grounding.md). The 2014 deepening is recorded in [`../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md`](../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md).
+Grounding details for the 2011 slice remain in [`../evidence/20-nvme10-2011-flush-fua-grounding.md`](../evidence/20-nvme10-2011-flush-fua-grounding.md). The 2014 deepening is recorded in [`../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md`](../evidence/20-nvme-2014-atomic-write-torn-write-deepening.md). The 2011 power-transition deepening is recorded in [`../evidence/20-nvme10-2011-shutdown-state-machine-deepening.md`](../evidence/20-nvme10-2011-shutdown-state-machine-deepening.md).
 
 ---
 
