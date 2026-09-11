@@ -26,4 +26,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Deepen Case20 torn-write atomicity
         run: |
+          sed -i 's/## Phase 2 — Evidence-backed expansion with comparison discipline/## Phase 2 — Build missing technical bridges/' scripts/integrate-case20-nvme-torn-write.sh
           bash scripts/integrate-case20-nvme-torn-write.sh
