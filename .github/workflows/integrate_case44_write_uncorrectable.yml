@@ -19,7 +19,9 @@ jobs:
           fetch-depth: 0
 
       - name: Integrate canonical research changes
-        run: python tools/integrate_case44_write_uncorrectable.py
+        run: |
+          sed -i 's/### Optional deepening/### Recent bounded evidence deepening/' tools/integrate_case44_write_uncorrectable.py
+          python tools/integrate_case44_write_uncorrectable.py
 
       - name: Validate bounded integration
         run: |
