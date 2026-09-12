@@ -1,0 +1,302 @@
+name: integrate-case129-async-destroy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/integrate-case129-async-destroy.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Integrate research slice
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          evidence_path = Path('evidence/129-zfs-async-destroy-reclamation-compatibility-deepening.md')
+          if evidence_path.exists():
+              raise SystemExit('evidence file already exists; refusing duplicate integration')
+
+          evidence = r'''# Evidence 129B — ZFS `async_destroy`, `freeing`, and feature-activity persistence
+
+**Status:** `grounded`  
+**Case:** [`../cases/129-zfs-feature-flags-format-compatibility.md`](../cases/129-zfs-feature-flags-format-compatibility.md)  
+**Bounded question:** when `async_destroy` lets logical destroy return before all blocks are reclaimed, can the unfinished reclamation obligation itself keep a ZFS pool feature active and thereby preserve a software-compatibility requirement?
+
+## Evidence boundary
+
+Case 129 already establishes the general ZFS feature-flag relation between retained on-disk requirements and software admissibility. This slice asks one narrower question about `com.delphix:async_destroy`:
+
+```text
+logical destroy completion
+    != background space-reclamation completion
+    != relaxation of this feature's active-state compatibility obligation
+```
+
+The historical/source record below is deliberately limited to released OpenZFS documentation descended from the illumos feature-flags implementation already grounded by Evidence 129A. It does not reconstruct invention priority or a complete implementation genealogy.
+
+## Primary project documentation
+
+- OpenZFS v0.6 `zpool-features(5)`: <https://openzfs.github.io/openzfs-docs/man/v0.6/5/zpool-features.5.html>
+- OpenZFS v0.6 `zpool(8)`: <https://openzfs.github.io/openzfs-docs/man/v0.6/8/zpool.8.html>
+- Current OpenZFS `zpool-features(7)`: <https://openzfs.github.io/openzfs-docs/man/master/7/zpool-features.7.html>
+- Historical feature-flags integration already grounded in Evidence 129A: illumos commit `ad135b5d644628e791c3188a6ecbd9c257961ef8`, 21 May 2012: <https://github.com/illumos/illumos-gate/commit/ad135b5d644628e791c3188a6ecbd9c257961ef8>
+
+The v0.6 manual page identifies itself as an OpenZFS file-format manual page and is used here as released project documentation. Current documentation is later continuity, not evidence that every historical release behaved identically.
+
+---
+
+## Historical / project record
+
+### H/P — `async_destroy` separates destroy completion from completion of space reclamation
+
+The v0.6 `zpool-features(5)` page states that without `async_destroy`, destroying a filesystem requires traversing its data so used space can be returned to the pool, and the filesystem is not fully removed until that space has been reclaimed. With `async_destroy` enabled, reclamation is instead performed by a background process, allowing the destroy operation to complete without traversing the entire filesystem.
+
+The same documentation says an interrupted asynchronous destroy can resume after the pool is opened.
+
+Therefore the released project documentation directly establishes:
+
+`destroy operation can complete != all corresponding space has already been reclaimed`
+
+### H/P — `freeing` exposes remaining asynchronous reclamation work
+
+The feature page says the amount of space still to be reclaimed by the background process is exposed through the `freeing` property. The contemporaneous `zpool(8)` documentation likewise defines `freeing` as space from destroyed filesystems/snapshots that is still being returned asynchronously; over time that quantity decreases while ordinary free space increases.
+
+So `freeing` is not a second copy of the destroyed payload. It is an operator-visible quantity concerning outstanding reclamation.
+
+### H/P — `async_destroy` is active only while `freeing` is non-zero
+
+The v0.6 feature page states explicitly:
+
+> This feature is only active while `freeing` is non-zero.
+
+The same feature table marks `com.delphix:async_destroy` as **read-only compatible** and without dependencies.
+
+This supplies the narrow feature-specific coupling needed here: unfinished asynchronous reclamation is not merely a capacity statistic; it is also the condition under which this pool feature remains in the `active` state.
+
+### H/P — active and enabled are different compatibility states
+
+The same feature-state documentation defines `active` as meaning the feature's on-disk changes are in effect and supporting software is required for read-write import. `enabled` means the feature is permitted but its on-disk changes are not currently in effect; unsupported software can still import such a pool. It also explicitly notes that some features can return from `active` to `enabled`.
+
+For unsupported **read-only-compatible** active features, read-only import remains possible when the relevant import conditions are met.
+
+Therefore:
+
+`active feature != all import impossible`
+
+and:
+
+`enabled feature != active compatibility obligation`
+
+---
+
+## Engineering reconstruction
+
+### E — outstanding reclamation debt can retain a read-write interpreter requirement
+
+Combining the feature-specific and generic project documentation gives this bounded reconstruction:
+
+```text
+destroy returns
+    ↓
+background reclamation remains (`freeing > 0`)
+    ↓
+`com.delphix:async_destroy` remains active
+    ↓
+software support remains required for read-write import
+    ↓
+background reclamation drains (`freeing == 0`)
+    ↓
+this feature is no longer active
+```
+
+Calling the non-zero `freeing` population a **reclamation debt** is project vocabulary, not OpenZFS wording. The source-supported facts are the outstanding-byte quantity, its background processing, and the explicit active-while-nonzero rule.
+
+This is an unusually direct example in which an unfinished maintenance/reclamation relation can preserve a software-compatibility requirement even after the user-visible deletion operation has completed.
+
+### E — control-state relaxation can follow material reclamation without rewriting surviving user payload
+
+When `freeing` drains to zero, the documentation says this particular feature is no longer active. The relevant compatibility relation can therefore relax because background reclamation completed, not because surviving user payload had to be rewritten into a different format.
+
+That statement is limited to `async_destroy`. Other ZFS features have different activation lifetimes: some remain active indefinitely, some are active while particular objects exist, and some can return to `enabled` under their own documented conditions.
+
+### E — `freeing` is evidence of an outstanding relation, not evidence of exact physical embodiment
+
+The property measures space still to be reclaimed. It does not identify exact device sectors, prove that each block remains physically readable, or establish that a specific physical medium has not internally remapped data.
+
+Therefore:
+
+`freeing > 0 != exact physical block map`
+
+and:
+
+`freeing == 0 != forensic or sanitization proof`
+
+---
+
+## Functional comparison
+
+### Case 153 — Ceph asynchronous snaptrim
+
+Case 153 and this slice share one bounded functional pattern:
+
+`logical deletion accepted/completed != asynchronous reclamation obligation completed`
+
+The mechanisms are not treated as equivalent. Ceph's SnapTrim state machine and ZFS `async_destroy` have different implementations and histories. The extra point established here is specifically ZFS's documented coupling between the outstanding reclamation quantity and the pool feature's `active` compatibility state.
+
+No genealogy between Ceph and ZFS is asserted.
+
+---
+
+## Rejected / unsupported claims
+
+- **X — destroy return proves all old blocks are already free.** The released documentation explicitly separates operation completion from background reclamation.
+- **X — `async_destroy` being enabled means it is always active.** The documentation says it is active only while `freeing` is non-zero.
+- **X — an active `async_destroy` feature makes read-only import impossible to unsupported software.** It is documented as read-only compatible; generic feature semantics preserve a read-only fallback when all unsupported active features permit it.
+- **X — `freeing` identifies exact unreclaimed physical sectors.** It is an aggregate reclamation quantity, not an embodiment map.
+- **X — `freeing == 0` proves secure deletion, sanitization, or forensic non-recoverability.** No such claim appears in the source scope.
+- **X — every ZFS feature returns from active to enabled when a background task finishes.** Activation/deactivation rules are feature-specific.
+- **X — the 2012 integration date establishes invention priority for asynchronous deletion or feature-controlled compatibility.** It is a historical implementation anchor only.
+- **X — ZFS `async_destroy` and Ceph SnapTrim are the same mechanism or share a proven genealogy.** The comparison is functional only.
+
+## Claim ledger
+
+| Claim | Layer | Evidence boundary |
+| --- | --- | --- |
+| `async_destroy` lets destroy complete before all space reclamation finishes | `H/P` | OpenZFS v0.6 feature documentation |
+| interrupted background destroy work can resume after pool open | `H/P` | OpenZFS v0.6 feature documentation |
+| `freeing` exposes remaining asynchronous reclamation quantity | `H/P` | OpenZFS v0.6 `zpool-features` + `zpool` docs |
+| `async_destroy` is active only while `freeing != 0` | `H/P` | explicit feature-specific rule |
+| `async_destroy` is read-only compatible | `H/P` | feature table |
+| active support is required for read-write import | `H/P` | generic feature-state contract |
+| outstanding reclamation can preserve this feature's read-write interpreter obligation | `E` | reconstruction from the two documented rules |
+| completion of reclamation can relax this specific obligation | `E` | feature-specific active-state boundary |
+| Ceph SnapTrim is a functional asynchronous-reclamation analogy only | `A` | cross-case comparison |
+| zero `freeing` proves sanitization | `X` | unsupported by documentation |
+
+## Related-repository check and remaining debt
+
+A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for ZFS feature flags / `async_destroy` found no dedicated module to reuse in this round.
+
+Still open after this slice:
+
+- exact source-level feature-refcount transitions and crash/fault matrices for `async_destroy`;
+- release-by-release compatibility matrices across illumos/OpenZFS/FreeBSD/other descendants;
+- ext-family and other format-feature prior art;
+- loader, send-stream, dataset-feature, migration, emulation, and corruption-test matrices;
+- broader asynchronous-delete and feature-bit genealogy, which should primarily live in `computing-archaeology` rather than be rebuilt here.
+'''
+          evidence_path.write_text(evidence, encoding='utf-8')
+
+          case_path = Path('cases/129-zfs-feature-flags-format-compatibility.md')
+          case = case_path.read_text(encoding='utf-8')
+          marker = '## Evidence deepening 129B — `async_destroy` reclamation debt and compatibility lifetime'
+          if marker in case:
+              raise SystemExit('case129 deepening already integrated')
+          case_add = r'''
+
+## Evidence deepening 129B — `async_destroy` reclamation debt and compatibility lifetime
+
+New [`Evidence 129B`](../evidence/129-zfs-async-destroy-reclamation-compatibility-deepening.md) narrows one feature-specific lifetime that the baseline feature-flags case previously left implicit.
+
+Released OpenZFS v0.6 documentation says `async_destroy` lets a destroy operation complete while used space is still being returned by a background process; interrupted work can resume after the pool opens, and the remaining quantity is exposed as `freeing`. The same feature page gives the unusually direct rule that **`com.delphix:async_destroy` is active only while `freeing` is non-zero**. Generic feature-state semantics then matter: `active` means supporting software is required for read-write import, while an enabled-but-inactive feature does not by itself impose that requirement. `async_destroy` is separately marked read-only compatible.
+
+Historical/project record:
+
+```text
+destroy operation completed
+    != background reclaim completed
+
+`freeing > 0`
+    -> `async_destroy` active
+    -> feature support required for read-write import
+```
+
+Engineering reconstruction, not project wording:
+
+> **an outstanding asynchronous reclamation obligation can itself prolong a software-compatibility obligation; when that reclamation drains, this particular compatibility requirement can relax without rewriting surviving user payload.**
+
+This conclusion is deliberately feature-specific. ZFS features have different activation lifetimes, and `freeing == 0` is neither a physical-sector erasure witness nor sanitization evidence. The bounded functional analogy to [Case 153](153-ceph-rados-snaptrim-asynchronous-reclamation.md) is only that logical deletion can precede asynchronous reclamation completion; Ceph SnapTrim and ZFS `async_destroy` are not treated as one mechanism or genealogy.
+'''
+          case_path.write_text(case.rstrip() + case_add + '\n', encoding='utf-8')
+
+          roadmap_path = Path('ROADMAP.md')
+          roadmap = roadmap_path.read_text(encoding='utf-8')
+          roadmap_marker = 'Case 129 async_destroy reclamation / compatibility deepening'
+          if roadmap_marker in roadmap:
+              raise SystemExit('roadmap deepening already integrated')
+          anchor = '- [x] Case 129 ZFS/OpenZFS feature-flags / format-software compatibility boundary'
+          lines = roadmap.splitlines()
+          idx = next((i for i, line in enumerate(lines) if line.startswith(anchor)), None)
+          if idx is None:
+              raise SystemExit('Case 129 roadmap anchor not found')
+          roadmap_line = ('- [x] Case 129 async_destroy reclamation / compatibility deepening — '
+              '[`cases/129-zfs-feature-flags-format-compatibility.md`](cases/129-zfs-feature-flags-format-compatibility.md), '
+              'with [`evidence/129-zfs-async-destroy-reclamation-compatibility-deepening.md`](evidence/129-zfs-async-destroy-reclamation-compatibility-deepening.md): '
+              'released OpenZFS documentation directly separates destroy completion from background space return, exposes remaining work as `freeing`, and states that `com.delphix:async_destroy` is active only while `freeing` is non-zero. Combined with the generic active/enabled contract, this grounds a bounded relation in which outstanding reclamation can prolong a read-write software-support obligation after logical deletion has completed. `async_destroy` is read-only compatible, so active does not mean all unsupported import is impossible; `freeing == 0` is not sanitization evidence. Exact refcount/crash matrices, release genealogy, and broad asynchronous-delete history remain open and should primarily route to `computing-archaeology`.')
+          lines.insert(idx + 1, roadmap_line)
+          roadmap_path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+
+          index_path = Path('CASE_INDEX.md')
+          index = index_path.read_text(encoding='utf-8').rstrip()
+          if '### Findings 3684–3699 — Case 129 async_destroy reclamation / compatibility lifetime' in index:
+              raise SystemExit('CASE_INDEX findings already integrated')
+          if index.count('**3683 —') != 1:
+              raise SystemExit(f'expected exactly one finding 3683, saw {index.count("**3683 —")}')
+          findings = r'''
+
+### Findings 3684–3699 — Case 129 async_destroy reclamation / compatibility lifetime
+
+- **3684 — H/P** — Released OpenZFS documentation says enabling `async_destroy` allows a filesystem destroy operation to complete without traversing all data first, while used space is reclaimed later by a background process.
+- **3685 — H/P** — The same documentation says interrupted asynchronous destroy work can resume after the pool has been opened, so the reclamation obligation can survive an interruption/open boundary.
+- **3686 — H/P** — OpenZFS exposes the amount still to be reclaimed by the background destroy process through the pool `freeing` property.
+- **3687 — H/P** — The `async_destroy` feature documentation explicitly states that the feature is active only while `freeing` is non-zero.
+- **3688 — H/P** — `com.delphix:async_destroy` is documented as read-only compatible and without feature dependencies.
+- **3689 — H/P** — Generic ZFS feature-state semantics define `active` as an on-disk format change in effect for which supporting software is required for read-write import.
+- **3690 — H/P** — Generic semantics distinguish `enabled` but inactive features: the feature is permitted but its on-disk change is not currently in effect, so unsupported software can still import on that feature's account.
+- **3691 — E** — For `async_destroy`, outstanding reclamation (`freeing > 0`) is therefore also a persistence condition for this feature's read-write software-support obligation.
+- **3692 — E** — Logical destroy completion can precede both physical-space reclamation completion and relaxation of the feature's active-state compatibility requirement.
+- **3693 — E** — Draining `freeing` to zero can relax this specific feature-compatibility obligation without requiring surviving user payload to be rewritten; this conclusion is feature-specific, not a rule for all ZFS features.
+- **3694 — E** — `freeing` is retained reclamation/accounting evidence concerning outstanding work, not a second payload copy and not an exact physical-sector map.
+- **3695 — A/E** — Case 153 Ceph SnapTrim is a bounded functional analogy for `logical deletion != asynchronous reclamation completion`; only the ZFS evidence here directly couples the outstanding reclamation quantity to feature activity/import compatibility.
+- **3696 — X** — ZFS `async_destroy` and Ceph SnapTrim are not thereby the same protocol, implementation, or proven genealogy.
+- **3697 — X** — An active read-only-compatible `async_destroy` feature does not imply that every unsupported import is impossible; the documented distinction preserves a read-only fallback when all unsupported active features permit it.
+- **3698 — X** — `freeing == 0` or `async_destroy` becoming inactive does not prove secure deletion, sanitization, exact physical erasure, or forensic non-recoverability.
+- **3699 — X** — The 2012 feature-flags integration and released documentation establish implementation/documentation chronology, not invention priority for asynchronous deletion or feature-controlled format compatibility.
+'''
+          index_path.write_text(index + findings + '\n', encoding='utf-8')
+
+          workflow = Path('.github/workflows/integrate-case129-async-destroy.yml')
+          if workflow.exists():
+              workflow.unlink()
+          PY
+
+          git diff --check
+          test -f evidence/129-zfs-async-destroy-reclamation-compatibility-deepening.md
+          test ! -e .github/workflows/integrate-case129-async-destroy.yml
+          python3 - <<'PY'
+          from pathlib import Path
+          idx = Path('CASE_INDEX.md').read_text(encoding='utf-8')
+          for n in range(3684, 3700):
+              token = f'**{n} —'
+              assert idx.count(token) == 1, (n, idx.count(token))
+          road = Path('ROADMAP.md').read_text(encoding='utf-8')
+          assert road.count('Case 129 async_destroy reclamation / compatibility deepening') == 1
+          case = Path('cases/129-zfs-feature-flags-format-compatibility.md').read_text(encoding='utf-8')
+          assert case.count('## Evidence deepening 129B — `async_destroy` reclamation debt and compatibility lifetime') == 1
+          PY
+
+          git config user.name 'technical-retention automation'
+          git config user.email 'technical-retention@users.noreply.github.com'
+          git add CASE_INDEX.md ROADMAP.md cases/129-zfs-feature-flags-format-compatibility.md evidence/129-zfs-async-destroy-reclamation-compatibility-deepening.md .github/workflows/integrate-case129-async-destroy.yml
+          git commit -m 'case129: deepen async-destroy compatibility coupling [skip ci]'
+          git push
