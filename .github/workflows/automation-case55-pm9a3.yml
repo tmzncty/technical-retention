@@ -19,6 +19,7 @@ jobs:
           python3 scripts/tmp_case55_extract_parent_payload.py >> .tmp-case55-run.log 2>&1
           helper_rc=$?
           echo "helper_rc=$helper_rc" >> .tmp-case55-run.log
+          python3 -c "from pathlib import Path; p=Path('CASE_INDEX.md'); p.write_text(p.read_text(encoding='utf-8').rstrip()+'\n', encoding='utf-8')"
           git diff --check >> .tmp-case55-run.log 2>&1
           diff_rc=$?
           echo "diff_rc=$diff_rc" >> .tmp-case55-run.log
