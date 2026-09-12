@@ -21,6 +21,15 @@ jobs:
       - name: Integrate bounded research slice
         run: python .github/scripts/tmp_case149_onfi_interface_integrate.py
 
+      - name: Normalize generated markdown EOF
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('CASE_INDEX.md')
+          p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
+
       - name: Validate canonical research diff
         shell: bash
         run: |
