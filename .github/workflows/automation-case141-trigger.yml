@@ -1,0 +1,39 @@
+name: automation-case141-trigger
+on:
+  push:
+    paths:
+      - '.github/workflows/automation-case141-trigger.yml'
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Execute staged Case 141 payload
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          raw = Path('.github/workflows/automation-case141-physical-slot.yml').read_text(encoding='utf-8')
+          start_marker = "          python3 - <<'PY'\n"
+          end_marker = "\n          PY\n"
+          start = raw.index(start_marker) + len(start_marker)
+          end = raw.index(end_marker, start)
+          lines = raw[start:end].splitlines()
+          code = '\n'.join(line[10:] if line.startswith('          ') else line for line in lines) + '\n'
+          compile(code, '<case141-physical-slot-payload>', 'exec')
+          exec(code, {'__name__': '__main__'})
+          PY
+          git config user.name "tmzncty"
+          git config user.email "72063145+tmzncty@users.noreply.github.com"
+          git add evidence/141-postgresql-2018-2020-physical-slot-advance-persistence-deepening.md \
+                  cases/141-postgresql-replication-slot-wal-retention-frontier.md \
+                  ROADMAP.md CASE_INDEX.md
+          git diff --cached --check
+          test "$(git diff --cached --name-only | wc -l)" -eq 4
+          git diff --cached --name-only
+          git commit -m "case141: deepen physical-slot advance persistence [skip ci]"
+          git push
