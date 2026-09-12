@@ -7,6 +7,7 @@
 
 - [`../evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md`](../evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md)
 - [`../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md`](../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md)
+- [`../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md`](../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md)
 
 ## Summary
 
@@ -168,6 +169,45 @@ The intermediate state blocks two collapses at once:
 and
 
 `protection withdrawal != completed physical disappearance`
+
+## 2014–2015 deepening — logical consumer acknowledgement and WAL restart are distinct frontiers
+
+The released PostgreSQL 9.4 logical-slot implementation already persists **two different positions**. `ReplicationSlotPersistentData` contains both `confirmed_flush`, tied to client acknowledgement, and `restart_lsn`, the oldest WAL position that the slot may still require. The same 9.4 header retains `candidate_restart_valid` / `candidate_restart_lsn` as logical-slot working state.
+
+`LogicalConfirmReceivedLocation()` makes the distinction operational rather than nominal. Consumer confirmation directly advances `confirmed_flush`; `restart_lsn` moves only when a prepared restart candidate exists and its validity position has been reached by confirmed progress. The neighboring source comment describes the restart candidate as the minimal LSN needed to replay transactions that had not yet committed at the candidate's point.
+
+Thus:
+
+```text
+consumer acknowledgement frontier (`confirmed_flush`)
+    != WAL restart/reclamation frontier (`restart_lsn`)
+```
+
+and, more specifically:
+
+`confirmed progress advanced != every older WAL record immediately reclaimable`
+
+PostgreSQL's own 10-August-2015 commit `3f811c2d6f51b13b71adff99e82894dd48cee055`, which exposes `confirmed_flush_lsn` in `pg_replication_slots`, states that the two positions have “rather distinct meanings” and notes that `restart_lsn` will commonly be older than the confirmed position. PostgreSQL 9.5 then documents `confirmed_flush_lsn` as logical-slot consumer receipt progress while `restart_lsn` remains the oldest possibly required WAL.
+
+There is also an observability chronology. PostgreSQL 9.4 source already persists `confirmed_flush`, but the documented 9.4 `pg_replication_slots` view exposes only `restart_lsn`; the separate `confirmed_flush_lsn` view column arrives with the 2015 commit. Therefore:
+
+`persistent internal control state != operator-visible telemetry surface`
+
+and:
+
+`2015 view-column introduction != 2015 invention of the underlying persisted state`.
+
+### Engineering reconstruction — acknowledgement is permission input, not completed reclamation
+
+Consumer acknowledgement can make a candidate restart position admissible, but acknowledgement is not itself WAL deletion and the two positions need not coincide. “Consumer has seen through X” and “server may forget every WAL byte before X” are different propositions.
+
+### Functional analogy and stop condition
+
+Other repository log cases also separate progress evidence from history liveness, but this is only a functional analogy. PostgreSQL's candidate restart logic is not Kafka high-watermark logic, Raft snapshot compaction, or LSM obsolete-file reclamation, and no genealogy is claimed.
+
+Neither frontier is a sanitization witness. Moving either value says nothing by itself about filesystem remnants, archived WAL, backups, device overprovisioning, or forensic recoverability.
+
+Full source/claim separation is recorded in [`../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md`](../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md).
 
 ## 2024 deepening — failover-slot synchronization makes the retention frontier itself cross-node state
 
@@ -404,6 +444,8 @@ That is enough for the conceptual comparison. It does not justify equating a rep
 - **Replication slot != replica.** The slot is control state about a replication stream, not another full database copy.
 - **Replication slot != WAL corpus.** It governs retention of WAL stored elsewhere.
 - **`restart_lsn` != full replay history.** It is a frontier, not the retained records themselves.
+- **`confirmed_flush_lsn` != `restart_lsn`.** Logical consumer acknowledgement and the oldest WAL still needed for decoding are distinct frontiers.
+- **Consumer acknowledgement != completed WAL reclamation.** Confirmation can permit a restart candidate to advance; it is not itself a checkpoint/removal event.
 - **Current primary state != sufficient downstream replay history.** A remote consumer can still need old WAL.
 - **Inactive != no retention obligation.** Disconnected consumers are a core use case.
 - **Crash-safe slot != immortal slot.** Administrative drop and later resource-bounded invalidation remain possible.
@@ -430,7 +472,7 @@ A complete genealogy belongs in `tmzncty/computing-archaeology`, not here. A fre
 The bounded case is grounded, while these remain open:
 
 1. exact pre-2014 proposal/review lineage and precursor implementations;
-2. physical-slot versus logical-slot advancement semantics in release-by-release detail;
+2. physical-slot advancement and release-by-release semantics beyond the now-grounded logical `confirmed_flush` / `restart_lsn` split;
 3. the interaction with WAL archiving, base backup, and reinitialization when required slot WAL is lost;
 4. post-17 failover-slot fixes, multi-standby/cascading evolution, promotion fault injection, and production failover traces;
 5. named production incidents or measurements of WAL accumulation and primary disk-pressure failure;
@@ -452,6 +494,7 @@ If the broad history of PostgreSQL WAL, streaming replication, logical decoding,
 
 - [Evidence 141 — PostgreSQL 2014–2020 replication-slot WAL-retention grounding](../evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md)
 - [Evidence 141 deepening — PostgreSQL 17 failover-slot synchronization](../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md)
+- [Evidence 141B — logical-slot `confirmed_flush` vs `restart_lsn` dual frontier](../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md)
 - [Case 58 — Raft snapshot/log compaction](58-raft-snapshot-log-compaction.md)
 - [Case 57 — Bigtable tablet log/memtable recovery](57-google-bigtable-tablet-log-memtable-recovery.md)
 - [Case 137 — LevelDB MANIFEST/CURRENT](137-leveldb-v17-manifest-current-recovery.md)
