@@ -1,0 +1,27 @@
+name: diagnose-case141-finalizer
+on:
+  push:
+    paths:
+      - .github/workflows/case141-debug-finalizer.yml
+permissions:
+  contents: write
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Capture finalizer diagnostic
+        shell: bash
+        run: |
+          set +e
+          python3 tools/tmp_case141_dual_frontier_finalize.py >/tmp/case141-debug.txt 2>&1
+          rc=$?
+          echo "exit_code=$rc" >>/tmp/case141-debug.txt
+          git restore CASE_INDEX.md ROADMAP.md cases/141-postgresql-replication-slot-wal-retention-frontier.md
+          cp /tmp/case141-debug.txt tools/case141-finalizer-debug.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/case141-finalizer-debug.txt
+          git commit -m 'ops: capture Case 141 finalizer diagnostic [skip ci]'
+          git push origin HEAD:main
+          exit 0
