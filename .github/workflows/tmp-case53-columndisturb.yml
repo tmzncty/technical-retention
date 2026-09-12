@@ -18,6 +18,19 @@ jobs:
           fetch-depth: 0
       - name: Apply bounded research integration
         run: python3 .tmp_case53_columndisturb.py
+      - name: Normalize final newlines
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in [
+              'CASE_INDEX.md',
+              'ROADMAP.md',
+              'cases/53-dram-rowhammer-targeted-refresh-policy.md',
+              'evidence/53-columndisturb-2025-nonlocal-read-disturb-deepening.md',
+          ]:
+              p = Path(name)
+              p.write_text(p.read_text().rstrip() + '\n')
+          PY
       - name: Verify canonical outputs
         run: |
           test -f evidence/53-columndisturb-2025-nonlocal-read-disturb-deepening.md
