@@ -1,0 +1,41 @@
+name: Case 04 pre-FTL NAND integration
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/case04-nand-preftl-integration.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+      - name: Apply Case 04 NAND device-geometry research patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout -B main origin/main
+          test -f .github/case04_nand_preftl_patch.py
+          python3 .github/case04_nand_preftl_patch.py
+          sed -i 's/[[:space:]]\+$//' cases/04-flash-virtual-mapping-logical-identity.md
+          sed -i 's/[[:space:]]\+$//' evidence/04-flash-1992-1998-grounding.md
+          sed -i 's/[[:space:]]\+$//' evidence/04-1987-1989-nand-device-geometry-before-ftl-deepening.md
+          sed -i 's/[[:space:]]\+$//' ROADMAP.md
+          sed -i 's/[[:space:]]\+$//' CASE_INDEX.md
+          rm .github/case04_nand_preftl_patch.py
+          rm .github/workflows/case04-nand-preftl-integration.yml
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git diff --cached --stat
+          git commit -m "case04: deepen pre-FTL NAND device geometry [skip ci]"
+          git push origin HEAD:main
