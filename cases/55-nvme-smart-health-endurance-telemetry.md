@@ -10,6 +10,8 @@ Persistent-event-log deepening: [`../evidence/55-nvme14-2019-persistent-event-lo
 
 Named-product vendor-layout deepening: [`../evidence/55-samsung-pm9a3-2021-vendor-smart-layout-deepening.md`](../evidence/55-samsung-pm9a3-2021-vendor-smart-layout-deepening.md).
 
+Named-product PEL-adoption deepening: [`../evidence/55-solidigm-d5-p5316-pel-product-adoption-deepening.md`](../evidence/55-solidigm-d5-p5316-pel-product-adoption-deepening.md).
+
 ## Scope
 
 This case asks a narrow retention question:
@@ -410,6 +412,16 @@ Thus **`same device + SMART label != one homogeneous telemetry schema`**, **`hos
 
 The PM9A3 field `Reset Count` is also treated only as reported state. Its name is not evidence for a command that resets telemetry. This keeps **history about reset episodes** separate from **authority to clear history**.
 
+### D5-P5316: named-product PEL adoption is not whole-revision conformance
+
+The D5-P5316 closes the named-product adoption gap left by the NVMe-1.4 PEL pass. NVM Express's 2019 change ledger identifies Persistent Event Log as an optional Revision-1.4 feature. Intel's first-party newsroom record dates the D5-P5316 product-family introduction to December 2020, but does not mention PEL. Solidigm's later D5-P5316 brief explicitly identifies the product as `Formerly Intel SSD D5-P5316` and, in one firmware/manageability list, states both `NVMe 1.3c and NVMe-MI 1.0a-compliant` and `Persistent Event Log exposes deeper drive history for debugging at scale`.
+
+That combination fixes a useful product-level boundary: **`feature support != whole-revision conformance claim`** and **`advertised interface revision != exclusive feature ceiling`**. The product statement does not rewrite standards history by moving PEL into NVMe 1.3c, and a PEL bullet does not upgrade the whole device to a complete NVMe-1.4 conformance claim.
+
+The chronology remains deliberately split. **`product-family introduction != first PEL-support firmware/date`**: Intel's December-2020 launch record is not PEL evidence, while Solidigm's public product brief supplies a later product-level feature-attestation floor. The brief's March-2021 `ACV10100` performance-test note is likewise not treated as a PEL test. A May-2024 Solidigm PCN separately documents the Intel-branded to Solidigm-branded D5-P5316 commercial transition without proving byte-identical firmware across every variant.
+
+Finally, the marketing phrase `deeper drive history` does not override the base-specification limits already grounded above. **PEL support does not imply complete immutable history, all standardized event types, lossless abrupt-power capture, or independently validated reset/sanitize behavior.** This slice is grounded in [`../evidence/55-solidigm-d5-p5316-pel-product-adoption-deepening.md`](../evidence/55-solidigm-d5-p5316-pel-product-adoption-deepening.md).
+
 ## Relation to existing cases
 
 ### Case 36 — NAND correct-and-refresh
@@ -469,6 +481,8 @@ It is **not** a full ATA SMART genealogy. The original SFF-8035i facsimile/revis
 
 NVMe 1.4 adds a later standards-history boundary: NVM Express's own revision ledger identifies Persistent Event Log as a new optional NVMe feature by June 2019. That does not make NVMe 1.4 the invention of retained drive history. The already-grounded 1999 ATA/ATAPI-5 21-entry circular self-test log is an explicit earlier counterexample. The useful comparison is narrower: ATA retains bounded self-test diagnostic records, whereas NVMe 1.4 standardizes a heterogeneous event-history interface with explicit suppression/deletion, reporting-context, periodic SMART-snapshot, and sanitize-modification rules. No direct ATA→NVMe genealogy is asserted, and TP4007a/4042a proposal chronology remains open until those proposals are independently inspected.
 
+The D5-P5316 deepening now supplies a bounded **named-product PEL adoption floor**: the family was introduced by Intel in December 2020, and later first-party Solidigm documentation explicitly exposes PEL while retaining an NVMe 1.3c conformance label. This closes the generic product-adoption gap but not the first-support firmware date, per-firmware event coverage, or independent behavioral validation.
+
 ## Philosophical interpretation — bounded
 
 This case permits one narrow formulation:
@@ -518,6 +532,11 @@ That is a project-level interpretation. It is not terminology attributed to NVM 
 | sanitize may remove/modify PEL events to prevent user-data derivation | `H/P/E` | `persistent != immutable` |
 | a PEL Sanitize Completion event independently verifies physical media sanitization | `X` | rejected; event history is not forensic verification |
 
+| D5-P5316 first-party product documentation exposes Persistent Event Log while advertising NVMe 1.3c compliance | `H/P` | strong named-product adoption/conformance-label evidence; not a claim that PEL belongs to the 1.3c standard |
+| feature support is not equivalent to whole-revision conformance, and a product-family launch date is not the first-support firmware date | `E` | bounded reconstruction from separated standards/product chronology |
+| December-2020 launch or March-2021 ACV10100 performance-test chronology proves PEL support/validation at those exact points | `X` | rejected; neither source is a PEL behavior test |
+| a first-party PEL feature bullet proves every event type, reset/power-fault/sanitize edge condition, complete history, or hidden FTL behavior | `X` | rejected; product adoption is not independent compliance validation |
+
 ## Sources
 
 1. NVM Express, **NVM Express Revision 1.0 Gold**, ratified 1 March 2011, especially the generic command-status definitions, asynchronous-event status table, §5.10.1.2, and Figure 59: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_0-Gold.pdf>
@@ -536,6 +555,11 @@ That is a project-level interpretation. It is not terminology attributed to NVM 
 13. Samsung Electronics, **_PM9A3 NVMe M.2 Datasheet_**, Rev. 1.0, January 2021; Samsung-authored product document, inspected through a surviving mirror: <https://www.stesz.com/Upload/SAMSUNG/PM9A3/PM9A3-M.2-Datasheet.pdf>
 14. Samsung Electronics, **_Samsung DC Toolkit 3.0 User Guide_**, Rev. 1.0, October 2023; official Samsung PDF: <https://download.semiconductor.samsung.com/resources/user-manual/Samsung_DCToolkit_V3.0_User_Guide.pdf>
 15. Open Compute Project, **_NVMe Cloud SSD Specification_**, Version 1.0 (03182020), especially §§4.8.3–4.8.4: <https://www.opencompute.org/documents/nvme-cloud-ssd-specification-v1-0-3-pdf>
+
+16. Intel, **Intel Announces Its Next Generation Memory and Storage Products**, 16 December 2020; first-party D5-P5316 product-family introduction record: <https://www.intel.com/content/www/us/en/newsroom/news/next-generation-memory-storage-products.html>
+17. Solidigm, **Solidigm D5-P5316 Product Brief**, published 10 October 2023; identifies the product as formerly Intel D5-P5316 and documents both NVMe 1.3c compliance and Persistent Event Log support: <https://www.solidigm.com/products/data-center/product-briefs/d5-p5316-product-brief.html>
+18. Solidigm, **Solidigm D5-P5316 Product Brief** downloadable PDF; first-party product-document copy of the same feature set: <https://www.solidigm.com/content/dam/solidigm/en/site/products/data-center/product-briefs/d5-p5316-product-brief/documents/d5-p5316-product-brief.pdf>
+19. Solidigm, **Product Change Notification 0000019376-00**, 31 May 2024; Intel-branded D5-P5316 discontinuance and Solidigm-brand continuation: <https://www.solidigm.com/content/dam/solidigm/en/site/products/documents/pcn/PCN0000019376-00.pdf>
 
 ## Related repositories
 

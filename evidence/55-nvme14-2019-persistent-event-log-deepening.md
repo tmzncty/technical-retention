@@ -161,7 +161,7 @@ The point is not that an SSD `remembers like a person`. It is that history reten
 ## Open evidence debt
 
 - inspect TP `4007a` and `4042a` directly before proposal-level chronology claims;
-- identify named shipping NVMe 1.4 products with documented PEL behavior before product-adoption claims;
+- named-product adoption floor is now supplied by [`55-solidigm-d5-p5316-pel-product-adoption-deepening.md`](55-solidigm-d5-p5316-pel-product-adoption-deepening.md); exact first-support firmware, event-type coverage, reset/sanitize behavior, and independent compliance/fault testing remain open;
 - independently test abrupt power failure, log-capacity pressure, suppression, reset, and sanitize behavior before compliance claims;
 - do not infer the physical medium, update atomicity, wear-management strategy, or firmware journaling used to retain PEL state;
 - broader storage-device logging genealogy belongs primarily in `tmzncty/computing-archaeology` if pursued.
