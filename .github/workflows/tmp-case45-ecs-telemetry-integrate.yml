@@ -1,0 +1,62 @@
+name: Temporary Case 45 ECS telemetry integration
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/tmp-case45-ecs-telemetry-integrate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Integrate bounded research slice
+        run: python .github/scripts/tmp_case45_ecs_telemetry_integrate.py
+
+      - name: Normalize markdown EOF
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for name in [
+              'CASE_INDEX.md',
+              'ROADMAP.md',
+              'cases/45-micron-ddr5-on-die-ecc-ecs.md',
+              'docs/SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md',
+              'evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md',
+          ]:
+              p = Path(name)
+              p.write_text(p.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
+
+      - name: Validate canonical research diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          test -f evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md
+          test ! -e .github/scripts/tmp_case45_ecs_telemetry_integrate.py
+          test ! -e .github/workflows/tmp-case45-ecs-telemetry-integrate.yml
+          grep -Fq -- '## ECS telemetry validity: count mode, thresholding, reset, and reporting epochs' cases/45-micron-ddr5-on-die-ecc-ecs.md
+          grep -Fq -- '- **3587 — no power-cycle, universality, or priority upgrade:**' CASE_INDEX.md
+          grep -Fq -- 'Case 45 DDR5 ECS telemetry-validity deepening' ROADMAP.md
+          grep -Fq -- '## 9A. Resettable, threshold-filtered diagnostic summary — Case 45' docs/SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md
+          git status --short
+
+      - name: Commit canonical research changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'case45: deepen ECS telemetry validity [skip ci]'
+          git push origin HEAD:main
