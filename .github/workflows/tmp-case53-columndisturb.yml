@@ -1,0 +1,39 @@
+name: tmp-case53-columndisturb
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tmp-case53-columndisturb.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply bounded research integration
+        run: python3 .tmp_case53_columndisturb.py
+      - name: Verify canonical outputs
+        run: |
+          test -f evidence/53-columndisturb-2025-nonlocal-read-disturb-deepening.md
+          grep -Fq '2025 ColumnDisturb deepening' cases/53-dram-rowhammer-targeted-refresh-policy.md
+          grep -Fq 'Case 53 — 2025 ColumnDisturb topology deepening findings' CASE_INDEX.md
+          grep -Fq 'Completed bounded deepening — Case 53 ColumnDisturb topology counterexample' ROADMAP.md
+          git diff --check
+      - name: Remove temporary integration files
+        run: |
+          rm -f .tmp_case53_columndisturb.py
+          rm -f .github/workflows/tmp-case53-columndisturb.yml
+      - name: Commit and push canonical research files
+        run: |
+          git config user.name 'technical-retention automation'
+          git config user.email 'technical-retention-automation@users.noreply.github.com'
+          git add CASE_INDEX.md ROADMAP.md cases/53-dram-rowhammer-targeted-refresh-policy.md evidence/53-columndisturb-2025-nonlocal-read-disturb-deepening.md .tmp_case53_columndisturb.py .github/workflows/tmp-case53-columndisturb.yml
+          git diff --cached --check
+          git commit -m 'case53: deepen nonlocal DRAM disturbance topology [skip ci]'
+          git push origin HEAD:main
