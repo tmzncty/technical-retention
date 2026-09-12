@@ -1,0 +1,421 @@
+name: integrate-case138-auto-aof-genealogy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/case138-auto-aof-genealogy-integrate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply bounded Case 138 research slice
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from textwrap import dedent
+
+          evidence_path = Path('evidence/138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md')
+          evidence = dedent(r'''
+          # Redis 2011–2012 Automatic AOF Rewrite Genealogy Deepening
+
+          ## Scope
+
+          This record deepens Case 138 with one narrow chronology that the original Redis 2.6 grounding deliberately left open: the separation between an already-existing **manual/background AOF rewrite mechanism** and the later **automatic rewrite trigger policy** that became part of Redis 2.4.
+
+          The bounded chain is:
+
+          1. released Redis 2.2.0 on 22 February 2011;
+          2. the public 10 June 2011 initial automatic-rewrite implementation and immediate hardening commits;
+          3. released Redis 2.4.0 on 14 October 2011;
+          4. continuity into the already-grounded Redis 2.6.0 behavior.
+
+          It does **not** establish the first invention of append-only logging, the first Redis AOF implementation, the first `BGREWRITEAOF` implementation, database-log compaction priority, or private/unpublished experiments. Those broader genealogical questions remain outside this bounded slice.
+
+          Case: [`../cases/138-redis26-aof-rewrite-current-state-reserialization.md`](../cases/138-redis26-aof-rewrite-current-state-reserialization.md)
+
+          Grounding record: [`138-redis26-aof-rewrite-grounding.md`](138-redis26-aof-rewrite-grounding.md)
+
+          ## Evidence labels
+
+          - `H/P` — direct historical / primary evidence from released Redis tags or the official Redis repository history;
+          - `E` — engineering reconstruction from those artifacts;
+          - `A` — bounded functional comparison;
+          - `X` — claim explicitly not established.
+
+          ## Source 1 — Redis 2.2.0: manual/background rewrite already exists
+
+          ### H/P — released floor
+
+          The official Redis repository's annotated `2.2.0` tag is dated **2011-02-22T17:24:07Z**.
+
+          Primary record:
+
+          - <https://github.com/redis/redis/releases/tag/2.2.0>
+          - tag object `0c1085b0514c740597041f3a103e3aed89747a91` in the official repository.
+
+          ### H/P — `BGREWRITEAOF` is already a callable maintenance mechanism
+
+          Released `2.2.0` `src/aof.c` contains `bgrewriteaofCommand()`. If no background AOF rewrite is already running, the command invokes `rewriteAppendOnlyFileBackground()`.
+
+          Primary artifact:
+
+          - <https://github.com/redis/redis/blob/2.2.0/src/aof.c>
+
+          The released `redis.conf` also tells the operator to check `BGREWRITEAOF` for rewriting an append log in the background when it becomes too big.
+
+          Primary artifact:
+
+          - <https://github.com/redis/redis/blob/2.2.0/redis.conf>
+
+          ### H/P — the released 2.2 configuration has no automatic-rewrite controls
+
+          The same released `2.2.0` configuration documents AOF enablement and fsync policy, but does not contain the later `auto-aof-rewrite-percentage` / `auto-aof-rewrite-min-size` stanza. The released `src/redis.c` likewise has no `auto_aof...` trigger state found in the 2.4 implementation.
+
+          This absence is used only to bound the **released 2.2 tree**.
+
+          **X:** `not present in released 2.2.0 = no earlier branch, patch, prototype, or unpublished experiment ever existed`.
+
+          ## Source 2 — 10 June 2011: automatic rewrite is added as a policy layer
+
+          ### H/P — first bounded public implementation commit
+
+          Official Redis commit:
+
+          - `b333e2399778e624174e00d123c2cb3785333e3d`;
+          - authored/committed **2011-06-10T10:39:23Z**;
+          - message: `automatic AOF rewrite first implementation. Still to be tested.`
+
+          Primary record:
+
+          - <https://github.com/redis/redis/commit/b333e2399778e624174e00d123c2cb3785333e3d>
+
+          The patch does not introduce AOF rewrite from nothing. Instead it layers automatic scheduling and accounting onto machinery that already had `BGREWRITEAOF`.
+
+          ### H/P — the commit adds the historical configuration vocabulary
+
+          The commit adds to `redis.conf`:
+
+          - `auto-aof-rewrite-percentage 100`;
+          - `auto-aof-rewrite-min-size 64mb`;
+          - documentation that Redis remembers AOF size after the latest rewrite (or startup size if no rewrite has occurred since restart), compares that base with current size, and implicitly calls `BGREWRITEAOF` when configured growth/minimum conditions are met.
+
+          It also adds server state for:
+
+          - rewrite percentage;
+          - minimum size;
+          - rewrite base size;
+          - current AOF size;
+          - a scheduled-rewrite flag.
+
+          ### H/P — automatic scheduling depends on retained maintenance-control state
+
+          The same patch updates current AOF size after writes/restarts/rewrites, retains a base-size reference, and adds a `serverCron` trigger that can call the existing background rewrite path.
+
+          It also adds a scheduled path for the case where a user requests `BGREWRITEAOF` while `BGSAVE` is active: the request can be represented by `aofrewrite_scheduled` and launched after conflicting background work ends.
+
+          These are direct examples of non-payload state that exists because future maintenance decisions depend on previous maintenance/startup events.
+
+          ## Source 3 — immediate hardening shows introduction != settled semantics
+
+          The official repository history between 2.2.0 and 2.4.0 records a cluster of automatic-rewrite fixes immediately after the first implementation:
+
+          - **2011-06-10 12:25Z — `e3d27a726162e9faefe2d6223caf3b459b7f94f7`** — avoid division-by-zero issues in automatically triggered rewrite;
+          - **2011-06-10 12:43Z — `4ff34b6adb9f5f9daad1f27e3aac8e016554b86c`** — fix automatic-rewrite percentage option parsing;
+          - **2011-06-10 12:52Z — `d630abcdaf869345fed8fe508774d0318d1d82ff`** — expose new auto-rewrite state in `INFO`;
+          - **2011-06-10 13:15Z — `19b46c9a0938ccda1bfd61afb06c63bb2f468398`** — ensure an automatic rewrite is triggered only when no other child is executing;
+          - **2011-06-12 05:27Z — `0b17517c7c9f1f6b1c299346b7b4fa374e343fbc`** — fix automatic rewrite starting too early and adjust growth calculation;
+          - **2011-08-09 09:45Z — `11aaf523131d4f3aa4507043f46984854505bc28`** — fix integer overflow in auto-rewrite calculation.
+
+          Primary history query:
+
+          - official `redis/redis` commit history for `src/redis.c` between the 2.2.0 and 2.4.0 tag dates.
+
+          ### H/P — the 12 June fix changes the meaning of `growth`
+
+          Commit `0b17517...` changes:
+
+          `current_size * 100 / base`
+
+          into:
+
+          `current_size * 100 / base - 100`
+
+          before comparing with the configured percentage. The commit message explicitly says the previous behavior could start automatic rewrite too early.
+
+          This is a useful historical warning: the configuration name was present in the initial patch, but its effective trigger semantics were not yet settled correctly.
+
+          ### H/P — the August fix widens the base-size arithmetic
+
+          Commit `11aaf523...` changes the local `base` used in the trigger calculation from `int` to `long long`, with a commit message explicitly identifying an auto-rewrite integer-overflow defect.
+
+          Thus even after the June trigger correction, large-size arithmetic remained part of the maintenance-policy correctness envelope.
+
+          ## Source 4 — Redis 2.4.0: the policy is in a released stable tree
+
+          ### H/P — released adoption floor
+
+          The official annotated `2.4.0` tag is dated **2011-10-14T15:54:41Z** and is labeled `Redis 2.4.0 Stable`.
+
+          Primary record:
+
+          - <https://github.com/redis/redis/releases/tag/2.4.0>
+          - tag object `05001b884a34ea2f40436224ad46a4f31eb077b5`.
+
+          ### H/P — released 2.4 retains the automatic-rewrite controls and guarded trigger
+
+          Released `2.4.0` `redis.conf` contains the automatic-rewrite stanza with the 100% / 64 MB defaults. Released `src/redis.c` checks, before triggering automatic rewrite, that:
+
+          - no RDB child is active;
+          - no AOF rewrite child is active;
+          - automatic rewrite percentage is nonzero;
+          - current AOF size exceeds the configured minimum;
+          - calculated growth relative to the remembered base reaches the configured threshold.
+
+          It then calls `rewriteAppendOnlyFileBackground()`.
+
+          Primary artifacts:
+
+          - <https://github.com/redis/redis/blob/2.4.0/redis.conf>
+          - <https://github.com/redis/redis/blob/2.4.0/src/redis.c>
+
+          This gives the bounded public chain needed by Case 138:
+
+          > released manual rewrite in 2.2.0 -> automatic policy introduced and hardened in public 2011 commits -> automatic policy present in released 2.4.0 -> later 2.6.0 mechanism already grounded by the parent evidence record.
+
+          ## Engineering reconstruction
+
+          ### E — manual maintenance mechanism != automatic trigger policy
+
+          Redis 2.2.0 already knew how to execute a background AOF rewrite. The June 2011 work adds policy state and a scheduler that decides when to invoke that pre-existing class of work.
+
+          Therefore:
+
+          > `rewrite mechanism exists != automatic rewrite policy exists`.
+
+          This is exactly the distinction that a release-only reading of 2.6 would hide.
+
+          ### E — maintenance policy depends on retained control history
+
+          Automatic rewrite uses a remembered base size from the latest rewrite or startup plus the current AOF size. The scheduler therefore cannot be described as a stateless reaction to one instantaneous file-size observation.
+
+          The retained relation is small compared with the AOF payload, but it changes future maintenance admissibility.
+
+          > `small maintenance-control state != payload`, yet it can govern when a large payload representation is replaced.
+
+          ### E — trigger threshold reached != rewrite starts immediately
+
+          Released 2.4 guards automatic invocation against concurrent RDB/AOF child work. The 2011 history also contains an explicit fix requiring that no other child be executing.
+
+          Hence:
+
+          > `rewrite due by size policy != rewrite admitted now != rewrite completed != replacement installed`.
+
+          Case 138's existing handoff analysis covers the later phases.
+
+          ### E — feature-introduction commit != stable operating semantics
+
+          The initial commit literally says `Still to be tested`, and the next hours/days/months repair division-by-zero, option parsing, child-concurrency, growth semantics, and integer width.
+
+          For historical method this matters: a first public commit is a **lower-bound implementation event**, not proof that all later semantics were already correct or final.
+
+          ### E — rewrite percentage is relative growth, not percent-of-capacity
+
+          The 12 June arithmetic fix makes the intended relation especially clear: the percentage expresses growth above a remembered base, not current-size-as-a-percent-of-some-storage-capacity.
+
+          This is a maintenance-amplification policy, not a media-retention threshold.
+
+          ## Functional comparison and limits
+
+          ### A — maintenance obligation / admission / execution separation
+
+          Case 136 (RAID repair priority) and Case 142 (Ceph capacity-gated recovery) also separate a reason for maintenance from the conditions under which work is admitted or scheduled. Redis automatic AOF rewrite is functionally comparable at that abstract level.
+
+          The compared systems retain different objects and use different mechanisms. No protocol, implementation, or genealogy is inferred.
+
+          ### X — no sanitization claim
+
+          Automatically rewriting and later replacing an AOF does not establish overwrite of the old file's physical sectors/pages, Flash erase, crypto erase, or forensic disappearance. It changes Redis's active recovery representation, not the security-erasure status of underlying media.
+
+          ### X — no invention-priority claim
+
+          `b333e239...` is the first bounded public implementation commit established by this repository slice. It is not claimed as the invention of automatic log compaction, automatic database checkpointing, or even necessarily the earliest private Redis experiment.
+
+          ## Related-repository check
+
+          Fresh code searches of `tmzncty/computing-archaeology` for `BGREWRITEAOF` and `auto-aof-rewrite` returned no dedicated overlapping module.
+
+          Division of labor remains:
+
+          - **technical-retention:** this bounded relation among rewrite machinery, automatic maintenance policy, retained trigger state, admission, and authority handoff;
+          - **computing-archaeology:** broader Redis persistence history, exact first AOF/BGREWRITEAOF commits, database/checkpoint prior art, and cross-system genealogy if later developed.
+
+          ## Claim ledger
+
+          | Claim | Label | Strength | Boundary |
+          | --- | --- | --- | --- |
+          | Redis 2.2.0 released tree already has callable background AOF rewrite | `H/P` | strong | released floor, not first invention |
+          | Redis 2.2.0 config directs operators to BGREWRITEAOF when the AOF is too large | `H/P` | strong | manual guidance only |
+          | Released 2.2.0 lacks the later automatic-rewrite controls | `H/P` | strong negative evidence | bounded to inspected released tree |
+          | `b333e239...` publicly introduces automatic AOF rewrite policy on 10 June 2011 | `H/P` | strong | public implementation event, not invention priority |
+          | initial patch adds percentage/min-size/base/current-size/scheduled control state | `H/P` | strong | exact commit |
+          | immediate follow-up commits harden arithmetic/config/concurrency/observability | `H/P` | strong | official repository history |
+          | 12 June fix corrects growth calculation to growth-above-base | `H/P` | strong | exact diff |
+          | August fix widens base arithmetic after overflow report | `H/P` | strong | exact diff |
+          | Redis 2.4.0 released tree contains the guarded automatic trigger | `H/P` | strong | release floor |
+          | manual rewrite mechanism and automatic trigger policy are separable | `E` | strong reconstruction | bounded Redis chain |
+          | automatic maintenance uses retained small control state | `E` | strong reconstruction | not application payload |
+          | threshold due does not imply immediate admission/completion/install | `E` | strong reconstruction | child-work guards + Case 138 handoff |
+          | 2011 first implementation does not prove settled semantics | `E`, `X` | strong boundary | multiple subsequent fixes |
+          | cross-case scheduler comparisons are functional only | `A`, `X` | bounded | no genealogy |
+          | rewrite/replacement does not prove media sanitization | `X` | strong boundary | lower-layer media separate |
+          | broader AOF/BGREWRITEAOF and database-checkpoint priority remains open | `X` | explicit scope | route history to computing-archaeology |
+
+          ## What this closes
+
+          This closes the **bounded automatic-rewrite introduction / 2.4 release genealogy** that the original Case 138 grounding left open.
+
+          It does **not** close:
+
+          1. exact first public Redis AOF implementation;
+          2. exact first public `BGREWRITEAOF` implementation;
+          3. broader pre-Redis database log-rewrite/checkpoint prior art;
+          4. Redis 7 multipart-AOF evolution;
+          5. crash/power fault injection around rewrite handoff.
+          ''').strip() + '\n'
+          evidence_path.write_text(evidence, encoding='utf-8')
+
+          # Case 138 navigation + bounded historical deepening.
+          case_path = Path('cases/138-redis26-aof-rewrite-current-state-reserialization.md')
+          case = case_path.read_text(encoding='utf-8')
+          marker = 'Grounding record: [`../evidence/138-redis26-aof-rewrite-grounding.md`](../evidence/138-redis26-aof-rewrite-grounding.md).\n'
+          if marker not in case:
+              raise SystemExit('Case 138 grounding marker not found')
+          if '138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md' not in case:
+              case = case.replace(marker, marker + '\nAutomatic-rewrite genealogy deepening: [`../evidence/138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md`](../evidence/138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md).\n', 1)
+
+          insert_marker = '## Philosophical interpretation — bounded\n'
+          deepening = dedent(r'''
+          ## Historical deepening — manual rewrite vs automatic rewrite policy, 2011 to Redis 2.4
+
+          The companion 2011–2012 evidence closes one of this case's original genealogy debts without turning the case into a general Redis history.
+
+          Released Redis **2.2.0** (22 February 2011) already contains `bgrewriteaofCommand()` and `rewriteAppendOnlyFileBackground()`. Its configuration tells operators to use `BGREWRITEAOF` when an append log becomes too large, but the released tree does not expose the later automatic-rewrite percentage/minimum-size policy.
+
+          On **10 June 2011**, public commit `b333e2399778e624174e00d123c2cb3785333e3d` adds automatic AOF rewrite as a policy layer: percentage/minimum-size configuration, remembered base/current AOF sizes, scheduled-rewrite state, and a `serverCron` trigger that can invoke the existing background rewrite path. The commit message itself calls this the first implementation and says it still needs testing.
+
+          The following public history matters methodologically. Within hours and days Redis fixes division-by-zero, option parsing, child-concurrency, and the growth formula; on **12 June 2011** commit `0b17517...` changes the calculation from current-size percentage to **growth above the remembered base**. On **9 August 2011**, `11aaf523...` widens the base arithmetic after an integer-overflow report. Released **2.4.0** (14 October 2011) contains the automatic-rewrite controls and guarded trigger.
+
+          This establishes a bounded chain:
+
+          > `manual/background rewrite mechanism exists` **before** `automatic rewrite policy exists`.
+
+          and:
+
+          > `maintenance threshold due != work admitted now != rewrite completed != replacement installed`.
+
+          The first inequality is grounded by the 2.2→June-2011 source history; the later phases remain grounded by this case's 2.6 handoff analysis. The retained base-size/current-size bookkeeping is maintenance-control state: small state about prior rewrite/startup history that governs a future large representation-maintenance action.
+
+          The chronology is not an invention-priority claim. It does not establish the first Redis AOF or `BGREWRITEAOF` commit, private experiments, or broader database checkpoint/log-compaction priority. Those broader questions still belong primarily in `computing-archaeology`.
+
+          ''')
+          if '## Historical deepening — manual rewrite vs automatic rewrite policy' not in case:
+              if insert_marker not in case:
+                  raise SystemExit('Case 138 philosophical marker not found')
+              case = case.replace(insert_marker, deepening + insert_marker, 1)
+
+          case = case.replace(
+              '- establish the 2.4 automatic-rewrite genealogy from release/source history;',
+              '- the bounded June-2011 -> Redis-2.4 automatic-rewrite introduction/release chain is now closed by the companion genealogy deepening; exact first AOF/BGREWRITEAOF implementation history remains open;'
+          )
+          case = case.replace(
+              'the earliest AOF/BGREWRITEAOF/automatic-rewrite commits/releases, background-fork design constraints, RDB/AOF evolution, and Redis 7 multipart-AOF transition;',
+              'the earliest AOF/BGREWRITEAOF commits/releases, broader automatic-maintenance/database-checkpoint precedents, background-fork design constraints, RDB/AOF evolution, and Redis 7 multipart-AOF transition;'
+          )
+          case_path.write_text(case, encoding='utf-8')
+
+          # Grounding record status update.
+          grounding_path = Path('evidence/138-redis26-aof-rewrite-grounding.md')
+          grounding = grounding_path.read_text(encoding='utf-8')
+          gmarker = '[`../cases/138-redis26-aof-rewrite-current-state-reserialization.md`](../cases/138-redis26-aof-rewrite-current-state-reserialization.md)\n'
+          if gmarker not in grounding:
+              raise SystemExit('Grounding case-link marker not found')
+          if '138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md' not in grounding:
+              grounding = grounding.replace(gmarker, gmarker + '\nCompanion genealogy deepening: [`138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md`](138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md)\n', 1)
+          grounding = grounding.replace(
+              '2. Exact first automatic-rewrite implementation and its 2.4 release genealogy.',
+              '2. **Closed for the bounded automatic-rewrite chain:** the June-2011 public implementation/hardening -> Redis-2.4 release genealogy is established in [`138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md`](138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md); exact first AOF/BGREWRITEAOF implementation history remains open.'
+          )
+          grounding_path.write_text(grounding, encoding='utf-8')
+
+          # ROADMAP: replace only the Case 138 line.
+          roadmap_path = Path('ROADMAP.md')
+          roadmap_lines = roadmap_path.read_text(encoding='utf-8').splitlines()
+          prefix = '- [x] Case 138 Redis 2.6 AOF rewrite / current-state re-serialization slice — '
+          replacement = (
+              '- [x] Case 138 Redis 2.6 AOF rewrite / current-state re-serialization slice — '
+              '[`cases/138-redis26-aof-rewrite-current-state-reserialization.md`](cases/138-redis26-aof-rewrite-current-state-reserialization.md) + '
+              '[`evidence/138-redis26-aof-rewrite-grounding.md`](evidence/138-redis26-aof-rewrite-grounding.md) + '
+              '[`evidence/138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md`](evidence/138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md): '
+              'the released 22-October-2012 `2.6.0` tree separates ordinary replayable AOF history, a fork-time current-dataset rewrite, parent-held concurrent differences, replacement-file authority handoff, size-growth rewrite scheduling, and independent `appendfsync` policy. '
+              'The 2011->2.4 genealogy deepening now closes the bounded automatic-policy chain: released 2.2.0 already has manual `BGREWRITEAOF` but no later auto-rewrite controls; 10-June-2011 public history adds percentage/min-size/base/current-size scheduling state, immediate fixes correct arithmetic/config/concurrency, 12-June corrects growth-above-base semantics, 9-August fixes size-width overflow, and released 2.4.0 retains the guarded automatic trigger. '
+              'This establishes `manual rewrite mechanism != automatic rewrite policy`, `maintenance due != admitted != completed != installed`, and `first implementation != settled semantics` without claiming invention priority or sanitization. Exact first AOF/BGREWRITEAOF genealogy, Redis 7 multipart-AOF evolution, and power-cut/fault validation remain open; broader Redis persistence/database-checkpoint history belongs primarily in `computing-archaeology`.'
+          )
+          hits = [i for i, line in enumerate(roadmap_lines) if line.startswith(prefix)]
+          if len(hits) != 1:
+              raise SystemExit(f'Expected one Case 138 ROADMAP line, got {len(hits)}')
+          roadmap_lines[hits[0]] = replacement
+          roadmap_path.write_text('\n'.join(roadmap_lines) + '\n', encoding='utf-8')
+
+          # CASE_INDEX: append a non-duplicated finding block. The index is intentionally
+          # append-oriented so this avoids rewriting older finding semantics.
+          index_path = Path('CASE_INDEX.md')
+          index = index_path.read_text(encoding='utf-8')
+          heading = '### Findings 3732–3747 — Case 138 Redis 2.2→2.4 manual/automatic AOF rewrite genealogy'
+          if heading not in index:
+              block = dedent(r'''
+
+              ### Findings 3732–3747 — Case 138 Redis 2.2→2.4 manual/automatic AOF rewrite genealogy
+
+              - **3732 — H/P** — The official Redis `2.2.0` tag is dated 22-Feb-2011, providing a released lower bound for the inspected pre-auto-rewrite state rather than an invention-priority date.
+              - **3733 — H/P** — Released Redis 2.2.0 `src/aof.c` already contains `bgrewriteaofCommand()` invoking background AOF rewrite, so background rewrite machinery predates the bounded automatic-trigger implementation.
+              - **3734 — H/P** — Released Redis 2.2.0 `redis.conf` explicitly points operators to `BGREWRITEAOF` when the append log becomes too large, while the released tree lacks the later `auto-aof-rewrite-percentage` / minimum-size controls.
+              - **3735 — H/P** — Official commit `b333e239...` on 10-Jun-2011 is the bounded public automatic-AOF-rewrite implementation event; its message explicitly says `first implementation` and `Still to be tested`.
+              - **3736 — H/P** — `b333e239...` adds percentage/minimum-size configuration plus base-size, current-size, and scheduled-rewrite state, making automatic maintenance dependent on retained control/accounting state.
+              - **3737 — H/P** — The same initial patch adds a `serverCron` trigger and scheduling around conflicting background save work rather than inventing a separate rewrite engine; it reuses the background rewrite path.
+              - **3738 — H/P** — Same-day follow-ups fix division-by-zero, option parsing, observability, and child-concurrency conditions, establishing that the first public patch was not yet settled operating semantics.
+              - **3739 — H/P** — Commit `0b17517...` on 12-Jun-2011 changes the trigger arithmetic from current-size percentage to `(current/base*100)-100`, explicitly fixing rewrites that started too early and grounding growth-above-base semantics.
+              - **3740 — H/P** — Commit `11aaf523...` on 9-Aug-2011 widens the trigger's base-size variable from `int` to `long long` to fix auto-rewrite integer overflow, making arithmetic width part of maintenance-policy correctness.
+              - **3741 — H/P** — The official Redis `2.4.0` tag is dated 14-Oct-2011, and its released `redis.conf` / `src/redis.c` retain the automatic-rewrite controls and guarded trigger; this is a released adoption floor.
+              - **3742 — E** — `manual/background rewrite mechanism exists != automatic rewrite policy exists`; the 2.2→2011 chain separates maintenance capability from the policy that decides when to invoke it.
+              - **3743 — E** — Automatic rewrite is history-sensitive control logic: remembered post-rewrite/startup base size plus current AOF size governs future maintenance admission; small control history can govern replacement of a much larger recovery representation.
+              - **3744 — E** — `size threshold due != rewrite admitted now != rewrite completed != replacement installed`; child-work guards establish the admission boundary, while Case 138's existing handoff evidence establishes completion/authority boundaries.
+              - **3745 — A/E** — Cases 136 and 142 are functional comparison points for separating maintenance reason/policy from admission/execution; they do not establish Redis implementation or genealogy.
+              - **3746 — X** — The 10-Jun-2011 public commit is not claimed as invention priority for log compaction/checkpointing, nor does absence of auto controls in released 2.2.0 exclude private branches, prototypes, or unpublished experiments.
+              - **3747 — X** — Automatic AOF rewrite and later file replacement do not establish overwrite, Flash erase, crypto erase, or forensic disappearance of retired AOF bytes; media sanitization remains a separate lower-layer question.
+              ''')
+              index = index.rstrip() + block + '\n'
+              index_path.write_text(index, encoding='utf-8')
+
+          # Remove the one-shot workflow from the final tree.
+          Path('.github/workflows/case138-auto-aof-genealogy-integrate.yml').unlink()
+          PY
+
+          git config user.name 'technical-retention-bot'
+          git config user.email 'technical-retention-bot@users.noreply.github.com'
+          git add CASE_INDEX.md ROADMAP.md \
+            cases/138-redis26-aof-rewrite-current-state-reserialization.md \
+            evidence/138-redis26-aof-rewrite-grounding.md \
+            evidence/138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md \
+            .github/workflows/case138-auto-aof-genealogy-integrate.yml
+          git diff --cached --check
+          git commit -m 'case138: deepen automatic AOF rewrite genealogy [skip ci]'
+          git push origin HEAD:main
