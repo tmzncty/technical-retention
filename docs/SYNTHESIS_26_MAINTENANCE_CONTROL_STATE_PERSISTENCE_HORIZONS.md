@@ -12,6 +12,8 @@ Grounded witnesses used here:
 - [`Case 116 — HDFS DataNode maintenance state`](../cases/116-apache-hdfs-datanode-maintenance-state.md), especially [`evidence/116-hadoop-301-maintenance-restart-reconstitution-deepening.md`](../evidence/116-hadoop-301-maintenance-restart-reconstitution-deepening.md): retained administrative intent can survive restart through configuration while runtime replica-location evidence is re-observed;
 - [`Case 15 — Intel SSD 320 power-loss durability`](../cases/15-intel-ssd320-power-loss-durability.md), especially [`evidence/15-intel320-2011-unsafe-shutdown-telemetry-deepening.md`](../evidence/15-intel320-2011-unsafe-shutdown-telemetry-deepening.md): a cumulative unsafe-shutdown count can retain event evidence without becoming a payload-durability verdict.
 
+- [`Case 45 — DDR5 on-die ECC / ECS`](../cases/45-micron-ddr5-on-die-ecc-ecs.md), especially [`evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md`](../evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md): a latest scrub diagnostic summary can be mode-relative, threshold-filtered, explicitly resettable, and interpretable only within a reporting/configuration epoch.
+
 The historical claims remain in those case/evidence records. The categories below are **engineering reconstruction**, not source vocabulary unless a source independently uses the same words.
 
 ---
@@ -20,7 +22,7 @@ The historical claims remain in those case/evidence records. The categories belo
 
 The repository should use `maintenance-control state` as a bounded umbrella for non-payload state whose role is to **schedule, qualify, resume, authorize, or audit work that preserves another retained relation**.
 
-The term is useful only if it does not imply one persistence contract. The five witnesses immediately reject that shortcut:
+The term is useful only if it does not imply one persistence contract. The six witnesses immediately reject that shortcut:
 
 ```text
 DRAM refresh counter
@@ -42,6 +44,10 @@ HDFS maintenance configuration
 SSD unsafe-shutdown counter
     -> cumulative event-history summary
     -> persists as telemetry, not as a durability verdict
+
+DDR5 ECS report state
+    -> mode-relative + threshold-filtered latest maintenance summary
+    -> explicitly resettable; not a lifetime event ledger
 ```
 
 Therefore the main rule is:
@@ -226,15 +232,53 @@ The product documentation also leaves the exact counter-update persistence mecha
 
 ---
 
+
+## 9A. Resettable, threshold-filtered diagnostic summary — Case 45
+
+DDR5 ECS adds a persistence horizon not represented by the first five witnesses. Micron's 2022 product-core record exposes a correction summary whose interpretation depends on count mode and threshold, whose maximum-row component compresses many visited rows into one retained diagnostic relation, and whose counters/report registers can be explicitly reset.
+
+The later Linux CXL ECS control surface independently exposes row/code-word count mode, reporting threshold, and counter reset as host-visible policy where supported.
+
+This means that the retained state is neither a lifetime event count nor an append-only event log:
+
+```text
+ECS corrective work
+    -> may repair array state
+
+reporting mode + threshold
+    -> define what later count means / what becomes visible
+
+latest report registers
+    -> retain bounded diagnostic summary
+
+reset / later reporting boundary
+    -> retire or replace that summary
+```
+
+Therefore:
+
+> **summary persistence != repair persistence**
+
+> **latest diagnostic state != complete maintenance history**
+
+> **telemetry reset != rollback of earlier corrective work**.
+
+This also sharpens the comparison with Case 15. A cumulative lifetime unsafe-shutdown count and a resettable ECS summary can both be long enough-lived to inform later diagnosis while having different history semantics. `counter` is therefore not a sufficient persistence-horizon category.
+
+The project term `reporting/configuration epoch` is used only to describe the validity interval over which a count mode/threshold and its accumulated summary can be interpreted together. It is not Micron or JEDEC historical vocabulary, and this synthesis does not claim the reporting registers survive power removal.
+
+---
+
 ## 10. Persistence horizon ≠ authority
 
-The five cases show that persistence duration and decision authority are independent axes.
+The six cases show that persistence duration and decision authority are independent axes.
 
 - A short-lived DRAM counter phase can be essential to full-array coverage.
 - A restart-persistent HDFS cursor can be lost with replay rather than unsafe payload admission.
 - A Flash BBT can gate whether a block is eligible for ordinary use.
 - An HDFS maintenance config can retain policy while runtime replica evidence is deliberately rebuilt conservatively.
 - A lifetime SMART count can persist for diagnosis without selecting payload currentness.
+- A resettable ECS summary can persist beyond one corrective operation while remaining filtered, mode-relative diagnostic evidence rather than a complete repair history.
 
 Therefore neither of these shortcuts is safe:
 
@@ -368,5 +412,6 @@ This synthesis introduces no new historical floor. Historical claims are inherit
 - Apache HDFS-7430, HDFS-12209, and Hadoop 2.7.3 source through Case 83 evidence;
 - Apache Hadoop 3.0.1 documentation/source/tests through Case 116 evidence;
 - Intel SSD 320 September/March 2011 manufacturer documents through Case 15 evidence.
+- Micron DDR5 SDRAM Product Core Data Sheet Rev. D 10/2022 plus official Linux EDAC/CXL ECS documentation through the Case 45 deepening evidence.
 
 For exact URLs, page anchors, version tags, and evidence grades, use the linked case/evidence records rather than treating this synthesis as a substitute source.

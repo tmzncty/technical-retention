@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/45-micron-ddr5-2021-2026-odecc-ecs-grounding.md`](../evidence/45-micron-ddr5-2021-2026-odecc-ecs-grounding.md).
 
+Telemetry-validity deepening: [`../evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md`](../evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md).
+
 ## Scope
 
 This case asks a narrow question left open by Cases 33, 40, and 43:
@@ -215,6 +217,42 @@ Therefore:
 Correcting an error internal to the DRAM array does not, by itself, prove protection of every transfer path, controller state, DIMM component, address/command path, software-visible page, or system failure mode.
 
 This case deliberately refuses the common shortcut `DDR5 has ECC, therefore ordinary ECC memory is unnecessary`.
+
+## ECS telemetry validity: count mode, thresholding, reset, and reporting epochs
+
+The 2022 Micron DDR5 product-core document makes the earlier phrase `correction telemetry` more precise. ECS exposes an `Error Counter (EC)` and an `Errors per Row Counter (EpRC)`, but their values are not a universal lifetime error ledger.
+
+The EC can count either rows containing at least one detected code-word error or detected code-word errors themselves, depending on the configured count mode. Both EC and EpRC reporting are threshold-conditioned, and EpRC retains a maximum-error-row relation rather than a row-by-row traversal history. Consequently:
+
+> **same counter value != same proposition without count-mode context**
+
+and:
+
+> **thresholded absence of a report != proof that no correctable error occurred**.
+
+Micron also documents an explicit ECS counter reset. Device RESET or the ECS reset control reinitializes counters/address state and resets the reporting registers; while the manual ECS reset control remains asserted, further ECS operations do not continue. The reset therefore belongs to the maintenance-control state machine rather than being only an observer-side log deletion.
+
+This yields another key boundary:
+
+> **telemetry reset != repair rollback**.
+
+Corrected array data already written by earlier scrub work and the later diagnostic summary about that work are separate retained relations.
+
+The product document further says ECS mode/threshold/count selections should not be changed after the first ECS operation without a following RESET / ECS RESET COUNTERS boundary. The project calls the resulting interval a **reporting/configuration epoch**. This is engineering reconstruction, not Micron vocabulary. It means that a retained count is interpretable only together with the measurement definition under which it accumulated.
+
+At the reporting boundary, the Micron interface retains the most recently produced error/max-row summary until a later report replaces it or reset clears it. That makes the state a latest/epoch-bounded diagnostic summary rather than an append-only archive:
+
+> **latest ECS summary != event-by-event history != lifetime error history**.
+
+The later Linux EDAC/CXL ECS control surface independently preserves the same semantic distinctions at a host-policy layer: `mode` selects row versus code-word counting, `threshold` can mask counts below the selected threshold, and `reset` explicitly resets the ECS counter. Linux is used only as a later authority/control boundary; its sysfs values are not projected backward as every Micron DDR5 mode-register encoding.
+
+This deepening also adds an evidence-validity prerequisite. Micron instructs that all array bits be written before ECS to avoid false failures. Therefore **ECS capability != already-valid diagnostic evidence over uninitialized protected state**.
+
+Cross-case comparison is intentionally functional. Case 15's Intel SSD 320 unsafe-shutdown attribute is a cumulative lifetime event count; DDR5 ECS report state is resettable, mode-relative, threshold-filtered, and latest/epoch-bounded. Case 55's NVMe PEL is a bounded typed event log; ECS telemetry is not an event log simply because it survives beyond one corrective operation. [`SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md`](../docs/SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md) now records this as a distinct maintenance-control-state horizon.
+
+No cross-power persistence claim follows. The inspected evidence does not establish that MR16–MR20 survive removal of device power, nor does it close JESD79-5 revision chronology, cross-vendor identity, or hardware fault-validation questions.
+
+Deepening record: [`../evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md`](../evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md).
 
 ## Maintenance and labor
 

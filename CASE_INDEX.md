@@ -4761,3 +4761,24 @@ Deepening record: [`evidence/149-onfi10-20-vendor-feature-space-otp-interface-de
 - **3569 — standard transport != standardized OTP semantics:** ONFI-standard `SET/GET FEATURES` plumbing does not by itself standardize the vendor meaning attached to feature address `90h`. (`E`)
 - **3570 — later mode-gated sequencing is not back-projected into 2006:** the 2014 feature-address state machine does not prove the Rev. D 12/06 device used identical mode selection, control state, firmware, or circuitry. (`X`, rejected upgrade)
 - **3571 — interface chronology != invention or implementation genealogy:** `Legacy OTP Commands`, standards namespace alignment, and same-vendor documentation do not prove direct code/die lineage, first invention, or cross-vendor derivation. (`A, X`)
+
+## Case 45 — DDR5 ECS telemetry-validity deepening findings
+
+Deepening record: [`evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md`](evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md).
+
+- **3572 — Micron ECS maintains EC and EpRC rather than one undifferentiated error count:** the Rev. D 10/2022 product-core record names an Error Counter plus an Errors per Row Counter. (`H/P`)
+- **3573 — EC meaning is mode-relative:** row mode counts rows with at least one detected code-word error while code-word mode counts detected code-word errors, so an equal numeric value does not imply an equal measured proposition. (`H/P, E`)
+- **3574 — ECS reporting is threshold-conditioned:** Micron subjects EC and EpRC reporting/count semantics to threshold filters; later Linux CXL ECS control independently exposes a threshold that masks sub-threshold counts. (`H/P`)
+- **3575 — EpRC is a maximum-row summary:** it retains the row with the largest code-word error count plus that row's address rather than preserving a row-by-row event ledger. (`H/P, E`)
+- **3576 — RESET/ECS reset reinitializes diagnostic and traversal state:** Micron documents counter reset plus internal ECS-address-counter initialization, and ECS RESET COUNTERS resets MR16–MR20. (`H/P`)
+- **3577 — ECS reset is not merely passive log deletion:** while the manual reset control remains asserted, additional ECS operations do not proceed; it must be released before ECS resumes. (`H/P, E`)
+- **3578 — telemetry reset != repair rollback:** clearing diagnostic/control state does not imply reversal of corrected codewords already written back by previous ECS work. (`E`)
+- **3579 — ECS configuration has a reset-bounded validity relation:** Micron says automatic-in-self-refresh, threshold, manual/automatic, and row/code-word selections should not change after the first ECS operation without RESET/ECS RESET COUNTERS; `reporting/configuration epoch` is the project's name for this evidence boundary. (`H/P, E`)
+- **3580 — retained count without configuration context is not self-interpreting:** count mode and threshold are part of the proposition required to interpret a later numeric summary. (`E`)
+- **3581 — ECS result state is latest-summary state rather than append-only history:** the reporting relation retains the most recently produced summary until later replacement or reset, so `latest report != chronological event log != lifetime history`. (`H/P, E`)
+- **3582 — zero/report absence is not an all-history negative proof:** explicit reset and threshold filtering block the inference `zero/hidden counter = no correctable error has ever occurred`. (`E`)
+- **3583 — Linux exposes later host authority over ECS evidence semantics:** official EDAC/CXL ECS controls expose row/code-word mode, threshold, and reset where supported, while remaining a later abstraction rather than proof of identical bare-DDR5 encodings. (`H/P, E, X`)
+- **3584 — corrective work and retained evidence are separate:** ECS read/correct/writeback can alter the array while the diagnostic summary is independently filtered, replaced, or reset. (`E`)
+- **3585 — initialized protected state is an evidence prerequisite:** Micron requires array bits to be written before ECS to avoid false failures, so feature availability does not by itself make telemetry semantically valid over uninitialized state. (`H/P, E`)
+- **3586 — lifetime event count != resettable scrub summary:** Intel SSD 320 SMART C0h and DDR5 ECS telemetry are only functionally analogous second-order evidence; the former is a documented cumulative lifetime event count while the latter is mode-relative, filtered, resettable, and latest/epoch-bounded. (`A, E`)
+- **3587 — no power-cycle, universality, or priority upgrade:** this slice does not establish MR16–MR20 survival across power removal, one-to-one Linux/CXL-to-vendor MR encoding, complete JESD79-5 revision chronology, identical cross-vendor behavior, invention priority, or hardware fault-validation results. (`X`, rejected upgrade)
