@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/runner/work/technical-retention/technical-retention/scripts/tmp_case55_extract_parent_payload.py", line 8, in <module>
+    start = raw.index(start_marker) + len(start_marker)
+            ^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: substring not found
