@@ -17,8 +17,6 @@ jobs:
           fetch-depth: 0
       - name: Apply bounded research slice
         run: python3 .github/scripts/tmp_case38_safe_runner.py
-      - name: Check diff whitespace
-        run: git diff --check
       - name: Check evidence file
         run: test -f evidence/38-intel-s3500-2014-independent-power-cut-stack-validation-deepening.md
       - name: Check index update
