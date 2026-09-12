@@ -19,6 +19,8 @@ Reef documentation says yes. That makes free capacity and repair admission part 
 
 The detailed source ledger is [`../evidence/142-ceph-reef-capacity-gated-recovery-grounding.md`](../evidence/142-ceph-reef-capacity-gated-recovery-grounding.md).
 
+A source-level Reef `v18.2.0` deepening is [`../evidence/142-ceph-reef-source-retry-state-horizon-deepening.md`](../evidence/142-ceph-reef-source-retry-state-horizon-deepening.md).
+
 ---
 
 ## Historical vocabulary
@@ -210,6 +212,30 @@ Therefore:
 > **maintenance admission denied now ≠ maintenance obligation discharged.**
 
 This is the core contribution of the case.
+
+### Reef source deepening: three maintenance-control horizons
+
+The released `v18.2.0` source makes the retry relation more precise than the prose documentation alone.
+
+For recovery, a `RecoveryTooFull` reaction sets `PG_STATE_RECOVERY_TOOFULL` and schedules a later `DoRecovery()` after `osd_recovery_retry_interval`; entering `Recovering` clears the too-full/wait state. For backfill, `RemoteReservationRejectedTooFull` sets `PG_STATE_BACKFILL_TOOFULL`, unwinds the current reservation attempt through `retry()`, and schedules a later `RequestBackfill()` after `osd_backfill_retry_interval`.
+
+This supports three distinct control-state lifetimes:
+
+1. **policy horizon** — OSDMap/configuration fullness policy can govern many attempts;
+2. **episode horizon** — a PG's `_TOOFULL` state reports the current blocked recovery/backfill episode and can be cleared by state transitions/reset;
+3. **retry horizon** — a scheduled peering event retains the shorter obligation to try again later.
+
+Therefore:
+
+`PG flag cleared != fullness policy changed`
+
+and:
+
+`retry scheduled != progress guaranteed`
+
+The project term **retention horizon** is an engineering reconstruction. The source does not establish that the PG flags themselves survive daemon restart, and this slice does not infer mClock behavior from the retry path.
+
+Detailed source ledger: [`../evidence/142-ceph-reef-source-retry-state-horizon-deepening.md`](../evidence/142-ceph-reef-source-retry-state-horizon-deepening.md).
 
 ---
 
@@ -437,7 +463,10 @@ The mechanisms, histories, and failure models are unrelated.
 - raising a ratio does not create capacity and may reduce the safety margin that motivated the gate.
 - completing recovery/backfill does not imply old physical copies were securely erased.
 - OSDMap persistence here is a documented control-state boundary, not a fault-injection proof of storage-stack atomicity.
-- the Reef documentation does not establish exact behavior for every mClock or scheduler configuration.
+- the Reef source deepening does not establish that `_TOOFULL` PG flags themselves survive daemon restart.
+- a scheduled retry does not guarantee eventual progress; unchanged fullness can gate the next attempt again.
+- the Reef documentation/source slice does not establish exact behavior for every mClock or scheduler configuration.
+- upstream standalone QA is intentional project-test evidence, not a named production trace.
 - no throughput, latency, or data-loss probability is inferred without measurement.
 
 ---
@@ -449,7 +478,7 @@ A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/c
 The division of labor is therefore:
 
 - `technical-retention`: capacity as a repair-admission relation; `active != clean`; repair obligation versus repair execution; retained OSDMap policy; spare headroom as maintenance infrastructure;
-- `computing-archaeology`: first-introduction genealogy of fullness ratios/reservations, source-code state-machine evolution, scheduler history, release-by-release behavior, and implementation benchmarks if developed later.
+- `computing-archaeology`: first-introduction genealogy of fullness ratios/reservations, pre/post-Reef state-machine evolution, scheduler history, release-by-release behavior, and implementation benchmarks if developed later. The stable Reef `v18.2.0` source-state baseline is now grounded here rather than duplicated there.
 
 Do not duplicate the general 2006 RADOS history already grounded in Case 05.
 
@@ -463,3 +492,4 @@ Do not duplicate the general 2006 RADOS history already grounded in Case 05.
 - Ceph Project, **Recovery Reservation**, Reef developer documentation: <https://docs.ceph.com/en/reef/dev/osd_internals/recovery_reservation/>.
 - Ceph Project, **Health Checks**, Reef documentation: <https://docs.ceph.com/en/reef/rados/operations/health-checks/>.
 - Related evidence ledger: [`../evidence/142-ceph-reef-capacity-gated-recovery-grounding.md`](../evidence/142-ceph-reef-capacity-gated-recovery-grounding.md).
+- Source-level retry-state deepening: [`../evidence/142-ceph-reef-source-retry-state-horizon-deepening.md`](../evidence/142-ceph-reef-source-retry-state-horizon-deepening.md).

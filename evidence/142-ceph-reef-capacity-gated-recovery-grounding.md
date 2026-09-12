@@ -307,3 +307,13 @@ Accordingly:
 - controlled fault/capacity experiments showing `active+degraded → *_toofull → recovery → active+clean`;
 - behavior when threshold policy itself changes while work is queued;
 - cross-release comparison from pre-Luminous through Reef/Tentacle.
+
+---
+
+## Follow-up — Reef `v18.2.0` source-level retry-state deepening
+
+The documentation-level question in this ledger has now been followed into the released Reef state machine in [`142-ceph-reef-source-retry-state-horizon-deepening.md`](142-ceph-reef-source-retry-state-horizon-deepening.md).
+
+That bounded source slice confirms that too-full recovery/backfill states are coupled to explicit delayed retry events, while the current reservation attempt and PG reporting flags have shorter lifetimes than the cluster fullness policy. It therefore closes the broad Reef-baseline question `capacity rejection -> retryable maintenance obligation` without claiming `_TOOFULL` flag crash persistence, mClock semantics, invention priority, or production prevalence.
+
+Further work should now be narrower: pre/post-Reef transition genealogy, mClock interaction, named operational traces, or controlled fault/capacity experiments.
