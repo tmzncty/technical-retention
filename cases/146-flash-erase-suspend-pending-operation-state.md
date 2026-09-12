@@ -2,9 +2,9 @@
 
 ## Status
 
-**`grounded`** — bounded to the public 1991-priority/1994-published Intel erase-suspend patent line, AMD's November-1996 Am29F040 product contract, and later 1996-priority/1998-public refinements used only to expose checkpoint and capability boundaries.
+**`grounded`** — bounded to the public 1991-priority/1994-published Intel erase-suspend patent line, AMD's November-1996 Am29F040 product contract, Texas Instruments' 1998 TMS29F040 named-product microstate/power-transition contract, and later 1996-priority/1998-public refinements used only to expose checkpoint and capability boundaries.
 
-Grounding record: [`../evidence/146-intel-amd-1991-1998-flash-erase-suspend-grounding.md`](../evidence/146-intel-amd-1991-1998-flash-erase-suspend-grounding.md).
+Grounding records: [`../evidence/146-intel-amd-1991-1998-flash-erase-suspend-grounding.md`](../evidence/146-intel-amd-1991-1998-flash-erase-suspend-grounding.md) + [`../evidence/146-ti-tms29f040-erase-suspend-microstate-power-deepening.md`](../evidence/146-ti-tms29f040-erase-suspend-microstate-power-deepening.md).
 
 ## Scope
 
@@ -145,6 +145,28 @@ Thus:
 
 Shared family naming does not make every revision's state machine identical.
 
+### Texas Instruments TMS29F040: same pending erase, reset internal pulse counter
+
+Texas Instruments' TMS29F040 production datasheet `SMJS820C` (April 1996, revised June 1998) supplies a named-product counterexample to an overly strong interpretation of Resume.
+
+The device asks its internal write-state machine to halt a sector erase at **predetermined breakpoints**. Once suspended, unaffected sectors can be read. The Resume command then restarts the suspended sector-erase operation and describes it as continuing from where it was halted.
+
+But the same Resume paragraph explicitly says that an erase-suspend / erase-resume combination **resets the internal pulse counter to zero** and clears `DQ5`. The status section identifies that counter as the limit on program/erase pulses and uses `DQ5` to report an exceeded timing/pulse limit.
+
+Therefore the product directly grounds:
+
+```text
+same pending erase obligation
+    !=
+bit-for-bit preservation of every internal progress variable
+```
+
+`from where it was halted` is safely read as operation/workflow continuation, not as a promise that every pulse-level controller coordinate remains unchanged.
+
+The same TI datasheet also documents a power-transition boundary. Below its low-VCC write-lockout threshold, command input is disabled and the device is reset to read mode; power-up also enters read mode. That provides named-product evidence that the powered suspend/resume control relation is not specified as a power-cycle-persistent checkpoint. It does **not** establish the exact cell-level condition of a sector whose erase was interrupted by power loss.
+
+Detailed source treatment: [`../evidence/146-ti-tms29f040-erase-suspend-microstate-power-deepening.md`](../evidence/146-ti-tms29f040-erase-suspend-microstate-power-deepening.md).
+
 ### Later Macronix evidence exposes checkpoint semantics
 
 Macronix `US5805501A`, priority 22-May-1996 and publication 8-September-1998, describes a **multiple checkpoint erase suspend algorithm**. Its related-art discussion identifies earlier erase-suspend work, while its own contribution is to increase the number of points at which an erase flow can safely stop: during preconditioning, erase-pulse application, erase verification, and boundaries between phases.
@@ -176,15 +198,11 @@ That relation may be very small compared with the sector payload, but it changes
 
 ### What is *not* established
 
-The sources do not establish one universal internal representation such as a durable program counter or exact analog-progress checkpoint. They also do not prove persistence across:
+The sources do not establish one universal internal representation such as a durable program counter or exact analog-progress checkpoint. The TI TMS29F040 in fact supplies a direct counterexample to exact-microstate preservation: its Resume path preserves the pending sector-erase relation while resetting the internal pulse counter to zero.
 
-- power failure;
-- reset;
-- device removal;
-- brownout;
-- controller replacement.
+The same TI product also resets command/control state to read mode below its low-VCC lockout threshold and on power-up. That is affirmative named-product evidence against treating its suspended erase as a crash-persistent transaction checkpoint. The exact cell-level condition of a power-interrupted target sector remains unspecified here, and the TI rule must not be projected onto every Intel/AMD/Macronix/later-NAND implementation.
 
-So the case grounds **powered operation-state retention**, not a crash-persistent transaction checkpoint.
+So the case grounds **powered operation-state retention with transition-specific state projection**, not universal preservation of controller microstate and not crash-persistent transaction recovery.
 
 ---
 
@@ -333,9 +351,13 @@ This is a functional/chronological comparison, not proof that Case 13's specific
 
 JFFS2 may request erase to reclaim a raw-Flash block and separately retain evidence that erase completed before admitting reuse. Case 146 studies the lower device-level possibility that erase execution itself can be suspended and resumed. Filesystem reclamation state and chip-internal suspend state are not one mechanism.
 
+### Case 45 — DDR5 maintenance-control-state horizons
+
+Case 45 shows that one device transition can preserve some maintenance/diagnostic state while resetting other control state. The TMS29F040 supplies a different functional instance: the pending erase remains resumable across powered Suspend/Resume even though an internal pulse counter is reinitialized. This is a bounded analogy, not circuitry or genealogy.
+
 ### Case 15 — SSD power-loss protection
 
-Both cases distinguish payload nonvolatility from volatile control/maintenance state, but Case 15 has explicit failure-triggered energy/durability concerns. Case 146 has **no evidence** that suspended erase state survives power loss. Suspend must therefore not be analogized to durable SSD transaction recovery.
+Both cases distinguish payload nonvolatility from volatile control/maintenance state, but Case 15 has explicit failure-triggered energy/durability concerns. Case 146's TI deepening instead documents a low-VCC reset to read mode and does **not** establish suspended-erase continuation across power loss. Suspend must therefore not be analogized to durable SSD transaction recovery.
 
 ---
 
