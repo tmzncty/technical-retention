@@ -6,6 +6,8 @@ This evidence record grounds Case 138:
 
 [`../cases/138-redis26-aof-rewrite-current-state-reserialization.md`](../cases/138-redis26-aof-rewrite-current-state-reserialization.md)
 
+Companion genealogy deepening: [`138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md`](138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md)
+
 The bounded object is Redis **2.6.0**, specifically the released `src/aof.c` and `redis.conf` behavior surrounding:
 
 - AOF command replay;
@@ -356,7 +358,7 @@ Therefore this case keeps the retention-specific relation here while routing bro
 ## Remaining evidence gaps
 
 1. Exact first public AOF and BGREWRITEAOF commits/releases.
-2. Exact first automatic-rewrite implementation and its 2.4 release genealogy.
+2. **Closed for the bounded automatic-rewrite chain:** the June-2011 public implementation/hardening -> Redis-2.4 release genealogy is established in [`138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md`](138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md); exact first AOF/BGREWRITEAOF implementation history remains open.
 3. Direct source-to-source comparison with Redis 7 multipart AOF.
 4. Power-cut/process-kill fault injection at:
    - child temp-file completion;

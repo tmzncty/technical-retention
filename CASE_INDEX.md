@@ -4958,3 +4958,23 @@ Deepening record: [`evidence/76-lattice-2014-qualified-by-similarity-retention-d
 - **3729 — X** — Intel's December-2020 D5-P5316 introduction does not establish that launch firmware already exposed PEL, and the March-2021 ACV10100 performance-test note does not establish PEL validation.
 - **3730 — X** — First-party product documentation establishes named-product adoption but does not independently validate every reset, abrupt-power, capacity-pressure, reporting-context, sanitize, or cross-firmware behavior.
 - **3731 — X** — PEL support does not prove complete immutable history, hidden NAND/FTL algorithms, media sanitization, exact product genealogy across every variant, or invention priority.
+
+### Findings 3732–3747 — Case 138 Redis 2.2→2.4 manual/automatic AOF rewrite genealogy
+
+- **3732 — H/P** — The official Redis `2.2.0` tag is dated 22-Feb-2011, providing a released lower bound for the inspected pre-auto-rewrite state rather than an invention-priority date.
+- **3733 — H/P** — Released Redis 2.2.0 `src/aof.c` already contains `bgrewriteaofCommand()` invoking background AOF rewrite, so background rewrite machinery predates the bounded automatic-trigger implementation.
+- **3734 — H/P** — Released Redis 2.2.0 `redis.conf` explicitly points operators to `BGREWRITEAOF` when the append log becomes too large, while the released tree lacks the later `auto-aof-rewrite-percentage` / minimum-size controls.
+- **3735 — H/P** — Official commit `b333e239...` on 10-Jun-2011 is the bounded public automatic-AOF-rewrite implementation event; its message explicitly says `first implementation` and `Still to be tested`.
+- **3736 — H/P** — `b333e239...` adds percentage/minimum-size configuration plus base-size, current-size, and scheduled-rewrite state, making automatic maintenance dependent on retained control/accounting state.
+- **3737 — H/P** — The same initial patch adds a `serverCron` trigger and scheduling around conflicting background save work rather than inventing a separate rewrite engine; it reuses the background rewrite path.
+- **3738 — H/P** — Same-day follow-ups fix division-by-zero, option parsing, observability, and child-concurrency conditions, establishing that the first public patch was not yet settled operating semantics.
+- **3739 — H/P** — Commit `0b17517...` on 12-Jun-2011 changes the trigger arithmetic to growth above the remembered base, explicitly fixing rewrites that started too early.
+- **3740 — H/P** — Commit `11aaf523...` on 9-Aug-2011 widens the trigger's base-size variable from `int` to `long long` to fix auto-rewrite integer overflow, making arithmetic width part of maintenance-policy correctness.
+- **3741 — H/P** — The official Redis `2.4.0` tag is dated 14-Oct-2011, and its released `redis.conf` / `src/redis.c` retain the automatic-rewrite controls and guarded trigger; this is a released adoption floor.
+- **3742 — E** — `manual/background rewrite mechanism exists != automatic rewrite policy exists`; the 2.2→2011 chain separates maintenance capability from the policy that decides when to invoke it.
+- **3743 — E** — Automatic rewrite is history-sensitive control logic: remembered post-rewrite/startup base size plus current AOF size governs future maintenance admission; small control history can govern replacement of a much larger recovery representation.
+- **3744 — E** — `size threshold due != rewrite admitted now != rewrite completed != replacement installed`; child-work guards establish the admission boundary, while Case 138's existing handoff evidence establishes completion/authority boundaries.
+- **3745 — A/E** — Cases 136 and 142 are functional comparison points for separating maintenance reason/policy from admission/execution; they do not establish Redis implementation or genealogy.
+- **3746 — X** — The 10-Jun-2011 public commit is not claimed as invention priority for log compaction/checkpointing, nor does absence of auto controls in released 2.2.0 exclude private branches, prototypes, or unpublished experiments.
+- **3747 — X** — Automatic AOF rewrite and later file replacement do not establish overwrite, Flash erase, crypto erase, or forensic disappearance of retired AOF bytes; media sanitization remains a separate lower-layer question.
+

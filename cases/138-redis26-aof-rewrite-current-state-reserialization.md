@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/138-redis26-aof-rewrite-grounding.md`](../evidence/138-redis26-aof-rewrite-grounding.md).
 
+Automatic-rewrite genealogy deepening: [`../evidence/138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md`](../evidence/138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md).
+
 This case does **not** claim that Redis invented append-only persistence, command logging, log compaction, snapshotting, fork-based persistence, or atomic file replacement. It uses Redis 2.6.0 as a bounded released implementation in which the relation between append history, reconstructed current state, concurrent change capture, replacement authority, and durability policy is unusually explicit.
 
 ## Scope
@@ -359,6 +361,30 @@ Do **not** infer:
 
 Exact first-introduction genealogy for AOF/BGREWRITEAOF/automatic rewrite, earlier database logging/checkpoint precedents, and later Redis persistence evolution belong primarily in `computing-archaeology` if developed.
 
+
+
+## Historical deepening — manual rewrite vs automatic rewrite policy, 2011 to Redis 2.4
+
+The companion 2011–2012 evidence closes one of this case's original genealogy debts without turning the case into a general Redis history.
+
+Released Redis **2.2.0** (22 February 2011) already contains `bgrewriteaofCommand()` and `rewriteAppendOnlyFileBackground()`. Its configuration tells operators to use `BGREWRITEAOF` when an append log becomes too large, but the released tree does not expose the later automatic-rewrite percentage/minimum-size policy.
+
+On **10 June 2011**, public commit `b333e2399778e624174e00d123c2cb3785333e3d` adds automatic AOF rewrite as a policy layer: percentage/minimum-size configuration, remembered base/current AOF sizes, scheduled-rewrite state, and a `serverCron` trigger that can invoke the existing background rewrite path. The commit message itself calls this the first implementation and says it still needs testing.
+
+The following public history matters methodologically. Within hours and days Redis fixes division-by-zero, option parsing, child-concurrency, and the growth formula; on **12 June 2011** commit `0b17517...` changes the calculation from current-size percentage to **growth above the remembered base**. On **9 August 2011**, `11aaf523...` widens the base arithmetic after an integer-overflow report. Released **2.4.0** (14 October 2011) contains the automatic-rewrite controls and guarded trigger.
+
+This establishes a bounded chain:
+
+> `manual/background rewrite mechanism exists` **before** `automatic rewrite policy exists`.
+
+and:
+
+> `maintenance threshold due != work admitted now != rewrite completed != replacement installed`.
+
+The first inequality is grounded by the 2.2→June-2011 source history; the later phases remain grounded by this case's 2.6 handoff analysis. The retained base-size/current-size bookkeeping is maintenance-control state: small state about prior rewrite/startup history that governs a future large representation-maintenance action.
+
+The chronology is not an invention-priority claim. It does not establish the first Redis AOF or `BGREWRITEAOF` commit, private experiments, or broader database checkpoint/log-compaction priority. Those broader questions still belong primarily in `computing-archaeology`.
+
 ## Philosophical interpretation — bounded
 
 The technical fact that matters here is narrow:
@@ -394,7 +420,7 @@ A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/c
 Division of labor:
 
 - **technical-retention:** keep the current-state/history/delta/replacement-authority/durability-policy comparison developed here;
-- **computing-archaeology:** if pursued, recover the broader genealogy of Redis persistence, the earliest AOF/BGREWRITEAOF/automatic-rewrite commits/releases, background-fork design constraints, RDB/AOF evolution, and Redis 7 multipart-AOF transition;
+- **computing-archaeology:** if pursued, recover the broader genealogy of Redis persistence, the earliest AOF/BGREWRITEAOF commits/releases, broader automatic-maintenance/database-checkpoint precedents, background-fork design constraints, RDB/AOF evolution, and Redis 7 multipart-AOF transition;
 - **problem-history:** useful only if later work asks what problem Redis authors explicitly framed AOF rewrite as solving at different dates.
 
 ## Sources
@@ -415,7 +441,7 @@ The current documentation is useful for later continuity/evolution and feature-h
 ## Next work
 
 - locate and inspect the exact first public AOF/BGREWRITEAOF implementations rather than inferring them from later documentation;
-- establish the 2.4 automatic-rewrite genealogy from release/source history;
+- the bounded June-2011 -> Redis-2.4 automatic-rewrite introduction/release chain is now closed by the companion genealogy deepening; exact first AOF/BGREWRITEAOF implementation history remains open;
 - compare 2.6 single-file rewrite with Redis 7 multipart AOF without back-projecting the later manifest/base/incremental structure;
 - run crash/fault injection around child completion, parent-delta merge, rename, directory durability, and process/power interruption;
 - compare rewrite amplification and recovery time empirically under update-heavy workloads;
