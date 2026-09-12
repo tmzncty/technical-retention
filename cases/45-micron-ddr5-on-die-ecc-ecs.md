@@ -8,6 +8,8 @@ Grounding record: [`../evidence/45-micron-ddr5-2021-2026-odecc-ecs-grounding.md`
 
 Telemetry-validity deepening: [`../evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md`](../evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md).
 
+Self-refresh/PASR transition-horizon deepening: [`../evidence/45-micron-ddr5-self-refresh-transition-state-horizon-deepening.md`](../evidence/45-micron-ddr5-self-refresh-transition-state-horizon-deepening.md).
+
 ## Scope
 
 This case asks a narrow question left open by Cases 33, 40, and 43:
@@ -253,6 +255,40 @@ Cross-case comparison is intentionally functional. Case 15's Intel SSD 320 unsaf
 No cross-power persistence claim follows. The inspected evidence does not establish that MR16–MR20 survive removal of device power, nor does it close JESD79-5 revision chronology, cross-vendor identity, or hardware fault-validation questions.
 
 Deepening record: [`../evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md`](../evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md).
+
+
+## Self-refresh transition horizons: preserved ECS state, reset refresh phase, and PASR validity
+
+The manufacturer record adds a transition-specific refinement to the earlier telemetry analysis. Micron's DDR5 product-core document states that ordinary self-refresh entry/exit **does not reset the ECS transparency counters/registers**. Automatic ECS can continue while self refresh is active, with its internal rate synchronized to the self-refresh oscillator, and the allowed interval before a later REFab/self-refresh opportunity may restart after exit.
+
+The same document gives a different transition rule for Same Bank Refresh: entering/exiting self refresh resets the internal REFsb bank counter. If all banks were not covered before entry, Micron prescribes compensating post-exit refresh work. One self-refresh transition can therefore preserve one maintenance-control relation while reinitializing another:
+
+```text
+self-refresh entry / exit
+    -> ECS transparency counters/registers preserved
+    -> ECS interval timing may restart
+    -> REFsb bank-enumeration phase reset
+```
+
+This grounds a new relation:
+
+> **same device transition != same persistence horizon for every maintenance-control state**.
+
+Partial Array Self Refresh sharpens the point further. When PASR masks segments, those segments are not guaranteed to retain data and need not receive ECS in self refresh. Micron warns that ECS transparency may then be inaccurate; after exit, the masked segments must be initialized with known data and ECS counters reset before the next accurate full-array scrub is claimed. Thus a register value can survive the transition while the evidential relation that gave the value its full-array meaning no longer survives:
+
+> **retained diagnostic bits != retained diagnostic validity**
+
+and:
+
+> **report continuity != measurement-population continuity**.
+
+The explicit ECS RESET / device RESET path remains different: it reinitializes ECS counters/address state and MR16–MR20. Self-refresh continuity therefore does **not** establish cross-power nonvolatility. It establishes only a narrower transition lifetime inside the powered self-refresh regime.
+
+Public SK hynix DDR5 product documents provide a bounded independent-vendor witness for the same broad distinction between self-refresh ECS operation and explicit RESET/ECS-reset authority. That similarity is not promoted into a universal JEDEC identity; direct revision-by-revision normative audit and independent hardware fault/power-transition validation remain open.
+
+This deepening also links back to Cases 09 and 21 without duplicating them. Case 09 remains the refresh-counter phase case; Case 21 remains the maintenance-responsibility handoff case. Case 45 adds the later DDR5-specific result that maintenance authority, coverage phase, scheduling interval, and diagnostic summary can cross the same mode boundary differently.
+
+Deepening record: [`../evidence/45-micron-ddr5-self-refresh-transition-state-horizon-deepening.md`](../evidence/45-micron-ddr5-self-refresh-transition-state-horizon-deepening.md).
 
 ## Maintenance and labor
 

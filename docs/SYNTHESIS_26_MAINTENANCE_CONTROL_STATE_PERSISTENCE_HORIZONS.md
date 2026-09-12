@@ -267,6 +267,18 @@ This also sharpens the comparison with Case 15. A cumulative lifetime unsafe-shu
 
 The project term `reporting/configuration epoch` is used only to describe the validity interval over which a count mode/threshold and its accumulated summary can be interpreted together. It is not Micron or JEDEC historical vocabulary, and this synthesis does not claim the reporting registers survive power removal.
 
+The Case 45 self-refresh/PASR deepening now adds a transition-relative refinement. Micron states that ordinary self-refresh entry/exit does not reset ECS transparency counters/registers, while the same transition resets the Same Bank Refresh internal bank counter; ECS interval timing may restart after exit. Under PASR, the counters can remain while the full-array evidential interpretation becomes invalid enough that known-data initialization plus counter reset is required before a later accurate full-array scrub.
+
+Therefore the synthesis must add two rules:
+
+> **same transition != same persistence horizon for every maintenance-control state**
+
+and:
+
+> **retained control state != retained validity of the proposition that state once supported**.
+
+This is still not a cross-power claim. It makes the comparison more precise by classifying the transition boundary and the evidence-validity domain alongside the state itself.
+
 ---
 
 ## 10. Persistence horizon ≠ authority
@@ -383,6 +395,7 @@ The interpretation stops there. The evidence does not justify `machines remember
 - **`duplicate control state implies consensus or crash atomicity` — rejected.** The BBT mirror is a local reconciliation mechanism with explicit fault limits.
 - **`control-state loss implies payload loss` — rejected as a universal rule.** Cursor loss can cause replay; telemetry loss can lose diagnosis; other control-state failures can be much more severe.
 - **`payload survival implies control-state survival` — rejected.** A physical replica can survive while a restarted NameNode has not yet re-observed it.
+- **`one transition gives every maintenance-control state the same lifetime` — rejected.** DDR5 self-refresh entry/exit preserves ECS transparency state while resetting REFsb bank phase, and PASR can preserve bits while invalidating their prior full-array evidential scope.
 
 ---
 
