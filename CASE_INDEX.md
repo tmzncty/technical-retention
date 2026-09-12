@@ -4740,4 +4740,3 @@ Deepening record: [`evidence/111-ibm-ess-post-offline-scrub-completion-deepening
 - **3553 — retained service can require witnessed recommissioning:** project interpretation treats the sequence from offline interval through scrub completion as active recommissioning rather than mere restoration of electrical power; this is not IBM historical vocabulary. (`I`)
 - **3554 — no device-internal completion claim:** `End scrubbing tracks ...` does not prove every drive-internal retention task, controller metadata pass, or NAND refresh operation has completed. (`X`, rejected upgrade)
 - **3555 — no invention or universal-policy claim:** the evidence does not establish first invention of scrubbing, a universal SSD cadence, or applicability beyond the documented ESS/Spectrum Scale RAID context. (`X`, rejected upgrade)
-
