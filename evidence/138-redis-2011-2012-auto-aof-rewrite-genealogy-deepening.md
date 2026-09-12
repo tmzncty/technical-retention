@@ -11,11 +11,13 @@ The bounded chain is:
 3. released Redis 2.4.0 on 14 October 2011;
 4. continuity into the already-grounded Redis 2.6.0 behavior.
 
-This does **not** establish the first invention of append-only logging, the first Redis AOF implementation, the first `BGREWRITEAOF` implementation, database-log compaction priority, or private/unpublished experiments.
+This does **not** establish the first invention of append-only logging, database-log compaction priority, or private/unpublished experiments. The separate 2009 origin deepening now supplies bounded public-repository first-appearance evidence for Redis AOF serialization and `BGREWRITEAOF`; this record remains scoped to the later automatic-policy layer.
 
 Case: [`../cases/138-redis26-aof-rewrite-current-state-reserialization.md`](../cases/138-redis26-aof-rewrite-current-state-reserialization.md)
 
 Grounding record: [`138-redis26-aof-rewrite-grounding.md`](138-redis26-aof-rewrite-grounding.md)
+
+Earlier public-implementation origin record: [`138-redis-2009-aof-bgrewriteaof-origin-deepening.md`](138-redis-2009-aof-bgrewriteaof-origin-deepening.md). It now bounds append-only serialization to 30 October 2009 and the first directly parent-diffed public `BGREWRITEAOF` implementation to 26 November 2009; this file remains responsible for the later automatic-policy layer.
 
 ## Evidence labels
 

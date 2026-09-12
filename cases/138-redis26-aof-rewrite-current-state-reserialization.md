@@ -8,6 +8,8 @@ Grounding record: [`../evidence/138-redis26-aof-rewrite-grounding.md`](../eviden
 
 Automatic-rewrite genealogy deepening: [`../evidence/138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md`](../evidence/138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md).
 
+Early AOF / BGREWRITEAOF public-implementation origin deepening: [`../evidence/138-redis-2009-aof-bgrewriteaof-origin-deepening.md`](../evidence/138-redis-2009-aof-bgrewriteaof-origin-deepening.md).
+
 This case does **not** claim that Redis invented append-only persistence, command logging, log compaction, snapshotting, fork-based persistence, or atomic file replacement. It uses Redis 2.6.0 as a bounded released implementation in which the relation between append history, reconstructed current state, concurrent change capture, replacement authority, and durability policy is unusually explicit.
 
 ## Scope
@@ -52,6 +54,20 @@ The inspected Redis 2.6.0 artifacts use:
 - `current dataset` / dataset-rebuilding language in source comments.
 
 `current-state re-serialization`, `concurrent delta bridge`, `replacement authority`, and `history-equivalence boundary` below are **project engineering terms**, not Redis 2.6 historical vocabulary.
+
+## Genealogy boundary added by the 2009 deepening
+
+The public Redis repository now supplies a narrower origin chain for the mechanisms used here. Commit `44b38ef...` on 30 October 2009 explicitly introduces append-only write serialization while saying loading is not yet implemented; on 1 November the first loading implementation is still labelled broken before an immediate fix. Commit `9d65a1...` on 26 November then introduces the server-side `BGREWRITEAOF` path, parent-held rewrite-difference state, and completion handler, while its direct parent lacks `bgrewriteaofCommand`. The introducing commit calls itself work in progress. Automatic size-growth policy is later, in the 2011 lineage documented separately.
+
+This strengthens the case's bounded separation without making an invention claim:
+
+`append serialization`
+`!= replay/recovery`
+`!= background rewrite mechanism`
+`!= automatic rewrite policy`
+`!= completed/installed replacement`.
+
+The dates are public-repository lower bounds for Redis implementation, not priority dates for the underlying techniques.
 
 ## Historical record
 

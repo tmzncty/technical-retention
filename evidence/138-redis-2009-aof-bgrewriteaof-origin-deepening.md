@@ -1,19 +1,4 @@
-from pathlib import Path
-
-
-def replace_once(path: str, old: str, new: str) -> None:
-    p = Path(path)
-    text = p.read_text(encoding="utf-8")
-    if old not in text:
-        raise SystemExit(f"anchor missing in {path}: {old[:80]!r}")
-    p.write_text(text.replace(old, new, 1), encoding="utf-8")
-
-
-evidence_path = Path("evidence/138-redis-2009-aof-bgrewriteaof-origin-deepening.md")
-if evidence_path.exists():
-    raise SystemExit("origin evidence already exists")
-
-evidence_path.write_text(r'''# Redis 2009 AOF / BGREWRITEAOF Public-Implementation Origin Deepening
+# Redis 2009 AOF / BGREWRITEAOF Public-Implementation Origin Deepening
 
 ## Scope
 
@@ -156,9 +141,9 @@ The later policy therefore retains a small amount of maintenance-control history
 
 The 2009 introduction already separates a child-produced base rewrite from parent-held differences and later completion handling. That yields the same bounded state distinctions grounded more fully in Redis 2.6:
 
-`command accepted / child launched`  
-`!= child rewrite produced`  
-`!= parent delta appended`  
+`command accepted / child launched`
+`!= child rewrite produced`
+`!= parent delta appended`
 `!= replacement made authoritative`.
 
 This does not assert that all later 2.6 details were byte-for-byte identical in the 2009 work-in-progress implementation.
@@ -205,66 +190,3 @@ This slice closes the **bounded public-repository first-appearance debt** for Re
 3. prior art outside Redis for append logging, log rewriting, checkpointing, copy-and-switch replacement, and fork-based persistence;
 4. exact crash/fault behavior of the 2009 implementation;
 5. lower-layer filesystem/device durability and sanitization behavior.
-''', encoding="utf-8")
-
-case_path = "cases/138-redis26-aof-rewrite-current-state-reserialization.md"
-case_anchor = "Automatic-rewrite genealogy deepening: [`../evidence/138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md`](../evidence/138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md).\n"
-replace_once(case_path, case_anchor, case_anchor + "\nEarly AOF / BGREWRITEAOF public-implementation origin deepening: [`../evidence/138-redis-2009-aof-bgrewriteaof-origin-deepening.md`](../evidence/138-redis-2009-aof-bgrewriteaof-origin-deepening.md).\n")
-case_marker = "## Historical record\n"
-case_insert = """## Genealogy boundary added by the 2009 deepening
-
-The public Redis repository now supplies a narrower origin chain for the mechanisms used here. Commit `44b38ef...` on 30 October 2009 explicitly introduces append-only write serialization while saying loading is not yet implemented; on 1 November the first loading implementation is still labelled broken before an immediate fix. Commit `9d65a1...` on 26 November then introduces the server-side `BGREWRITEAOF` path, parent-held rewrite-difference state, and completion handler, while its direct parent lacks `bgrewriteaofCommand`. The introducing commit calls itself work in progress. Automatic size-growth policy is later, in the 2011 lineage documented separately.
-
-This strengthens the case's bounded separation without making an invention claim:
-
-`append serialization`  
-`!= replay/recovery`  
-`!= background rewrite mechanism`  
-`!= automatic rewrite policy`  
-`!= completed/installed replacement`.
-
-The dates are public-repository lower bounds for Redis implementation, not priority dates for the underlying techniques.
-
-"""
-replace_once(case_path, case_marker, case_insert + case_marker)
-
-later_path = "evidence/138-redis-2011-2012-auto-aof-rewrite-genealogy-deepening.md"
-later_anchor = "Grounding record: [`138-redis26-aof-rewrite-grounding.md`](138-redis26-aof-rewrite-grounding.md)\n"
-replace_once(later_path, later_anchor, later_anchor + "\nEarlier public-implementation origin record: [`138-redis-2009-aof-bgrewriteaof-origin-deepening.md`](138-redis-2009-aof-bgrewriteaof-origin-deepening.md). It now bounds append-only serialization to 30 October 2009 and the first directly parent-diffed public `BGREWRITEAOF` implementation to 26 November 2009; this file remains responsible for the later automatic-policy layer.\n")
-replace_once(later_path,
-    "This does **not** establish the first invention of append-only logging, the first Redis AOF implementation, the first `BGREWRITEAOF` implementation, database-log compaction priority, or private/unpublished experiments.",
-    "This does **not** establish the first invention of append-only logging, database-log compaction priority, or private/unpublished experiments. The separate 2009 origin deepening now supplies bounded public-repository first-appearance evidence for Redis AOF serialization and `BGREWRITEAOF`; this record remains scoped to the later automatic-policy layer.")
-
-roadmap_path = "ROADMAP.md"
-roadmap_anchor = "## Phase 2 — Build missing technical bridges\n\n"
-roadmap_bullet = "- [x] **Case 138 Redis 2009 AOF / BGREWRITEAOF public-origin deepening:** [`cases/138-redis26-aof-rewrite-current-state-reserialization.md`](cases/138-redis26-aof-rewrite-current-state-reserialization.md) + [`evidence/138-redis-2009-aof-bgrewriteaof-origin-deepening.md`](evidence/138-redis-2009-aof-bgrewriteaof-origin-deepening.md) now direct-parent-diff the public Redis repository chronology: `44b38ef...` on 30-Oct-2009 explicitly adds append-only write serialization while loading is absent; replay appears on 1-Nov first as broken and then fixed; `9d65a1...` on 26-Nov-2009 introduces server-side `BGREWRITEAOF`, child/background rewrite state, the parent difference buffer, and completion handling, while its direct parent lacks `bgrewriteaofCommand`. This closes the bounded public-tree first-appearance debt for AOF serialization and BGREWRITEAOF and connects cleanly to the existing 2011 automatic-policy genealogy. Release/tag genealogy between the 2009 WIP mechanism and released 2.2.0, private history, non-Redis prior art, and 2009 fault behavior remain open; broad persistence/compaction genealogy belongs in `computing-archaeology`.\n\n"
-replace_once(roadmap_path, roadmap_anchor, roadmap_anchor + roadmap_bullet)
-
-index = Path("CASE_INDEX.md")
-text = index.read_text(encoding="utf-8")
-if "**3764 —" in text or "Findings 3764–3779" in text:
-    raise SystemExit("finding range already used")
-if "**3763 —" not in text:
-    raise SystemExit("expected current finding 3763 missing")
-findings = r'''
-
-### Findings 3764–3779 — Case 138 Redis 2009 AOF / BGREWRITEAOF public-origin genealogy
-
-- **3764 — H/P*** — Redis commit `44b38ef43259e8805b01db01ad9a1c67479c6194` (30-Oct-2009) explicitly calls itself the initial append-only-mode implementation and says loading is not yet implemented.
-- **3765 — H/P*** — `44b38ef...` adds append-only server/file state and `feedAppendOnlyFile()`, so public-tree append serialization is directly present before public-tree restart replay support is complete.
-- **3766 — H/P*** — The same commit's `redis.conf` already describes startup reconstruction from the append log even though the commit message says loading is absent, separating documented intent from executable support at that revision.
-- **3767 — H/P*** — Commit `f80dff6212661a404c7c32c6741691b6255a4e31` on 1-Nov-2009 adds a first loading implementation while explicitly calling it broken and warning against use.
-- **3768 — H/P*** — Commit `9387d17dfeb757d685236ff5c792d102ea296631`, ten minutes later on 1-Nov-2009, is titled `append only file loading fixed`, evidencing immediate replay-path maturation rather than a single atomic origin event.
-- **3769 — H/P*** — The direct parent `210e29f7d276be1bbbaf1b711b654dd6834f8e93` of the 26-Nov rewrite-introduction commit has ordinary AOF machinery but no `bgrewriteaofCommand` symbol in `redis.c`.
-- **3770 — H/P*** — Commit `9d65a1bbae9e59269472e8067cb2fff1e1cce24c` (26-Nov-2009) adds the server-side `bgrewriteaof` command and `bgrewriteaofCommand()`.
-- **3771 — H/P*** — The same `9d65a1...` patch adds background-rewrite child state, a parent rewrite buffer, and completion handling that appends parent-side differences to the child-produced temporary AOF before replacement.
-- **3772 — H/P*** — `9d65a1...` labels the rewrite work `work in progress` and asks users to wait for an OK commit, so its date is an implementation lower bound rather than a stable-release boundary.
-- **3773 — H/P*** — Commit `85a831729fc5d38370b304dffee0fa381e27de42` later on 26-Nov-2009 is titled `append only file fixes`, corroborating immediate post-introduction hardening.
-- **3774 — H/P*** — Commit `b3fad521cc3752b48fdf43c10237527ea2a99d5b` on 12-Dec-2009 adds BGREWRITEAOF in-progress observability to INFO; because its parent already contains the rewrite functions, it is not the mechanism's origin.
-- **3775 — E** — `append-only serialization exists != replay/recovery exists`; the 30-Oct commit is direct historical evidence that those capabilities can enter a system at different revisions.
-- **3776 — E** — `documented intended recovery != implemented recovery at the same revision`, and `first replay implementation != tested/released/stable replay contract`.
-- **3777 — E** — The Redis public chronology now separates `append serialization != replay != background rewrite mechanism != automatic rewrite policy != completed/installed replacement` rather than collapsing these into one AOF feature date.
-- **3778 — A/E** — Cases 136 and 142 remain bounded functional comparisons for mechanism/policy/admission/execution separation; they do not establish Redis genealogy or shared implementation lineage.
-- **3779 — X** — The 2009 public-repository lower bounds do not establish invention priority, exclude private/unpublished Redis work or external prior art, prove 2009 crash correctness, or turn logical AOF replacement into physical-media sanitization.
-'''
-index.write_text(text.rstrip() + findings + "\n", encoding="utf-8")

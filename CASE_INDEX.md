@@ -4997,3 +4997,22 @@ Deepening record: [`evidence/76-lattice-2014-qualified-by-similarity-retention-d
 - **3762 — X** — The 1998 TI production-data witness does not establish invention priority, a universal NOR-Flash suspend implementation, exact hidden register layout, or behavior of Intel/AMD/Macronix/later-NAND devices.
 - **3763 — X** — Suspend, Resume, low-VCC reset to read mode, or even successful sector erase do not by themselves establish secure sanitization, forensic non-recoverability, or a known uniform cell state after an interrupted erase.
 
+### Findings 3764–3779 — Case 138 Redis 2009 AOF / BGREWRITEAOF public-origin genealogy
+
+- **3764 — H/P*** — Redis commit `44b38ef43259e8805b01db01ad9a1c67479c6194` (30-Oct-2009) explicitly calls itself the initial append-only-mode implementation and says loading is not yet implemented.
+- **3765 — H/P*** — `44b38ef...` adds append-only server/file state and `feedAppendOnlyFile()`, so public-tree append serialization is directly present before public-tree restart replay support is complete.
+- **3766 — H/P*** — The same commit's `redis.conf` already describes startup reconstruction from the append log even though the commit message says loading is absent, separating documented intent from executable support at that revision.
+- **3767 — H/P*** — Commit `f80dff6212661a404c7c32c6741691b6255a4e31` on 1-Nov-2009 adds a first loading implementation while explicitly calling it broken and warning against use.
+- **3768 — H/P*** — Commit `9387d17dfeb757d685236ff5c792d102ea296631`, ten minutes later on 1-Nov-2009, is titled `append only file loading fixed`, evidencing immediate replay-path maturation rather than a single atomic origin event.
+- **3769 — H/P*** — The direct parent `210e29f7d276be1bbbaf1b711b654dd6834f8e93` of the 26-Nov rewrite-introduction commit has ordinary AOF machinery but no `bgrewriteaofCommand` symbol in `redis.c`.
+- **3770 — H/P*** — Commit `9d65a1bbae9e59269472e8067cb2fff1e1cce24c` (26-Nov-2009) adds the server-side `bgrewriteaof` command and `bgrewriteaofCommand()`.
+- **3771 — H/P*** — The same `9d65a1...` patch adds background-rewrite child state, a parent rewrite buffer, and completion handling that appends parent-side differences to the child-produced temporary AOF before replacement.
+- **3772 — H/P*** — `9d65a1...` labels the rewrite work `work in progress` and asks users to wait for an OK commit, so its date is an implementation lower bound rather than a stable-release boundary.
+- **3773 — H/P*** — Commit `85a831729fc5d38370b304dffee0fa381e27de42` later on 26-Nov-2009 is titled `append only file fixes`, corroborating immediate post-introduction hardening.
+- **3774 — H/P*** — Commit `b3fad521cc3752b48fdf43c10237527ea2a99d5b` on 12-Dec-2009 adds BGREWRITEAOF in-progress observability to INFO; because its parent already contains the rewrite functions, it is not the mechanism's origin.
+- **3775 — E** — `append-only serialization exists != replay/recovery exists`; the 30-Oct commit is direct historical evidence that those capabilities can enter a system at different revisions.
+- **3776 — E** — `documented intended recovery != implemented recovery at the same revision`, and `first replay implementation != tested/released/stable replay contract`.
+- **3777 — E** — The Redis public chronology now separates `append serialization != replay != background rewrite mechanism != automatic rewrite policy != completed/installed replacement` rather than collapsing these into one AOF feature date.
+- **3778 — A/E** — Cases 136 and 142 remain bounded functional comparisons for mechanism/policy/admission/execution separation; they do not establish Redis genealogy or shared implementation lineage.
+- **3779 — X** — The 2009 public-repository lower bounds do not establish invention priority, exclude private/unpublished Redis work or external prior art, prove 2009 crash correctness, or turn logical AOF replacement into physical-media sanitization.
+
