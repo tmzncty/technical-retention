@@ -21,6 +21,8 @@ The detailed source ledger is [`../evidence/142-ceph-reef-capacity-gated-recover
 
 A source-level Reef `v18.2.0` deepening is [`../evidence/142-ceph-reef-source-retry-state-horizon-deepening.md`](../evidence/142-ceph-reef-source-retry-state-horizon-deepening.md).
 
+A source-level projected-capacity accounting deepening is [`../evidence/142-ceph-reef-projected-backfill-admission-accounting-deepening.md`](../evidence/142-ceph-reef-projected-backfill-admission-accounting-deepening.md).
+
 ---
 
 ## Historical vocabulary
@@ -252,6 +254,26 @@ Engineering reconstruction:
 > **projected maintenance occupancy can constrain present maintenance admission.**
 
 That is a future-capacity relation, not a forecast of hardware failure.
+
+### Reef source deepening: projected backfill bytes are admission state, not exact preallocation
+
+The released Reef `v18.2.0` source makes the health-check wording about projected occupancy concrete. `MBackfillReserve` carries `primary_num_bytes` and `shard_num_bytes` into the remote reservation path. For an ordinary replicated PG, `pending_backfill()` treats the extra capacity claim as `max(0, primary_bytes - local_bytes)` rather than charging the target for the entire source PG again.
+
+For erasure-coded pools, the source explicitly says it **overestimates by a full stripe per object** because exact per-object stripe rounding is not known at that point. Nearby comments also state that compression information, metadata overhead, and omap overhead are not fully available to the calculation.
+
+The target passes the resulting `pending_adjustment` into `tentative_backfill_full()`. `OSDService::compute_adjusted_ratio()` applies the proposed increment and also folds in pending backfill state from other PGs before comparing the adjusted ratio with the ordinary fullness thresholds. At the same time, Reef keeps a separate raw `physical_ratio`; the failsafe-full branch uses that raw ratio while `FULL` / `BACKFILLFULL` / `NEARFULL` are evaluated against the adjusted quantity.
+
+This closes a more precise relation than the documentation alone:
+
+```text
+current raw physical utilization
+    != utilization adjusted for already-promised + proposed backfill bytes
+    != exact future backend allocation
+```
+
+Engineering reconstruction: physically empty bytes can already be partly **spoken for** by admitted maintenance work before those bytes are materially occupied. But this is retained accounting/control state, not an exact disk-extent reservation and not another payload copy. Reservation acceptance therefore does not guarantee eventual completion, while rejection does not prove loss; it changes the present admissibility of a still-owed repair.
+
+Full source and approximation boundaries: [`../evidence/142-ceph-reef-projected-backfill-admission-accounting-deepening.md`](../evidence/142-ceph-reef-projected-backfill-admission-accounting-deepening.md).
 
 ---
 
@@ -493,3 +515,4 @@ Do not duplicate the general 2006 RADOS history already grounded in Case 05.
 - Ceph Project, **Health Checks**, Reef documentation: <https://docs.ceph.com/en/reef/rados/operations/health-checks/>.
 - Related evidence ledger: [`../evidence/142-ceph-reef-capacity-gated-recovery-grounding.md`](../evidence/142-ceph-reef-capacity-gated-recovery-grounding.md).
 - Source-level retry-state deepening: [`../evidence/142-ceph-reef-source-retry-state-horizon-deepening.md`](../evidence/142-ceph-reef-source-retry-state-horizon-deepening.md).
+- Projected-backfill admission accounting: [`../evidence/142-ceph-reef-projected-backfill-admission-accounting-deepening.md`](../evidence/142-ceph-reef-projected-backfill-admission-accounting-deepening.md).
