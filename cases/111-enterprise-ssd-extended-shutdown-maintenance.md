@@ -8,6 +8,8 @@ Grounding record: [`../evidence/111-ibm-dell-2020-2026-ssd-extended-shutdown-gro
 
 NetApp rated-life/offline-retention telemetry deepening: [`../evidence/111-netapp-rated-life-offline-retention-telemetry-deepening.md`](../evidence/111-netapp-rated-life-offline-retention-telemetry-deepening.md).
 
+IBM ESS post-offline scrub-completion deepening: [`../evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md`](../evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md).
+
 ## Scope
 
 - **Object / system:** enterprise SSD/NVMe storage kept powered off for extended periods, as addressed by IBM storage-system support guidance and Dell PowerEdge support guidance.
@@ -140,6 +142,23 @@ immediate failure verdict
 ```
 
 NetApp does **not** provide the IBM/Dell periodic power-up cadence in the inspected evidence. The bounded addition is a wear-state **admission/replacement policy**, not another documented refresh schedule.
+
+## IBM ESS follow-up — post-offline scrub and operator-visible completion
+
+A bounded ESS-specific follow-up is now grounded in [`evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md`](../evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md).
+
+IBM's _Spectrum Scale RAID Frequently Asked Questions and Answers_ goes beyond the generic instruction to restore power after an extended SSD shutdown. For an SSD-based ESS system powered off for two months, it tells the operator to power the system on **to allow the disk scrubbing process to complete a run**, and gives an `mmfs` completion message — `End scrubbing tracks of ...` — to be observed for each vdisk in each declustered array. The same FAQ separately gives a time-based recommendation of at least two weeks powered after two months off.
+
+This sharpens the case's maintenance state machine:
+
+```text
+calendar intervention point
+    != powered maintenance opportunity
+    != named scrub execution
+    != observed per-vdisk scrub completion
+```
+
+The evidence remains system-layer evidence. A Spectrum Scale RAID scrub completion message does **not** prove that every NAND cell was read or rewritten, does not expose drive-firmware refresh thresholds, and does not establish that every hidden device-local retention task is complete. The same IBM passage separately prescribes **Sanitize with Block Erase** when drives are to be cleared for later reuse, so `scrub complete != sanitize complete` is directly preserved in the vendor record.
 
 ## Engineering reconstruction
 

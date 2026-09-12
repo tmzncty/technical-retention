@@ -1,8 +1,4 @@
-from pathlib import Path
-
-EVIDENCE_PATH = Path('evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md')
-assert not EVIDENCE_PATH.exists(), EVIDENCE_PATH
-EVIDENCE = r'''# Evidence 111C — IBM ESS post-offline scrub completion deepening
+# Evidence 111C — IBM ESS post-offline scrub completion deepening
 
 **Status:** `grounded`
 
@@ -250,76 +246,3 @@ power restored != scrub complete
 scrub complete != every NAND cell rewritten
 scrub complete != sanitize complete
 ```
-'''
-EVIDENCE_PATH.write_text(EVIDENCE, encoding='utf-8')
-
-case_path = Path('cases/111-enterprise-ssd-extended-shutdown-maintenance.md')
-case = case_path.read_text(encoding='utf-8')
-assert '111-ibm-ess-post-offline-scrub-completion-deepening.md' not in case
-nav_anchor = 'NetApp rated-life/offline-retention telemetry deepening: [`../evidence/111-netapp-rated-life-offline-retention-telemetry-deepening.md`](../evidence/111-netapp-rated-life-offline-retention-telemetry-deepening.md).'
-assert nav_anchor in case
-case = case.replace(nav_anchor, nav_anchor + '\n\nIBM ESS post-offline scrub-completion deepening: [`../evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md`](../evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md).', 1)
-
-marker = '## Engineering reconstruction\n'
-assert marker in case
-follow = r'''## IBM ESS follow-up — post-offline scrub and operator-visible completion
-
-A bounded ESS-specific follow-up is now grounded in [`evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md`](../evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md).
-
-IBM's _Spectrum Scale RAID Frequently Asked Questions and Answers_ goes beyond the generic instruction to restore power after an extended SSD shutdown. For an SSD-based ESS system powered off for two months, it tells the operator to power the system on **to allow the disk scrubbing process to complete a run**, and gives an `mmfs` completion message — `End scrubbing tracks of ...` — to be observed for each vdisk in each declustered array. The same FAQ separately gives a time-based recommendation of at least two weeks powered after two months off.
-
-This sharpens the case's maintenance state machine:
-
-```text
-calendar intervention point
-    != powered maintenance opportunity
-    != named scrub execution
-    != observed per-vdisk scrub completion
-```
-
-The evidence remains system-layer evidence. A Spectrum Scale RAID scrub completion message does **not** prove that every NAND cell was read or rewritten, does not expose drive-firmware refresh thresholds, and does not establish that every hidden device-local retention task is complete. The same IBM passage separately prescribes **Sanitize with Block Erase** when drives are to be cleared for later reuse, so `scrub complete != sanitize complete` is directly preserved in the vendor record.
-
-'''
-case = case.replace(marker, follow + marker, 1)
-case_path.write_text(case, encoding='utf-8')
-
-roadmap_path = Path('ROADMAP.md')
-roadmap = roadmap_path.read_text(encoding='utf-8')
-assert 'Case 111 IBM ESS post-offline scrub completion' not in roadmap
-phase = '## Phase 2 — Build missing technical bridges\n\n'
-assert phase in roadmap
-bullet = "- [x] **Case 111 IBM ESS post-offline scrub completion:** [`cases/111-enterprise-ssd-extended-shutdown-maintenance.md`](cases/111-enterprise-ssd-extended-shutdown-maintenance.md) + [`evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md`](evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md) ground an ESS-specific transition from two-month offline policy to powered disk-scrub execution and per-vdisk `mmfs` completion evidence, while keeping `power restored != scrub complete != every NAND cell rewritten != sanitize complete`.\n"
-roadmap = roadmap.replace(phase, phase + bullet, 1)
-roadmap_path.write_text(roadmap, encoding='utf-8')
-
-index_path = Path('CASE_INDEX.md')
-idx = index_path.read_text(encoding='utf-8')
-assert '- **3541 —' in idx
-assert '- **3542 —' not in idx
-add = r'''
-
-## Case 111 — IBM ESS post-offline scrub-completion deepening findings
-
-Deepening record: [`evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md`](evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md).
-
-- **3542 — ESS long-offline maintenance names a scrub process:** IBM's Spectrum Scale RAID FAQ says that after an SSD-based system and its enclosed drives have been powered off for two months, the system should be powered on to allow the disk scrubbing process to complete a run. (`H/P`)
-- **3543 — time-based and process-based guidance coexist:** the same FAQ also says a system and its enclosed drives should be powered up for at least two weeks after two months off, so a prescribed powered dwell window and a named scrub completion condition are both present in the vendor record. (`H/P`)
-- **3544 — per-vdisk completion telemetry:** IBM says scrub completion is indicated in the `mmfs` log by `End scrubbing tracks of ...` for each vdisk in each declustered array, providing operator-visible completion evidence at the storage-system layer. (`H/P`)
-- **3545 — two-month intervention point != individual-drive failure verdict:** the two-month point is an operational policy threshold preceding the three-month / 40 °C standards background cited by IBM; it is not evidence that every drive has already lost data. (`E`)
-- **3546 — power restored != scrub complete:** powering the system creates the opportunity for maintenance, while IBM separately names the scrub run and its completion message. (`E`)
-- **3547 — dwell time != completion evidence:** an elapsed powered interval and an observed end-of-scrub marker are different evidence types even when both appear in one runbook. (`E`)
-- **3548 — system scrub completion is object-scoped:** the documented completion witness is attached to vdisks / declustered arrays, not directly to individual NAND cells or hidden FTL structures. (`H/P, E`)
-- **3549 — all vdisks scrubbed != every NAND cell rewritten:** the inspected FAQ does not disclose physical-page coverage, conditional rewrite policy, read-reclaim thresholds, or device-local refresh completion. (`E`)
-- **3550 — scrub and sanitize are distinct vendor operations:** the same extended-shutdown passage separately prescribes Sanitize with Block Erase when drives are to be cleared for future reuse, so scrub completion is not the documented erase/sanitize contract. (`H/P, E`)
-- **3551 — functional analogy to Dell is re-observation only:** Dell's used-NAND read can trigger device retention tasks, while IBM ESS exposes a Spectrum Scale RAID scrub with per-vdisk completion telemetry; both involve re-observation, but mechanism identity and genealogy are not established. (`A`)
-- **3552 — calendar trigger != state-based completion:** Case 111 now contains direct evidence that an operator policy can combine a time trigger with an observable state transition marking a maintenance pass complete. (`E/A`)
-- **3553 — retained service can require witnessed recommissioning:** project interpretation treats the sequence from offline interval through scrub completion as active recommissioning rather than mere restoration of electrical power; this is not IBM historical vocabulary. (`I`)
-- **3554 — no device-internal completion claim:** `End scrubbing tracks ...` does not prove every drive-internal retention task, controller metadata pass, or NAND refresh operation has completed. (`X`, rejected upgrade)
-- **3555 — no invention or universal-policy claim:** the evidence does not establish first invention of scrubbing, a universal SSD cadence, or applicability beyond the documented ESS/Spectrum Scale RAID context. (`X`, rejected upgrade)
-'''
-idx = idx.rstrip() + add + '\n'
-index_path.write_text(idx, encoding='utf-8')
-
-# Remove one-shot integration scaffolding from the final tree.
-Path('.github/scripts/tmp_case111_ess_scrub_integrate.py').unlink()
-Path('.github/workflows/tmp-case111-ess-scrub-integrate.yml').unlink()

@@ -4721,3 +4721,23 @@ Deepening record: [`evidence/38-intel-s3500-2014-independent-power-cut-stack-val
 - **3539 — Case 15 ~ Case 38 only as durability-assurance layering:** SSD 320's persistence/failure boundary and Case 38's readiness/manufacturer/independent-observation layers can be compared functionally, without asserting shared controller/firmware/capacitor design or direct product genealogy. (`A, X`)
 - **3540 — durability confidence as evidence layers is project interpretation:** contract, health state, manufacturer qualification, and independent fault observation can be treated as differently scoped evidence for retention confidence; Intel and Nordeus are not credited with this repository vocabulary. (`I, X`)
 - **3541 — independent S3500 witness != universal compliance:** the Nordeus result must not be upgraded into proof of all S3500 units, all power-loss conditions, S3700 identity, every acknowledged ATA write, or every higher-layer durability invariant. (`X`)
+
+## Case 111 — IBM ESS post-offline scrub-completion deepening findings
+
+Deepening record: [`evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md`](evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md).
+
+- **3542 — ESS long-offline maintenance names a scrub process:** IBM's Spectrum Scale RAID FAQ says that after an SSD-based system and its enclosed drives have been powered off for two months, the system should be powered on to allow the disk scrubbing process to complete a run. (`H/P`)
+- **3543 — time-based and process-based guidance coexist:** the same FAQ also says a system and its enclosed drives should be powered up for at least two weeks after two months off, so a prescribed powered dwell window and a named scrub completion condition are both present in the vendor record. (`H/P`)
+- **3544 — per-vdisk completion telemetry:** IBM says scrub completion is indicated in the `mmfs` log by `End scrubbing tracks of ...` for each vdisk in each declustered array, providing operator-visible completion evidence at the storage-system layer. (`H/P`)
+- **3545 — two-month intervention point != individual-drive failure verdict:** the two-month point is an operational policy threshold preceding the three-month / 40 °C standards background cited by IBM; it is not evidence that every drive has already lost data. (`E`)
+- **3546 — power restored != scrub complete:** powering the system creates the opportunity for maintenance, while IBM separately names the scrub run and its completion message. (`E`)
+- **3547 — dwell time != completion evidence:** an elapsed powered interval and an observed end-of-scrub marker are different evidence types even when both appear in one runbook. (`E`)
+- **3548 — system scrub completion is object-scoped:** the documented completion witness is attached to vdisks / declustered arrays, not directly to individual NAND cells or hidden FTL structures. (`H/P, E`)
+- **3549 — all vdisks scrubbed != every NAND cell rewritten:** the inspected FAQ does not disclose physical-page coverage, conditional rewrite policy, read-reclaim thresholds, or device-local refresh completion. (`E`)
+- **3550 — scrub and sanitize are distinct vendor operations:** the same extended-shutdown passage separately prescribes Sanitize with Block Erase when drives are to be cleared for future reuse, so scrub completion is not the documented erase/sanitize contract. (`H/P, E`)
+- **3551 — functional analogy to Dell is re-observation only:** Dell's used-NAND read can trigger device retention tasks, while IBM ESS exposes a Spectrum Scale RAID scrub with per-vdisk completion telemetry; both involve re-observation, but mechanism identity and genealogy are not established. (`A`)
+- **3552 — calendar trigger != state-based completion:** Case 111 now contains direct evidence that an operator policy can combine a time trigger with an observable state transition marking a maintenance pass complete. (`E/A`)
+- **3553 — retained service can require witnessed recommissioning:** project interpretation treats the sequence from offline interval through scrub completion as active recommissioning rather than mere restoration of electrical power; this is not IBM historical vocabulary. (`I`)
+- **3554 — no device-internal completion claim:** `End scrubbing tracks ...` does not prove every drive-internal retention task, controller metadata pass, or NAND refresh operation has completed. (`X`, rejected upgrade)
+- **3555 — no invention or universal-policy claim:** the evidence does not establish first invention of scrubbing, a universal SSD cadence, or applicability beyond the documented ESS/Spectrum Scale RAID context. (`X`, rejected upgrade)
+
