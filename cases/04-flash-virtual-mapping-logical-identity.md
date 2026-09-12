@@ -56,6 +56,23 @@ For this repository, the paper matters mainly as a historical boundary:
 
 **Primary bibliographic anchor:** F. Masuoka, M. Momodomi, Y. Iwata, R. Shirota, IEDM Technical Digest 1987, pp. 552–555, DOI `10.1109/IEDM.1987.191485`.
 
+**Early NAND device-geometry deepening:** [`evidence/04-1987-1989-nand-device-geometry-before-ftl-deepening.md`](../evidence/04-1987-1989-nand-device-geometry-before-ftl-deepening.md) follows the 1987 proposal into 1988–1989 peer-reviewed Toshiba device papers. Their public abstracts expose selective/successive programming, an eight-bit serial NAND string with reduced select/contact overhead, page programming, block erasing, and random reading before the later mapped-storage line. The boundary is explicit: `NAND string / block-page operation geometry != FTL / logical-to-physical remapping`; the historical ordering is not promoted into an actor-to-actor genealogy.
+
+### H/P + E — late-1980s NAND operation geometry predates this case's mapping semantics
+
+The 1989 ISSCC record describes eight bits arranged in series between two select transistors and page-mode programming; the 1989 JSSC record explicitly names block erasing, successive programming, and random reading. These are device/circuit facts. They establish a nonvolatile array with shared operation geometry, not a virtual sector namespace.
+
+For this case the distinction is now source-controlled:
+
+```text
+NAND cell/string organization
+    + block/page program/read/erase operations
+        !=
+logical identity retained while physical embodiment changes
+```
+
+The latter relation still enters with the 1992–1995 mapping evidence below. A later FTL can functionally mediate constraints created by Flash geometry, but no direct influence from the 1987–1989 Toshiba papers to Ban/Intel/PCMCIA is asserted. Direct full-text inspection of the 1987 paper remains open.
+
 ### H/S + H/P — FTL terminology is public by February 1995, while approval and release remain separate milestones
 
 A February 1995 *Dr. Dobb's* article calls the sector-translation device-driver approach commonly known as a `Flash Translation Layer (FTL)`. This moves the currently inspected **public terminology floor** earlier than the August 1995 Intel AP-619 application note.

@@ -257,7 +257,9 @@ The document does not provide the endurance-count evidence used in this case. Fi
 
 Fujio Masuoka, Momodomi, Iwata, and Shirota's IEDM 1987 paper, `New ultra high density EPROM and Flash EEPROM with NAND structure cell`, remains an important earlier device-history boundary (IEDM Technical Digest 1987, pp. 552–555, DOI `10.1109/IEDM.1987.191485`).
 
-During this grounding pass, bibliographic metadata and abstract-level records were recoverable, but a directly inspectable full text was not obtained. Therefore:
+A directly inspectable full 1987 text still was not obtained. A companion deepening now follows the bounded abstract-level 1987 record into 1988–1989 peer-reviewed Toshiba device publications that explicitly expose selective/successive programming, serial NAND-string topology, page programming, block erase, and random read: [`04-1987-1989-nand-device-geometry-before-ftl-deepening.md`](04-1987-1989-nand-device-geometry-before-ftl-deepening.md). That new chain strengthens the pre-FTL **device-operation** boundary without treating it as mapping history.
+
+Therefore:
 
 - the paper is **not** used as a unique source for any central mapping, FTL, reclamation, or wear-leveling claim;
 - the roadmap item to inspect the full paper remains open;

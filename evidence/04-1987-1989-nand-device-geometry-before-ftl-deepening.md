@@ -1,36 +1,4 @@
-from pathlib import Path
-
-
-def replace_once(path: str, old: str, new: str) -> None:
-    p = Path(path)
-    text = p.read_text(encoding="utf-8")
-    if old not in text:
-        raise SystemExit(f"anchor missing in {path}: {old[:180]!r}")
-    if text.count(old) != 1:
-        raise SystemExit(f"anchor not unique in {path}: {old[:180]!r}")
-    p.write_text(text.replace(old, new, 1), encoding="utf-8")
-
-
-def append_once(path: str, required_marker: str, forbidden_marker: str, addition: str) -> None:
-    p = Path(path)
-    text = p.read_text(encoding="utf-8")
-    if required_marker not in text:
-        raise SystemExit(f"required marker missing in {path}: {required_marker!r}")
-    if forbidden_marker in text:
-        raise SystemExit(f"addition already appears in {path}: {forbidden_marker!r}")
-    p.write_text(text.rstrip() + "\n\n" + addition.strip() + "\n", encoding="utf-8")
-
-
-evidence_path = Path("evidence/04-1987-1989-nand-device-geometry-before-ftl-deepening.md")
-case_path = "cases/04-flash-virtual-mapping-logical-identity.md"
-grounding_path = "evidence/04-flash-1992-1998-grounding.md"
-roadmap_path = "ROADMAP.md"
-index_path = "CASE_INDEX.md"
-
-if evidence_path.exists():
-    raise SystemExit(f"evidence already exists: {evidence_path}")
-
-EVIDENCE = r'''# Case 04 Deepening — NAND Device Geometry Before FTL Semantics (1987–1989)
+# Case 04 Deepening — NAND Device Geometry Before FTL Semantics (1987–1989)
 
 ## Purpose
 
@@ -289,39 +257,3 @@ demonstrated actor-to-actor genealogy
 - device-level experiments or electrical characterization.
 
 Broader semiconductor-memory history belongs primarily in `computing-archaeology`; this record exists to prevent Case 04 from collapsing device geometry into later logical-retention machinery.
-'''
-
-evidence_path.write_text(EVIDENCE, encoding="utf-8")
-
-case_anchor = """**Primary bibliographic anchor:** F. Masuoka, M. Momodomi, Y. Iwata, R. Shirota, IEDM Technical Digest 1987, pp. 552–555, DOI `10.1109/IEDM.1987.191485`.\n\n### H/S + H/P — FTL terminology is public by February 1995, while approval and release remain separate milestones"""
-case_replacement = """**Primary bibliographic anchor:** F. Masuoka, M. Momodomi, Y. Iwata, R. Shirota, IEDM Technical Digest 1987, pp. 552–555, DOI `10.1109/IEDM.1987.191485`.\n\n**Early NAND device-geometry deepening:** [`evidence/04-1987-1989-nand-device-geometry-before-ftl-deepening.md`](../evidence/04-1987-1989-nand-device-geometry-before-ftl-deepening.md) follows the 1987 proposal into 1988–1989 peer-reviewed Toshiba device papers. Their public abstracts expose selective/successive programming, an eight-bit serial NAND string with reduced select/contact overhead, page programming, block erasing, and random reading before the later mapped-storage line. The boundary is explicit: `NAND string / block-page operation geometry != FTL / logical-to-physical remapping`; the historical ordering is not promoted into an actor-to-actor genealogy.\n\n### H/P + E — late-1980s NAND operation geometry predates this case's mapping semantics\n\nThe 1989 ISSCC record describes eight bits arranged in series between two select transistors and page-mode programming; the 1989 JSSC record explicitly names block erasing, successive programming, and random reading. These are device/circuit facts. They establish a nonvolatile array with shared operation geometry, not a virtual sector namespace.\n\nFor this case the distinction is now source-controlled:\n\n```text\nNAND cell/string organization\n    + block/page program/read/erase operations\n        !=\nlogical identity retained while physical embodiment changes\n```\n\nThe latter relation still enters with the 1992–1995 mapping evidence below. A later FTL can functionally mediate constraints created by Flash geometry, but no direct influence from the 1987–1989 Toshiba papers to Ban/Intel/PCMCIA is asserted. Direct full-text inspection of the 1987 paper remains open.\n\n### H/S + H/P — FTL terminology is public by February 1995, while approval and release remain separate milestones"""
-replace_once(case_path, case_anchor, case_replacement)
-
-ground_anchor = """## Masuoka 1987 status — deliberately not overclaimed\n\nFujio Masuoka, Momodomi, Iwata, and Shirota's IEDM 1987 paper, `New ultra high density EPROM and Flash EEPROM with NAND structure cell`, remains an important earlier device-history boundary (IEDM Technical Digest 1987, pp. 552–555, DOI `10.1109/IEDM.1987.191485`).\n\nDuring this grounding pass, bibliographic metadata and abstract-level records were recoverable, but a directly inspectable full text was not obtained. Therefore:"""
-ground_replacement = """## Masuoka 1987 status — deliberately not overclaimed\n\nFujio Masuoka, Momodomi, Iwata, and Shirota's IEDM 1987 paper, `New ultra high density EPROM and Flash EEPROM with NAND structure cell`, remains an important earlier device-history boundary (IEDM Technical Digest 1987, pp. 552–555, DOI `10.1109/IEDM.1987.191485`).\n\nA directly inspectable full 1987 text still was not obtained. A companion deepening now follows the bounded abstract-level 1987 record into 1988–1989 peer-reviewed Toshiba device publications that explicitly expose selective/successive programming, serial NAND-string topology, page programming, block erase, and random read: [`04-1987-1989-nand-device-geometry-before-ftl-deepening.md`](04-1987-1989-nand-device-geometry-before-ftl-deepening.md). That new chain strengthens the pre-FTL **device-operation** boundary without treating it as mapping history.\n\nTherefore:"""
-replace_once(grounding_path, ground_anchor, ground_replacement)
-
-road_anchor = """## Phase 2 — Build missing technical bridges\n\n- [x] **Case 115 HDFS snapshot normal edit-log replay deepening:**"""
-road_replacement = """## Phase 2 — Build missing technical bridges\n\n- [x] **Case 04 1987–1989 NAND device-geometry / pre-FTL deepening:** [`cases/04-flash-virtual-mapping-logical-identity.md`](cases/04-flash-virtual-mapping-logical-identity.md) + [`evidence/04-1987-1989-nand-device-geometry-before-ftl-deepening.md`](evidence/04-1987-1989-nand-device-geometry-before-ftl-deepening.md) separate the late-1980s Toshiba NAND device publication chain from the 1992–1995 mapping/FTL layer. The 1987 abstract establishes a dense NAND-structure proposal with selective bit programming; 1988–1989 peer-reviewed records add successive programming, an eight-bit serial string with reduced select/contact overhead, page programming, block erasing, random reading, and block-page programming. This closes the bounded `early NAND device geometry != later FTL semantics` seam and fixes `block erase != garbage collection`, `page programming != remapping`, and `historical ordering != demonstrated genealogy`. Direct page-level inspection of the 1987 IEDM paper, earlier patent/shipment chronology, and actor-to-actor influence genealogy remain open; broader semiconductor-memory history belongs primarily in `computing-archaeology`.\n\n- [x] **Case 115 HDFS snapshot normal edit-log replay deepening:**"""
-replace_once(roadmap_path, road_anchor, road_replacement)
-
-FINDINGS = r'''### Findings 3828–3843 — Case 04 late-1980s NAND device geometry before FTL semantics
-
-- **3828 — H/P** — The abstract-level record for Masuoka et al., IEDM 1987, presents a NAND-structure cell as a density technique, reports 6.43 µm² under a 1.0-µm rule and about 30% lower area per bit than the compared conventional 4-Mbit EPROM structure, and says individual NAND-cell bits can be selectively programmed.
-- **3829 — H/P** — Momodomi et al., IEDM 1988, describe a 5-V-only NAND EEPROM program regime using half programming voltage on unselected bit lines plus successive programming to retain threshold margin, with experimentally confirmed cell reliability in the abstract-level record.
-- **3830 — H/P** — Itoh et al., ISSCC 1989, describe an experimental 512K×8 EEPROM whose NAND structured cell places eight bits in series between two select transistors, reducing select-transistor and contact-hole overhead per bit.
-- **3831 — H/P** — The same ISSCC record reports 10^4-cycle endurance for the experimental device and page mode for high-speed programming; these are device/circuit characteristics rather than evidence of a logical block map.
-- **3832 — H/P** — Momodomi et al., IEEE JSSC 1989, explicitly list block erasing, successive programming, and random reading as operations implemented by the NAND-cell control circuit.
-- **3833 — H/P** — A 1989 Toshiba-authored CICC paper separately describes a 4-Mbit NAND EEPROM with high-speed block-page programming circuits for microcomputer applications, corroborating that nontrivial program granularity predates the Case-04 mapping line.
-- **3834 — E** — `NAND serial-string density optimization != logical-to-physical translation`: sharing select devices / contacts explains a device-layout advantage but does not determine which physical embodiment is current for a stable host-visible identity.
-- **3835 — E** — `block erase != garbage collection`: a physical erase operation can exist without the copy-current / retire-old / remap policy relation grounded later by Ban/Wells/FTL sources.
-- **3836 — E** — `page or successive programming != logical remapping`; a device programming mode does not by itself preserve one external logical address while relocating data.
-- **3837 — E** — `random reading != random in-place overwrite`; the ability to select/read data does not erase the physical program/erase asymmetry later mapping layers must mediate.
-- **3838 — E** — `device-level nonvolatility != logical-identity continuity across relocation`; the former concerns persistence of cell state, while the latter additionally requires retained currentness / mapping relations.
-- **3839 — FA** — The later Case-04 mapping layer can be compared functionally as machinery that mediates Flash operation constraints and a stable-looking rewritable namespace, but the comparison does not establish direct descent from the Toshiba device papers.
-- **3840 — X** — Publication order `1987–1989 NAND device papers -> 1992–1995 mapping/FTL evidence` is not evidence of an actor-to-actor citation, influence, standards, or implementation genealogy.
-- **3841 — X** — The inspected records do not establish that 1987 is the first NAND invention, first commercial NAND shipment, or first use of every listed program/erase technique.
-- **3842 — X** — Because the 1987 paper was not page-by-page inspected in this pass, abstract-level evidence is not promoted into unsupported circuit details or exact full-paper wording; direct full-text inspection remains open.
-- **3843 — X** — `block erase` in these device records is not evidence of host-level deletion, reclamation completion, secure sanitization, or forensic non-recoverability.
-'''
-append_once(index_path, "### Findings 3812–3827", "### Findings 3828–3843", FINDINGS)

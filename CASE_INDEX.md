@@ -5072,3 +5072,22 @@ Deepening record: [`evidence/76-lattice-2014-qualified-by-similarity-retention-d
 - **3825 — E** — Reconstructed snapshot namespace authority still depends on surviving DataNode block replicas for payload; edit replay can restore naming/currentness relations without proving every replica healthy or correctly placed.
 - **3826 — E/X** — Replayed snapshot deletion can retire namespace/reference state and trigger block-collection logic, but it does not prove immediate filesystem reuse, media overwrite, discard completion, sanitization, or forensic non-recoverability.
 - **3827 — X** — Hadoop 2.4.1 supplies a bounded released implementation/replay witness only; no claim is made that HDFS invented snapshots, edit logging, replay, copy-on-write retention, or namespace checkpointing.
+
+### Findings 3828–3843 — Case 04 late-1980s NAND device geometry before FTL semantics
+
+- **3828 — H/P** — The abstract-level record for Masuoka et al., IEDM 1987, presents a NAND-structure cell as a density technique, reports 6.43 µm² under a 1.0-µm rule and about 30% lower area per bit than the compared conventional 4-Mbit EPROM structure, and says individual NAND-cell bits can be selectively programmed.
+- **3829 — H/P** — Momodomi et al., IEDM 1988, describe a 5-V-only NAND EEPROM program regime using half programming voltage on unselected bit lines plus successive programming to retain threshold margin, with experimentally confirmed cell reliability in the abstract-level record.
+- **3830 — H/P** — Itoh et al., ISSCC 1989, describe an experimental 512K×8 EEPROM whose NAND structured cell places eight bits in series between two select transistors, reducing select-transistor and contact-hole overhead per bit.
+- **3831 — H/P** — The same ISSCC record reports 10^4-cycle endurance for the experimental device and page mode for high-speed programming; these are device/circuit characteristics rather than evidence of a logical block map.
+- **3832 — H/P** — Momodomi et al., IEEE JSSC 1989, explicitly list block erasing, successive programming, and random reading as operations implemented by the NAND-cell control circuit.
+- **3833 — H/P** — A 1989 Toshiba-authored CICC paper separately describes a 4-Mbit NAND EEPROM with high-speed block-page programming circuits for microcomputer applications, corroborating that nontrivial program granularity predates the Case-04 mapping line.
+- **3834 — E** — `NAND serial-string density optimization != logical-to-physical translation`: sharing select devices / contacts explains a device-layout advantage but does not determine which physical embodiment is current for a stable host-visible identity.
+- **3835 — E** — `block erase != garbage collection`: a physical erase operation can exist without the copy-current / retire-old / remap policy relation grounded later by Ban/Wells/FTL sources.
+- **3836 — E** — `page or successive programming != logical remapping`; a device programming mode does not by itself preserve one external logical address while relocating data.
+- **3837 — E** — `random reading != random in-place overwrite`; the ability to select/read data does not erase the physical program/erase asymmetry later mapping layers must mediate.
+- **3838 — E** — `device-level nonvolatility != logical-identity continuity across relocation`; the former concerns persistence of cell state, while the latter additionally requires retained currentness / mapping relations.
+- **3839 — FA** — The later Case-04 mapping layer can be compared functionally as machinery that mediates Flash operation constraints and a stable-looking rewritable namespace, but the comparison does not establish direct descent from the Toshiba device papers.
+- **3840 — X** — Publication order `1987–1989 NAND device papers -> 1992–1995 mapping/FTL evidence` is not evidence of an actor-to-actor citation, influence, standards, or implementation genealogy.
+- **3841 — X** — The inspected records do not establish that 1987 is the first NAND invention, first commercial NAND shipment, or first use of every listed program/erase technique.
+- **3842 — X** — Because the 1987 paper was not page-by-page inspected in this pass, abstract-level evidence is not promoted into unsupported circuit details or exact full-paper wording; direct full-text inspection remains open.
+- **3843 — X** — `block erase` in these device records is not evidence of host-level deletion, reclamation completion, secure sanitization, or forensic non-recoverability.
