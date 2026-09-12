@@ -300,6 +300,14 @@ A failed AFh test is therefore not synonymous with user-data loss. Conversely, a
 
 ---
 
+## Independent named-product follow-up — Intel DC S3500 system-stack power-cut observation
+
+A bounded independent follow-up is now available in [`evidence/38-intel-s3500-2014-independent-power-cut-stack-validation-deepening.md`](../evidence/38-intel-s3500-2014-independent-power-cut-stack-validation-deepening.md).
+
+Intel's January-2015 S3500 product specification independently anchors `Enhanced power-loss data protection`, the power-loss capacitor self-test, and the separation between `AEh` unexpected-power-loss history and `AFh` protection-health state. Nordeus Engineering then supplies a different source role: it reports **December-2014 hard-power-cut testing of a named Intel DC S3500** inside a Dell R420 / H710p / CentOS 6.5 / XFS stack. Its `fsync` test used an external side-channel record, physically unplugged the server, waited ten minutes, rebooted, and verified the file; its PostgreSQL 9.3 path used data checksums and `pg_dumpall` after the same class of hard cut. The displayed S3500 configuration with disk cache on, barriers off, and RAID write-back is reported `OK` in both test families, with tested parameter combinations requiring at least five successful repetitions to count as passed.
+
+This closes only the **independent named-product witness** part of the old evidence debt. It is explicitly **system-stack evidence**, not isolated SSD-only certification: RAID-controller behavior, software, host power transition, and drive state all remain in the causal path. `>=5 observed passes != complete failure-envelope coverage`, and successful filesystem/database recovery does not expose every hidden FTL/controller-metadata path.
+
 ## Engineering reconstruction
 
 ### E — retention mechanism presence ≠ retention mechanism readiness
@@ -333,6 +341,14 @@ The drive can generate and retain health state automatically, but Intel also exp
 ### E — manufacturer validation ≠ independent compliance evidence
 
 Intel's 7000-repeat validation flow is meaningful first-party evidence for the test method Intel describes. It is not an independent field study of every shipped device, nor does it identify the anonymized FAST '13 devices from Case 15.
+
+### E — independent system-stack observation ≠ isolated SSD-only causality
+
+Nordeus supplies an independent named-product fault observation, but the S3500 is tested inside a Dell/H710p/Linux/XFS/PostgreSQL stack rather than on an isolated component bench. A passing stack is evidence about that tested composition; it does not prove that every successful outcome is attributable only to the drive-local PLI mechanism.
+
+### E — repeated pass ≠ complete power-fault envelope
+
+Nordeus requires at least five passes for a parameter combination and reports success for the displayed S3500 configuration. That is useful independent fault-injection evidence, but it does not sweep supply waveform, cut timing against every internal operation, temperature, age, firmware, or every host/controller/software composition.
 
 ---
 
@@ -438,10 +454,26 @@ Directly inspected:
 - printed p. 13 §2.8 — `Power Loss Capacitor Test`, monitored through SMART `AFh`;
 - printed p. 21 — `AEh` and `AFh`, discharge-test range, recency, lifetime count, normalized failure/excess-temperature states.
 
+### Independent practitioner — Nordeus S3500 power-cut test
+
+Strahinja Kustudic, Nordeus Engineering, **“Power Failure Testing with SSDs,”** published 12 November 2015; the article states testing was performed in December 2014.
+
+<https://engineering.nordeus.com/power-failure-testing-with-ssds/>
+
+Directly inspected:
+
+- named Intel DC S3500 test subject and test date;
+- Dell R420 / H710p / CentOS 6.5 / XFS stack;
+- `fsync` side-channel + physical-unplug procedure;
+- PostgreSQL 9.3 checksums + `pg_dumpall` recovery procedure;
+- at-least-five-pass rule and displayed S3500 results.
+
+See the bounded evidence record for source-role and causality limits.
+
 ---
 
 ## Status
 
-**`grounded`** for the bounded PLI-health / self-test / manufacturer-validation relation.
+**`grounded`** for the bounded PLI-health / self-test / manufacturer-validation relation, now with an independent named-product **system-stack** power-cut witness.
 
-The sources are unusually strong for the historical/product layer because they directly expose not only the power-fail mechanism but also the drive's own health state, self-test procedure, operator-visible control surface, and Intel's validation workflow. The unresolved next step is deliberately different: **independent named-product fault-compliance evidence or deeper controller-metadata recovery**, not another repetition of the capacitor-transfer mechanism.
+The first-party sources directly expose the power-fail mechanism, drive health state, self-test procedure, operator-visible control surface, and Intel's validation workflow. Nordeus adds independent December-2014 hard-power-cut observations of a named Intel DC S3500 in a documented storage/software stack. That closes the earlier independent named-product witness debt only at stack scope. Remaining work is narrower: **controlled component-only S3500/S3700 power-waveform replication, lifetime/temperature coverage, and deeper controller-metadata recovery evidence**, not another repetition of the capacitor-transfer mechanism.
