@@ -1,0 +1,63 @@
+name: integrate-case141-dual-frontier-retry
+
+on:
+  push:
+    paths:
+      - .github/workflows/case141-dual-frontier-retry.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reuse prepared research payload and integrate cleanly
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          from pathlib import Path
+          import textwrap
+
+          source_path = Path('.github/workflows/case141-dual-frontier-once.yml')
+          source = source_path.read_text()
+
+          ev_start = "          cat > evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md <<'EOF_EVIDENCE'\n"
+          ev_end = "\n          EOF_EVIDENCE\n"
+          if source.count(ev_start) != 1 or source.count(ev_end) != 1:
+              raise SystemExit('could not locate prepared evidence payload')
+          evidence = source.split(ev_start, 1)[1].split(ev_end, 1)[0]
+          evidence = textwrap.dedent(evidence)
+          evidence = '\n'.join(line.rstrip() for line in evidence.splitlines()).rstrip() + '\n'
+          Path('evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md').write_text(evidence)
+
+          py_start = "          python3 - <<'PY'\n"
+          py_end = "\n          PY\n"
+          if source.count(py_start) != 1 or source.count(py_end) != 1:
+              raise SystemExit('could not locate prepared patch program')
+          patch = source.split(py_start, 1)[1].split(py_end, 1)[0]
+          patch = textwrap.dedent(patch)
+          exec(compile(patch, '<case141-patch>', 'exec'), {'__name__': '__main__'})
+          PY
+
+          rm .github/workflows/case141-dual-frontier-once.yml
+          rm .github/workflows/case141-dual-frontier-retry.yml
+
+          git diff --check
+          test -f evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md
+          grep -q '3598 — PostgreSQL itself says the positions have distinct meanings' CASE_INDEX.md
+          grep -q 'consumer acknowledgement != WAL reclaimability frontier' ROADMAP.md
+          grep -q '2014–2015 deepening — logical consumer acknowledgement' cases/141-postgresql-replication-slot-wal-retention-frontier.md
+          test ! -e .github/workflows/case141-dual-frontier-once.yml
+          test ! -e .github/workflows/case141-dual-frontier-retry.yml
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CASE_INDEX.md ROADMAP.md cases/141-postgresql-replication-slot-wal-retention-frontier.md evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md .github/workflows/case141-dual-frontier-once.yml .github/workflows/case141-dual-frontier-retry.yml
+          git commit -m 'case141: deepen logical-slot dual frontiers [skip ci]'
+          git push origin HEAD:main
