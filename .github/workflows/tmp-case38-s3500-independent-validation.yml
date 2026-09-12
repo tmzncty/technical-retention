@@ -16,17 +16,20 @@ jobs:
         with:
           fetch-depth: 0
       - name: Apply bounded research slice
-        run: python3 .github/scripts/tmp_case38_s3500_integrate.py
-      - name: Validate and push
+        run: python3 .github/scripts/tmp_case38_safe_runner.py
+      - name: Validate canonical research changes
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           git diff --check
           test -f evidence/38-intel-s3500-2014-independent-power-cut-stack-validation-deepening.md
           grep -q '3541 — independent S3500 witness' CASE_INDEX.md
           grep -q 'Case 38 Intel DC S3500 independent power-cut stack validation' ROADMAP.md
           grep -q 'Independent named-product follow-up' cases/38-intel-dc-s3700-pli-self-test-validation.md
+      - name: Commit and push canonical research changes
+        run: |
+          set -euxo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
+          git add CASE_INDEX.md ROADMAP.md cases/38-intel-dc-s3700-pli-self-test-validation.md evidence/38-intel-s3500-2014-independent-power-cut-stack-validation-deepening.md
           git commit -m 'case38: add independent S3500 power-cut evidence [skip ci]'
           git push origin HEAD:main
