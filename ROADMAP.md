@@ -61,7 +61,7 @@ Remaining work is archival or scope-specific cleanup rather than a promotion blo
 - [x] distinguish element-level nonvolatility from whole-machine restart persistence;
 - [x] grounding record: [`evidence/02-magnetic-core-1951-1954-grounding.md`](evidence/02-magnetic-core-1951-1954-grounding.md).
 
-Remaining archival cleanup: obtain a directly renderable full scan of Papian's 1952 IRE paper; central claims no longer depend uniquely on it.
+[x] **Papian 1952 direct-facsimile cleanup closed via Case 70:** [`evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md`](evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md) now supplies page-level inspection of the IRE paper, including repeated half-amplitude nonselecting-pulse test geometry, independently variable pulse amplitude/length/spacing/count, and disturbed-signal discrimination. Case 02 now links rather than duplicates that narrower analysis. Remaining magnetic-core work is production/named-machine quantitative margin evidence, temperature/material distributions, and broader genealogy, primarily under Case 70 / `computing-archaeology`.
 
 ### 4. DRAM — `grounded`
 

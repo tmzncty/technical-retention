@@ -10,6 +10,8 @@ Security-erasure vocabulary deepening: [`../evidence/02-1991-ncsc-core-clearing-
 
 Power-transition retention deepening: [`../evidence/02-1965-1966-core-power-transition-retention-deepening.md`](../evidence/02-1965-1966-core-power-transition-retention-deepening.md). This later IBM/DEC machine evidence grounds `unpowered retention != transition immunity != whole-machine restart continuity`; it does not replace the case's 1950–1954 MIT anchor.
 
+Papian direct-facsimile deepening: [`../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md`](../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md). This Case-70 record supplies the page-level 1952 IRE inspection that Case 02 previously carried as archival cleanup; its quantitative disturbance analysis remains scoped to Case 70 rather than being duplicated here.
+
 ## Scope
 
 - **Object / system:** classic coincident-current magnetic-core memory, with MIT Project Whirlwind / Memory Test Computer as the principal historical anchor;
@@ -501,7 +503,7 @@ This case is `grounded`. The dedicated grounding record closes the former promot
 - Widrow 1954 and Brown's 1953-filed patent as bounded contemporary nondestructive-read counterexamples;
 - a separate Case 86 system-level witness showing why remanent main-memory state must not be equated with whole-machine restart state.
 
-Remaining archival cleanup is narrower: obtain a conveniently renderable full scan of Papian's 1952 IRE paper for direct page-level inspection. The central Case-02 claims no longer depend uniquely on its abstract.
+The former Papian-1952 facsimile cleanup is now **closed** by the direct inspection recorded in [`../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md`](../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md). Case 02 therefore no longer carries a page-level Papian evidence debt. Further work is narrower and belongs mainly to Case 70 or `computing-archaeology`: named-machine quantitative half-select/current/sense margins, production material distributions, temperature dependence, exact correspondence between Papian test materials and deployed arrays, and broader invention-priority genealogy.
 
 ---
 
@@ -519,7 +521,7 @@ Remaining archival cleanup is narrower: obtain a conveniently renderable full sc
 
 The Forrester patent is primary evidence for the proposed storage and selection mechanism and explicitly describes destructive reading and rewriting. A patent does not by itself establish later production practice, commercial success, or uncontested invention priority.
 
-Papian's 1952 IRE paper remains contemporary technical evidence for remanence and repeated nonselecting disturbances; direct page-level inspection of a conveniently renderable full scan remains archival cleanup. The case no longer depends uniquely on that abstract because the grounding record adds Papian's 1953 implemented-memory paper, Mayer & Papian M-2121, and other primary witnesses.
+Papian's 1952 IRE paper remains contemporary technical evidence for remanence and repeated nonselecting disturbances. Direct page-level inspection is now recorded in the Case-70 facsimile deepening, which independently grounds the pulse-pattern variables and disturbed-signal boundaries without forcing Case 02 to duplicate the narrower half-select analysis. Case 02 also remains independently grounded by Papian's 1953 implemented-memory paper, Mayer & Papian M-2121, and other primary witnesses.
 
 Widrow's M-2383 memorandum is primary operational evidence tied to an actual 32 × 32 core memory under test. Its reported operating values should not be generalized to all core-memory systems.
 

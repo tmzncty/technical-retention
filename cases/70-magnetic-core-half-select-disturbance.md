@@ -288,6 +288,8 @@ The selected bit is read correctly but the required rewrite fails. This remains 
 
 The original grounding used MIT's preserved abstract to establish repeated `nonselecting` disturbance as a retention criterion. Direct inspection of the article facsimile now closes that evidence debt; see [`../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md`](../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md).
 
+The same direct facsimile also closes the older Case-02 roadmap/source-note request for page-level inspection of the 1952 IRE paper. Case 02 keeps the general remanence + destructive-read + rewrite argument; Case 70 owns the narrower quantitative half-select/disturbed-signal analysis, so the two cases share evidence without duplicating scope.
+
 The full article adds three boundaries that the abstract alone could not safely support:
 
 - Papian's disturbed-ONE test inserts a large number of **half-amplitude nonselecting pulses** between write and read, while pulse **amplitude, length, spacing, and count are independently variable**;
