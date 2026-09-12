@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/149-micron-2004-2006-nand-otp-data-protect-grounding.md`](../evidence/149-micron-2004-2006-nand-otp-data-protect-grounding.md).
 
+Interface/standards deepening: [`../evidence/149-onfi10-20-vendor-feature-space-otp-interface-deepening.md`](../evidence/149-onfi10-20-vendor-feature-space-otp-interface-deepening.md).
+
 ## Scope
 
 - **Object / system:** Micron raw NAND one-time-programmable (OTP) area and the `OTP DATA PROGRAM`, `OTP DATA PROTECT`, and `OTP DATA READ` relations documented in the 2006 product datasheet.
@@ -173,6 +175,33 @@ But chronology is not genealogy. This case does not claim that the Micron produc
 
 ---
 
+
+## ONFI command-space boundary and later Micron interface migration
+
+The bounded standards history now separates **OTP semantics** from **the command namespace used to reach them**.
+
+ONFI 1.0 (28-Dec-2006) already defines `GET FEATURES (EEh)` / `SET FEATURES (EFh)`, reserves feature addresses `80h-FFh` to vendors, and classifies opcode range `91h-BFh` as vendor-specific. Micron's historical `A0h`, `A5h`, and `AFh` OTP command bytes all fall inside that vendor-specific opcode range. Because the Micron Rev. D product witness is dated only `12/06`, this case does not claim whether it appeared before or after the precisely dated ONFI 1.0 final specification.
+
+ONFI 2.0 (27-Feb-2008) preserves the same important separation: standardized feature-access machinery coexists with vendor-defined command and feature-address space. A Micron Flash Memory Summit presentation from August 2008 then makes the intended use explicit: vendor-specific feature-address space can carry functions such as OTP and thereby reduce the need for additional vendor-specific top-level instructions.
+
+Micron product records show both sides of the transition. A Rev. A 8/08 2Gb part identifies itself as ONFI 1.0-compliant while still documenting the dedicated `A0h/A5h/AFh` OTP sequences. By Rev. M 4/14, a Micron 2Gb data sheet selects OTP operation through `SET FEATURES (EFh)` at vendor feature address `90h` with P1=`01h`, and OTP protection mode at the same feature address with P1=`03h`; ordinary page read/program commands are then used inside that mode. The later document still carries a `Legacy OTP Commands` note naming the earlier `A0h/A5h/AFh` vocabulary.
+
+The safe engineering conclusions are:
+
+> **ONFI-standard command transport != ONFI-standard OTP semantics**
+
+> **irreversible OTP authority semantics != command encoding / transport state machine**
+
+> **ONFI compliance != absence of vendor-specific commands or features**
+
+and
+
+> **later feature-address mode != evidence that the 2006 product used the same mode internally**.
+
+The later `Legacy OTP Commands` label is useful same-vendor documentary continuity, but it does not prove identical firmware, die lineage, lock circuitry, or direct implementation genealogy.
+
+---
+
 ## Retained state
 
 At least five different state classes coexist in the bounded Micron product contract:
@@ -331,7 +360,7 @@ A wider history of:
 - PROM/EPROM/EEPROM one-time and multiple-time programmability vocabulary;
 - AMD/Fujitsu secure-sector / OTP-sector product lines;
 - Micron NAND generation chronology;
-- ONFI OTP command standardization;
+- broader ONFI/vendor-feature OTP genealogy beyond the bounded 1.0/2.0 interface alignment established here;
 - flash security-register, lock-bit, eFuse, and antifuse lineages;
 - physical reverse-engineering and attack resistance;
 
@@ -343,7 +372,7 @@ belongs primarily in `computing-archaeology` rather than being duplicated here.
 
 - obtain an origin-hosted archived copy of the exact 2006 Micron datasheet rather than relying on a faithful third-party mirror for the period product witness;
 - identify the exact shipped part-number family and die/control implementation corresponding to the Rev. D datasheet;
-- trace when Micron's OTP command vocabulary entered or aligned with ONFI specifications;
-- compare later Micron NAND OTP command revisions without back-projecting them into 2006;
+- deepen cross-vendor ONFI/vendor-feature OTP genealogy only if required; the bounded record now establishes that the examined ONFI 1.0/2.0 revisions leave OTP semantics vendor-scoped;
+- identify the earliest Micron shipped family using feature-address `90h` OTP mode and compare additional later families without back-projecting them into 2006;
 - test a compatible physical device, if obtainable, to observe protect success/failure, reset/power-cycle behavior, and attempted post-protect programming;
 - route the broader flash-OTP genealogy to `computing-archaeology`.

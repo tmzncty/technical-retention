@@ -13,6 +13,8 @@ Ground Case 149 at the raw-NAND product/interface layer and prevent six common s
 
 This record separates historical primary claims (`H/P`), mirrored-primary product evidence (`H/P*`), engineering reconstruction (`E`), functional analogy (`A`), and stop conditions/counterclaims (`X`).
 
+Follow-up standards/interface record: [`149-onfi10-20-vendor-feature-space-otp-interface-deepening.md`](149-onfi10-20-vendor-feature-space-otp-interface-deepening.md).
+
 ---
 
 ## Source ledger
@@ -273,7 +275,7 @@ A broader technical history of PROM/EPROM/EEPROM/Flash OTP vocabulary, vendor se
 
 - recover an origin-hosted or archival-origin copy of the exact Micron Rev. D 12/06 datasheet;
 - identify exact part numbers/die generations covered by the historical document and whether protection representation differs across revisions;
-- trace ONFI OTP command standardization and later Micron command migrations;
+- use the follow-up standards/interface record for the bounded ONFI 1.0/2.0 vendor-space alignment; broader cross-vendor and earliest-feature-mode genealogy remains open;
 - locate period Micron application notes describing intended serial-number/security provisioning workflows;
 - perform hardware validation of protect, post-protect program rejection, reset, and power-cycle behavior on a compatible device;
 - deepen AMD/Fujitsu/Micron flash-OTP genealogy in `computing-archaeology` without rewriting chronology as causation.

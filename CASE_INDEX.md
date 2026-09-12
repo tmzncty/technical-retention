@@ -4740,3 +4740,24 @@ Deepening record: [`evidence/111-ibm-ess-post-offline-scrub-completion-deepening
 - **3553 — retained service can require witnessed recommissioning:** project interpretation treats the sequence from offline interval through scrub completion as active recommissioning rather than mere restoration of electrical power; this is not IBM historical vocabulary. (`I`)
 - **3554 — no device-internal completion claim:** `End scrubbing tracks ...` does not prove every drive-internal retention task, controller metadata pass, or NAND refresh operation has completed. (`X`, rejected upgrade)
 - **3555 — no invention or universal-policy claim:** the evidence does not establish first invention of scrubbing, a universal SSD cadence, or applicability beyond the documented ESS/Spectrum Scale RAID context. (`X`, rejected upgrade)
+
+## Case 149 — ONFI vendor-space / Micron OTP interface-migration deepening findings
+
+Deepening record: [`evidence/149-onfi10-20-vendor-feature-space-otp-interface-deepening.md`](evidence/149-onfi10-20-vendor-feature-space-otp-interface-deepening.md).
+
+- **3556 — ONFI 1.0 supplies a vendor-opcode boundary:** the 28-Dec-2006 ONFI 1.0 final specification classifies opcode range `91h-BFh` as vendor-specific; Micron's documented legacy OTP bytes `A0h`, `A5h`, and `AFh` all lie inside that range. (`H/P, E`)
+- **3557 — December-2006 document ordering remains unresolved:** the Micron product witness is dated only `Rev. D 12/06`, whereas ONFI 1.0 is exactly 28-Dec-2006, so current evidence does not establish which appeared first. (`H/P, X`)
+- **3558 — ONFI 1.0 already defines generic feature access:** `GET FEATURES (EEh)` and `SET FEATURES (EFh)` are part of the ONFI 1.0 record, independent of Micron's later OTP use of that mechanism. (`H/P`)
+- **3559 — ONFI 1.0 reserves feature addresses `80h-FFh` to vendors:** a standardized feature-access command can therefore carry a vendor-defined feature meaning. (`H/P, E`)
+- **3560 — ONFI 2.0 preserves the vendor-space separation:** Revision 2.0 (27-Feb-2008) retains vendor-specific opcode range `91h-BFh` and vendor-specific feature-address range `80h-FFh`. (`H/P`)
+- **3561 — Micron's Aug-2008 ONFI presentation explicitly names OTP as a vendor-feature use case:** the deck says vendor-specific feature-address space can handle OTP and reduce the need for additional vendor-specific command instructions. (`H/P*`)
+- **3562 — an ONFI-1.0-compliant Micron 2008 part still documents dedicated OTP commands:** the Rev. A 8/08 product record combines ONFI compliance, `GET/SET FEATURES`, and `A0h/A5h/AFh` OTP sequences. (`H/P*`)
+- **3563 — ONFI compliance != absence of vendor extensions:** the coexistence record blocks the inference that standards compliance requires every product function to use only ONFI-assigned standard semantics. (`E`)
+- **3564 — by Rev. M 4/14 Micron selects OTP operation through feature address `90h`:** `SET FEATURES (EFh)` with P1=`01h` enters OTP operation mode, after which normal page read/program commands act on the OTP area. (`H/P*`)
+- **3565 — 2014 Micron protection mode also uses feature address `90h`:** P1=`03h` selects OTP protection mode before the documented program path establishes the irreversible protected relation. (`H/P*`)
+- **3566 — `90h` OTP meaning remains vendor-scoped in the inspected ONFI revisions:** because ONFI 1.0/2.0 reserve `80h-FFh` feature addresses to vendors, Micron's use of `90h` is not evidence for an ONFI-standard OTP feature assignment. (`H/P, E, X`)
+- **3567 — `Legacy OTP Commands` records same-vendor vocabulary continuity:** the 2014 Micron document explicitly names `A0h-10h`, `A5h-10h`, and `AFh-30h` as legacy OTP commands while documenting the feature-address mode. (`H/P*`)
+- **3568 — irreversible authority semantics != command encoding:** Case 149 can retain the distinction `program/verify -> protect -> no further programming while read survives` even when the interface migrates from dedicated OTP opcodes to a mode selected through `SET FEATURES`. (`E`)
+- **3569 — standard transport != standardized OTP semantics:** ONFI-standard `SET/GET FEATURES` plumbing does not by itself standardize the vendor meaning attached to feature address `90h`. (`E`)
+- **3570 — later mode-gated sequencing is not back-projected into 2006:** the 2014 feature-address state machine does not prove the Rev. D 12/06 device used identical mode selection, control state, firmware, or circuitry. (`X`, rejected upgrade)
+- **3571 — interface chronology != invention or implementation genealogy:** `Legacy OTP Commands`, standards namespace alignment, and same-vendor documentation do not prove direct code/die lineage, first invention, or cross-vendor derivation. (`A, X`)
