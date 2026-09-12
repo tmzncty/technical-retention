@@ -26,6 +26,24 @@ Yes, with a deliberately layered evidence chain:
 
 The evidence is sufficient to ground the retention relation, but not to reconstruct M550 firmware internals.
 
+### Follow-up deepening — Micron TN-29-60 (2011)
+
+A bounded prior-art/mechanism follow-up is now recorded in [`150-micron-2011-ftl-garbage-collection-prior-art-deepening.md`](150-micron-2011-ftl-garbage-collection-prior-art-deepening.md).
+
+That note adds a Micron-authored April 2011 FTL witness for:
+
+- out-of-place update followed by invalidation of the old physical page;
+- explicit garbage-collection sequencing: select candidate block(s), copy still-valid pages, then erase;
+- free-page / full-virtual-block pressure as a trigger condition;
+- optional background garbage collection during system idle time;
+- a documented power-consumption trade-off for that idle-time feature.
+
+This moves the public Micron functional-prior-art floor for the general idle/background FTL-GC pattern to **no later than April 2011**. It does **not** establish Micron invention priority, direct M550 firmware descent, identical algorithms, or a shipping-controller implementation history.
+
+The bounded engineering relation is now strengthened to:
+
+`logical supersession != invalidity != reclamation opportunity != copy/erase execution != reclamation completion`.
+
 ---
 
 ## Claim table
@@ -39,6 +57,7 @@ The evidence is sufficient to ground the retention relation, but not to reconstr
 | Current Crucial support says powered idle periods and free space are needed for effective Active GC | Crucial support | current vendor contract | strong current statement; anti-anachronism guard required |
 | TRIM indication and internal GC are distinct mechanisms | M550 flyer + SNIA 2011 | historical record + engineering reconstruction | strong distinction; exact firmware coupling unknown |
 | Generic SSD GC relocates valid data before erasing source blocks containing invalid data | SNIA 2016 | high-quality industry mechanism source | strong generic mechanism, not M550-specific |
+| Micron publicly documented an FTL select/copy/erase GC sequence and optional idle-time background feature by Apr-2011 | Micron TN-29-60 | historical record / vendor technical note | strong for generic SLC FTL guidance; not M550 firmware genealogy |
 | Flash erase-unit / out-of-place update management predates M550 | Gal & Toledo 2005 | academic prior-art guardrail | strong against invention claim, no direct genealogy |
 | Exact M550 victim selection / mapping commit / crash recovery is known | none | blocked | **not established** |
 | Active GC proves secure deletion / sanitization | none | blocked | **false / unsupported** |
@@ -132,7 +151,7 @@ This is the generic mechanism witness used for engineering reconstruction:
 
 It is explicitly **not** used as evidence that M550 uses the same scheduler, data structures, or internal copy primitive.
 
-### 6. Gal & Toledo, Algorithms and Data Structures for Flash Memories — ACM CSUR 37(2), 2005
+### 6. Gal & Toledo, Algorithms and Data Structures for Flash Memories — ACM CSUR 37(2), June 2005
 
 Institutional record:
 <https://cris.tau.ac.il/en/publications/algorithms-and-data-structures-for-flash-memories/>
@@ -142,6 +161,20 @@ The survey records two relevant physical constraints: bits are cleared by erasin
 Use:
 
 Only as a broad prior-art guardrail: the erase-management / out-of-place-update problem family was mature before the M550. No direct genealogy to Micron/Crucial firmware is asserted.
+
+### 7. Micron TN-29-60, Garbage Collection in SLC NAND Flash Memory — Rev. G 4/11 — `H/P`
+
+Historical Micron URL:
+<https://www.micron.com/~/media/documents/products/technical-note/nand-flash/tn2960-garbage-collection-slc-nand.pdf>
+
+Accessible preserved text copy inspected:
+<https://studylib.net/doc/18193030/garbage-collection-in-slc-nand-flash-memory>
+
+The Micron-authored note explicitly describes an FTL garbage-collection algorithm in which out-of-place writes leave old physical pages invalid, garbage collection selects candidate blocks, copies still-valid pages to free space, then erases the selected physical block(s). It also describes an optional background feature that activates garbage collection during system idle time, while noting a power-consumption trade-off.
+
+Use:
+
+This is a pre-M550 vendor-authored functional-prior-art and mechanism witness. It does **not** prove that M550 firmware is an implementation of the note, or that Micron first invented any of these mechanisms in 2011. See the dedicated deepening evidence linked above for claim typing and stop conditions.
 
 ---
 
@@ -179,6 +212,8 @@ Key distinctions:
 
 This decomposition explains why `delete`, `TRIM`, `GC`, and `sanitize` cannot be used as synonyms.
 
+TN-29-60 further lets the project separate **maintenance demand** from **maintenance opportunity**: a free-page threshold can create reclamation pressure, while an idle interval can provide an opportunity to perform the work earlier. Therefore `GC due/pressured != idle opportunity != GC execution != completion`.
+
 ---
 
 ## Stop conditions
@@ -190,8 +225,8 @@ The following claims are intentionally blocked:
 3. **Exact free-space threshold.** The current support recommendation is operational guidance, not a 2014 firmware constant.
 4. **Power-fail atomicity.** M550 lists power-loss protection, but no source ties that feature to a specific GC transaction protocol.
 5. **Sanitization.** Ordinary GC is not documented as device-wide secure purge, cryptographic erase, or verified forensic irrecoverability.
-6. **Invention priority.** 2011 SNIA and earlier flash-management literature predate the named M550 witness; no first-inventor claim is made.
-7. **Genealogy.** Chronology does not establish design descent from Gal/Toledo, SNIA, another SSD vendor, or a specific controller architecture.
+6. **Invention priority.** Micron TN-29-60 (2011), SNIA 2011, and earlier flash-management literature predate the named M550 witness; no first-inventor claim is made.
+7. **Genealogy.** Chronology does not establish M550 design descent from TN-29-60, Gal/Toledo, SNIA, another SSD vendor, or a specific controller architecture.
 
 ---
 
@@ -207,6 +242,6 @@ The following claims are intentionally blocked:
 
 ## Related-repository check
 
-A fresh code search in `tmzncty/computing-archaeology` for `SSD garbage collection FTL` returned no dedicated study. Therefore this bounded retention case does not duplicate a known companion-repository package.
+A fresh code search in `tmzncty/computing-archaeology` for `TN-29-60`, `garbage collection NAND`, and `FTL NAND` returned no dedicated study. Therefore this bounded retention case does not duplicate a known companion-repository package.
 
 If expanded later, broad FTL history, early commercial SSD garbage collection, controller lineages, and product scheduler evolution should move to `computing-archaeology`; `technical-retention` should retain only the state/reclamation relation and cross-case comparison.
