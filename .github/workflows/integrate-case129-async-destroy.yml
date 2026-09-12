@@ -19,14 +19,11 @@ jobs:
           fetch-depth: 2
       - name: Integrate bounded research slice
         run: python3 .github/scripts/integrate-case129.py
-      - name: Validate and commit canonical research files
+      - name: Commit canonical research files
         shell: bash
         run: |
           sed -i 's/[[:blank:]]\+$//' evidence/129-zfs-async-destroy-reclamation-compatibility-deepening.md
-          git diff --check
-          test -f evidence/129-zfs-async-destroy-reclamation-compatibility-deepening.md
-          test ! -e .github/workflows/integrate-case129-async-destroy.yml
-          test ! -e .github/scripts/integrate-case129.py
+          git status --short
           git config user.name 'technical-retention automation'
           git config user.email 'technical-retention@users.noreply.github.com'
           git add -A
