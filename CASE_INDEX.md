@@ -4901,3 +4901,23 @@ Deepening record: [`evidence/76-lattice-2014-qualified-by-similarity-retention-d
 - **3681 — A/E** — Small retained control state can govern much larger retained populations in both Case 141 and Case 142, but WAL-retention frontiers and Ceph pending-backfill byte claims have unrelated protocols and histories.
 - **3682 — X** — Pending-backfill counters do not prove exact disk-extent preallocation, exact EC/storage overhead, complete compression/omap accounting, or a universal future-capacity guarantee.
 - **3683 — X** — Capacity admission/rejection neither proves payload loss nor sanitization, and the cited 2018 implementation-intent commits do not establish invention priority or unchanged behavior across all Ceph releases.
+
+### Findings 3684–3699 — Case 129 async_destroy reclamation / compatibility lifetime
+
+- **3684 — H/P** — Released OpenZFS documentation says `async_destroy` allows a filesystem destroy operation to complete while used space is reclaimed later by a background process.
+- **3685 — H/P** — The same documentation says interrupted asynchronous destroy work can resume after the pool is opened, so the reclamation obligation can survive an interruption/open boundary.
+- **3686 — H/P** — OpenZFS exposes the amount still to be reclaimed by the background destroy process through the pool `freeing` property.
+- **3687 — H/P** — The `async_destroy` feature documentation explicitly states that the feature is active only while `freeing` is non-zero.
+- **3688 — H/P** — `com.delphix:async_destroy` is documented as read-only compatible and without dependencies; OpenZFS 2.2.8 source registers it with `ZFEATURE_FLAG_READONLY_COMPAT`.
+- **3689 — H/P** — Generic ZFS feature-state semantics define `active` as an on-disk format change in effect for which supporting software is required for read-write import.
+- **3690 — H/P** — Generic semantics distinguish `enabled` but inactive features, and state that once a feature is enabled it cannot be disabled even though some features may later return from active to enabled.
+- **3691 — E** — For `async_destroy`, outstanding reclamation (`freeing > 0`) is therefore also a persistence condition for this feature's read-write software-support obligation.
+- **3692 — E** — Logical destroy completion can precede both space-reclamation completion and relaxation of this feature's active-state compatibility requirement.
+- **3693 — E** — Draining `freeing` to zero can relax this feature's activity without returning the pool to the pre-enable state; `active -> enabled/inactive != enabled -> disabled`.
+- **3694 — E** — `freeing` is reclamation/accounting evidence concerning outstanding work, not a second payload copy and not an exact physical-sector map.
+- **3695 — A/E** — Case 153 Ceph SnapTrim is a bounded functional analogy for `logical deletion != asynchronous reclamation completion`; only the ZFS evidence here directly couples outstanding reclamation to pool-feature activity/import compatibility.
+- **3696 — X** — ZFS `async_destroy` and Ceph SnapTrim are not thereby the same protocol, implementation, or proven genealogy.
+- **3697 — X** — An active read-only-compatible `async_destroy` feature does not imply that every unsupported import is impossible; read-only compatibility is a distinct access-mode boundary.
+- **3698 — X** — `freeing == 0` or `async_destroy` becoming inactive does not prove byte-identical rollback, secure deletion, sanitization, exact physical erasure, or forensic non-recoverability.
+- **3699 — X** — The 2012 feature-flags integration and later released documentation/source establish implementation/documentation chronology, not invention priority for asynchronous deletion or feature-controlled format compatibility.
+

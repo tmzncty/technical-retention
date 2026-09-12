@@ -181,6 +181,32 @@ These are functional comparisons (`A`), not genealogy.
 
 These are project interpretations, not claims about illumos/OpenZFS authors' intent.
 
+
+## Evidence deepening 129B — `async_destroy` reclamation lifetime and compatibility state
+
+New [`Evidence 129B`](../evidence/129-zfs-async-destroy-reclamation-compatibility-deepening.md) grounds one feature-specific lifetime that the baseline feature-flags case previously left implicit.
+
+Released OpenZFS documentation says `async_destroy` lets a destroy operation complete while used space is still being returned by a background process; interrupted work can resume after the pool opens, and remaining work is exposed as `freeing`. The feature-specific rule is unusually direct: **`com.delphix:async_destroy` is active only while `freeing` is non-zero**. OpenZFS also documents and source-registers it as read-only compatible.
+
+Historical/project record:
+
+```text
+destroy operation completed
+    != background reclaim completed
+
+`freeing > 0`
+    -> `async_destroy` active
+    -> feature support required for read-write import
+```
+
+The generic feature contract adds a second boundary: once enabled, a feature cannot be disabled, even though some features can return from `active` to `enabled`. For `async_destroy`, draining `freeing` can therefore relax the active compatibility requirement without returning the pool to a pre-feature state.
+
+Engineering reconstruction, not project wording:
+
+> **an outstanding asynchronous reclamation relation can prolong a read-write software-compatibility obligation after logical deletion has completed; completion of that reclamation can relax activity without undoing feature enablement.**
+
+This conclusion is feature-specific. `freeing == 0` is neither byte-identical rollback nor a physical-sector erasure/sanitization witness. The bounded functional analogy to [Case 153](153-ceph-rados-snaptrim-asynchronous-reclamation.md) is only `logical deletion != asynchronous reclamation completion`; Ceph SnapTrim and ZFS `async_destroy` are not treated as one mechanism or genealogy.
+
 ## Limits
 
 This case does not establish that:
