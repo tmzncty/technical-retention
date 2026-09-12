@@ -2,9 +2,9 @@
 
 ## Status
 
-**`grounded`** — bounded to the public 1991-priority/1994-published Intel erase-suspend patent line, AMD's November-1996 Am29F040 product contract, Texas Instruments' 1998 TMS29F040 named-product microstate/power-transition contract, and later 1996-priority/1998-public refinements used only to expose checkpoint and capability boundaries.
+**`grounded`** — bounded to the public 1991-priority/1994-published Intel erase-suspend patent line, Intel's November-1995 / January-1996 28F008SA named-product contract, AMD's November-1996 Am29F040 product contract, Texas Instruments' 1998 TMS29F040 named-product microstate/power-transition contract, and later 1996-priority/1998-public refinements used only to expose checkpoint and capability boundaries.
 
-Grounding records: [`../evidence/146-intel-amd-1991-1998-flash-erase-suspend-grounding.md`](../evidence/146-intel-amd-1991-1998-flash-erase-suspend-grounding.md) + [`../evidence/146-ti-tms29f040-erase-suspend-microstate-power-deepening.md`](../evidence/146-ti-tms29f040-erase-suspend-microstate-power-deepening.md).
+Grounding records: [`../evidence/146-intel-amd-1991-1998-flash-erase-suspend-grounding.md`](../evidence/146-intel-amd-1991-1998-flash-erase-suspend-grounding.md) + [`../evidence/146-ti-tms29f040-erase-suspend-microstate-power-deepening.md`](../evidence/146-ti-tms29f040-erase-suspend-microstate-power-deepening.md) + [`../evidence/146-intel-28f008sa-suspend-abort-power-boundary-deepening.md`](../evidence/146-intel-28f008sa-suspend-abort-power-boundary-deepening.md).
 
 ## Scope
 
@@ -95,6 +95,26 @@ The safe public-document floor used here is 1994 unless an earlier public source
 The patent title and later patent-family references establish a specific 1990s design problem: an automated erase sequence could occupy the nonvolatile memory long enough that a system needed a way to suspend erase, service another access, and later resume the erase sequence.
 
 This case does **not** claim Intel invented every form of interruptible nonvolatile-memory operation. Earlier EEPROM/write-interruption material exists, and program/write interruption is not identical to sector erase suspend.
+
+### Intel 28F008SA: named product suspend/resume and abort boundary by 1995–1996
+
+Intel's November-1995 28F008SA datasheet (Order Number `290429-005`) advertises `Erase Suspend Capability` for a named 8-Mbit FlashFile product with sixteen 64-Kbyte blocks, an integrated Command User Interface / state machine, and production package offerings. January-1996 application note AP-364 then exposes the product's WSM behavior in more detail.
+
+During block erase, `B0H` requests suspend. Once the WSM reaches the suspended state, status distinguishes the mode, reads can be directed to blocks other than the target, and `D0H` transitions the WSM back to Erase. AP-364 explicitly says that the target block contains unknown data while suspended and that `VPP` must remain high through the suspend interval.
+
+The same note distinguishes suspend from abort. `RP#` low / Deep Powerdown or low `VPP` aborts block erase, after which Intel tells software to repeat the block-erase sequence once system integrity is restored. Power-up and return from Deep Powerdown default the device to Read Array mode. Thus the product supplies a concrete named-device boundary:
+
+```text
+powered suspend + valid continuation conditions
+    -> D0H resumes pending erase
+
+reset/power-control abort
+    -> fresh erase setup/confirm required
+```
+
+This closes the **named Intel product-behavior** gap but not the stronger genealogy claim. The shared Intel corporate lineage and compatible chronology do not prove that a particular 28F008SA silicon revision implements the exact circuitry or claims of `US5355464A`.
+
+Detailed source treatment: [`../evidence/146-intel-28f008sa-suspend-abort-power-boundary-deepening.md`](../evidence/146-intel-28f008sa-suspend-abort-power-boundary-deepening.md).
 
 ### AMD Am29F040: a named product contract by November 1996
 
@@ -200,7 +220,7 @@ That relation may be very small compared with the sector payload, but it changes
 
 The sources do not establish one universal internal representation such as a durable program counter or exact analog-progress checkpoint. The TI TMS29F040 in fact supplies a direct counterexample to exact-microstate preservation: its Resume path preserves the pending sector-erase relation while resetting the internal pulse counter to zero.
 
-The same TI product also resets command/control state to read mode below its low-VCC lockout threshold and on power-up. That is affirmative named-product evidence against treating its suspended erase as a crash-persistent transaction checkpoint. The exact cell-level condition of a power-interrupted target sector remains unspecified here, and the TI rule must not be projected onto every Intel/AMD/Macronix/later-NAND implementation.
+The TI product resets command/control state to read mode below its low-VCC lockout threshold and on power-up. Intel's 28F008SA independently supplies a related but separately documented product boundary: AP-364 requires maintained `VPP` through suspend, treats `RP#` low / low `VPP` as erase-abort conditions, requires a fresh block-erase sequence after abort, and defaults to Read Array on power-up / return from Deep Powerdown. These are product-specific control contracts; neither establishes the exact cell-level condition of a power-interrupted target sector, and neither rule may be projected onto AMD/Macronix/later-NAND implementations.
 
 So the case grounds **powered operation-state retention with transition-specific state projection**, not universal preservation of controller microstate and not crash-persistent transaction recovery.
 
@@ -424,6 +444,14 @@ Manufacturer preliminary datasheet preserved through archival mirrors:
 
 Used only as a later refinement witness for read+program during suspend, target-sector status reads, and the changed suspend contract. It is not back-projected into 1996.
 
+### P6 — Intel 28F008SA datasheet (November 1995) + AP-364 (January 1996) — `H/P*`
+
+Intel-authored product documentation preserved through archival mirrors:
+<https://www.alldatasheet.com/html-pdf/66035/INTEL/PA28F008SA-85/132/1/PA28F008SA-85.html>
+<https://intel-vintage-developer.eu5.org/DESIGN/FLCOMP/APPLNOTS/29209903.PDF>
+
+Used for the named Intel product witness, `B0H` suspend / `D0H` resume WSM path, target-block `unknown data` boundary, maintained-`VPP` condition, reset/power-control abort distinction, and Read Array default after power-up / Deep Powerdown. Archival hosting is marked with `*`; no patent-to-product descent is inferred.
+
 ### P4 — Macronix `US5805501A` — `H/P`
 
 Macronix International Co., Ltd., **“Flash memory device with multiple checkpoint erase suspend logic,”** priority 22-May-1996, publication 8-September-1998:
@@ -443,7 +471,7 @@ Searchable archival copies list Am29F040 `Suspend Erase/Resume` as allowing read
 ## Next work
 
 - obtain a directly inspectable full facsimile/text rendering of `US5355464A` if an exact figure/claim-level implementation argument becomes necessary;
-- identify a named Intel shipping part/manual tied directly to the 1991-priority patent line without inferring product implementation from patent ownership;
+- the 28F008SA now supplies a named Intel product/manual witness; still require direct documentary evidence before tying a particular 28F008SA silicon revision to the exact 1991-priority patent implementation, and keep exact first-shipment genealogy separate;
 - test reset/power-fail behavior on a period-compatible part or emulator before making any persistence-across-reset claim;
 - trace erase-suspend evolution into later simultaneous-read/write NOR and modern NAND only if the broader engineering history is developed in `computing-archaeology`;
 - keep secure erase/sanitization and higher-layer reclamation as separate cases.

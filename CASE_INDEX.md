@@ -5016,3 +5016,21 @@ Deepening record: [`evidence/76-lattice-2014-qualified-by-similarity-retention-d
 - **3778 — A/E** — Cases 136 and 142 remain bounded functional comparisons for mechanism/policy/admission/execution separation; they do not establish Redis genealogy or shared implementation lineage.
 - **3779 — X** — The 2009 public-repository lower bounds do not establish invention priority, exclude private/unpublished Redis work or external prior art, prove 2009 crash correctness, or turn logical AOF replacement into physical-media sanitization.
 
+### Findings 3780–3795 — Case 146 Intel 28F008SA named-product suspend / abort boundary
+
+- **3780 — H/P*** — Intel's November-1995 `28F008SA` datasheet (Order Number `290429-005`) advertises `Erase Suspend Capability` for the named 8-Mbit FlashFile product and documents an integrated Command User Interface / state machine.
+- **3781 — H/P*** — Intel AP-364 (`292099-003`, January 1996) documents the 28F008SA WSM and gives separate block-erase, erase-suspend/resume, current/next-state, and background-erase flows.
+- **3782 — H/P*** — During an active block erase, `B0H` requests suspend; after the WSM reaches suspend, `SR.7` and `SR.6` indicate the state and `RY/BY#` returns high.
+- **3783 — H/P*** — In the suspended state, AP-364 permits reading blocks other than the one being erased and explicitly says the target block contains unknown data.
+- **3784 — H/P*** — `D0H` Erase Resume transitions the WSM out of suspend and back to Erase; Intel requires `VPP` to remain at the high erase level throughout the suspend interval.
+- **3785 — H/P*** — AP-364 says block-erase abort occurs when `RP#` goes low / Deep Powerdown is entered or `VPP` falls low, and directs software to repeat the block-erase sequence after system integrity is restored.
+- **3786 — H/P*** — The 28F008SA defaults to Read Array mode at power-up and on return from Deep Powerdown, so the product documentation does not specify suspended WSM mode as a power-cycle-persistent checkpoint.
+- **3787 — E** — `powered suspend != abort/restart`: Resume is a continuation command only while the suspended operation relation remains live; abort recovery requires a fresh erase setup/confirm sequence.
+- **3788 — E** — `resumable erase obligation != authoritative target payload`: the pending erase can remain resumable while the target block's data is explicitly unknown.
+- **3789 — E** — `nonvolatile Flash array != nonvolatile pending-operation control state`; product-level power/reset behavior separates payload substrate from the WSM continuation relation.
+- **3790 — E** — Maintained `VPP` is part of the documented continuation conditions, so retention of the suspend/resume relation is conditional on external operating state as well as logical command state.
+- **3791 — E** — Requiring a fresh erase command sequence after abort establishes loss of the immediate interface-level Resume relation, but does not establish that prior physical erase progress has been reset to zero.
+- **3792 — A/E** — Intel 28F008SA and TI TMS29F040 both separate powered suspend/resume from reset/power interruption, but TI's documented pulse-counter reset must not be projected into Intel's undocumented internal progress state.
+- **3793 — H/P*** — The named Intel product witness is dated November 1995 / January 1996, after the 1991-priority/1994-public patent line and before the November-1996 AMD Am29F040 witness; this is chronology, not proof of implementation descent.
+- **3794 — X** — Shared Intel ownership, compatible dates, and similar vocabulary do not prove that a particular 28F008SA silicon revision implements the exact circuitry or claims of `US5355464A`; direct patent-to-product genealogy remains open.
+- **3795 — X** — Erase Suspend, abort, repeat erase, target-block unknown data, and eventual successful block erase do not by themselves establish rollback, a known interrupted cell distribution, secure sanitization, or forensic non-recoverability.
