@@ -5091,3 +5091,22 @@ Deepening record: [`evidence/76-lattice-2014-qualified-by-similarity-retention-d
 - **3841 — X** — The inspected records do not establish that 1987 is the first NAND invention, first commercial NAND shipment, or first use of every listed program/erase technique.
 - **3842 — X** — Because the 1987 paper was not page-by-page inspected in this pass, abstract-level evidence is not promoted into unsupported circuit details or exact full-paper wording; direct full-text inspection remains open.
 - **3843 — X** — `block erase` in these device records is not evidence of host-level deletion, reclamation completion, secure sanitization, or forensic non-recoverability.
+
+### Findings 3844–3859 — Case 70 DEC PDP-8/E MM8-E production operating margin
+
+- **3844 — H/P** — DEC's September 1973 `DEC-8E-HMM1A-D-D` maintenance manual supplies a named PDP-8/E MM8-E production/service witness rather than a laboratory-only core-material record.
+- **3845 — H/P** — MM8-E Table 4-6 treats field select, strobe, slice, X/Y current control, and temperature tracking as distinct memory-circuit variables rather than one scalar margin setting.
+- **3846 — H/P** — The same table assigns strobe and field select to factory or field service while slice, X/Y current control, and temperature tracking are factory-only settings.
+- **3847 — H/P** — DEC lists four slice levels for the G104 path: `-4.3 V`, `-4.8 V`, `-5.3 V`, and `-6.0 V`, and explicitly warns against field adjustment.
+- **3848 — H/P** — The G227 X/Y current-control table exposes four discrete control-voltage choices (`+3.7%`, `+2.2%`, nominal `~3.5 V at 25 °C`, `-1.7%`) and gives a corresponding nominal X/Y current of `370 mA`.
+- **3849 — H/P** — MM8-E inhibit current is documented as fixed in adjustment but proportional to the `-15 V` supply, with nominal value `340 mA`.
+- **3850 — H/P** — A thermistor-resistor network on the memory stack board feeds a temperature-sensitive divider into the current-control circuit, making temperature tracking part of the documented operating-control path.
+- **3851 — H/P** — The MM8-E strobe uses a six-position switch with discrete `10 ns` steps; field service is instructed to run `Memory Checkerboard` while moving toward error boundaries in both timing directions.
+- **3852 — H/P** — DEC's reliability criterion requires at least three consecutive working strobe positions and then selects the middle working position, favoring the more delayed center position when the count is even.
+- **3853 — H/P** — Checkout requires the checkerboard to run at the middle position and for at least `15 minutes` at each adjacent position without error; acceptance is run only at the final strobe position.
+- **3854 — E** — The observed checkerboard pass window is evidence of an installed-system operational timing margin; it is not a measurement of unpowered remanent-retention duration.
+- **3855 — E/X** — Three or more passing 10-ns taps plus midpoint selection support a robustness reconstruction but do not prove a continuous symmetric `±10 ns` analog tolerance or a quantified failure probability.
+- **3856 — E** — Temperature-sensitive current control means the nominal room-temperature voltage/current point is not the whole operating relation; this evidence still does not supply a core-material temperature coefficient or deployed-material distribution.
+- **3857 — E** — `manufacturing calibration authority != field maintenance authority`: DEC intentionally restricts slice/current/temperature settings while allowing field adjustment of strobe and field select.
+- **3858 — FA** — Papian's 1952 material/pulse-regime disturbance measurements and DEC's 1973 installed-system service qualification are complementary margin evidence layers; the comparison does not establish direct procedural genealogy.
+- **3859 — X** — The MM8-E values (`370 mA`, `340 mA`, slice levels, 10-ns taps, 15-minute checkout) are not universal magnetic-core constants, retention guarantees, sanitization evidence, or proof that every available calibration setting passes.
