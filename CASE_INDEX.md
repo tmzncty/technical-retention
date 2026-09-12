@@ -4824,3 +4824,24 @@ Deepening record: [`evidence/136-dell-2013-2018-perc-puncture-source-readability
 - **3617 — puncture is not sanitization:** loss of a logical stripe does not establish forensic erasure of prior physical embodiments. (`X`, rejected upgrade)
 - **3618 — Dell manuals establish documentation floors, not invention priority:** the 2013/2018 records do not prove first use of puncture terminology or identical firmware genealogy across PERC generations. (`X`, rejected upgrade)
 - **3619 — no universal URE-risk model is inferred:** vendor manuals do not establish a universal URE probability, failure rate, correlation model, or quantitative rebuild-risk curve; cross-vendor evidence and fault injection remain open. (`X`, scope boundary)
+
+## Case 76 — Lattice qualification-by-similarity retention-coverage deepening findings
+
+Deepening record: [`evidence/76-lattice-2014-qualified-by-similarity-retention-deepening.md`](evidence/76-lattice-2014-qualified-by-similarity-retention-deepening.md).
+
+- **3620 — December-2014 LA-MachXO qualification explicitly uses a source qualification vehicle:** Lattice Test Group B names LAXP2-17E-FTN256 for NVCE + HTDR rather than representing every LA-MachXO combination as independently stressed. (`H/P`)
+- **3621 — Lattice explicitly uses Qualified-by-Similarity vocabulary:** the LA-MachXO summary says the target-family Flash NVCE + HTDR is Qualified-by-Similarity from LAXP2 data under the cited product-qualification-family rule. (`H/P`)
+- **3622 — the stated transfer basis is same Flash cells plus same wafer fab:** this is the manufacturer-recorded rationale for the bounded NVM qualification transfer; it is not a project-invented similarity criterion. (`H/P`)
+- **3623 — source retention testing covers programmed and erased Flash states:** Lattice says all cells in all arrays are life-tested in both programmed and erased states for the cited retention qualification. (`H/P`)
+- **3624 — LAXP2 source devices are preconditioned by 10,000 P/E cycles:** the LA-MachXO qualification record states that LAXP2 devices are programmed and erased 10,000 times before data-retention testing. (`H/P`)
+- **3625 — the LatticeXP2 HTRX record uses accelerated 150 °C stress through 1000 hours:** the manufacturer family summary specifies 168/500/1000-hour HTRX intervals at 150 °C and cites JESD22-A103C/A117A. (`H/P`)
+- **3626 — named LAXP2 HTRX lots report zero failures in the published table:** lots 8/9/10 are listed at 100/80/80 units with zero failures; an additional LFXP2 lot yields a published cumulative 0/362 and 362,000 device-hours. (`H/P`)
+- **3627 — LA-MachXO also has separate target-family extended-cycling evidence:** the automotive summary reports an 80-unit LAMXO2280E split with zero failures through 40,000 P/E cycles, separately from the source-family HTRX evidence. (`H/P`)
+- **3628 — standard stress method is not the qualification coverage rule:** a JESD/AEC-referenced test procedure defines stress/measurement, while the source-to-target similarity relation defines why prior results are allowed to cover another family. (`E`)
+- **3629 — directly stressed vehicle is not every device covered by qualification:** qualification coverage can be relational: tested vehicle + result + accepted similarity criteria can support a broader product-family claim. (`E`)
+- **3630 — same Flash cell and wafer fab do not prove whole-device equivalence:** the bounded QBS rationale is not upgraded into identity of packages, high-voltage circuits, assembly behavior, or every system-level failure mode. (`X`)
+- **3631 — zero observed qualification failures do not imply zero field-failure probability:** bounded samples and stress durations cannot be promoted into a deterministic per-device lifetime guarantee. (`X`)
+- **3632 — accelerated retention duration is not literal field lifetime:** the 150 °C HTRX interval is qualification evidence; stress-to-use transformation requires a separate model, handled comparatively in Case 132. (`E/A`)
+- **3633 — device-level Flash retention qualification is not the JESD218 SSD service contract:** the former qualifies NVM cells/devices under cycling/retention stress, while the latter composes host TBW, workload, SSD error/failure criteria, and later power-off retention. (`E/A`)
+- **3634 — qualification coverage depends on retained relation evidence as well as retained test results:** for a QBS claim to remain interpretable, later users need both the source result and the documented basis authorizing transfer to the target family. (`E`)
+- **3635 — the 2014 Lattice record is a documentation floor, not an invention-priority claim:** it proves this named manufacturer used QBS vocabulary and practice by December 2014 but not first industry use, origin of AEC generic-data policy, or origin of JESD22-A117. (`X`)

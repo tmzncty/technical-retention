@@ -8,6 +8,8 @@ A 2025 Solidigm D5-P5336 QLC product brief and Micron 7600 Rev. B (07/2026) TLC 
 
 Grounding record: [`../evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md`](../evidence/76-jedec-2000-2015-ssd-endurance-retention-grounding.md).
 
+Qualification-coverage deepening: [`../evidence/76-lattice-2014-qualified-by-similarity-retention-deepening.md`](../evidence/76-lattice-2014-qualified-by-similarity-retention-deepening.md).
+
 Operational continuation: [`Case 111 — Enterprise SSD Extended Shutdown`](111-enterprise-ssd-extended-shutdown-maintenance.md) separates this qualification relation from later IBM/Dell operator power-up schedules, powered maintenance opportunity, and recommissioning policy.
 
 ## Scope
@@ -74,6 +76,22 @@ JESD218 (2010)
 ```
 
 The bounded contribution of JESD218 in this case is different: it composes a **whole-SSD**, host-visible endurance rating in TBW with application-class workload, capacity, UBER/FFR, and a subsequent power-off retention requirement.
+
+### Manufacturer qualification coverage can extend beyond directly stressed samples
+
+A December-2014 Lattice LA-MachXO AEC-Q100 qualification summary adds a useful evidence-layer boundary below the SSD-level JESD218 contract. For `NVCE + HTDR`, Lattice names LAXP2-17E as the qualification vehicle and explicitly says LA-MachXO Flash endurance/data retention is **Qualified-by-Similarity** because the families use the same Flash cells and the same wafer fab under the cited product-family rule. The accompanying data say the source LAXP2 devices were P/E-cycled 10,000 times before retention stress, with cells exercised in programmed and erased states; a LatticeXP2 family summary gives 150 °C HTRX intervals through 1000 hours and zero failures for the named LAXP2 lots. A separate 80-unit LA-MachXO extended-cycling exercise reports zero failures through 40,000 cycles.
+
+The historical vocabulary therefore supports a distinction that should not be erased in later summaries:
+
+```text
+directly stressed qualification vehicle
+    !=
+target family covered by a documented similarity relation
+```
+
+**Engineering reconstruction:** qualification coverage depends on a chain of stress method + source vehicle + observed result + similarity criteria. `Standard test method != qualification coverage rule`; `covered family != every covered SKU directly stressed`; `same Flash cell / wafer fab != identical whole-device failure envelope`; and `0 observed failures in a bounded qualification sample != zero field-failure probability`. The high-temperature stress is also accelerated evidence, not literal observation of the target field lifetime; Case 132 owns that separate stress-to-use boundary.
+
+This does not collapse device-level Flash qualification into JESD218. The Lattice evidence is a semiconductor NVM endurance/retention qualification relation, whereas JESD218 composes host-written TBW, workload, SSD-level error/failure criteria, and subsequent power-off retention. The shared vocabulary is historical overlap, not proof of identical qualification objects or genealogy.
 
 ### JESD218 makes endurance and retention separate concepts, then composes them
 
