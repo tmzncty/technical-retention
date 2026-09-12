@@ -1,4 +1,4 @@
-name: Integrate Case 136 source-readability deepening
+name: Inspect Case 136 integration schema
 
 on:
   push:
@@ -11,24 +11,14 @@ permissions:
   contents: write
 
 jobs:
-  integrate:
+  inspect:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Apply research integration
-        run: python3 .github/scripts/integrate_case136.py
-      - name: Validate and commit
+      - name: Inspect index schema
         shell: bash
         run: |
-          git diff --check
-          rm -f .github/scripts/integrate_case136.py
-          rm -f .github/workflows/automation-case136-puncture.yml
-          git add -A
-          git diff --cached --check
-          git status --short
-          git config user.name 'technical-retention-automation'
-          git config user.email 'technical-retention-automation@users.noreply.github.com'
-          git commit -m 'case136: deepen degraded-rebuild source readability [skip ci]'
-          git push origin HEAD:main
+          echo '--- HEAD ---'
+          head -n 30 CASE_INDEX.md
+          echo '--- TAIL ---'
+          tail -n 80 CASE_INDEX.md
