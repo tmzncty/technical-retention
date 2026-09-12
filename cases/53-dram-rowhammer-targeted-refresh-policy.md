@@ -309,3 +309,19 @@ A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty
 3. CMU-SAFARI, **rowhammer** experimental source repository accompanying the ISCA 2014 work: <https://github.com/CMU-SAFARI/rowhammer>.
 4. Micron Technology, **4Gb: x4, x8, x16 DDR4 SDRAM**, document `09005aef84af6dd0`, Rev. E 11/15, `Target Row Refresh Mode`; archived distributor mirror: <https://tz.yic-electronics.com/datasheet/cf/MT40A256M16GE-083E-B.pdf>.
 5. Pietro Frigo et al., **“TRRespass: Exploiting the Many Sides of Target Row Refresh,”** IEEE Symposium on Security and Privacy, 2020, DOI 10.1109/SP40000.2020.00090: <https://doi.org/10.1109/SP40000.2020.00090>; author/arXiv record: <https://arxiv.org/abs/2004.01807>.
+
+## 2025 ColumnDisturb deepening: disturbance topology is not always row adjacency
+
+Follow-up evidence: [`../evidence/53-columndisturb-2025-nonlocal-read-disturb-deepening.md`](../evidence/53-columndisturb-2025-nonlocal-read-disturb-deepening.md).
+
+Yüksel et al. (arXiv:2510.14750v2, 17 October 2025) experimentally report **ColumnDisturb**, a later DRAM read-disturbance phenomenon whose measured victim relation follows shared physical columns / bitlines across multiple subarrays rather than only the few row-neighbor victims associated with RowHammer / RowPress. Their tested population comprises 216 DDR4 and 4 HBM2 chips; the reported blast radius reaches as many as three subarrays / 3072 rows in tested DDR4 chips, and some tested devices exhibit bitflips within a nominal refresh window.
+
+This does **not** extend the historical scope of the original 2012–2020 RowHammer case by silently calling ColumnDisturb "RowHammer." It supplies a bounded later counterexample to one possible overgeneralization of Case 53's engineering model:
+
+> **physical row adjacency is one disturbance topology, not a universal definition of access-induced DRAM retention risk**.
+
+The safer reconstruction is `access history + hidden physical coupling relation -> disturbance-conditioned victim set`. RowHammer instantiates that relation with row-neighbor coupling; ColumnDisturb's published experiments instead implicate shared columns / bitlines across subarray boundaries.
+
+The deepening also sharpens the link to Cases 40/43. The 2025 paper compares ordinary retention failures with ColumnDisturb victims and reports a substantially wider disturbance-weak population, then shows that this expanded weak-row set can sharply reduce the simulated benefit of RAIDR-style heterogeneous refresh. Therefore **retention-profile classification != mechanism-independent robustness classification**. A row that is "strong" under a no-disturbance retention test is not thereby proven safe under every access-conditioned coupling mechanism.
+
+Historical record, engineering reconstruction, analogy, and interpretation remain separate: the authors' claim of a first experimental ColumnDisturb demonstration is recorded as an author claim rather than independently verified invention priority; ColumnDisturb is only functionally analogous to RowHammer at the access-induced-retention level; and the project phrase "mechanism-relative retention neighborhood" is not attributed to the paper's actors.

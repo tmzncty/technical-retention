@@ -595,3 +595,12 @@ Before marking a case `mature`, additionally require that it survive cross-case 
 ### Completed bounded deepening — Case 135 e.MMC 4.41 manual-BKOPS prior-art floor
 
 - [x] [`cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md`](cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md) + [`evidence/135-emmc441-2010-manual-bkops-prior-art-deepening.md`](evidence/135-emmc441-2010-manual-bkops-prior-art-deepening.md): move the conservative public standardized **generic manual-BKOPS** floor from the previously inspected 2015 e.MMC 5.1 witness back to at least **e.MMC 4.41 / 2010**, using JESD84-A441 publication/title metadata plus period SanDisk/Kingston 4.41 product documentation exposing `BKOPS_START`, `BKOPS_EN`, support, and status fields. Preserve the lower-bound/not-invention distinction; keep manual host-granted scheduling separate from the later inspected `AUTO_EN` device-autonomous scheduling mode; preserve `scheduling authority != target/algorithm authority`; and leave the exact A44→A441 clause diff plus 4.5/4.51/5.0 genealogy to direct JEDEC archaeology / `computing-archaeology`.
+
+## Completed bounded deepening — Case 53 ColumnDisturb topology counterexample (2026-09-12)
+
+- Added [`evidence/53-columndisturb-2025-nonlocal-read-disturb-deepening.md`](evidence/53-columndisturb-2025-nonlocal-read-disturb-deepening.md), grounded in Yüksel et al., arXiv:2510.14750v2 (17 October 2025).
+- Extended Case 53 without merging mechanisms: RowHammer's row-neighbor victim relation is now explicitly bounded against ColumnDisturb's experimentally reported column/bitline-coupled victims across multiple subarrays.
+- Added the engineering distinction `aggressor-history evidence != complete victim-coverage policy` and the cross-case result `retention-profile classification != mechanism-independent robustness classification`.
+- Recorded the paper's 216-DDR4 + 4-HBM2 test population, within-refresh-window failures in some tested devices, and its retention-aware-refresh/RAIDR implications while keeping all numeric outcomes sample/model bounded.
+- Preserved chronology discipline: the 2025 paper's "first" language is stored as an author claim, not independently established invention priority; broader bitline/read-disturb genealogy remains a `computing-archaeology` task.
+- Fresh `tmzncty/computing-archaeology` searches for `ColumnDisturb` and `RowPress` found no reusable dedicated module, so no duplicate historical genealogy was created here.
