@@ -1,0 +1,38 @@
+name: Case 115 snapshot edit-log replay integration
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/case115-snapshot-editlog-replay-integration.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 5
+      - name: Apply Case 115 snapshot replay research patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^^)" = "a3057d5f3798fc48eefd0b648c95c76542d178c9"
+          python3 .github/case115_snapshot_editlog_replay_patch.py
+          sed -i 's/[[:space:]]\+$//' cases/115-apache-hdfs-snapshot-shared-block-replication.md
+          sed -i 's/[[:space:]]\+$//' evidence/115-hadoop-241-snapshot-editlog-replay-deepening.md
+          sed -i 's/[[:space:]]\+$//' ROADMAP.md
+          sed -i 's/[[:space:]]\+$//' CASE_INDEX.md
+          rm .github/case115_snapshot_editlog_replay_patch.py
+          rm .github/workflows/case115-snapshot-editlog-replay-integration.yml
+          git config user.name "technical-retention automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git diff --cached --stat
+          git commit -m "case115: deepen snapshot edit-log replay boundary [skip ci]"
+          git push origin HEAD:main
