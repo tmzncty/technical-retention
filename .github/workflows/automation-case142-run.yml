@@ -1,0 +1,42 @@
+name: automation-case142-run
+on:
+  push:
+    paths:
+      - '.github/workflows/automation-case142-run.yml'
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Integrate Case 142 projected-backfill evidence
+        shell: bash
+        run: |
+          set +e
+          python3 scripts/tmp_case142_projected_backfill_integrate.py > /tmp/case142.out 2>&1
+          rc=$?
+          cat /tmp/case142.out
+          if [ "$rc" -ne 0 ]; then
+            cp /tmp/case142.out .case142-integration-error.txt
+            git config user.name "tmzncty"
+            git config user.email "72063145+tmzncty@users.noreply.github.com"
+            git add .case142-integration-error.txt
+            git commit -m "automation: capture Case 142 integration error [skip ci]"
+            git push
+            exit 0
+          fi
+          git config user.name "tmzncty"
+          git config user.email "72063145+tmzncty@users.noreply.github.com"
+          git rm scripts/tmp_case142_projected_backfill_integrate.py .github/workflows/automation-case142-run.yml
+          git add evidence/142-ceph-reef-projected-backfill-admission-accounting-deepening.md \
+                  cases/142-ceph-reef-capacity-gated-recovery.md \
+                  ROADMAP.md CASE_INDEX.md
+          git diff --cached --check
+          test "$(git diff --cached --name-only | wc -l)" -eq 6
+          test ! -e .case142-integration-error.txt
+          git diff --cached --name-only
+          git commit -m "case142: deepen projected backfill admission accounting [skip ci]"
+          git push
