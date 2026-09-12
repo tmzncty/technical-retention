@@ -8,6 +8,8 @@ Grounding record: [`../evidence/104-micron-2009-2014-lpddr-tcsr-pasr-grounding.m
 
 Low-power-state retention-boundary deepening: [`../evidence/104-micron-2014-lpddr-low-power-retention-boundary-deepening.md`](../evidence/104-micron-2014-lpddr-low-power-retention-boundary-deepening.md). This product-level slice separates ordinary Power-Down, SELF REFRESH, and DPD without turning DPD content loss into a sanitization claim.
 
+Earlier DPD product-availability / optionality deepening: [`../evidence/104-micron-hynix-2008-2009-dpd-product-availability-deepening.md`](../evidence/104-micron-hynix-2008-2009-dpd-product-availability-deepening.md). This earlier named-product slice moves the bounded public-document floor to June 2008 and adds Hynix May-2009 optional-feature plus MR/EMR-loss evidence without turning product chronology into JEDEC or invention genealogy.
+
 ## Scope
 
 Cases 03, 09, 10, 21, and 69 already establish why DRAM requires refresh, how refresh addressing/scheduling can move on-chip, how SDRAM hands recurring refresh responsibility between controller and device, and how DDR4 permits bounded scheduling elasticity. This case asks a narrower question left open by Case 21:
@@ -84,6 +86,28 @@ This supports `Power-Down != powered off`, `SELF REFRESH != passive nonvolatilit
 
 The content-loss statement is still not a sanitization guarantee. The datasheet does not establish the cell-level remanence horizon, laboratory recoverability, or verified physical erasure after DPD.
 
+### H/P* — named Mobile-DDR DPD product documents are visible by 2008–2009, with optionality still explicit
+
+Micron's earlier Mobile DDR Rev. H document (June 2008) already lists Deep Power-Down for the `MT46H16M16LF` / `MT46H8M32LF/LG` family and gives the same broad non-retentive boundary: memory-array power is eliminated, payload is not retained, and exit is followed by 200 microseconds of valid clocks plus PRECHARGE ALL and the full initialization sequence.
+
+Hynix's `H5MS2G22MFR` / `H5MS2G32MFR` Rev. 1.2 document (May 2009) independently describes Deep Power Down, but marks it as an **optional feature**. Its DPD section says internal voltage generators stop, all memory data are lost, and Mode Register plus Extended Mode Register information are also lost; exit requires a 200-microsecond wait and complete device reinitialization.
+
+These dated documents are product-document lower bounds, not invention or JEDEC-standardization dates. They add two bounded distinctions:
+
+```text
+product-family documentation includes DPD
+    !=
+every ordering/configuration necessarily implements DPD
+
+DPD payload loss
+    can coexist with
+configuration/control-state loss
+```
+
+The Hynix optionality statement is especially important: presence of interface vocabulary and a command description is not by itself proof of universal feature availability.
+
+Detailed source treatment: [`../evidence/104-micron-hynix-2008-2009-dpd-product-availability-deepening.md`](../evidence/104-micron-hynix-2008-2009-dpd-product-availability-deepening.md).
+
 ## Retained state and control state
 
 At least four state classes must remain distinct:
@@ -91,9 +115,10 @@ At least four state classes must remain distinct:
 1. **payload state** — charge-encoded data in DRAM cells;
 2. **retention-scope policy** — PASR mode-register state selecting which regions receive maintenance;
 3. **maintenance-rate control** — temperature-sensor / self-refresh-oscillator relation that determines internal cadence;
-4. **power/mode state** — whether the device is in ordinary operation, self refresh, or DPD.
+4. **power/mode state** — whether the device is in ordinary operation, self refresh, or DPD;
+5. **device-configuration state** — mode-register settings that may need to be reconstructed after a deep-power transition; the May-2009 Hynix product document explicitly says MR/EMR information is lost in DPD.
 
-The project terms `retention-scope policy` and `maintenance-rate control` are engineering reconstructions, not Micron's historical vocabulary.
+The project terms `retention-scope policy` and `maintenance-rate control` are engineering reconstructions, not Micron's or Hynix's historical vocabulary. The Hynix MR/EMR statement is a named-product witness and must not be universalized to every LPDDR generation.
 
 ## Engineering reconstruction
 
@@ -191,6 +216,9 @@ This is a functional comparison. It is not a claim of one linear invention genea
 | ordinary Power-Down duration is bounded by refresh requirements rather than providing indefinite retention | H/P* | Micron Mobile LPDDR Rev. I 01/14 pp. 90–93 |
 | SELF REFRESH retains payload through internally scheduled refresh without external clocking | H/P* | Micron Mobile LPDDR Rev. I 01/14 pp. 89–90 |
 | exit from DPD requires a full DRAM initialization sequence | H/P* | Micron Mobile LPDDR Rev. I 01/14 pp. 93–94 |
+| Micron Rev. H 6/08 publicly documents DPD for a named Mobile DDR product family, with non-retention and full-init exit semantics | H/P* | Micron vendor document preserved by archival mirror |
+| Hynix Rev. 1.2 05/09 documents DPD as optional and states that payload plus MR/EMR state are lost | H/P* | Hynix vendor datasheet preserved by distributor |
+| appearance of DPD in a product-family document proves universal availability across every listed configuration | X | contradicted by Hynix's explicit optional-feature language |
 | DPD content loss is equivalent to verified sanitization | X | not established; no remanence / recovery / erase-assurance evidence |
 | retention coverage and ordinary addressable capacity can differ | E | bounded reconstruction from PASR semantics |
 | maintenance rate and maintenance scope are independent comparison axes | E/A | bounded cross-feature comparison |
@@ -209,3 +237,5 @@ A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty
 2. Lionel S. White, Jr. and G. R. Mohan Rao, Texas Instruments, US4207618A, _On-chip refresh for dynamic memory_, filed 26 June 1978, published 10 June 1980: <https://patents.google.com/patent/US4207618A/en>.
 3. Takayasu Sakurai and Tetsuya Iizuka, Toshiba Corp., US4682306A, _Self-refresh control circuit for dynamic semiconductor memory device_, Japanese priority 20 August 1984, US publication 21 July 1987: <https://patents.google.com/patent/US4682306A/en>.
 4. Micron Technology, Inc., _512Mb: x16, x32 Mobile LPDDR SDRAM_, `t67m_512mb_mobile_lpddr.pdf`, Rev. I, January 2014, especially pp. 90–94; vendor-origin datasheet preserved via Texas Instruments: <https://e2e.ti.com/cfs-file/__key/telligent-evolution-components-attachments/00-791-00-00-00-38-27-14/T67M_5F00_512Mb_5F00_mobile_5F00_lpddr_5F00_sdram.pdf>.
+5. Micron Technology, Inc., Mobile DDR SDRAM `MT46H16M16LF` / `MT46H8M32LF/LG`, Rev. H, June 2008, especially feature list and Deep Power-Down operation; vendor-origin text preserved by AllDatasheet: <https://www.alldatasheet.com/html-pdf/75876/MICRON/MT46H16M16LF/185/1/MT46H16M16LF.html> and <https://www.alldatasheet.com/html-pdf/75876/MICRON/MT46H16M16LF/9123/49/MT46H16M16LF.html>.
+6. Hynix Semiconductor, _2Gbit Mobile DDR SDRAM_, `H5MS2G22MFR` / `H5MS2G32MFR`, Rev. 1.2, May 2009, especially feature list and Deep Power Down operation; vendor datasheet preserved by Farnell: <https://www.farnell.com/datasheets/1750885.pdf>.

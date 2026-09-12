@@ -5034,3 +5034,22 @@ Deepening record: [`evidence/76-lattice-2014-qualified-by-similarity-retention-d
 - **3793 — H/P*** — The named Intel product witness is dated November 1995 / January 1996, after the 1991-priority/1994-public patent line and before the November-1996 AMD Am29F040 witness; this is chronology, not proof of implementation descent.
 - **3794 — X** — Shared Intel ownership, compatible dates, and similar vocabulary do not prove that a particular 28F008SA silicon revision implements the exact circuitry or claims of `US5355464A`; direct patent-to-product genealogy remains open.
 - **3795 — X** — Erase Suspend, abort, repeat erase, target-block unknown data, and eventual successful block erase do not by themselves establish rollback, a known interrupted cell distribution, secure sanitization, or forensic non-recoverability.
+
+### Findings 3796–3811 — Case 104 Mobile DDR DPD earlier-product / optional-capability boundary
+
+- **3796 — H/P*** — Micron's Mobile DDR Rev. H document is dated June 2008 and names the `MT46H16M16LF` / `MT46H8M32LF/LG` product family while listing Deep Power-Down among its low-power capabilities.
+- **3797 — H/P*** — Micron's June-2008 DPD section says the mode obtains maximum power reduction by eliminating power to the memory array and that data are not retained.
+- **3798 — H/P*** — The same Micron document requires a 200-microsecond exit interval with valid clocks followed by PRECHARGE ALL and the full DRAM initialization sequence before ordinary service resumes.
+- **3799 — H/P*** — Hynix's `H5MS2G22MFR` / `H5MS2G32MFR` 2-Gbit Mobile DDR Rev. 1.2 document is dated May 2009 and lists Deep Power Down as an optional feature whose availability requires vendor confirmation.
+- **3800 — H/P*** — Hynix says DPD stops internal voltage generators and loses all memory data in the bounded product contract.
+- **3801 — H/P*** — Hynix separately states that Mode Register and Extended Mode Register information are lost in DPD, making non-payload configuration-state loss explicit.
+- **3802 — H/P*** — Hynix requires a 200-microsecond delay and complete device reinitialization after DPD; the documented sequence includes PRECHARGE ALL, two AUTO REFRESH commands, and mode-register loading.
+- **3803 — E** — `product-family documentation includes DPD != every ordering/configuration necessarily implements DPD`; Hynix's explicit optionality blocks universal feature-availability inference.
+- **3804 — E** — `payload continuity != configuration continuity`: the Hynix witness shows one power-management transition can invalidate both user data and device-configuration state while those remain analytically distinct state classes.
+- **3805 — E** — `complete reinitialization != payload restoration`; the exit sequence restores command/service admissibility rather than reconstructing pre-DPD user data.
+- **3806 — E** — The June-2008 and May-2009 dates are public product-document lower bounds, not first-shipment, invention, or JEDEC-standardization dates.
+- **3807 — A/E** — Micron 2008 and Hynix 2009 share the bounded functional relation `DPD -> payload outside retention contract -> reinitialization`, but the sources do not establish identical internal voltage domains, circuitry, or command-state implementations.
+- **3808 — A/E** — Case 02 magnetic core remains a functional counterexample: controlled power removal can preserve core payload while surrounding control state resets, whereas Mobile-DDR DPD explicitly withdraws the payload-retention contract; no shared genealogy is inferred.
+- **3809 — X** — These vendor documents do not establish when DPD entered a JEDEC Mobile DDR/LPDDR standard or whether the feature was normative, optional, or revised there at any particular date.
+- **3810 — X** — `data not retained` / `all memory data is lost` do not establish secure sanitization, an exact capacitor-decay horizon, or forensic non-recoverability.
+- **3811 — X** — No claim is made that Micron or Hynix invented DPD, that June 2008 is the first product deployment, or that every configuration in either family has identical entry/exit or retention behavior.
