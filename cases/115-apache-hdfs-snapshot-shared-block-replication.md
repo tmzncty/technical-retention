@@ -344,7 +344,72 @@ Mapped Flash Case 04 also separates authority/currentness retirement from later 
 
 ### Remaining bounded debt
 
-Still open: arbitrary crash/edit-log replay and HA-failover semantics for snapshots; lower `FSDataset`/filesystem reuse behavior; block-device remapping/discard/sanitize composition; fault-injected timing between retirement, invalidation dispatch, DataNode execution, and restart; and evolution of this path across later Hadoop releases. Broader HDFS persistence/deletion history remains a `computing-archaeology` task.
+Still open: arbitrary-crash / torn-or-corrupt-edit-log recovery and HA-failover semantics for snapshots; lower `FSDataset`/filesystem reuse behavior; block-device remapping/discard/sanitize composition; fault-injected timing between retirement, invalidation dispatch, DataNode execution, and restart; and evolution of this path across later Hadoop releases. Normal non-format NameNode restart with snapshot edit-log application is now grounded separately below. Broader HDFS persistence/deletion history remains a `computing-archaeology` task.
+
+
+## Normal edit-log replay deepening — Hadoop 2.4.1
+
+The companion evidence record [`evidence/115-hadoop-241-snapshot-editlog-replay-deepening.md`](../evidence/115-hadoop-241-snapshot-editlog-replay-deepening.md) closes the **normal NameNode-restart replay** part of the earlier persistence debt without turning the case into a general crash-consistency claim.
+
+### H/P — snapshot lifecycle operations are explicit edit-log operations with explicit replay handlers
+
+In `release-2.4.1`, `FSEditLog` serializes `CreateSnapshotOp`, `DeleteSnapshotOp`, and `RenameSnapshotOp`; `FSEditLogLoader` contains matching `OP_CREATE_SNAPSHOT`, `OP_DELETE_SNAPSHOT`, and `OP_RENAME_SNAPSHOT` branches that apply the operations through `SnapshotManager`.
+
+This supplies a released implementation path:
+
+```text
+snapshot namespace transition
+    -> snapshot-specific edit-log operation
+    -> later loader replay
+    -> reconstructed snapshot namespace relation
+```
+
+The edit record is control/history state. It is not another copy of the DataNode block payload.
+
+### H/P — the released regression separates edit-log replay from later fsimage loading
+
+`TestSnapshot.checkFSImage()` says it restarts the cluster to check **edit log applying and fsimage saving/loading**. It first shuts down and restarts `MiniDFSCluster` with `format(false)`, dumps a middle namespace tree specifically to check that the edit log is applied correctly, and compares that tree with the pre-restart tree. Only afterward does it call `saveNamespace()` and perform a second non-format restart to check the fsimage-loaded tree.
+
+Therefore the bounded release test supports:
+
+> **snapshot namespace authority can survive ordinary NameNode process restart through edit-log application, not only through a prior explicit `saveNamespace` checkpoint.**
+
+### H/P + E — successful createSnapshot crosses an HDFS edit-log sync boundary before return
+
+The inspected `FSNamesystem.createSnapshot(...)` path mutates the snapshot manager, calls `logCreateSnapshot(...)`, leaves the write-lock block, then calls `getEditLog().logSync()` before the method returns the snapshot path.
+
+The safe conclusion is exact and software-layered:
+
+> **successful create return != merely unsynchronized in-process snapshot state.**
+
+But:
+
+> **HDFS `logSync()` boundary != universal proof of lower-media durability under every hardware fault.**
+
+### Engineering reconstruction
+
+Together with the existing 2.4.1 documentation that DataNode blocks are not copied for snapshots, the replay path demonstrates a useful control/payload decomposition:
+
+```text
+retained namespace/edit history
+    + shared block identities
+    + surviving DataNode replicas
+    -> reconstructed historical snapshot view after NameNode restart
+```
+
+Hence:
+
+> **NameNode process-memory loss != snapshot-relation loss.**
+
+> **snapshot edit-log replay != snapshot payload duplication.**
+
+> **reconstructed namespace relation != proof that every DataNode replica is healthy.**
+
+### Remaining boundary
+
+The released test uses orderly shutdown and ordinary restart. It does not inject failures at every edit-log write/sync instruction, prove torn/corrupt-log recovery, or exercise active/standby shared-edits failover. The new evidence therefore narrows the old debt rather than erasing it:
+
+> **normal restart replay != arbitrary crash/torn-log recovery != HA failover.**
 
 
 ## Prior art and genealogy boundary

@@ -5053,3 +5053,22 @@ Deepening record: [`evidence/76-lattice-2014-qualified-by-similarity-retention-d
 - **3809 — X** — These vendor documents do not establish when DPD entered a JEDEC Mobile DDR/LPDDR standard or whether the feature was normative, optional, or revised there at any particular date.
 - **3810 — X** — `data not retained` / `all memory data is lost` do not establish secure sanitization, an exact capacitor-decay horizon, or forensic non-recoverability.
 - **3811 — X** — No claim is made that Micron or Hynix invented DPD, that June 2008 is the first product deployment, or that every configuration in either family has identical entry/exit or retention behavior.
+
+### Findings 3812–3827 — Case 115 HDFS snapshot normal edit-log replay boundary
+
+- **3812 — H/P** — Apache Hadoop `release-2.4.1` `FSEditLog.logCreateSnapshot(...)` constructs `CreateSnapshotOp` and submits it through `logEdit(op)`, making snapshot creation an explicit edit-log state transition.
+- **3813 — H/P** — The same release has `logDeleteSnapshot(...)` backed by `DeleteSnapshotOp` plus `logEdit(op)`, rather than treating snapshot deletion as an unlogged in-memory-only change.
+- **3814 — H/P** — The same release has `logRenameSnapshot(...)` backed by `RenameSnapshotOp` plus `logEdit(op)`, making historical-name change explicit in the edit stream.
+- **3815 — H/P** — `FSEditLogLoader` handles `OP_CREATE_SNAPSHOT` by invoking `SnapshotManager.createSnapshot(...)`, so the create opcode participates in namespace reconstruction.
+- **3816 — H/P** — `FSEditLogLoader` handles `OP_DELETE_SNAPSHOT` by invoking `SnapshotManager.deleteSnapshot(...)` and then processing collected blocks / removed inodes, preserving the distinction between replayed namespace retirement and later lower-media erasure.
+- **3817 — H/P** — `FSEditLogLoader` handles `OP_RENAME_SNAPSHOT` by invoking `SnapshotManager.renameSnapshot(...)`, pairing the serialized rename with an explicit replay path.
+- **3818 — H/P** — `TestSnapshot.checkFSImage()` explicitly says it restarts the cluster to check edit-log application and fsimage saving/loading; its first `format(false)` restart occurs before `saveNamespace()` and its middle tree is later compared to verify that edit-log application preserved the snapshot-bearing namespace tree.
+- **3819 — E** — `NameNode process-memory loss != snapshot-relation loss`: persisted namespace/edit history can be replayed to reconstruct the relation that keeps shared HDFS blocks historically reachable.
+- **3820 — E** — `snapshot edit-log replay != snapshot payload duplication`; the replayed state is namespace/control history, while released HDFS snapshot documentation separately says DataNode blocks are not copied for snapshots.
+- **3821 — H/P** — In the inspected `release-2.4.1` successful `FSNamesystem.createSnapshot(...)` path, the NameNode logs the create operation and calls `getEditLog().logSync()` before returning the snapshot path.
+- **3822 — E/X** — Crossing that exact HDFS `logSync()` boundary is stronger than merely retaining unsynchronized Java-object state but is not promoted into a universal physical-media durability guarantee across every filesystem, controller, device cache, power fault, or correlated failure.
+- **3823 — X** — The released non-format restart regression uses orderly shutdown; `normal restart + edit-log application != arbitrary crash / torn-or-corrupt-log recovery proof`.
+- **3824 — X** — The inspected restart does not establish active/standby, JournalNode quorum, shared-edits fencing, or other HA failover behavior; `single-NameNode restart replay != HA semantics`.
+- **3825 — E** — Reconstructed snapshot namespace authority still depends on surviving DataNode block replicas for payload; edit replay can restore naming/currentness relations without proving every replica healthy or correctly placed.
+- **3826 — E/X** — Replayed snapshot deletion can retire namespace/reference state and trigger block-collection logic, but it does not prove immediate filesystem reuse, media overwrite, discard completion, sanitization, or forensic non-recoverability.
+- **3827 — X** — Hadoop 2.4.1 supplies a bounded released implementation/replay witness only; no claim is made that HDFS invented snapshots, edit logging, replay, copy-on-write retention, or namespace checkpointing.
