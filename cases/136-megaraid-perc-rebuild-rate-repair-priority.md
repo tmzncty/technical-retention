@@ -4,7 +4,10 @@
 
 **`grounded`** — bounded to publicly documented LSI MegaRAID / Dell PERC rebuild-rate semantics. This case does not claim a general history of RAID rebuild scheduling, exact controller bandwidth allocation, or failure-probability measurements.
 
-Grounding record: [`../evidence/136-lsi-2006-dell-perc-rebuild-rate-grounding.md`](../evidence/136-lsi-2006-dell-perc-rebuild-rate-grounding.md).
+Grounding records:
+
+- [`../evidence/136-lsi-2006-dell-perc-rebuild-rate-grounding.md`](../evidence/136-lsi-2006-dell-perc-rebuild-rate-grounding.md) — rebuild-rate / maintenance-policy semantics;
+- [`../evidence/136-dell-2013-2018-perc-puncture-source-readability-deepening.md`](../evidence/136-dell-2013-2018-perc-puncture-source-readability-deepening.md) — surviving-source unreadability, rebuild-with-errors, and RAID-puncture boundary.
 
 ## Scope
 
@@ -127,6 +130,26 @@ For background initialization, the 2006 guide says changing rebuild rate does no
 
 This claim is limited to the documented background-initialization path. The source does not establish identical latch/update semantics for an in-flight rebuild.
 
+### Surviving-source readability can limit reconstruction even while rebuild continues
+
+Dell's March 2013 OpenManage guide documents `A Rebuild Completes with Errors` for named PERC 4 controllers: a rebuild can report successful completion while damaged portions cannot be restored. The same guide says medium/bad-block damage discovered during rebuild or degraded operation can cross a recovery boundary that requires restoration from backup.
+
+Dell's November 2018 PowerEdge troubleshooting guide makes the relation more explicit under `RAID puncture` / `rebuild with errors`. Its RAID 5 example starts with one failed/replacement member; if a surviving member has a data error in the same stripe when rebuild reaches it, remaining information is insufficient to reconstruct that stripe. PERC can puncture that stripe and let global rebuild continue.
+
+The guide says puncturing can restore redundancy and return the array to `optimal` while the affected stripe remains lost. Therefore:
+
+> **rebuild progress/completion != reconstructable coverage.**
+>
+> **redundancy restored / array optimal != complete payload integrity.**
+>
+> **rebuild rate / repair priority != surviving-source readability.**
+
+Source readability is a constitutive repair input alongside replacement destination and admitted controller resources. More scheduling priority cannot reconstruct information the redundancy code no longer has.
+
+A local unreadable region on a surviving member must also remain distinct from a second whole-device failure. Both can remove a contribution required by a stripe, but they differ in scope and failure object.
+
+Dell says affected punctured data continues to produce uncorrectable errors when accessed and post-puncture Check Consistency does not resolve the existing loss. At project level this supports treating puncture as a retained **negative condition / error relation** on the affected logical extent. It does not identify an undocumented firmware field or where that relation is physically encoded.
+
 ### Rebuild urgency != payload correctness
 
 A higher rate may reduce time spent degraded but can consume more foreground resources. A lower rate can protect service performance while leaving the system degraded longer.
@@ -151,13 +174,19 @@ member failure
 
 The comparison is direct within RAID, but Case 136 does not rewrite the historical RAID taxonomy of Case 17.
 
-### Cases 18 / 102 — scrub and patrol read
+### Cases 18 / 101 / 102 — proactive integrity and media scans
 
-Scrub/patrol read govern proactive discovery/verification work; rebuild rate governs reconstruction after a member-loss repair obligation exists. Both consume background service capacity, but:
+The puncture evidence sharpens why proactive observation matters. A consistency check, scrub, medium scan, or patrol-read style operation can expose latent defects while enough redundancy remains to repair or retire them. After a separate member loss consumes redundancy margin, the same local unreadability can become unreconstructable.
 
-> **integrity-scan scheduling != rebuild scheduling.**
+This is a functional comparison only:
 
-The 2006 MegaRAID guide itself helps keep this distinction visible by separately naming patrol read, consistency check, background initialization, and rebuild even where some controller-rate controls are reused.
+> **proactive integrity/readability maintenance != rebuild**, and Dell PERC Check Consistency is not thereby equivalent to ZFS scrub or another stack's checksum mechanism.
+
+### Cases 94 / 96 — code margin and repair exposure
+
+Case 94's RAID 6 P/Q example is a counterexample to universalizing Dell's RAID 5 example: code strength changes how many unavailable contributions a stripe can tolerate. Case 96 shows how faster reconstruction can reduce the interval spent degraded.
+
+> **shorter repair exposure != proof that every surviving source region is readable**, and **RAID 5 failure geometry != RAID 6 failure geometry**.
 
 ### Case 131 — PERC foreign configuration
 
@@ -214,10 +243,12 @@ Division of labor:
 
 ## Open evidence debt
 
-- earlier pre-2006 RAID-controller rebuild-throttling genealogy;
-- exact persistence location and reset/default semantics of the rebuild-rate property on named controllers;
-- whether in-flight rebuild progress resumes or restarts from an earlier checkpoint after power loss on named MegaRAID/PERC generations;
-- measured rebuild-rate-to-throughput mapping under controlled foreground workloads;
-- rebuild-rate interaction with URE handling, patrol read, consistency check, cache policy, and SSD/HDD media mix;
+- earlier pre-2006 rebuild-throttling and pre-2013 rebuild-with-errors / puncture genealogy;
+- exact persistence location and reset/default semantics of rebuild-rate policy on named controllers;
+- whether in-flight rebuild progress resumes or restarts from an earlier checkpoint after power loss;
+- controller-generation-specific telemetry and persistence mechanism for punctured/error locations;
+- RAID 6 / multi-parity PERC behavior and cross-vendor handling of surviving-source unreadability;
+- probabilistic/correlated URE models and measured rebuild-rate-to-throughput/risk curves;
+- interaction among rebuild scheduling, patrol read/check consistency, cache policy, and media mix;
 - current PERC 12/13 generation semantics and firmware-specific mutability;
-- fault injection and second-failure exposure measurements.
+- independent fault injection and second-failure/source-read-error exposure measurements.

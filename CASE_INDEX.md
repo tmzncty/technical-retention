@@ -4804,3 +4804,23 @@ Deepening record: [`evidence/141-postgresql-logical-slot-confirmed-flush-restart
 - **3602 — neither frontier is a sanitization boundary:** advancement does not prove deletion from filesystem, archive, backup, device, or forensic embodiments. (`X`, rejected upgrade)
 - **3603 — scope remains version-bounded:** this slice grounds the PostgreSQL 9.4/9.5 logical dual-frontier baseline, not all later candidate-restart behavior, physical-slot semantics, production lag distributions, or fault behavior. (`X`, scope boundary)
 
+## Case 136 — Dell PERC surviving-source unreadability / RAID-puncture deepening findings
+
+Deepening record: [`evidence/136-dell-2013-2018-perc-puncture-source-readability-deepening.md`](evidence/136-dell-2013-2018-perc-puncture-source-readability-deepening.md).
+
+- **3604 — March 2013 PERC rebuild can complete with errors:** Dell OpenManage documentation for named PERC 4 controllers says a rebuild can complete successfully while reporting errors and can restore healthy portions but not a damaged portion. (`H/P`)
+- **3605 — degraded-state media damage can cross a recoverability boundary:** the 2013 guide says medium/bad-block damage discovered during rebuild or degraded operation can leave damaged data unrecoverable from the virtual disk without restoration from backup. (`H/P`)
+- **3606 — Dell explicitly names RAID puncture / rebuild with errors:** the November 2018 PowerEdge troubleshooting guide defines RAID puncture as PERC behavior that can let rebuild continue when a double fault exceeds the impacted stripe's redundancy. (`H/P`)
+- **3607 — one failed member plus one surviving same-stripe data error can defeat RAID 5 reconstruction:** Dell's worked example says insufficient information remains for that stripe, which is lost/punctured during rebuild. (`H/P`)
+- **3608 — restored redundancy can coexist with lost payload:** the 2018 guide says puncturing can restore redundancy and return the array to an optimal state while the affected stripe remains lost. (`H/P`)
+- **3609 — post-puncture Check Consistency is not recovery:** Dell says Check Consistency after a RAID puncture is induced does not resolve it, and recommends proactive Check Consistency, especially before drive replacement when possible. (`H/P`)
+- **3610 — rebuild progress/completion != reconstructable coverage:** global rebuild can continue after a local stripe becomes unreconstructable and is punctured. (`E`)
+- **3611 — array optimal / redundancy restored != complete payload integrity:** restored redundancy after puncture does not retroactively recover the lost stripe. (`E`)
+- **3612 — rebuild rate / repair priority != source readability:** surviving-source readability/reconstructability is a constitutive repair input independent of scheduling resources. (`E`)
+- **3613 — latent surviving-source defect != second whole-device failure:** either can remove a contribution required by a degraded stripe, but they differ in scope and failure object. (`E`)
+- **3614 — proactive integrity/readability maintenance can preserve future repair opportunity:** discovering latent defects before another member loss consumes redundancy margin is functionally comparable to Cases 18/101/102, without mechanism identity. (`E/A`)
+- **3615 — RAID 5 puncture geometry is not universal RAID geometry:** Case 94 RAID 6 provides a code-margin counterexample, so Dell's RAID 5 example is not generalized to dual parity. (`A`)
+- **3616 — faster repair does not certify readable sources:** Case 96 / faster-repair comparison is limited to exposure time; higher rebuild priority or shorter rebuild does not by itself prevent puncture. (`A`)
+- **3617 — puncture is not sanitization:** loss of a logical stripe does not establish forensic erasure of prior physical embodiments. (`X`, rejected upgrade)
+- **3618 — Dell manuals establish documentation floors, not invention priority:** the 2013/2018 records do not prove first use of puncture terminology or identical firmware genealogy across PERC generations. (`X`, rejected upgrade)
+- **3619 — no universal URE-risk model is inferred:** vendor manuals do not establish a universal URE probability, failure rate, correlation model, or quantitative rebuild-risk curve; cross-vendor evidence and fault injection remain open. (`X`, scope boundary)
