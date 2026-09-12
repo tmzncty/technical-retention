@@ -1,0 +1,29 @@
+name: run-case141-finalizer
+on:
+  push:
+    paths:
+      - .github/workflows/case141-run-finalizer.yml
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Integrate Case 141 research
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/tmp_case141_dual_frontier_finalize.py
+          git diff --check
+          grep -q '3603 — scope remains version-bounded' CASE_INDEX.md
+          grep -q 'logical-slot acknowledgement vs WAL-restart dual frontier' ROADMAP.md
+          grep -q '2014–2015 deepening — logical consumer acknowledgement' cases/141-postgresql-replication-slot-wal-retention-frontier.md
+          test -f evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CASE_INDEX.md ROADMAP.md cases/141-postgresql-replication-slot-wal-retention-frontier.md
+          git commit -m 'case141: integrate logical-slot dual frontiers [skip ci]'
+          git push origin HEAD:main
