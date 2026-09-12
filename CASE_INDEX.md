@@ -4721,4 +4721,3 @@ Deepening record: [`evidence/38-intel-s3500-2014-independent-power-cut-stack-val
 - **3539 — Case 15 ~ Case 38 only as durability-assurance layering:** SSD 320's persistence/failure boundary and Case 38's readiness/manufacturer/independent-observation layers can be compared functionally, without asserting shared controller/firmware/capacitor design or direct product genealogy. (`A, X`)
 - **3540 — durability confidence as evidence layers is project interpretation:** contract, health state, manufacturer qualification, and independent fault observation can be treated as differently scoped evidence for retention confidence; Intel and Nordeus are not credited with this repository vocabulary. (`I, X`)
 - **3541 — independent S3500 witness != universal compliance:** the Nordeus result must not be upgraded into proof of all S3500 units, all power-loss conditions, S3700 identity, every acknowledged ATA write, or every higher-layer durability invariant. (`X`)
-
