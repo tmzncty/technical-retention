@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 3
+          fetch-depth: 8
       - name: Integrate bounded named-product PEL research slice
         shell: bash
         run: |
