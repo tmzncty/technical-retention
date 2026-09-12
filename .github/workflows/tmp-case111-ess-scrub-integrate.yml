@@ -1,0 +1,45 @@
+name: Temporary Case 111 ESS scrub integration
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/tmp-case111-ess-scrub-integrate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Integrate bounded research slice
+        run: python .github/scripts/tmp_case111_ess_scrub_integrate.py
+
+      - name: Validate research tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          test -f evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md
+          grep -Fq '111-ibm-ess-post-offline-scrub-completion-deepening.md' cases/111-enterprise-ssd-extended-shutdown-maintenance.md
+          grep -Fq 'Case 111 IBM ESS post-offline scrub completion' ROADMAP.md
+          grep -Fq -- '- **3555 —' CASE_INDEX.md
+          test ! -e .github/scripts/tmp_case111_ess_scrub_integrate.py
+          test ! -e .github/workflows/tmp-case111-ess-scrub-integrate.yml
+          git status --short
+
+      - name: Commit canonical research changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'case111: deepen ESS scrub completion semantics [skip ci]'
+          git push origin HEAD:main
