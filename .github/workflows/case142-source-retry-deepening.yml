@@ -26,6 +26,7 @@ jobs:
           git checkout main
           git pull --ff-only origin main
           python3 scripts/case142_source_retry_deepening.py
+          python3 -c "from pathlib import Path; p=Path('evidence/142-ceph-reef-capacity-gated-recovery-grounding.md'); p.write_text(p.read_text().rstrip() + '\n')"
           test -f evidence/142-ceph-reef-source-retry-state-horizon-deepening.md
           grep -q source-retry-state-horizon-deepening cases/142-ceph-reef-capacity-gated-recovery.md
           grep -q source-retry-state-horizon-deepening evidence/142-ceph-reef-capacity-gated-recovery-grounding.md
