@@ -8,6 +8,8 @@ Grounding record: [`../evidence/55-nvme10-13-smart-health-endurance-grounding.md
 
 Persistent-event-log deepening: [`../evidence/55-nvme14-2019-persistent-event-log-deepening.md`](../evidence/55-nvme14-2019-persistent-event-log-deepening.md).
 
+Named-product vendor-layout deepening: [`../evidence/55-samsung-pm9a3-2021-vendor-smart-layout-deepening.md`](../evidence/55-samsung-pm9a3-2021-vendor-smart-layout-deepening.md).
+
 ## Scope
 
 This case asks a narrow retention question:
@@ -161,6 +163,18 @@ Intel's July 2014 `Intel Solid-State Drive DC P3700 Series Product Specification
 The same P3700 product specification also says that a small portion of physical capacity is used for NAND media management and maintenance while the user-addressable LBA count remains stable for the life of the drive. That is product-level evidence that visible logical capacity and hidden maintenance capacity are not the same relation.
 
 The surviving copy used here is an Intel-authored document preserved through manual/document mirrors rather than a current Intel-hosted PDF. The document identity, order number, July 2014 revision, and page transcript are preserved in the grounding record; this provenance is not silently upgraded to a current-vendor URL.
+
+### Samsung PM9A3: one named product exposes multiple SMART/telemetry namespaces
+
+Samsung's January-2021 PM9A3 M.2 datasheet adds a named-product layout beneath the standardized interfaces already grounded in this case. Identify Controller vendor-specific byte 3092 reports `OEM Extended SMART Supported`; §6.4 defines an **Extended SMART Information Log at LID `0xCA`**, while the next table separately defines an **Enhanced SMART Log at LID `0xC4`**. These exist alongside the standard NVMe SMART/Health `0x02` interface.
+
+The `0xCA` page includes lifetime program/erase/wear/error fields, lifetime user/NAND-write and user-read counters, reserve-block state, `Read Reclaim count`, UECC/shutdown/error/recovery fields, firmware-update counts, `Reset Count`, and related telemetry. One thermal-throttle event counter is explicitly said to be preserved over power cycles. That wording is not generalized here into an undocumented claim that every byte in `0xCA` shares one persistence/reset contract.
+
+Samsung's official October-2023 DC Toolkit 3.0 guide independently lists PM9A3 as a supported NVMe product, offers distinct standard-SMART and extended-SMART retrieval options, and shows a named PM9A3 (`GDC7502Q`) reference output for `Get Extended SMART data`. This grounds public product/tool exposure, not one immutable layout across every firmware/OEM variant.
+
+The Open Compute Project's March-2020 NVMe Cloud SSD profile supplies a useful adjacent but **separate** contract. It defines Cloud Health at `0xC0`, requires specified health data to survive named power-cycle/reset boundaries, and defines `Physical Media Units Written` to include user and metadata traffic in user and system areas so it can support WAF calculation. Therefore `base NVMe 0x02 != OCP 0xC0 != Samsung OEM 0xCA != Samsung Enhanced 0xC4`; OCP persistence rules are not silently projected onto Samsung's different vendor page.
+
+This named-product slice is grounded in [`../evidence/55-samsung-pm9a3-2021-vendor-smart-layout-deepening.md`](../evidence/55-samsung-pm9a3-2021-vendor-smart-layout-deepening.md).
 
 ### NVMe 1.4 adds a persistent but explicitly selective event-history layer
 
@@ -388,6 +402,14 @@ The periodic SMART/Health snapshot is also not a raw-media ledger. It does not d
 
 The separate Sanitize Start and Sanitize Completion event types fix another boundary: **`operation start != operation completion != independent verification of physical forgetting`**. The event record documents interface state; it does not become a forensic audit of every physical embodiment.
 
+### Telemetry namespace and field wording are part of the persistence evidence
+
+The PM9A3/OCP comparison adds a guardrail to this case: a familiar label such as `SMART`, `writes`, `reclaim`, or `reset` is not enough to identify the retained state. The researcher must bind the claim to the log namespace, field definition, accounting boundary, and explicit persistence/update rules.
+
+Thus **`same device + SMART label != one homogeneous telemetry schema`**, **`host write traffic != physical-media write traffic`**, and **`OCP 0xC0 persistence != undocumented Samsung 0xCA persistence`**. Likewise, Case 67's PM963 field named `Lifetime read Reclaim count` must not be used to backfill lifetime semantics into PM9A3's separately documented `Read Reclaim count`. Similar vendor vocabulary is a functional comparison, not proof of identical persistence horizon, reset behavior, trigger logic, or firmware genealogy.
+
+The PM9A3 field `Reset Count` is also treated only as reported state. Its name is not evidence for a command that resets telemetry. This keeps **history about reset episodes** separate from **authority to clear history**.
+
 ## Relation to existing cases
 
 ### Case 36 — NAND correct-and-refresh
@@ -511,6 +533,9 @@ That is a project-level interpretation. It is not terminology attributed to NVM 
 10. T13, **AT Attachment with Packet Interface - 5 (ATA/ATAPI-5), Working Draft T13/1321D Revision 2**, 13 December 1999; period draft transcription/mirror used for revision history and §§8.41.4–8.41.6: <https://studylib.net/doc/25730948/ata-atapi-5>
 11. NVM Express, **NVM Express Base Specification, Revision 1.4**, 10 June 2019, especially §5.14.1.13 and §5.14.1.13.1: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_4-2019.06.10-Ratified.pdf>
 12. NVM Express, **Changes in NVMe Revision 1.4**, first-party revision summary: <https://nvmexpress.org/changes-in-nvme-revision-1-4/>
+13. Samsung Electronics, **_PM9A3 NVMe M.2 Datasheet_**, Rev. 1.0, January 2021; Samsung-authored product document, inspected through a surviving mirror: <https://www.stesz.com/Upload/SAMSUNG/PM9A3/PM9A3-M.2-Datasheet.pdf>
+14. Samsung Electronics, **_Samsung DC Toolkit 3.0 User Guide_**, Rev. 1.0, October 2023; official Samsung PDF: <https://download.semiconductor.samsung.com/resources/user-manual/Samsung_DCToolkit_V3.0_User_Guide.pdf>
+15. Open Compute Project, **_NVMe Cloud SSD Specification_**, Version 1.0 (03182020), especially §§4.8.3–4.8.4: <https://www.opencompute.org/documents/nvme-cloud-ssd-specification-v1-0-3-pdf>
 
 ## Related repositories
 

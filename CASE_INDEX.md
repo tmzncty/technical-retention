@@ -4845,3 +4845,22 @@ Deepening record: [`evidence/76-lattice-2014-qualified-by-similarity-retention-d
 - **3633 — device-level Flash retention qualification is not the JESD218 SSD service contract:** the former qualifies NVM cells/devices under cycling/retention stress, while the latter composes host TBW, workload, SSD error/failure criteria, and later power-off retention. (`E/A`)
 - **3634 — qualification coverage depends on retained relation evidence as well as retained test results:** for a QBS claim to remain interpretable, later users need both the source result and the documented basis authorizing transfer to the target family. (`E`)
 - **3635 — the 2014 Lattice record is a documentation floor, not an invention-priority claim:** it proves this named manufacturer used QBS vocabulary and practice by December 2014 but not first industry use, origin of AEC generic-data policy, or origin of JESD22-A117. (`X`)
+
+### Findings 3636–3651 — Case 55 Samsung PM9A3 vendor SMART layout
+
+- **3636 — H/P*** — Samsung's January-2021 PM9A3 M.2 datasheet defines OEM Extended SMART support and a vendor Extended SMART Information Log at LID `0xCA`; product-document custody is mirror-hosted, so provenance is retained explicitly.
+- **3637 — H/P*** — The same PM9A3 datasheet separately defines an Enhanced SMART Log at LID `0xC4`; standard NVMe SMART/Health `0x02`, OEM `0xCA`, and Enhanced `0xC4` are distinct interface surfaces.
+- **3638 — H/P*** — PM9A3 `0xCA` includes lifetime user-write, lifetime NAND-write, lifetime user-read, reserve-block, UECC, shutdown, firmware-update, recovery, and related health/maintenance fields.
+- **3639 — H/P*** — PM9A3 `0xCA` includes a field named `Read Reclaim count`; the inspected table does not label that field `Lifetime` even though many neighboring fields are explicitly so labelled.
+- **3640 — H/P*** — PM9A3's thermal-throttle event count is explicitly documented as preserved over power cycles; this is direct field-specific persistence evidence.
+- **3641 — H/P** — Samsung DC Toolkit 3.0 officially lists PM9A3 support, separates standard SMART from extended-SMART retrieval, and shows a named PM9A3 `GDC7502Q` extended-SMART reference output.
+- **3642 — H/P** — OCP NVMe Cloud SSD Version 1.0 (03182020) defines a separate 512-byte Cloud Attribute Log at LID `0xC0` and explicit persistence/update rules for its health data.
+- **3643 — H/P** — OCP `SLOG-10` requires SMART Health `0x02` / Cloud Health `0xC0` data older than ten minutes not to be lost across power cycles/resets; `SLOG-11` separately protects named warning/backup-energy-source information.
+- **3644 — H/P** — OCP `Physical Media Units Written` includes user and metadata bytes written to user and system areas and is intended to support WAF calculation; `Physical Media Units Read` similarly uses a media/system-area accounting boundary.
+- **3645 — E** — `base NVMe 0x02 != OCP 0xC0 != Samsung OEM 0xCA != Samsung Enhanced 0xC4`; telemetry namespace is part of the evidence boundary rather than cosmetic naming.
+- **3646 — E** — An explicit persistence statement for one field does not automatically confer identical persistence, reset, update, or saturation semantics on every adjacent field in a vendor page.
+- **3647 — E** — Host-interface write volume and physical-media write volume are different accounting relations; a generic `bytes written` label is insufficient without the field contract.
+- **3648 — A/E** — PM963 `Lifetime read Reclaim count` and PM9A3 `Read Reclaim count` support only a bounded functional comparison of vendor telemetry vocabulary, not identical persistence horizon, trigger logic, counter reset behavior, or firmware lineage.
+- **3649 — X** — OCP `0xC0` persistence requirements do not by themselves prove persistence semantics for Samsung's different `0xCA` OEM page.
+- **3650 — X** — PM9A3 `Reset Count` / `Recovery Reset Count` are reported telemetry fields and do not establish a host command or policy that clears other health counters.
+- **3651 — X** — Vendor telemetry layout does not prove hidden NAND/FTL maintenance algorithms, read-disturb thresholds, sanitization, complete physical histories, or invention priority.
