@@ -8,6 +8,7 @@
 - [`../evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md`](../evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md)
 - [`../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md`](../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md)
 - [`../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md`](../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md)
+- [`../evidence/141-postgresql-2018-2020-physical-slot-advance-persistence-deepening.md`](../evidence/141-postgresql-2018-2020-physical-slot-advance-persistence-deepening.md)
 
 ## Summary
 
@@ -208,6 +209,30 @@ Other repository log cases also separate progress evidence from history liveness
 Neither frontier is a sanitization witness. Moving either value says nothing by itself about filesystem remnants, archived WAL, backups, device overprovisioning, or forensic recoverability.
 
 Full source/claim separation is recorded in [`../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md`](../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md).
+
+## 2018–2020 deepening — physical-slot advancement exposes the retention frontier's own persistence horizon
+
+PostgreSQL added `pg_replication_slot_advance()` on **17 January 2018** for both physical and logical slots. A **24 December 2019** pgsql-hackers report then showed that a physical slot's newly advanced `restart_lsn` could be visible before restart and revert afterward because the physical path had changed only in-memory state without marking persistent slot data dirty.
+
+The **30 January 2020** fix (`b0afdcad21fde1470e6502a376bfaf0e10d384fa`, backpatched through 11) made physical advancement participate in checkpoint-driven slot persistence. PostgreSQL 11.7 and 12.2, released **13 February 2020**, carry the fix. Released PostgreSQL 12 documentation nevertheless keeps the checkpoint boundary explicit: updated slot information is written at the follow-up checkpoint, and a crash can still return the slot to an earlier position.
+
+```text
+new restart_lsn returned / visible in memory
+    != updated slot frontier already written for restart recovery
+    != older WAL physically reclaimed
+```
+
+### Engineering reconstruction — the claimant on WAL has a delayed persistence boundary
+
+A physical slot's `restart_lsn` is a compact claimant on history. Advancing it can narrow the WAL prefix that the slot still requires, but the claimant itself first crosses an in-memory-to-checkpoint persistence boundary. Only separately can WAL-removal machinery use the newer frontier and later reclaim files.
+
+This closes `function returned != checkpoint-durable slot frontier`, `clean-restart persistence != arbitrary-crash persistence immediately after return`, and `restart_lsn advanced != old WAL already removed`. The physical/logical discrepancy also supplies a direct counterexample to assuming that one SQL interface means one internal persistence path.
+
+### Functional analogy and stop condition
+
+The bounded analogy is to other checkpointed control-state cases; it is not mechanism identity with Kafka, HDFS, or DRAM maintenance state. Slot advancement is also not sanitization: it changes a replay-history retention relation without proving secure erasure of local WAL remnants, archives, backups, or lower-layer embodiments.
+
+Full source/claim separation is recorded in [`../evidence/141-postgresql-2018-2020-physical-slot-advance-persistence-deepening.md`](../evidence/141-postgresql-2018-2020-physical-slot-advance-persistence-deepening.md).
 
 ## 2024 deepening — failover-slot synchronization makes the retention frontier itself cross-node state
 
