@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to the NVMe 1.0/1.0e/1.3 SMART / Health Information interface and a 2014 Intel DC P3700 product witness. The spare-exhaustion deepening uses the original 2011 Gold specification to separate spare-threshold warning, reserve exhaustion, and actual command failure without inferring a hidden SSD remapping algorithm. A prior-art pass adds a bounded 1995–1997 ATA SMART floor for retained drive-health state, while explicitly refusing to equate ATA vendor-specific attributes with the later NVMe SMART / Health schema or to claim a direct ATA→NVMe genealogy. A further ATA/ATAPI-5 pass adds a bounded 1999 diagnostic-history relation: off-line data collection, short/extended self-test, off-line versus captive execution, current progress/status, and a finite circular self-test log are kept distinct. The case establishes that an SSD can retain cumulative health/endurance evidence across power cycles and expose it to host software without that evidence being the user payload or a complete physical wear history. A further NVMe 1.4 deepening adds Persistent Event Log as a later, explicitly selective event-history layer and separates log persistence from completeness, immutability, lossless abrupt-power-failure capture, and sanitization verification.
+**`grounded`** — bounded to the NVMe 1.0/1.0e/1.3 SMART / Health Information interface and a 2014 Intel DC P3700 product witness. The spare-exhaustion deepening uses the original 2011 Gold specification to separate spare-threshold warning, reserve exhaustion, and actual command failure without inferring a hidden SSD remapping algorithm. A prior-art pass adds a bounded 1995–1997 ATA SMART floor for retained drive-health state, while explicitly refusing to equate ATA vendor-specific attributes with the later NVMe SMART / Health schema or to claim a direct ATA→NVMe genealogy. A further ATA/ATAPI-5 pass adds a bounded 1999 diagnostic-history relation: off-line data collection, short/extended self-test, off-line versus captive execution, current progress/status, and a finite circular self-test log are kept distinct. The case establishes that an SSD can retain cumulative health/endurance evidence across power cycles and expose it to host software without that evidence being the user payload or a complete physical wear history. A further NVMe 1.4 deepening adds Persistent Event Log as a later, explicitly selective event-history layer and separates log persistence from completeness, immutability, lossless abrupt-power-failure capture, and sanitization verification. A 2024 OCP Datacenter NVMe SSD v2.6 deepening now adds a profile-level end-of-life control boundary: low-spare warning remains distinct from the `Available Spare = 0%` read-only transition, while the profile explicitly requires reported `0%` to occur before literal exhaustion of all physical spares so that reserve remains for blocks going bad during reads.
 
 Grounding record: [`../evidence/55-nvme10-13-smart-health-endurance-grounding.md`](../evidence/55-nvme10-13-smart-health-endurance-grounding.md).
 
@@ -11,6 +11,8 @@ Persistent-event-log deepening: [`../evidence/55-nvme14-2019-persistent-event-lo
 Named-product vendor-layout deepening: [`../evidence/55-samsung-pm9a3-2021-vendor-smart-layout-deepening.md`](../evidence/55-samsung-pm9a3-2021-vendor-smart-layout-deepening.md).
 
 Named-product PEL-adoption deepening: [`../evidence/55-solidigm-d5-p5316-pel-product-adoption-deepening.md`](../evidence/55-solidigm-d5-p5316-pel-product-adoption-deepening.md).
+
+Datacenter spare-exhaustion / read-only deepening: [`../evidence/55-ocp-2024-available-spare-read-only-eol-deepening.md`](../evidence/55-ocp-2024-available-spare-read-only-eol-deepening.md).
 
 ## Scope
 
@@ -356,6 +358,8 @@ The retention consequence is that **present payload correctness and future repai
 
 This is where Cases 14 and 78 become useful functional comparisons. SCSI grown-defect reassignment and Micron NAND bad-block management directly ground finite replacement pools at lower layers; NVMe 1.0 shows a later host-visible interface that reports remaining spare capacity and can surface a write failure when spare locations are unavailable. The comparison is **not** genealogy, and the NVMe source cannot be used to infer that an SSD implements either earlier mechanism internally.
 
+The OCP Datacenter NVMe SSD v2.6 deepening adds a later profile-level negative control. It requires `Available Spare = 0%` to trigger Read Only Mode while also requiring that the reported zero occur **before** literal exhaustion of all physical spare blocks, leaving reserve for blocks that go bad during reads. It also requires the low-spare threshold to precede the zero boundary by at least three days under the specified worst-case write workload. Therefore **`reported zero spare != physically zero spare blocks`**, **`low-spare warning != write-service cutoff`**, and **`reserve sufficient for continued host writes != residual reserve retained to preserve read service`**. This is an OCP profile contract, not a rule projected onto every NVMe SSD. See [`../evidence/55-ocp-2024-available-spare-read-only-eol-deepening.md`](../evidence/55-ocp-2024-available-spare-read-only-eol-deepening.md).
+
 ### Spare capacity is maintenance reserve, not ordinary free user space
 
 The NVMe `Available Spare` field refers to remaining spare capacity. Intel's P3700 separately documents physical capacity reserved for NAND management/maintenance while keeping the logical LBA count stable.
@@ -461,9 +465,10 @@ Several forms of failure remain distinct:
 - a healthy-looking interface report does not independently verify hidden physical wear distribution or future failure time;
 - PEL persistence does not imply every event survives every abrupt power failure;
 - repeated-event suppression and bounded-log deletion mean retained event history may be intentionally incomplete;
-- sanitize may deliberately remove or modify some persistent-event history.
+- sanitize may deliberately remove or modify some persistent-event history;
+- an OCP `Available Spare = 0%` transition can end host-write service while deliberately retaining some physical spare reserve for later read-related defects.
 
-The repository should therefore reject `SMART says healthy` as a synonym for `all retained payload is safe indefinitely`, and reject `persistent log` as a synonym for `complete immutable archive`.
+The repository should therefore reject `SMART says healthy` as a synonym for `all retained payload is safe indefinitely`, reject `persistent log` as a synonym for `complete immutable archive`, and reject `Available Spare = 0%` as a synonym for `no physical spare blocks remain`.
 
 ## Prior art and anti-anachronism
 
@@ -482,6 +487,8 @@ It is **not** a full ATA SMART genealogy. The original SFF-8035i facsimile/revis
 NVMe 1.4 adds a later standards-history boundary: NVM Express's own revision ledger identifies Persistent Event Log as a new optional NVMe feature by June 2019. That does not make NVMe 1.4 the invention of retained drive history. The already-grounded 1999 ATA/ATAPI-5 21-entry circular self-test log is an explicit earlier counterexample. The useful comparison is narrower: ATA retains bounded self-test diagnostic records, whereas NVMe 1.4 standardizes a heterogeneous event-history interface with explicit suppression/deletion, reporting-context, periodic SMART-snapshot, and sanitize-modification rules. No direct ATA→NVMe genealogy is asserted, and TP4007a/4042a proposal chronology remains open until those proposals are independently inspected.
 
 The D5-P5316 deepening now supplies a bounded **named-product PEL adoption floor**: the family was introduced by Intel in December 2020, and later first-party Solidigm documentation explicitly exposes PEL while retaining an NVMe 1.3c conformance label. This closes the generic product-adoption gap but not the first-support firmware date, per-firmware event coverage, or independent behavioral validation.
+
+The OCP 2024 deepening is likewise a later **profile-contract witness**, not an invention date. It fixes one concrete end-of-life policy over already-established NVMe SMART / Health fields, but does not move `Available Spare`, SMART warning semantics, spare replacement, or SSD end-of-life management into a 2024 origin story. Earlier OCP revision genealogy and named-controller implementation chronology remain open.
 
 ## Philosophical interpretation — bounded
 
@@ -531,6 +538,10 @@ That is a project-level interpretation. It is not terminology attributed to NVM 
 | PEL reporting context excludes newly occurring events from its existing view while those events continue to be logged | `H/P/E` | `reporting context != frozen underlying log` |
 | sanitize may remove/modify PEL events to prevent user-data derivation | `H/P/E` | `persistent != immutable` |
 | a PEL Sanitize Completion event independently verifies physical media sanitization | `X` | rejected; event history is not forensic verification |
+| OCP Datacenter NVMe SSD v2.6 requires ROM when `Available Spare` reaches reported 0% | `H/P` | strong official 2024 profile requirement; not universal NVMe behavior |
+| OCP requires reported `Available Spare = 0%` before literal exhaustion of all spares, retaining reserve for blocks going bad during reads | `H/P/E` | strong negative control: reported zero is a service-policy boundary, not literal physical zero |
+| OCP low-spare threshold crossing and 0% ROM transition are separate states, with at least a three-day runway under the specified worst-case write workload | `H/P/E` | bounded profile timing requirement; not a general lifetime/SLA claim |
+| OCP v2.6 proves first invention or named-device conformance of the spare-exhaustion policy | `X` | rejected; profile witness only |
 
 | D5-P5316 first-party product documentation exposes Persistent Event Log while advertising NVMe 1.3c compliance | `H/P` | strong named-product adoption/conformance-label evidence; not a claim that PEL belongs to the 1.3c standard |
 | feature support is not equivalent to whole-revision conformance, and a product-family launch date is not the first-support firmware date | `E` | bounded reconstruction from separated standards/product chronology |
@@ -560,7 +571,8 @@ That is a project-level interpretation. It is not terminology attributed to NVM 
 17. Solidigm, **Solidigm D5-P5316 Product Brief**, published 10 October 2023; identifies the product as formerly Intel D5-P5316 and documents both NVMe 1.3c compliance and Persistent Event Log support: <https://www.solidigm.com/products/data-center/product-briefs/d5-p5316-product-brief.html>
 18. Solidigm, **Solidigm D5-P5316 Product Brief** downloadable PDF; first-party product-document copy of the same feature set: <https://www.solidigm.com/content/dam/solidigm/en/site/products/data-center/product-briefs/d5-p5316-product-brief/documents/d5-p5316-product-brief.pdf>
 19. Solidigm, **Product Change Notification 0000019376-00**, 31 May 2024; Intel-branded D5-P5316 discontinuance and Solidigm-brand continuation: <https://www.solidigm.com/content/dam/solidigm/en/site/products/documents/pcn/PCN0000019376-00.pdf>
+20. Open Compute Project, **Datacenter NVMe SSD Specification, Version 2.6 (`09252024`)**, 25 September 2024, especially §8.4 `End-of-Life (EOL)` requirements `EOL-1`, `EOL-4`–`EOL-8`, pp. 160–161: <https://www.opencompute.org/documents/datacenter-nvme-ssd-specification-v2-6-2-pdf>
 
 ## Related repositories
 
-A fresh repository search found no dedicated NVMe SMART/endurance, Persistent Event Log, or ATA SMART/SFF-8035i/ATA5 self-test case in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology). Broader SMART/ATA/NVMe health-monitoring and event-log genealogy, proposal history, product adoption, and disk/SSD engineering chronology should remain there if developed; this case keeps only the retention-specific state/history, diagnostic-history, and interface-boundary distinctions.
+A fresh repository search found no dedicated NVMe SMART/endurance, Persistent Event Log, ATA SMART/SFF-8035i/ATA5 self-test, or OCP `Available Spare` end-of-life/read-only case in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology). Broader SMART/ATA/NVMe/OCP health-monitoring, spare-management, event-log genealogy, proposal history, product adoption, and disk/SSD engineering chronology should remain there if developed; this case keeps only the retention-specific state/history, diagnostic-history, reserve/service-boundary, and interface distinctions.
