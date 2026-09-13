@@ -2,9 +2,11 @@
 
 ## Status
 
-**`grounded`** — bounded to NAND read disturb from a Fujitsu 2002-priority manufacturer filing through Yu Cai et al.'s 2015 DSN experimental characterization. NASA/JPL's March 2008 qualification study is retained as an independent institutional witness, including its explicit negative result; a 2009-priority Texas Memory Systems patent and a 2013 APSys paper constrain controller/FTL prior-art claims. The case separates measured device behavior, engineering reconstruction, and proposed mitigation/recovery, and does not claim commercial deployment of the 2015 mechanisms.
+**`grounded`** — bounded to NAND read disturb from a Fujitsu 2002-priority manufacturer filing through Yu Cai et al.'s 2015 DSN experimental characterization. NASA/JPL's March 2008 qualification study is retained as an independent institutional witness, including its explicit negative result; a 2009-priority Texas Memory Systems patent and a 2013 APSys paper constrain controller/FTL prior-art claims. Micron's 2006 TN-29-17 design guidance now supplies an earlier manufacturer system-policy witness that explicitly separates temporary read-disturb recovery from permanent bad-block retirement. The case separates measured device behavior, engineering reconstruction, and proposed mitigation/recovery, and does not claim commercial deployment of the 2015 mechanisms.
 
 Grounding record: [`../evidence/52-cai-2009-2015-nand-read-disturb-grounding.md`](../evidence/52-cai-2009-2015-nand-read-disturb-grounding.md).
+
+Micron 2006 failure-taxonomy / maintenance-policy deepening: [`../evidence/52-micron-2006-read-disturb-temporary-failure-maintenance-deepening.md`](../evidence/52-micron-2006-read-disturb-temporary-failure-maintenance-deepening.md).
 
 ## Scope
 
@@ -33,6 +35,40 @@ Fujitsu's **US20030137873A1, “Read disturb alleviated flash memory,”** has a
 Primary source: <https://patents.google.com/patent/US20030137873A1/en>.
 
 This is an earlier manufacturer-primary witness than the 2009-priority controller patent already used in this case. It is **not** evidence that Fujitsu first discovered read disturb or invented every later mitigation technique.
+
+### Manufacturer design-guidance witness — Micron, August 2006
+
+Micron's **TN-29-17, _NAND Flash Design and Use Considerations_**, Rev. A 8/06, adds a different evidence class from the Fujitsu patent. It first separates NAND failures into **permanent** and **temporary** categories. Permanent failures require bad-block-table exclusion; temporary failures can be recoverable and the block need not be added to the bad-block table.
+
+Micron places `Read Disturb` inside the temporary category. The note says repeated reads to individual pages can exacerbate read-disturb errors and prescribes erasing the affected block and reprogramming its data. In that bounded design guidance, therefore:
+
+```text
+read-disturb error
+    !=
+automatic permanent bad-block identity
+```
+
+The same note then treats repeated executable-code reads under demand paging as a system-design problem and gives three mitigation strategies: keep executable code in volatile memory after a power-on load; maintain master/working NAND copies and renew the working copy after a system-designated read count; or use stronger ECC with an intervention threshold below the correctable limit and move data before exhaustion.
+
+That establishes an early manufacturer policy relation:
+
+```text
+same access-induced risk
+    !=
+one mandatory maintenance topology
+```
+
+and:
+
+```text
+read-count maintenance threshold
+    !=
+universal physical failure count
+```
+
+The inspected Rev. A content survives on third-party document hosting; the historical first-party Micron URL is preserved in contemporary/later references. The follow-on evidence record keeps that provenance limitation explicit and does not claim first invention or a shipped controller implementation from the design guide alone.
+
+Deepening record: [`../evidence/52-micron-2006-read-disturb-temporary-failure-maintenance-deepening.md`](../evidence/52-micron-2006-read-disturb-temporary-failure-maintenance-deepening.md).
 
 ### Independent qualification witness — NASA/JPL, March 2008
 
@@ -106,17 +142,33 @@ This does not mean every read immediately changes a decoded neighbor value. The 
 
 The NASA/JPL 2008 result prevents an easy but incorrect upgrade from `read disturb exists` to `a fixed read count predicts failure`. The report used large read-count sequences and contemporary migration/erase guidance, yet its own tested devices did not reproduce a disturb failure.
 
+Micron's 2006 design guide independently points in the same direction at the policy layer: its redundant working-copy strategy says the designated renewal count is **determined by the system**, rather than presenting one number as a universal physical law.
+
 Therefore:
 
 > **read-disturb mechanism ≠ universal fixed read-count failure threshold**.
 
 A practical threshold is qualified by device generation, process, wear, data pattern, temperature, voltage, ECC margin, and test/workload conditions.
 
+### Temporary read disturbance ≠ permanent carrier retirement
+
+Micron's 2006 failure taxonomy adds a boundary not supplied by the later characterization paper alone. It treats read disturb as a temporary failure whose block can be erased and reprogrammed, while permanent failures require bad-block-table exclusion.
+
+Therefore:
+
+> **read-path error state ≠ permanent bad-block identity**.
+
+and:
+
+> **renewal obligation ≠ retirement obligation**.
+
+This is a direct bridge to Case 78. Case 78 studies the retained authority that says a carrier must no longer be allocated; Case 52 studies an access-induced condition that can demand maintenance before such permanent exclusion exists. The functional relation is useful, but no Micron→KIOXIA genealogy is asserted.
+
 ### Read count can become a maintenance clock
 
 Case 36 uses elapsed retention time and wear as inputs to proactive Flash Correct-and-Refresh. Read disturb exposes a different trigger class. A physically hot block can accumulate disturbance because of **how often it is read**, even if user data is not being rewritten and little wall-clock time has passed.
 
-The 2009-priority patent explicitly maintains a per-block read count since erase and uses threshold crossing to trigger migration behavior. Cai et al. likewise analyze cumulative read-disturb count and note earlier controller proposals that rewrite or move blocks/pages after read-count thresholds.
+Micron's 2006 working-copy strategy already uses a system-designated read count to decide when to renew a hot embodiment. The 2009-priority patent explicitly maintains a per-block read count since erase and uses threshold crossing to trigger migration behavior. Cai et al. likewise analyze cumulative read-disturb count and note earlier controller proposals that rewrite or move blocks/pages after read-count thresholds.
 
 Therefore:
 
@@ -143,6 +195,8 @@ This boundary matters directly to Case 36: FCR can renew a block and thereby res
 ### ECC can preserve the answer while the physical margin is deteriorating
 
 As with Case 36, raw errors can remain below the ECC correction capability. A host-visible read may still return the intended value even though physical errors have accumulated.
+
+Micron's 2006 stronger-ECC strategy makes the maintenance consequence explicit: it recommends a threshold **below** the ECC-correctable limit and migration when that threshold is reached. ECC margin is therefore not only a last-resort reconstruction capacity; it can also become an intervention signal.
 
 Therefore:
 
@@ -255,13 +309,15 @@ It does **not** promote the paper into:
 - invention of read-triggered relocation;
 - invention of all read-voltage adaptation or recovery.
 
-US7818525B1 has a 2009 priority date and already describes recognized NAND `Read Disturb` errors, per-block read counting, threshold-triggered movement, ECC, and logical-to-physical remapping. The 2013 APSys paper independently places read-disturb management and FTL relocation before the 2015 characterization.
+Fujitsu's 2002-priority filing already uses `read disturb` as manufacturer vocabulary and discusses non-selected-word-line read-voltage stress. Micron's 2006 design guide already classifies `Read Disturb` as a temporary failure and gives read-count renewal / pre-ECC-limit relocation strategies. US7818525B1 has a 2009 priority date and describes per-block read counting, threshold-triggered movement, ECC, and logical-to-physical remapping. The 2013 APSys paper independently places read-disturb management and FTL relocation before the 2015 characterization.
 
 Accordingly:
 
 > **2015 commercial-chip characterization ≠ invention of read-disturb mitigation**.
 
-Historical vocabulary belongs to its source. Project phrases such as `access-stress clock`, `future-retention cost`, and `recovery evidence` are engineering reconstructions, not claims about how the engineers historically conceptualized memory or temporality.
+Micron's current support FAQ is also kept separate from its 2006 vocabulary. A terse present-day instruction concerning generic `READ errors` does not retroactively redefine the specifically scoped 2006 temporary `Read Disturb` category without product-level evidence connecting those terms.
+
+Historical vocabulary belongs to its source. Project phrases such as `access-stress clock`, `future-retention cost`, `carrier-retirement authority`, and `recovery evidence` are engineering reconstructions, not claims about how the engineers historically conceptualized memory or temporality.
 
 ## Philosophical interpretation — bounded
 
@@ -269,7 +325,9 @@ The case adds one narrow conceptual pressure to the repository:
 
 > retrieval is not always external to retention. An operation that successfully makes a state available now can materially reduce the future recoverability of other retained states.
 
-This helps resist a simple opposition in which `storage` passively preserves while `access` merely observes. It does **not** imply that every act of reading consumes its medium, nor that the 2015 authors were making a philosophical argument.
+The Micron deepening adds a second bounded relation: continued identity can depend on deciding when a still-recoverable embodiment should be renewed or replaced **before** it becomes permanently defective.
+
+This helps resist a simple opposition in which `storage` passively preserves while `access` merely observes. It does **not** imply that every act of reading consumes its medium, nor that Micron or the 2015 authors were making a philosophical argument.
 
 ## Cross-case result
 
@@ -305,33 +363,50 @@ cumulative read activity / wear
     -> access-induced error growth, mitigation, relocation, or recovery
 ```
 
-The common higher-level relation is maintenance before recoverability margin is exhausted. The trigger and physical mechanism are different.
+Compared with Case 78:
+
+```text
+recoverable access-induced error
+    -> may require renewal or relocation
+
+permanent carrier classification
+    -> changes future allocation authority
+```
+
+The common higher-level relation is maintenance before recoverability margin is exhausted. The trigger, physical mechanism, and authority transition are different.
 
 ## Claim ledger
 
 | Claim | Label | Evidence status |
 | --- | --- | --- |
-| NAND `Read Disturb` vocabulary and read-count-based mitigation predate 2015 | H/P | 2009-priority US7818525B1 + 2013 APSys record |
+| NAND `Read Disturb` vocabulary predates 2015 | H/P | Fujitsu 2002-priority filing + Micron 2006 TN-29-17 + later prior art |
+| Micron 2006 classifies Read Disturb as a temporary failure rather than automatic permanent bad-block identity | H/P | TN-29-17 Rev. A 8/06 |
+| Micron 2006 gives multiple mitigation choices: volatile residency, master/working-copy renewal, and stronger-ECC/pre-limit relocation | H/P | TN-29-17 best-practices section |
+| A system-designated read count can act as a maintenance trigger | H/P/E | Micron TN-29-17 + later US7818525B1 |
 | A read to one NAND row can shift threshold voltages of unread cells in other rows of the same block | H/P | DSN 2015 §§1–2 + experimental characterization |
 | The selected page may be read while neighboring unread cells receive cumulative pass-through-voltage stress | H/P/E | DSN 2015 circuit account + characterization |
 | Read-disturb effect/RBER increases with cumulative reads and P/E wear in the tested 2Y-nm MLC chips | H/P | DSN 2015 §§3.2–3.3 |
 | Read disturb and retention-age errors are distinct error sources that can coexist | H/P | DSN 2015 error taxonomy/evaluation |
-| Per-block read count can act as a maintenance trigger | H/P/E | US7818525B1 + DSN 2015 prior-work section |
+| Per-block read count can act as a maintenance trigger | H/P/E | Micron TN-29-17 + US7818525B1 + DSN 2015 prior-work section |
 | Lowering Vpass can reduce disturb but can also create other read errors | H/P | DSN 2015 §§3.4–3.7 |
 | Vpass Tuning is proven as a deployed commercial SSD feature | X | DSN 2015 proposes/evaluates the mechanism; it does not identify a shipped controller implementation |
 | RDR intentionally adds controlled read disturbance to infer susceptible cells after an uncorrectable read | H/P | DSN 2015 §5 |
 | RDR physically restores cells to their pre-disturb threshold voltages | X | RDR estimates logical state and retries ECC; physical rewind is not the demonstrated mechanism |
 | NAND read disturb is the same mechanism as magnetic-core destructive read | X/A | only the bounded function `access can create preservation work` is comparable |
-| Every modern NAND generation has the same read-count threshold | X | process, wear, voltage, architecture, and generation dependence are explicit limits |
+| Every modern NAND generation has the same read-count threshold | X | Micron makes one threshold system-designated; NASA/JPL gives a negative-result boundary; later process dependence is explicit |
 
 ## Related repositories
 
-A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated NAND read-disturb case. A broader history of NAND scaling, cell architecture, controllers, and manufacturer reliability techniques belongs there; this repository keeps the retention-specific relation among access, neighboring physical disturbance, ECC margin, read-count policy, relocation, and recovery.
+A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for both `TN-29-17` and `read disturb` found no dedicated NAND read-disturb case to reuse. A broader history of NAND scaling, cell architecture, controllers, embedded demand paging, and manufacturer reliability techniques belongs there; this repository keeps the retention-specific relation among access, neighboring physical disturbance, ECC margin, read-count policy, relocation, recovery, and carrier-retirement authority.
 
-[`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) supplies the anti-anachronism discipline. `Read Disturb`, `Vpass Tuning`, and `Read Disturb Recovery` are source vocabulary where cited; `access-stress clock` and `future-retention cost` are modern analytical terms.
+[`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) supplies the anti-anachronism discipline. `Read Disturb`, `Vpass Tuning`, and `Read Disturb Recovery` are source vocabulary where cited; `access-stress clock`, `future-retention cost`, and `carrier-retirement authority` are modern analytical terms.
 
 ## Sources
 
 1. Yu Cai, Yixin Luo, Saugata Ghose, Erich F. Haratsch, Ken Mai, Onur Mutlu, **“Read Disturb Errors in MLC NAND Flash Memory: Characterization, Mitigation, and Recovery,”** *45th Annual IEEE/IFIP International Conference on Dependable Systems and Networks (DSN)*, Rio de Janeiro, 2015, pp. 438–449, DOI `10.1109/DSN.2015.49`. Author/institution-hosted full paper: <https://istc-cc.cmu.edu/publications/papers/2015/flash-read-disturb-errors_dsn15.pdf>. Institutional abstract: <https://istc-cc.cmu.edu/publications/papers/2015/flash-read-disturb-errors_dsn15_abs.shtml>.
 2. Holloway H. Frost, Charles J. Camp, Timothy J. Fisher, James A. Fuxa, Lance W. Shelton, **“Efficient reduction of read disturb errors in NAND FLASH memory,”** US7818525B1, priority 12 August 2009, filed 24 September 2009, published 19 October 2010, original assignee Texas Memory Systems, Inc.: <https://patents.google.com/patent/US7818525B1/en>.
 3. Keonsoo Ha, Jaeyong Jeong, Jihong Kim, **“A read-disturb management technique for high-density NAND flash memory,”** *4th Asia-Pacific Workshop on Systems (APSys 2013)*, Article 13, DOI `10.1145/2500727.2500743`. Seoul National University publication record: <https://snu.elsevierpure.com/en/publications/a-read-disturb-management-technique-for-high-density-nand-flash-m/>.
+4. Micron Technology, Inc., **TN-29-17: _NAND Flash Design and Use Considerations_**, Rev. A 8/06. Historical Micron URL preserved in contemporary/later references: `http://download.micron.com/pdf/technotes/nand/tn2917.pdf`; surviving Rev. A extracted mirror: <https://www.scribd.com/document/919510643/design-and-use-considerations>. Evidence/provenance details: [`../evidence/52-micron-2006-read-disturb-temporary-failure-maintenance-deepening.md`](../evidence/52-micron-2006-read-disturb-temporary-failure-maintenance-deepening.md).
+5. Fujitsu Ltd., **“Read disturb alleviated flash memory,”** US20030137873A1 / US6707714B2, priority 22 January 2002, U.S. application publication 24 July 2003: <https://patents.google.com/patent/US20030137873A1/en>.
+6. Douglas Sheldon and Michael Freie, **_Disturb Testing in Flash Memories_**, JPL Publication 08-7, March 2008, NASA/JPL NEPP: <https://nepp.nasa.gov/files/13582/07-100%20Sheldon_JPL%20Distrub%20Testing%20in%20Flash%20Mem.pdf>.
+7. Micron Technology, Inc., **FAQs**, current official support page, including `READ DISTURB` / refresh and bad-block guidance: <https://www.micron.com/sales-support/sales/faqs>.
