@@ -2,9 +2,9 @@
 
 ## Status
 
-**`grounded`** — bounded to DDR4-era Post-Package Repair (`PPR`) semantics evidenced by Micron DDR4 product documentation, Intel platform documentation, Lenovo ThinkSystem service behavior, and an Intel hard-PPR power-failure disclosure. A 1979-filed semiconductor-memory redundancy patent supplies an earlier spare-row/address-substitution prior-art floor. The case does **not** claim a complete JEDEC PPR genealogy or a universal internal implementation for all DDR4 devices.
+**`grounded`** — bounded to DDR4-era Post-Package Repair (`PPR`) semantics evidenced by Micron DDR4 product documentation, Samsung's 2014 DDR4 operation document, an SK hynix 2015-priority PPR patent embodiment, Intel platform documentation, Lenovo ThinkSystem service behavior, and an Intel hard-PPR power-failure disclosure. A 1979-filed semiconductor-memory redundancy patent supplies an earlier spare-row/address-substitution prior-art floor. The case does **not** claim a complete JEDEC PPR genealogy, a universal internal implementation for all DDR4 devices, or that patent embodiments automatically describe every shipping product.
 
-Grounding records: [`../evidence/119-ddr4-1979-2023-post-package-repair-grounding.md`](../evidence/119-ddr4-1979-2023-post-package-repair-grounding.md) + [`../evidence/119-micron-ddr4-ppr-payload-retention-resource-exhaustion-deepening.md`](../evidence/119-micron-ddr4-ppr-payload-retention-resource-exhaustion-deepening.md).
+Grounding/deepening records: [`../evidence/119-ddr4-1979-2023-post-package-repair-grounding.md`](../evidence/119-ddr4-1979-2023-post-package-repair-grounding.md) + [`../evidence/119-micron-ddr4-ppr-payload-retention-resource-exhaustion-deepening.md`](../evidence/119-micron-ddr4-ppr-payload-retention-resource-exhaustion-deepening.md) + [`../evidence/119-samsung-2014-ddr4-ppr-cross-vendor-resource-transition-deepening.md`](../evidence/119-samsung-2014-ddr4-ppr-cross-vendor-resource-transition-deepening.md) + [`../evidence/119-skhynix-2015-ppr-resource-reconstruction-deepening.md`](../evidence/119-skhynix-2015-ppr-resource-reconstruction-deepening.md).
 
 ## Scope
 
@@ -70,6 +70,38 @@ Finally, none of these transitions establishes sanitization. Backing up/restorin
 
 ---
 
+## Cross-vendor resource and transition deepening
+
+Samsung and SK hynix add two different kinds of manufacturer-primary evidence around the same resource question.
+
+Samsung's September/October 2014 DDR4 operation document exposes a one-repair-element-per-bank-group operation contract, distinguishes volatile `sPPR` from permanent `hPPR`, requires outstanding soft repair to be cleared before the documented hard-repair path, and says exhausted resource causes a repair programming sequence to be ignored. See [`../evidence/119-samsung-2014-ddr4-ppr-cross-vendor-resource-transition-deepening.md`](../evidence/119-samsung-2014-ddr4-ppr-cross-vendor-resource-transition-deepening.md).
+
+The SK hynix 2015-priority patent embodiment exposes a different layer: persistent failed-address information in an Array Rupture Electrical-fuse (`ARE`) array is scanned after power-up to derive repair-resource information; fuse lines can be shared across a bank grouping while resource status is checked per bank/region; and a masking controller prevents another irreversible rupture when no unused repair fuse remains. See [`../evidence/119-skhynix-2015-ppr-resource-reconstruction-deepening.md`](../evidence/119-skhynix-2015-ppr-resource-reconstruction-deepening.md).
+
+Together with the bounded Micron product evidence, these records justify several negative controls:
+
+```text
+shared PPR vocabulary
+    != identical exposed repair capacity
+
+shared PPR vocabulary
+    != identical physical/shared resource topology
+
+same sPPR/hPPR lifetime labels
+    != identical transition preconditions
+
+persistent repair state
+    != runtime resource-availability state
+
+remaining repair capacity
+    can be reconstructed from retained allocation history
+    in at least one manufacturer patent embodiment
+```
+
+The evidence layers remain deliberately unequal: Samsung is a vendor operation document, Micron is bounded product documentation, and the SK hynix source is a patent embodiment. The SK hynix patent is therefore **not** promoted into a named shipping-product contract merely to force a symmetrical comparison.
+
+---
+
 ## Historical record
 
 ### A much earlier spare-row/address-substitution floor: 1979 filing
@@ -99,6 +131,29 @@ A later Micron 16Gb DDR4 product-document extraction states the distinction dire
 - repeated repair activity in one bank does not silently overwrite an already established hard-PPR address.
 
 The Micron text is manufacturer-authored but, in this research slice, accessed through public datasheet mirrors rather than a stable current Micron-hosted archive. That provenance is preserved explicitly in the evidence record.
+
+### Samsung 2014 DDR4 operation contract
+
+Samsung's **DDR4 SDRAM Specification — Device Operation & Timing Diagram**, Rev. 1.1, October 2014, exposes hard PPR and soft PPR as separate operation modes. The bounded public extraction states one repair element per bank group in the exposed operation contract, describes hard repair as permanent electrical-fuse repair, makes soft repair volatile across loss of operating power/reset, requires outstanding soft repairs to be cleared before the documented hard-repair path, and makes repair-resource exhaustion visible to the operation semantics.
+
+This is a vendor operation-document witness. It does not prove that every Samsung DDR4 SKU contains exactly one physical spare wordline per bank group or that Samsung's fuse implementation is shared by other vendors.
+
+### SK hynix 2015-priority PPR patent embodiment
+
+SK hynix's **“Post package repair device”** family has Korean priority on 26 January 2015. The US application was filed 28 April 2015, published as US20160217873A1 on 28 July 2016, and granted as US9666308B2 on 30 May 2017.
+
+The disclosure describes an Array Rupture Electrical-fuse (`ARE`) array that permanently stores failed-address information. After power-up, a boot-up controller scans fuse data used for PPR and provides resource information to a resource-detection unit. The resource state is qualified by channel/bank-group/bank/mat/fuse-address selection, and a masking controller prevents an irreversible rupture operation when no unused fuse remains. The disclosure also describes two banks sharing fuse lines in one grouping while fuse use remains controllable per bank.
+
+This supplies manufacturer-primary implementation evidence for:
+
+```text
+persistent repair-fuse state
+    -> boot-time resource scan
+    -> derived target-qualified availability
+    -> irreversible repair allowed or masked
+```
+
+It is not a named-product capability sheet and is not projected onto every shipping SK hynix DDR4 part.
 
 ### Intel platform authority: BIOS participates in row repair
 
@@ -143,9 +198,10 @@ Case 119 contains several different states that must not be collapsed into one w
 6. **repair lifetime class** — soft/non-persistent versus hard/persistent;
 7. **defect evidence** — platform/device evidence that a row should be retired;
 8. **repair authority and sequencing state** — BIOS/controller/mode-register state required to request and complete PPR;
-9. **remaining spare/repair resource** — finite replacement capacity available to the bounded device.
+9. **remaining spare/repair resource** — finite replacement capacity available to the bounded device;
+10. **derived resource-availability state** — runtime knowledge that a target region can still accept another repair, which the SK hynix patent embodiment reconstructs from persistent fuse state during boot-up.
 
-Only item 1 is the ordinary user payload. Items 5–9 are **second-order retention infrastructure** that determine whether future reads/writes to the same row address reach a usable physical embodiment.
+Only item 1 is the ordinary user payload. Items 5–10 are **second-order retention infrastructure** that determine whether future reads/writes to the same row address reach a usable physical embodiment and whether another repair transition remains possible.
 
 ---
 
@@ -250,11 +306,17 @@ This is not a universal DDR4 atomicity claim. It is a bounded example showing th
 
 The bounded Micron product documentation exposes a finite repair-row budget. Once a hard repair occupies a persistent repair address/resource, later repair commands do not simply overwrite it as though the spare relation were cost-free and unbounded.
 
+The SK hynix patent adds another implementation-level boundary: the state that says `repair resource still available` can be reconstructed after power-up by scanning persistent fuse allocation and then used to mask a later rupture when the pool is exhausted.
+
 Therefore:
 
 > **spare-row availability ≠ unlimited future repair capacity.**
 
-Reserved silicon that is not carrying ordinary current payload can still be constitutive retention infrastructure because it preserves the option to replace a future defective embodiment.
+and, in the bounded SK hynix embodiment:
+
+> **persistent repair history ≠ runtime capacity state, but runtime capacity can be reconstructed from persistent repair history.**
+
+Reserved silicon and its allocation history can therefore be constitutive retention infrastructure even when they are not carrying ordinary current payload.
 
 ---
 
@@ -263,7 +325,9 @@ Reserved silicon that is not carrying ordinary current payload can still be cons
 ### Historical record
 
 - a 1979-filed semiconductor-memory patent already describes spare rows/columns taking over addresses of defective standard elements through programmable decoder changes;
-- Micron DDR4 product documentation distinguishes non-persistent `sPPR` and persistent/irreversible `hPPR` and exposes finite row-repair resources;
+- Samsung's 2014 DDR4 operation document exposes bank-group-scoped repair capacity, volatile sPPR versus permanent hPPR, and a clear-before-hard transition rule in its documented path;
+- Micron DDR4 product documentation distinguishes non-persistent `sPPR` and persistent/irreversible `hPPR`, exposes finite row-repair resources, and documents a different vendor resource/transition envelope;
+- an SK hynix 2015-priority patent embodiment stores failed-address information in electrical fuses, reconstructs resource availability through boot-time scanning, and masks rupture when no unused fuse remains;
 - Intel platform documentation makes BIOS a participant in identifying a failing row and exchanging it with a spare row;
 - Lenovo server guidance documents reboot-time hard-PPR service and boot-lifetime soft PPR;
 - Intel's 2020-priority patent disclosure identifies a hard-PPR fuse-programming power-failure hazard in its bounded implementation context.
@@ -283,6 +347,8 @@ defect evidence
     != repair-mapping lifetime
     != payload lifetime
     != repair-transition durability
+    != persistent repair-allocation history
+    != runtime derived resource availability
     != remaining spare capacity
 ```
 
@@ -306,11 +372,13 @@ Case 119 sharpens one bounded conceptual problem:
 
 The engineering evidence says that material identity of one physical row is not required. A retained repair relation can preserve the **callability** of row address A while replacing the material row that answers to A.
 
-The stronger philosophical claim should stop there. This case does not prove that logical identity is immaterial, nor that a DRAM row is `tertiary retention`, nor that addressability by itself constitutes Heideggerian `Bestand`. The retained mapping is itself material/technical state, requires spare silicon and repair machinery, and can fail during establishment.
+The SK hynix resource-reconstruction witness adds a second, narrower point: even the maintenance possibility itself need not persist as one byte-identical runtime object if durable repair-allocation traces allow the device to reconstruct which future substitutions remain possible after power-up.
+
+The stronger philosophical claim should stop there. This case does not prove that logical identity is immaterial, nor that a DRAM row is `tertiary retention`, nor that addressability by itself constitutes Heideggerian `Bestand`. The retained mapping and repair-resource traces are themselves material/technical state, require spare silicon and repair machinery, and can fail during establishment.
 
 The useful conclusion is narrower:
 
-> technical persistence can reside partly in a **retained rule of substitution** rather than in persistence of one physical bearer.
+> technical persistence can reside partly in a **retained rule of substitution** and in durable traces from which future substitution capacity can be reconstructed, rather than in persistence of one physical bearer or one runtime control object.
 
 ---
 
@@ -323,16 +391,18 @@ The useful conclusion is narrower:
 5. **A row replacement does not prove data migration.** No universal payload-copy claim is made.
 6. **PPR does not prove ECC is unnecessary.** Correction/detection and permanent row substitution solve different parts of the failure lifecycle.
 7. **Intel's fuse-power-failure disclosure is implementation-bounded.** It is not projected onto every vendor's internal hard-PPR technology.
-8. **One Micron product's spare-row budget is not a universal DDR4 capacity law.** Cross-vendor and revision-specific resource counts remain open.
-9. **A successful platform PPR event is not a forensic proof of every internal mapping bit.** Independent fault injection and post-repair characterization remain separate evidence.
-10. **Permanent repair ≠ secure erasure of the retired row.** The inspected evidence does not establish sanitization, overwrite, or forensic inaccessibility of the defective physical row.
+8. **Samsung, Micron, and SK hynix evidence layers are not symmetrical.** A Samsung operation document, Micron product documentation, and an SK hynix patent embodiment cannot be silently treated as three equivalent shipping-product contracts.
+9. **One vendor's repair-resource geometry is not a universal DDR4 capacity law.** Cross-vendor counts, sharing, and transition rules differ or remain unproven.
+10. **A patent embodiment is not proof of a named shipping SKU.** SK hynix product-level confirmation remains open.
+11. **A successful platform PPR event is not a forensic proof of every internal mapping bit.** Independent fault injection and post-repair characterization remain separate evidence.
+12. **Permanent repair ≠ secure erasure of the retired row.** The inspected evidence does not establish sanitization, overwrite, or forensic inaccessibility of the defective physical row.
 
 ---
 
 ## Related repositories
 
 - [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) — broader semiconductor-memory redundancy, decoder/fuse history, DIMM/controller/platform history, and JEDEC chronology belong there if developed; searches in this round found no dedicated `PPR` / `Post Package Repair` case to reuse.
-- [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) — use its anti-anachronism discipline: `logical identity survives physical replacement` is this repository's engineering reconstruction, not language attributed to 1979 or DDR4 actors unless a source says so.
+- [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) — use its anti-anachronism discipline: `logical identity survives physical replacement` and `runtime repair capacity is reconstructed from retained allocation history` are this repository's engineering reconstructions, not language attributed to 1979 or DDR4 actors unless a source says so.
 
 ---
 
@@ -340,11 +410,11 @@ The useful conclusion is narrower:
 
 - establish the exact JEDEC revision/ballot chronology by which `hPPR` and `sPPR` entered DDR4 rather than assuming initial JESD79-4 already contained both;
 - obtain a stable official Micron-hosted archive or page-preserving facsimile for the bounded 2020 DDR4 product documentation;
-- compare Samsung/SK hynix/Micron internal repair-resource and fuse/antifuse implementations without projecting one vendor's mechanism onto another;
-- extend the now-grounded Micron target-row/associated-row preservation semantics to JEDEC text and Samsung/SK hynix products before making any cross-vendor rule;
+- obtain a **named SK hynix DDR4 product** operation/datasheet witness before turning the 2015 patent embodiment into a product-level capacity or transition claim;
+- extend the now-grounded Micron target-row/associated-row preservation semantics to JEDEC text and named Samsung/SK hynix products before making any cross-vendor payload-retention rule;
 - inspect how ECC/patrol scrub/error thresholds hand off row-defect evidence to firmware repair decisions on named platforms;
 - test hard-PPR power-failure behavior and recovery on sacrificial hardware where safe and practical;
-- characterize physical repair-resource topology/counts, exhaustion telemetry, and success/failure reporting on named DIMMs without projecting the bounded Micron behavior across vendors;
+- characterize physical repair-resource topology/counts, exhaustion telemetry, and success/failure reporting on named DIMMs without projecting any one vendor's bounded behavior across others;
 - investigate interactions among manufacturing-time redundancy, post-package repair, internal address scrambling/remapping, RowHammer mitigation, and later DDR5 repair features.
 
-These are future bounded slices. They are not blockers for the present `logical address vs physical row vs repair-state lifetime` result.
+These are future bounded slices. They are not blockers for the present `logical address vs physical row vs repair-state lifetime vs reconstructed repair-capacity state` result.
