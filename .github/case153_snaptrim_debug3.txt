@@ -1,0 +1,22 @@
+status=2
++ set -euo pipefail
++ test -f .github/case153_snaptrim_reconstruction_patch.py
++ rm -f evidence/153-ceph-2016-pg-activation-trim-obligation-reconstruction-deepening.md
++ python3 .github/case153_snaptrim_reconstruction_patch.py
++ sed -i 's/[[:space:]]\+$//' cases/153-ceph-rados-snaptrim-asynchronous-reclamation.md
++ sed -i 's/[[:space:]]\+$//' evidence/153-ceph-2016-pg-activation-trim-obligation-reconstruction-deepening.md
++ sed -i 's/[[:space:]]\+$//' docs/SYNTHESIS_28_RECLAMATION_AUTHORITY_AFTER_RETIREMENT.md
++ sed -i 's/[[:space:]]\+$//' ROADMAP.md
++ sed -i 's/[[:space:]]\+$//' CASE_INDEX.md
++ rm -f .github/case153_snaptrim_reconstruction_patch.py
++ rm -f .github/case153_snaptrim_debug.txt
++ rm -f .github/case153_snaptrim_debug2.txt
++ rm -f .github/workflows/case153-snaptrim-reconstruction-integration.yml
++ rm -f .github/workflows/case153-snaptrim-reconstruction-run2.yml
++ rm -f .github/workflows/case153-snaptrim-reconstruction-run3.yml
++ rm -f .github/workflows/case153-snaptrim-reconstruction-debug3.yml
++ git config user.name 'technical-retention automation'
++ git config user.email actions@users.noreply.github.com
++ git add -A
++ git diff --cached --check
+CASE_INDEX.md:5132: new blank line at EOF.
