@@ -205,3 +205,18 @@ The general core-memory history, coincident-current mechanism, destructive read,
 - <https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md>
 
 This case reuses that history and adds only the production/service margin evidence required by `technical-retention`.
+
+## Follow-on status — IBM 1800 cross-machine witness
+
+The cross-machine debt above is now **partially closed by a second named vendor/machine**: IBM's February-1970 1800 field-engineering manuals. See [`70-ibm1800-1970-temperature-sense-margin-deepening.md`](70-ibm1800-1970-temperature-sense-margin-deepening.md).
+
+That record adds a different production/service surface rather than another DEC-like strobe-window procedure: temperature-compensated `VRef`, an explicit nominal `60 °F–90 °F` room environment in single-address diagnosis, a temperature-dependent explanation of signal-peak motion relative to fixed strobe timing, a documented `<7 mV at strobe time` half-select `delta noise` criterion for the two-microsecond waveform, and a closed-cover requirement when maintaining the temperature-tracking relation.
+
+Accordingly, the remaining debt should now be stated more narrowly:
+
+- a second named machine/vendor witness exists, but **not** a statistically meaningful distribution across machines;
+- exact deployed material/vendor-lot distributions remain open;
+- machine-specific temperature coefficients/curves remain open;
+- earlier factory acceptance/manufacturing correspondence and direct genealogy remain open.
+
+The IBM/DEC comparison is functional only. Similar concern with current, strobe, temperature, and sense margin does not establish shared circuitry or procedural descent.
