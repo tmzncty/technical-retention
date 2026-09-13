@@ -237,3 +237,17 @@ Still-open work includes:
 - a broader RAID / parity-declustering / distributed-sparing history in `computing-archaeology` if that repository takes up the topic.
 
 Those are additional research slices, not blockers for the bounded relation decomposition completed here.
+
+## Case 19 negative control: fragment-count recovery is not geometry recovery
+
+Facebook f4 supplies a primary-source negative control for one of the synthesis's central distinctions. The OSDI 2014 paper documents a `(10,4)` code in which any ten of fourteen blocks recover the stripe, but it separately constrains how many same-stripe blocks may share one Rebuilder failure domain. It further states that ordinary recovery preserves the placement invariant while reconstruction can, rarely, leave a violation that later block movement or domain splitting attempts to correct.
+
+That means restored **symbol count** and restored **fault geometry** are observably separable operational states:
+
+`enough current fragments to decode`
+`!=`
+`fragments distributed so that the intended next-fault margin has been restored`.
+
+For retention analysis, the repair-margin state of a coded object therefore has at least three independent coordinates: code budget, fragment currentness, and correlated-failure placement geometry. A system can be readable on the first two while still carrying placement debt on the third. Case 24 provides a functional comparison from Azure LRC, where code locality and cross-rack placement are likewise distinct, but this comparison is not a genealogy claim.
+
+See `evidence/19-facebook-f4-fragment-placement-failure-domain-margin-deepening.md`.

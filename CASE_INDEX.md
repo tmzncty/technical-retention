@@ -5129,3 +5129,22 @@ Deepening record: [`evidence/76-lattice-2014-qualified-by-similarity-retention-d
 - **3873 — FA** — ext3/ext4 orphan tracking, Ceph activation-time queue reconstruction, and GFS re-observation represent different functional ways to preserve or recover cleanup obligations; the comparison does not imply shared algorithms or genealogy.
 - **3874 — E/I** — A technical obligation can remain persistent through reconstructibility of `work still owed` even when the executor's temporary queue identity is not retained; this is project interpretation, not historical Ceph vocabulary.
 - **3875 — X** — Reconstructing snaptrim work does not prove BlueStore allocator reuse timing, SSD physical erase, cryptographic erasure, sanitization, forensic irrecoverability, or the 2016 mechanism's first-introduction date.
+
+## Findings 3876–3891 — Case 19 f4 failure-domain placement margin deepening
+
+- **Finding 3876 (H)** — Muralidhar et al., OSDI 2014, is the primary engineering publication used here for Facebook f4's warm-BLOB storage design; this evidence slice treats it as a source for the deployed design described by the authors, not as a universal erasure-coding history.
+- **Finding 3877 (H)** — f4's documented stripe uses ten data blocks plus four parity blocks; any ten of the fourteen recover the original ten data blocks under the paper's code model.
+- **Finding 3878 (H)** — The normal placement described by f4 assigns a stripe's fourteen blocks to fourteen different racks, making physical spreading a separate part of the fault-tolerance design.
+- **Finding 3879 (H)** — The paper keeps Data- and Parity-stripe failure domains disjoint in the described placement scheme; this is a placement property, not a consequence of Reed–Solomon algebra alone.
+- **Finding 3880 (H)** — The described deployment configures `MaxRebuildFailures` as two for Data and one for Parity and requires that no more than the configured number of same-stripe blocks occupy one Rebuilder failure domain.
+- **Finding 3881 (H)** — The f4 paper says regular Block- and Rebuilder-based failure recovery maintains the placement invariant.
+- **Finding 3882 (H)** — The same source says reconstruction heuristics can, in rare circumstances, leave a post-reconstruction placement violation; f4 then attempts corrective block movement, may split a failure domain, and verifies recoverability before retiring a drive.
+- **Finding 3883 (E)** — An erasure-count budget is not automatically a failure-domain-count budget: the latter depends on how many same-stripe fragments one correlated physical event can remove.
+- **Finding 3884 (E)** — If one correlated domain contains `m` fragments from a stripe, losing that domain consumes `m` erasure positions at once; placement therefore determines how quickly a physical fault consumes algebraic redundancy.
+- **Finding 3885 (E)** — Holding f4's documented “any ten of fourteen” model fixed, more than four simultaneous unavailable blocks exceed the stated algebraic recovery budget; this does not imply that exactly four arbitrary correlated domains are tolerable.
+- **Finding 3886 (E)** — Reconstructing enough valid fragments for current readability does not by itself prove that the intended future correlated-failure margin has been restored.
+- **Finding 3887 (E)** — `coded-fragment count restored != failure-domain topology restored`; the f4 reconstruction path provides a source-backed negative control rather than a purely hypothetical one.
+- **Finding 3888 (E)** — A documented placement policy is not proof of continuous live compliance at every intermediate moment; f4's rare post-reconstruction violation explicitly demonstrates that operational placement state can diverge from intended geometry.
+- **Finding 3889 (E)** — A restored-margin claim for coded storage needs evidence for both fragment content/currentness and current failure-domain geometry; validating only one dimension can overstate resilience to the next correlated fault.
+- **Finding 3890 (F)** — Case 24 Azure LRC provides a bounded functional comparison in which code geometry and rack-placement geometry are also distinct; this does not establish shared algorithm, implementation, or genealogy with f4.
+- **Finding 3891 (boundary/synthesis)** — The f4 paper documents the possibility of a rare placement violation, not a source-quantified frequency or necessarily a documented data-loss incident. Its safe synthesis is that usable coded-repair margin jointly depends on code budget, fragment currentness, and correlated-failure placement geometry.

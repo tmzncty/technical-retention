@@ -475,6 +475,26 @@ ZFS scrub proactively looks for unknown integrity failures before ordinary deman
 
 ---
 
+## Deepening: reconstruction can restore blocks before it restores failure-domain margin
+
+The 2014 f4 paper gives a useful negative control for the difference between **code-level recoverability** and **failure-domain repair margin**. Its `(10,4)` Reed–Solomon stripe has fourteen blocks and is recoverable from any ten, while normal placement assigns the fourteen blocks across fourteen different racks. More specifically, the deployment described in the paper configures `MaxRebuildFailures` as two for Data and one for Parity and requires that no more than that many same-stripe blocks occupy one Rebuilder failure domain.
+
+The source then draws a distinction that matters directly for this repository: ordinary Block/Rebuilder failure recovery maintains that placement invariant, whereas reconstruction uses heuristics that can, under rare circumstances, leave a post-reconstruction violation. f4 subsequently tries to move blocks to correct violations, can split a failure domain when necessary, and checks for unrecoverable filesets before retiring a drive.
+
+This supports a stronger bounded claim than the earlier generic placement discussion:
+
+`coded-fragment count restored != failure-domain topology restored`
+
+and therefore:
+
+`current readability restored != future correlated-failure margin restored`.
+
+If one correlated domain contains `m` blocks from the same stripe, one domain outage consumes `m` erased-block positions. Under the paper's “any ten of fourteen” model, more than four simultaneous erased blocks exceed the stated algebraic budget. The code parameters therefore do not by themselves determine how many correlated physical failures are tolerable; placement controls how much of the algebraic budget one physical event can consume.
+
+The claim remains deliberately narrow. The paper does not quantify how often its rare post-reconstruction placement violation occurred, does not thereby document a data-loss incident, and does not show that every live stripe is always in a fourteen-distinct-Rebuilder-domain configuration. It also does not prove reconstructed content current merely because placement has been corrected. A complete restored-margin claim needs both content/currentness evidence and placement/topology evidence.
+
+See `evidence/19-facebook-f4-fragment-placement-failure-domain-margin-deepening.md` for the historical record, engineering reconstruction, explicit non-claims, and the bounded functional comparison with Case 24.
+
 ## Counterexamples and limits
 
 - Reed–Solomon and erasure coding long predate f4; the paper itself explicitly disclaims coding-theory innovation.
