@@ -6,6 +6,8 @@ This record grounds a narrow operational-retention case: two infrastructure vend
 
 It does **not** independently reproduce JESD218; that standards relation is already grounded in Case 76. It does not infer undocumented firmware algorithms from support prose.
 
+Cadence/source-provenance follow-on: [`111-ibm-lenovo-2020-2021-cadence-provenance-deepening.md`](111-ibm-lenovo-2020-2021-cadence-provenance-deepening.md). That deepening shows that IBM itself published different minimum powered-run durations for different product contexts while invoking the same broad retention background, and that Lenovo's later near-matching Storwize-family guidance should not be counted naively as an independent cross-vendor witness.
+
 ## Source 1 — IBM Support: “Potential for SSD data loss after extended shutdown”
 
 **Current page:** <https://www.ibm.com/support/pages/potential-ssd-data-loss-after-extended-shutdown>
@@ -123,6 +125,23 @@ one standardized maintenance-completion rule
 
 The vendor runbooks layer operational policy above a qualification relation.
 
+## Follow-on — IBM / Lenovo cadence and source independence
+
+The bounded follow-on in [`111-ibm-lenovo-2020-2021-cadence-provenance-deepening.md`](111-ibm-lenovo-2020-2021-cadence-provenance-deepening.md) adds two source controls:
+
+- IBM's general guidance, with a surviving creation date of **16 December 2020**, asks for at least **two weeks** powered after two months off;
+- IBM's TS7770-specific notice, first published **17 December 2020**, invokes the same broad three-month / 40 °C background but asks for at least **one week** powered after two months off;
+- Lenovo HT511702, originally published **24 January 2021**, repeats the two-month / two-week schedule for a platform list that includes `Storwize V7000 for Lenovo`, while older Lenovo support material explicitly groups IBM Storwize-for-Lenovo and Lenovo Storage V-series firmware planning.
+
+The resulting evidence rule is:
+
+```text
+same qualification background != uniquely determined field cadence
+separate vendor webpage != automatically independent engineering evidence
+```
+
+Lenovo therefore remains useful as a provenance/control witness, but it is **not counted as an independent new vendor sample** for a universal powered-maintenance schedule.
+
 ## Cross-case grounding
 
 ### Case 76
@@ -149,6 +168,8 @@ Repository search for `SSD data retention extended shutdown power-off refresh` i
 | qualification boundary != vendor runbook | E | strong |
 | powered state != proved maintenance completion | E | strong |
 | read sweep != verification-only in Dell's bounded regime | H/E | strong |
+| IBM product-specific cadence can differ even with the same broad retention background | H/E | strong; TS7770 is the bounded negative control |
+| Lenovo HT511702 is independent confirmation of a universal IBM-style cadence | X | rejected; visible Storwize-for-Lenovo/V-series support lineage makes independence unsafe to assume |
 | vendor guidance proves one universal SSD refresh algorithm | X | rejected |
 | three months is deterministic device failure time | X | rejected |
 | Case 37 -> IBM/Dell direct genealogy | X | rejected |
@@ -159,6 +180,7 @@ Repository search for `SSD data retention extended shutdown power-off refresh` i
 2. named-drive/controller mapping for Dell's described hidden retention tasks;
 3. telemetry or service logs proving maintenance completion;
 4. independent post-endurance fault/retention tests of the recommended shutdown schedules;
-5. broader cross-vendor periodic-power-up guidance beyond IBM and Dell; NetApp rated-life/offline-retention admission is now grounded separately in `111-netapp-rated-life-offline-retention-telemetry-deepening.md`;
+5. genuinely independent cross-vendor periodic-power-up guidance beyond IBM and Dell; NetApp rated-life/offline-retention admission is grounded separately in `111-netapp-rated-life-offline-retention-telemetry-deepening.md`, while Lenovo HT511702 is now retained as a lineage/provenance control rather than counted as an independent vendor sample;
 6. direct firmware or patent evidence for the read-triggered retention path;
-7. capacity-to-maintenance-time scaling.
+7. capacity-to-maintenance-time scaling;
+8. public engineering rationale for IBM's one-week TS7770 cadence versus the two-week general Storwize/FlashSystem cadence.
