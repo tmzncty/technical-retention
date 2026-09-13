@@ -257,3 +257,11 @@ demonstrated actor-to-actor genealogy
 - device-level experiments or electrical characterization.
 
 Broader semiconductor-memory history belongs primarily in `computing-archaeology`; this record exists to prevent Case 04 from collapsing device geometry into later logical-retention machinery.
+
+## Follow-on navigation — 1987 patent-side chronology
+
+The bounded patent portion of the `earlier NAND-string patent / device genealogy` debt is now continued in:
+
+- [`04-toshiba-1987-series-cell-nand-patent-chronology-deepening.md`](04-toshiba-1987-series-cell-nand-patent-chronology-deepening.md)
+
+That follow-on directly inspects two 1987-priority Toshiba patent lines: Masuoka's April series-connected nonvolatile-cell filing and Iwahashi's June explicit `NAND cell structure` filing. It keeps **priority / filing dates separate from later patent-publication dates**, and therefore does not misuse a claimed priority date as proof of public disclosure. The full 1987 IEDM paper and commercial-shipment chronology remain open.
