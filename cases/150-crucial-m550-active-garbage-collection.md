@@ -18,6 +18,10 @@ The bounded question is narrower:
 
 The case is useful because the same product family exposes `Active Garbage Collection` and `TRIM support` as distinct features, while maintained Crucial documentation describes controller-local cleanup as work that needs powered idle opportunity and free space. A vendor-neutral SNIA account supplies the generic erase-block mechanism without turning that generic mechanism into an undocumented M550 implementation claim.
 
+## Evidence navigation
+
+- [Powered idle, sleep states, and maintenance opportunity deepening](../evidence/150-crucial-powered-idle-sleep-maintenance-opportunity-deepening.md) — separates host-visible idleness, device/interface sleep, controller maintenance eligibility, and actual GC execution; also records the M550's co-listed Device Sleep support and a firmware-version boundary around power-state transitions.
+
 ---
 
 ## Historical vocabulary
@@ -73,6 +77,8 @@ The bounded engineering consequence is nonetheless clear:
 - `maintenance opportunity != maintenance completion`.
 
 An idle interval can therefore be operationally productive even when the host sees no application I/O. Conversely, lack of idle opportunity can accumulate background maintenance pressure without implying that currently readable logical data are already incorrect.
+
+The follow-on power-state deepening adds an important qualification. Crucial's maintained troubleshooting procedure deliberately keeps an SSD powered and idle for **6–8 hours**, including by using BIOS/UEFI or Startup Manager, and recommends changing sleep-related power settings so the device remains powered long enough for background cleanup. Meanwhile the 2014 M550 flyer separately lists `Device Sleep support`. These records justify treating **host idle**, **interface/device sleep**, **maintenance eligibility**, and **actual maintenance execution** as distinct analytical states. They do **not** prove whether M550 garbage collection can or cannot run in SATA DevSleep, Partial, or Slumber.
 
 ---
 
@@ -174,7 +180,17 @@ So:
 
 The maintained Crucial support instructions require the SSD to remain **powered** while idle to give Active Garbage Collection an opportunity to run. This makes energy availability part of the maintenance opportunity.
 
-But the inspected sources do not reveal:
+The power-state deepening further separates:
+
+- absence of foreground I/O;
+- SATA/interface low-power state;
+- system sleep policy;
+- controller-local maintenance eligibility;
+- actual completion of reclamation work.
+
+The M550's co-listed Device Sleep support therefore cannot be used as shorthand for either “GC runs during sleep” or “GC cannot run during sleep.” Product-specific evidence for that arbitration remains missing. Crucial's M550 MU02 release notes also later mention improved behavior during power-state transitions, which is enough to make firmware-version sensitivity explicit but not enough to infer a GC scheduler change.
+
+But the inspected sources still do not reveal:
 
 - whether a particular GC move is transactionally checkpointed;
 - exactly when old/new mapping metadata become authoritative;
@@ -233,6 +249,10 @@ ZNS deliberately changes the host/device division of flash-management responsibi
 
 Case 39 explicitly studies metadata needed to recover FTL state after power failure. Case 150 has no source basis for reconstructing the M550 GC crash protocol, so it stops at the observed maintenance/reclamation boundary.
 
+### Case 111 — long-offline SSD operational retention
+
+Case 111 also demonstrates that future powered opportunity can matter, but for a different obligation: long-offline NAND retention and field policy rather than ordinary erase-block reclamation. The comparison is functional only. Case 111's weeks/months cadence must not be imported into Case 150, and Case 150's 6–8-hour troubleshooting window must not be treated as a NAND retention qualification interval.
+
 ### Cases 44 / 47 — sanitization
 
 Ordinary garbage collection reclaims capacity while preserving all data that remains current. Sanitization aims to retire recoverability itself. Similar erase primitives can participate in both, but their authority, completeness, and verification contracts differ.
@@ -250,7 +270,7 @@ Guardrails:
 - the M550 evidence therefore serves as a **named-product embodiment floor**, not an invention date;
 - chronology does not prove a Micron/Crucial genealogy from any particular earlier paper, patent, controller family, or SSD vendor.
 
-A fresh search of `tmzncty/computing-archaeology` found no dedicated SSD garbage-collection study to reuse. Broader FTL genealogy, early commercial SSD GC, controller architecture, and product-by-product scheduler history belong primarily there if pursued; Case 150 keeps only the retention/reclamation relation.
+A fresh search of `tmzncty/computing-archaeology` found no dedicated SSD garbage-collection or M550/DEVSLP study to reuse. Broader FTL genealogy, early commercial SSD GC, controller architecture, SATA low-power-state genealogy, and product-by-product scheduler history belong primarily there if pursued; Case 150 keeps only the retention/reclamation relation.
 
 ---
 
@@ -261,6 +281,8 @@ The engineering evidence supports one restrained observation: **technical forget
 A mixed erase block cannot be forgotten wholesale. The controller must discriminate current from stale embodiments, carry current data forward, and only then erase the old container. “Garbage collection” is therefore not pure destruction; it is a selective transition that preserves one continuity while ending another.
 
 A second observation is that **inactivity at one layer can be maintenance activity at another**. Host idleness can provide the interval in which a controller reorganizes physical state while leaving the logical namespace apparently unchanged.
+
+The power-state deepening adds a further limit to that observation: apparent inactivity does not itself guarantee that lower-layer maintenance machinery remains eligible. Energy-saving policy can consume the same idle interval in a different way.
 
 These are mechanism-level observations. They do not make SSD garbage collection a theory of human forgetting, archival memory, or ontology.
 
@@ -280,7 +302,7 @@ Directly supports:
 - `Active Garbage Collection` and `TRIM support` listed as separate advanced features;
 - co-presence of power-loss protection, SMART, ECC, and device sleep.
 
-It does **not** disclose the garbage collector's victim-selection algorithm, mapping transaction protocol, idle threshold, crash recovery, or erase scheduling.
+It does **not** disclose the garbage collector's victim-selection algorithm, mapping transaction protocol, idle threshold, crash recovery, erase scheduling, or GC eligibility in Device Sleep.
 
 ### P2 — Micron M550 availability announcement, 18 March 2014 — `H/P`
 
@@ -295,7 +317,7 @@ Crucial Support, localized origin-hosted copies including:
 <https://www.crucial.jp/support/articles-faq-ssd/ssd-used-to-be-faster-but-has-slowed-down>
 <https://www.crucial.es/support/articles-faq-ssd/ssd-used-to-be-faster-but-has-slowed-down>
 
-Directly supports Crucial's maintained family-level statements that Active Garbage Collection is controller-local background maintenance, benefits from powered idle time, and needs available space for cleanup/data movement.
+Directly supports Crucial's maintained family-level statements that Active Garbage Collection is controller-local background maintenance, benefits from powered idle time, needs available space for cleanup/data movement, and can be given a longer maintenance window by keeping the device powered rather than allowing ordinary sleep policy to remove that opportunity.
 
 This source is **not** used to assert that every 2014 M550 firmware revision had identical timing thresholds or scheduling behavior.
 
@@ -322,22 +344,47 @@ Tel Aviv University record:
 
 The peer-reviewed survey records flash's erase-unit constraint and established not-in-place update / erase-management / wear-management techniques well before M550. It is used to reject a 2014 invention-priority reading, not to claim direct genealogy.
 
+### P7 — SATA-IO TPR 038 `DEVSLP` and interoperability material — `H/P`, protocol boundary only
+
+SATA-IO, **“SATA3.1 TPR C108 – Device Sleep,” Version 1.0a**:
+<https://sata-io.org/sites/default/files/TP_038_SATA31_TPR_C108_DEVSLP_V1.0a.pdf>
+
+SATA-IO Unified Test Document Device Sleep tests:
+<https://sata-io.org/sites/default/files/documents/UTD_1_6_Rev1_1%20Released.pdf>
+
+These sources distinguish DevSleep from PHYRDY/Partial/Slumber and document Device Sleep interface behavior. They are used to prevent vocabulary collapse, not to infer M550 GC behavior.
+
+### P8 — Crucial M550 MU02 firmware support record, released 8 January 2018 — `H/P`, revision-sensitivity guardrail
+
+Crucial Support, **M550 SSD firmware and support**:
+<https://stage.crucial.com/content/crucial/en-us/home/support/ssd-support/m550-support.html>
+
+The published release note includes improved stability/efficiency/performance during power-state transitions and corrected NCQ TRIM error handling. It does not say that garbage-collection scheduling changed.
+
+### F1 — follow-on bounded deepening
+
+[Evidence 150 — Crucial SSD Active Garbage Collection: Powered Idle, Sleep States, and Maintenance Opportunity](../evidence/150-crucial-powered-idle-sleep-maintenance-opportunity-deepening.md)
+
+This follow-on is the authoritative location for the power-state/maintenance-opportunity decomposition and its explicit non-claims.
+
 ---
 
 ## Evidence-strength summary
 
 - **Strong:** named M550 product documentation explicitly lists Active Garbage Collection and TRIM as separate features; Micron gives a dated 2014 availability anchor.
-- **Strong for current vendor behavior:** Crucial's maintained support material explicitly describes controller-local Active Garbage Collection, powered idle opportunity, and free-space dependence.
+- **Strong for current vendor behavior:** Crucial's maintained support material explicitly describes controller-local Active Garbage Collection, powered idle opportunity, free-space dependence, and power-setting changes that preserve a long idle maintenance window.
 - **Strong generic mechanism:** SNIA describes relocation of valid data before erase-block reclamation and its write-amplification/performance cost.
+- **Strong protocol boundary:** SATA-IO distinguishes DevSleep from active/other reduced-power interface states, but does not specify M550's internal GC eligibility.
 - **Moderate historical guardrail:** 2011 SNIA and 2005 academic flash-management literature establish that the relevant problem family predates M550.
-- **Not established:** exact M550 GC algorithm, victim policy, internal metadata, free-space threshold, power-fail transaction, firmware-version differences, or complete physical sanitization effect.
+- **Moderate product revision guardrail:** M550 MU02 explicitly changed power-state-transition handling, but no inspected source ties that change to GC.
+- **Not established:** exact M550 GC algorithm, victim policy, internal metadata, free-space threshold, power-fail transaction, per-power-state GC eligibility, firmware-version scheduler differences, or complete physical sanitization effect.
 
 ---
 
 ## Open debt
 
-1. Recover an origin-hosted or archived 2010–2014 Crucial support page that dates Active Garbage Collection's idle-time description closer to M550 rather than relying on maintained 2024 support text.
-2. Find a first-party controller/firmware document exposing an actual managed-SSD GC state machine, victim selection, or crash protocol.
-3. Add named-device traces that correlate TRIM, idle time, internal writes, and reclaimed space without mistaking performance recovery for direct block-level proof.
-4. Trace early commercial SSD GC / FTL genealogy in `computing-archaeology` rather than expanding this case into a general SSD history.
+1. Recover an origin-hosted or archived **2010–2014 Crucial** support page that dates the powered-idle / 6–8-hour Active Garbage Collection instructions closer to M550 rather than relying on maintained 2024 support text.
+2. Find a first-party controller/firmware document exposing an actual managed-SSD GC state machine, victim selection, crash protocol, or explicit power-state eligibility table.
+3. Add named-device traces that correlate TRIM, active idle, low-power states, internal writes, and reclaimed space without mistaking performance recovery for direct block-level proof.
+4. Trace early commercial SSD GC / FTL and SATA low-power-state genealogy in `computing-archaeology` rather than expanding this case into a general SSD history.
 5. Keep ordinary reclamation erase separate from sanitize/remanence testing unless lower-layer evidence is obtained.
