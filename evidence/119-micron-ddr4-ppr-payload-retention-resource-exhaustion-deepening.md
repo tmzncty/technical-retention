@@ -9,6 +9,8 @@ This record deepens [`../cases/119-ddr4-post-package-repair-row-remapping.md`](.
 
 The bounded result is deliberately narrower than a JEDEC-wide PPR genealogy. It uses Micron-authored DDR4 product documentation as a manufacturer witness and keeps product behavior, engineering reconstruction, cross-case analogy, and philosophical interpretation separate.
 
+**Cross-vendor follow-on:** [`119-samsung-2014-ddr4-ppr-cross-vendor-resource-transition-deepening.md`](119-samsung-2014-ddr4-ppr-cross-vendor-resource-transition-deepening.md) now compares this Micron product envelope against Samsung's September/October 2014 DDR4 operation document. It closes the bounded claim that shared `PPR` / `sPPR` vocabulary does **not** imply identical repair-resource geometry or identical soft-to-hard transition preconditions. SK hynix, exact JEDEC adoption chronology, and hidden physical spare/fuse topology remain open.
+
 ## Evidence classification
 
 - **H/P** — historical / manufacturer-primary technical record.
@@ -253,4 +255,4 @@ row retired / mapping changed
     != retired physical row sanitized
 ```
 
-Remaining work is narrower: exact JEDEC chronology, cross-vendor confirmation, named-platform completion telemetry, and physical characterization of repair-resource topology/exhaustion.
+The Samsung follow-on now closes the narrower **cross-vendor operation-contract** question: the same public PPR vocabulary can coexist with different repair-resource geometry and different soft-to-hard transition preconditions. Remaining work is narrower: exact JEDEC chronology, SK hynix comparison, named Samsung/Micron product-level physical implementation evidence, named-platform completion telemetry, and physical/fault characterization of repair-resource topology/exhaustion.
