@@ -36,6 +36,14 @@ jobs:
           p.write_text(s.replace(old, new, 1), encoding='utf-8')
           PY
           python3 .github/case19_margin_patch.py
+          for name in \
+            cases/19-facebook-f4-erasure-coded-failure-domains.md \
+            evidence/19-facebook-f4-fragment-placement-failure-domain-margin-deepening.md \
+            docs/SYNTHESIS_07_CODED_RECOVERABILITY_REPAIR_MARGIN.md \
+            ROADMAP.md \
+            CASE_INDEX.md; do
+            sed -i 's/[[:space:]]\+$//' "$name"
+          done
           python3 - <<'PY'
           from pathlib import Path
           for name in [
