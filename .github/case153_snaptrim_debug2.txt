@@ -1,0 +1,5 @@
+status=1
++ set -euo pipefail
++ test -f .github/case153_snaptrim_reconstruction_patch.py
++ python3 .github/case153_snaptrim_reconstruction_patch.py
+evidence already exists: evidence/153-ceph-2016-pg-activation-trim-obligation-reconstruction-deepening.md
