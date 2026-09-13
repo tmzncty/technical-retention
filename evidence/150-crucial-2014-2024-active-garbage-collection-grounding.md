@@ -44,6 +44,23 @@ The bounded engineering relation is now strengthened to:
 
 `logical supersession != invalidity != reclamation opportunity != copy/erase execution != reclamation completion`.
 
+### Follow-up deepening — powered-idle maintenance opportunity and host power policy
+
+A second bounded follow-up is recorded in [`150-crucial-powered-idle-maintenance-opportunity-deepening.md`](150-crucial-powered-idle-maintenance-opportunity-deepening.md).
+
+That note re-inspects Crucial's first-party maintained support procedure and records the operational details that the earlier grounding deliberately left qualitative:
+
+- Active Garbage Collection is described as controller-local cleanup while the SSD is **powered** but not actively reading/writing;
+- Crucial recommends at least **10% free capacity** for best results;
+- a performance-recovery procedure reserves **6–8 hours** of powered idle time, for example in BIOS/UEFI or macOS Startup Manager;
+- Crucial explicitly recommends host power settings that keep SATA/NVMe SSDs powered/available during otherwise idle periods.
+
+The bounded engineering result is:
+
+`host inactivity != guaranteed device maintenance opportunity != maintenance completion`.
+
+The `6–8 h` interval is treated as a vendor runbook window, **not** a firmware completion SLA; the `10%` figure is treated as an operational recommendation, **not** a published GC trigger threshold. The current family-level procedure is not back-projected as exact 2014 M550 firmware behavior.
+
 ---
 
 ## Claim table
@@ -55,6 +72,9 @@ The bounded engineering relation is now strengthened to:
 | M550 was publicly available under Crucial/Micron brands on 18-Mar-2014 | Micron release | historical record / primary | strong |
 | Current Crucial support describes Active GC as controller-local background cleanup | Crucial support | current vendor contract | strong for maintained family description, not 2014 exact internals |
 | Current Crucial support says powered idle periods and free space are needed for effective Active GC | Crucial support | current vendor contract | strong current statement; anti-anachronism guard required |
+| Current Crucial support recommends a 6–8 h powered-idle recovery window | Crucial support | current vendor runbook | strong for the procedure; **not** a GC completion-time guarantee |
+| Current Crucial support recommends keeping at least 10% free for best results | Crucial support | current vendor runbook | strong recommendation; **not** an exact firmware threshold |
+| Host power-management settings can be changed to preserve the vendor-recommended powered-idle opportunity | Crucial support | current vendor runbook + engineering reconstruction | strong for the operational procedure; exact SATA/NVMe controller-state semantics unknown |
 | TRIM indication and internal GC are distinct mechanisms | M550 flyer + SNIA 2011 | historical record + engineering reconstruction | strong distinction; exact firmware coupling unknown |
 | Generic SSD GC relocates valid data before erasing source blocks containing invalid data | SNIA 2016 | high-quality industry mechanism source | strong generic mechanism, not M550-specific |
 | Micron publicly documented an FTL select/copy/erase GC sequence and optional idle-time background feature by Apr-2011 | Micron TN-29-60 | historical record / vendor technical note | strong for generic SLC FTL guidance; not M550 firmware genealogy |
@@ -103,8 +123,7 @@ The release dates public availability; it does not independently document Active
 
 ### 3. Crucial maintained support — Active Garbage Collection
 
-Origin-hosted localized copies:
-<https://www.crucial.jp/support/articles-faq-ssd/ssd-used-to-be-faster-but-has-slowed-down>
+Origin-hosted localized copy:
 <https://www.crucial.es/support/articles-faq-ssd/ssd-used-to-be-faster-but-has-slowed-down>
 
 The maintained article is dated 15-Nov-2024 on surfaced copies.
@@ -115,11 +134,14 @@ Observed vendor statements:
 - it performs background cleanup when the SSD is powered but not actively reading/writing;
 - idle periods are needed for it to operate;
 - available free space is needed because cleanup involves moving data;
-- the feature is presented as useful where TRIM cannot operate normally.
+- the feature is presented as useful where TRIM cannot operate normally;
+- at least **10% free capacity** is recommended for best results;
+- a degraded-performance recovery procedure leaves the SSD powered and idle for **6–8 hours**;
+- the same procedure recommends host power settings that prevent the SSD from being powered down during the intended maintenance window.
 
 Anti-anachronism rule:
 
-Use this as a **maintained family-level behavior description**, not as proof that M550 firmware in 2014 had the same trigger intervals, threshold values, or scheduling policy. The historical M550 document proves the feature name; the current support page explains the maintained vendor concept.
+Use this as a **maintained family-level behavior description and runbook**, not as proof that M550 firmware in 2014 had the same trigger intervals, free-space threshold, scheduler, SATA/NVMe power-state handling, or 6–8-hour completion behavior. The historical M550 document proves the feature name; the current support page explains the maintained vendor concept and operator procedure.
 
 ### 4. SNIA, Trim: The Basics — 29-Jun-2011
 
@@ -214,6 +236,12 @@ This decomposition explains why `delete`, `TRIM`, `GC`, and `sanitize` cannot be
 
 TN-29-60 further lets the project separate **maintenance demand** from **maintenance opportunity**: a free-page threshold can create reclamation pressure, while an idle interval can provide an opportunity to perform the work earlier. Therefore `GC due/pressured != idle opportunity != GC execution != completion`.
 
+The maintained Crucial runbook sharpens `idle opportunity` into a cross-layer condition. In the vendor's procedure, application/user inactivity is insufficient by itself: the SSD must remain powered, and Crucial explicitly changes host power settings to preserve that device-level condition. Therefore the project can now use the more precise bounded relation:
+
+`host inactivity != powered-device maintenance opportunity != GC completion`.
+
+The recommended **6–8 h** interval is evidence for reserving a maintenance window, not for a controller completion deadline. Likewise, the **10%** free-space recommendation is an operator guideline, not a demonstrated firmware threshold.
+
 ---
 
 ## Stop conditions
@@ -222,11 +250,13 @@ The following claims are intentionally blocked:
 
 1. **Exact M550 algorithm.** No inspected first-party source exposes victim selection, wear-leveling coupling, valid-page-copy primitive, or mapping commit order.
 2. **Idle-only GC.** Current Crucial support explains idle-time Active GC; it does not prove M550 never performed urgent/foreground reclamation.
-3. **Exact free-space threshold.** The current support recommendation is operational guidance, not a 2014 firmware constant.
-4. **Power-fail atomicity.** M550 lists power-loss protection, but no source ties that feature to a specific GC transaction protocol.
-5. **Sanitization.** Ordinary GC is not documented as device-wide secure purge, cryptographic erase, or verified forensic irrecoverability.
-6. **Invention priority.** Micron TN-29-60 (2011), SNIA 2011, and earlier flash-management literature predate the named M550 witness; no first-inventor claim is made.
-7. **Genealogy.** Chronology does not establish M550 design descent from TN-29-60, Gal/Toledo, SNIA, another SSD vendor, or a specific controller architecture.
+3. **Exact free-space threshold.** The current support `10%` recommendation is operational guidance, not a 2014 firmware constant or universal trigger.
+4. **Six-to-eight-hour completion SLA.** The interval is a vendor runbook opportunity window; no inspected source makes it a guaranteed GC deadline.
+5. **Specific low-power-state semantics.** Host power-setting guidance does not expose SATA DEVSLP/HIPM/DIPM, NVMe APST, or controller-state internals.
+6. **Power-fail atomicity.** M550 lists power-loss protection, but no source ties that feature to a specific GC transaction protocol.
+7. **Sanitization.** Ordinary GC is not documented as device-wide secure purge, cryptographic erase, or verified forensic irrecoverability.
+8. **Invention priority.** Micron TN-29-60 (2011), SNIA 2011, and earlier flash-management literature predate the named M550 witness; no first-inventor claim is made.
+9. **Genealogy.** Chronology does not establish M550 design descent from TN-29-60, Gal/Toledo, SNIA, another SSD vendor, or a specific controller architecture.
 
 ---
 
@@ -234,6 +264,7 @@ The following claims are intentionally blocked:
 
 - **Case 04:** use for logical-to-physical remapping/currentness; Case150 adds selective reclamation of mixed erase blocks.
 - **Case 39:** use for an explicit FTL crash-recovery implementation; do not fill M550's crash-protocol gap by analogy.
+- **Case 135:** both cases expose controller-owned maintenance that depends on a host-created service opportunity. Case135 uses a reset/time command window, bus-idle gating and ECC-threshold selection; Case150C uses a powered-idle operator runbook. Functional comparison only; no shared algorithm or genealogy is claimed.
 - **Case 145:** raw-Flash JFFS2 exposes obsolete-node and erase/reuse evidence in open source; managed SSD GC hides corresponding details behind firmware.
 - **Case 84:** ZNS shifts parts of placement/reclamation responsibility across the host/device boundary; functional comparison only.
 - **Cases 44/47:** retain sanitize/remanence authority; do not promote GC erase to secure erase.
@@ -242,6 +273,6 @@ The following claims are intentionally blocked:
 
 ## Related-repository check
 
-A fresh code search in `tmzncty/computing-archaeology` for `TN-29-60`, `garbage collection NAND`, and `FTL NAND` returned no dedicated study. Therefore this bounded retention case does not duplicate a known companion-repository package.
+A fresh code search in `tmzncty/computing-archaeology` for `active garbage collection` returned no dedicated study. Therefore this bounded retention case does not duplicate a known companion-repository package.
 
-If expanded later, broad FTL history, early commercial SSD garbage collection, controller lineages, and product scheduler evolution should move to `computing-archaeology`; `technical-retention` should retain only the state/reclamation relation and cross-case comparison.
+If expanded later, broad FTL history, early commercial SSD garbage collection, controller lineages, SATA/NVMe power-state genealogy, and product scheduler evolution should move to `computing-archaeology`; `technical-retention` should retain only the state/reclamation/maintenance-opportunity relation and cross-case comparison.
