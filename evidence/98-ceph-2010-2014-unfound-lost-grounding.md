@@ -4,6 +4,8 @@ This record grounds [`Case 98`](../cases/98-ceph-unfound-recovery-exhaustion-adm
 
 **Status:** `grounded evidence record`
 
+Automatic-loss configuration/capability deepening: [`98-ceph-auto-mark-unfound-lost-nonimplementation-deepening.md`](98-ceph-auto-mark-unfound-lost-nonimplementation-deepening.md). The companion record closes the bounded question `configuration key exists != automatic loss capability implemented` at Firefly v0.80.7 and a pinned 2026 main snapshot, while leaving exact option-introduction genealogy, backend parity, and production incidents open.
+
 ## Grounding question
 
 Case 05 already establishes the normal 2006 RADOS relation among placement, versions, primary authority, peering, and replica repair. This evidence package asks a narrower later question:
