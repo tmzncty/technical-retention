@@ -199,6 +199,26 @@ Across these cases, cleanup can therefore depend on retained work state **or** o
 
 ---
 
+### A retained obligation need not be the worker queue itself
+
+Case 153 now supplies a useful refinement to the phrase **retained cleanup obligation**. A 2016 Ceph implementation/documentation slice reconstructs `snap_trimq` at PG activation from the removed-snapshot relation minus `purged_snaps`; current source preserves the subtraction relation through different data structures. The obligation can therefore survive because the inputs needed to *derive pending work* remain available, even if the old in-memory queue object and exact worker cursor do not.
+
+This gives a third shape between a literally durable work list and pure re-observation:
+
+```text
+authoritative retirement state
+        +
+retained completion state
+        ↓
+reconstructed pending-work set
+```
+
+For Synthesis 28, the rule is therefore:
+
+> **retained cleanup obligation != necessarily a durably serialized scheduler queue.**
+
+The comparison with ext3/ext4's explicit orphan tracking and GFS's reconciliation from current authority/inventory is functional only. It does not imply shared algorithms or genealogy.
+
 ## 8. E — forgetting stale state can require active preservation of live state
 
 This is the strongest Flash/SSD contribution to the synthesis.

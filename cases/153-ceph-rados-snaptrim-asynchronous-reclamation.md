@@ -336,6 +336,32 @@ MEMBERSHIP REVISED
 
 This is project engineering reconstruction from Ceph's documented relations, not a claim that Ceph developers used these exact state names.
 
+## PG-activation reconstruction deepening: the obligation can survive without the old queue object
+
+A second evidence pass now closes one narrower restart/recovery question. Ceph's 15-Dec-2016 `pgpool.rst` and matching `PG.cc` show that primary PG activation **constructs** `snap_trimq` from the pool's removed-snapshot set and subtracts `info.purged_snaps`; the current source has changed the concrete representation but still computes `to_trim` from OSDMap removed-snapshot state minus `info.purged_snaps` before handing the result into PG activation. See [`../evidence/153-ceph-2016-pg-activation-trim-obligation-reconstruction-deepening.md`](../evidence/153-ceph-2016-pg-activation-trim-obligation-reconstruction-deepening.md).
+
+This strengthens the failure/recovery model:
+
+```text
+snapshot-retirement relation
++
+trim-completion relation (`purged_snaps`)
+        ↓ activation / reconciliation
+pending snap IDs to trim
+        ↓
+worker queue / asynchronous execution
+```
+
+The critical distinction is:
+
+> **unfinished reclamation obligation can remain reconstructible even when the previous in-memory scheduler queue does not survive.**
+
+In 2016 the documented implementation used `cached_removed_snaps - info.purged_snaps -> snap_trimq`. In the inspected 12-Sep-2026 mainline source, `PeeringState` instead builds `to_trim` from the OSDMap `removed_snaps_queue`, subtracts the intersection with `info.purged_snaps`, and passes the result into `on_activate`; the current Crimson PG then materializes that set as `snap_trimq`. The stable relation therefore outlives a concrete representation change.
+
+Maintained `snaps.rst` adds the completion side of the relation: replicas persist the new `purged_snaps` with PG info, normal peering/recovery maintain trim operations, and loss of a `purged_snaps` update can cause a now-empty snapshot to be trimmed again. That is evidence that **missing completion evidence may cause redundant work**, not evidence that the snapshot becomes live again.
+
+Do not over-read this into exact resume semantics. The inspected sources do not establish persistence of a byte-identical queue, thread state, scheduling order, or exact per-object iterator position. `queue reconstructed != exact worker cursor restored`, and the documented empty-retrim case does not prove universal exactly-once/idempotent behavior for every snaptrim crash window.
+
 ## Prior art and genealogy boundary
 
 ### WAFL 1994 blocks a broad snapshot/COW novelty claim
