@@ -13,7 +13,14 @@ This case is deliberately not a general history of the Apollo Guidance Computer,
 
 It therefore complements, rather than duplicates, [`Case 02`](02-magnetic-core-destructive-read.md). Case 02 studies classic coincident-current read/write core memory, where remanent magnetization itself carries the bit and a read may destroy that state. Case 60 studies a fixed transformer memory whose readable program is carried by **wiring topology** while the selected core is intentionally switched as part of the read process.
 
-A repository search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated core-rope case at the time of this slice, so no parallel engineering history is reproduced here.
+A repository search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated core-rope case at the time of this slice, so no parallel engineering history is reproduced here. A later check for `Apollo core rope verification` likewise found no reusable dedicated treatment.
+
+---
+
+## Evidence navigation
+
+- [`../evidence/60-apollo-core-rope-1964-1972-grounding.md`](../evidence/60-apollo-core-rope-1964-1972-grounding.md) — principal mechanism/history grounding for the 1964–1972 bounded case.
+- [`../evidence/60-nasa-1967-flight-fixed-memory-certification-deepening.md`](../evidence/60-nasa-1967-flight-fixed-memory-certification-deepening.md) — NASA approval → hard-memory fabrication → bit-for-bit manufactured-memory comparison → acceptance/certification and configuration-control deepening.
 
 ---
 
@@ -203,6 +210,44 @@ A routing error is not merely a defect in packaging around an otherwise correct 
 
 ---
 
+## 1967 flight fixed-memory certification: topology alone is not configuration identity
+
+NASA's October 4, 1967 **_Apollo Guidance Software Development and Verification Plan_** now supplies a direct process-level witness for what happened after the program was approved. See [`../evidence/60-nasa-1967-flight-fixed-memory-certification-deepening.md`](../evidence/60-nasa-1967-flight-fixed-memory-certification-deepening.md).[^nasa-1967-verification]
+
+The report separates software approval from hard-memory fabrication, verification, and KSC system testing. Section 5.5.1 then requires procedures to ensure that the approved program delivered by the software contractor is **identical, bit for bit, to the manufactured flight fixed memory**, with formal MSC acceptance/certification and comparison of the manufactured contents against the MSC-approved fixed-memory software configuration.[^nasa-1967-verification]
+
+That adds a lifecycle distinction to the mechanism-level argument above:
+
+```text
+approved software configuration
+!=
+manufacturing/control representation
+!=
+manufactured rope artifact
+!=
+certified flight artifact
+```
+
+The rope's physical topology may be stable and runtime read-only while still requiring evidence that it embodies the authorized bit pattern. A wrongly manufactured topology would not become correct merely because normal AGC instructions could not rewrite it.
+
+The same 1967 plan says that after the First Article Configuration Inspection, changes to the configuration-controlled program require Guidance Software Control Panel approval, including changes to any memory cell. It also allows a previous flight's fixed memory to be approved for a later flight under a reduced cycle.[^nasa-1967-verification]
+
+The engineering reconstruction is therefore:
+
+```text
+physical persistence
+!=
+bitwise correspondence to approved software
+!=
+configuration authority / mission currentness
+```
+
+NASA SP-8070 sharpens the time boundary: the Apollo example had an approximately four-week new-module production cycle, while its verification cycles were reported as at least as long as production cycles.[^nasa-sp8070] `manufacturing time`, `verification time`, and `total revision-to-flight latency` should therefore not be collapsed into one rope-production constant.
+
+This is not evidence that the 1967 plan specifies every Raytheon manufacturing detail, that every mission followed the diagram without deviation, or that bit-for-bit acceptance proved absence of latent hardware faults or correctness of the software requirements themselves.
+
+---
+
 ## Time: retention interval and revision latency diverge
 
 Core rope creates two very different timescales.
@@ -215,6 +260,8 @@ Once correctly manufactured, the fixed bit pattern does not require periodic ref
 
 Changing the fixed program is slow because the new state must travel through a manufacturing and verification process. NASA's approximately four-week procurement cycle for Apollo program changes is evidence that **revision latency can be much longer than read latency or quiescent retention maintenance time**.[^nasa-sp8070]
 
+The 1967 verification plan makes that lifecycle more explicit: acceptance of the software authorizes hard-memory fabrication, while the manufactured fixed memory still requires comparison, formal acceptance, and certification.[^nasa-1967-verification]
+
 This creates a retention regime in which stability is bought partly by making ordinary modification difficult.
 
 The right conclusion is not `immutable = reliable`. Instead:
@@ -222,7 +269,7 @@ The right conclusion is not `immutable = reliable`. Instead:
 ```text
 easy accidental rewrite is strongly reduced
 but
-intentional revision becomes a manufacturing operation
+intentional revision becomes a manufacturing + verification operation
 ```
 
 Retention strength and update flexibility trade against one another.
@@ -247,6 +294,12 @@ Payload topology can survive while the local selection path no longer routes the
 
 A wire routed through a core when it should bypass it, or vice versa, directly changes the manufactured bit pattern.
 
+The 1967 NASA certification procedure is especially important here because it treats manufactured contents as something that must be compared against the approved configuration rather than presumed correct.[^nasa-1967-verification]
+
+### Configuration divergence
+
+A physical rope may contain a readable fixed program yet fail the stronger relation `this artifact matches the currently approved flight configuration`. That is a configuration/authority failure, not magnetic decay.
+
 ### Supersession without destruction
 
 A replaced rope module can remain a perfectly readable artifact containing an obsolete program. Logical currentness changes because a different module is designated for flight, not because the older program automatically vanishes.
@@ -260,13 +313,14 @@ These failure modes should not be collapsed into `the core lost its magnetizatio
 ### Primary / contemporary institutional sources
 
 1. **MIT Instrumentation Laboratory / Charles Stark Draper Laboratory, _MIT's Role in Project Apollo, Volume III: Computer Subsystem_, R-700 (1972).** Section 2.3.6 identifies the transformer-type core rope as nondestructive fixed program memory; §3.5.2 and Figs. 3-12/3-13 describe thread/bypass encoding, core switching, inhibit selection, sense-line readout, and six-module organization; the mechanical-construction section describes tape-guided operator threading.[^r700]
-2. **NASA SP-8070, _Spaceborne Digital Computer Systems_ (March 1971).** The memory section distinguishes fixed/read-only memory from read-write memory, identifies manufactured contents and physical modification as the update path, names the Apollo core-rope program memory, and reports an approximately four-week production cycle for program changes.[^nasa-sp8070]
+2. **NASA SP-8070, _Spaceborne Digital Computer Systems_ (March 1971).** The memory section distinguishes fixed/read-only memory from read-write memory, identifies manufactured contents and physical modification as the update path, names the Apollo core-rope program memory, reports an approximately four-week production cycle for program changes, and notes verification cycles at least as long as production cycles.[^nasa-sp8070]
 3. **Ramon L. Alonso, Robert E. Oleksiak, William B. Turner, MIT, U.S. Patent 3,451,129, filed January 5, 1966.** Contemporary primary evidence that wired-in computer memories stored data in wiring geometry, with threading/bypass choices encoding binary values and a tape-controlled Jacquard-derived manufacturing method.[^mit-wired-patent]
 4. **Hayden A. Nelson, U.S. Patent 3,419,855, filed December 24, 1964.** Contemporary evidence for a read-only wired-core fixed-information memory in which storage resides in the physical configuration of drive windings; useful for bounding Apollo/MIT novelty claims.[^nelson]
+5. **NASA Manned Spacecraft Center, Guidance Software Validation Committee, _Apollo Guidance Software — Development and Verification Plan_, October 4, 1967.** Direct process evidence for release of accepted software to hard-memory fabrication, fixed-memory bit-for-bit comparison against the approved configuration, formal MSC acceptance/certification, and configuration-control authority over later memory-cell changes.[^nasa-1967-verification]
 
 ### Related-repository check
 
-5. `tmzncty/computing-archaeology` was searched for `core rope`; no dedicated case was found during this slice. Broader magnetic-core history remains routed there rather than being reconstructed here.
+6. `tmzncty/computing-archaeology` was searched for `core rope` and later for `Apollo core rope verification`; no dedicated case was found during these slices. Broader magnetic-core history remains routed there rather than being reconstructed here.
 
 ---
 
@@ -292,6 +346,24 @@ Core rope requires little runtime work merely to preserve the program, but it de
 
 An old rope can still retain every bit after it is replaced. Whether that bit pattern is the **current flight program** depends on designation and installation history, not on physical survivability alone.
 
+### Finding 6 — a manufactured state can require retained evidence of correspondence
+
+The 1967 NASA process treats the approved software configuration and manufactured fixed memory as distinct representations that must be compared before the artifact is accepted.
+
+Thus a retention analysis of fixed memory needs one more relation beyond substrate persistence:
+
+```text
+artifact payload survives
++
+artifact remains readable
++
+artifact corresponds to approved configuration
++
+artifact remains authorized/current for its mission context
+```
+
+Those predicates may coincide in a healthy flight unit, but they are not logically identical.
+
 ---
 
 ## Functional analogy
@@ -301,6 +373,8 @@ An old rope can still retain every bit after it is replaced. Whether that bit pa
 A limited analogy to later mask ROM is useful: in both cases, ordinary operation reads a manufactured pattern that is not electrically rewritten by the executing program.
 
 The analogy stops there. Core rope uses magnetic transformer coupling and conductor topology; semiconductor mask ROM uses a different fabrication substrate and circuit mechanism. No direct genealogy is asserted here.
+
+The 1967 certification evidence adds only an abstract lifecycle comparison: a manufactured read-only payload can still require a reference configuration and post-manufacture verification. That is not a claim that Apollo rope established later ROM-verification practice.
 
 ### Classic magnetic-core RAM
 
@@ -322,6 +396,8 @@ This case tests one narrow proposition:
 That proposition is engineering-grounded here: the selected magnetic core changes state, but the program remains because the wire/core relation remains.
 
 It is tempting to say that the Apollo program was `literally woven into hardware`. That phrase can be useful, but only after the mechanism is kept exact. The retention claim is not that software became mystical material memory. It is that the executable program's fixed bits were materially constrained by routing decisions made during manufacture, and ordinary electrical operation lacked authority to revise those relations.
+
+The 1967 certification evidence adds another bounded interpretation: making the program physically stable does not eliminate mediation. It creates a need to preserve correspondence among approved software, manufacturing representations, the woven artifact, and its authorized mission identity. That is a project-level interpretation of the documented process, not NASA's historical philosophical vocabulary.
 
 For a Stieglerian or media-archaeological reading, this offers a particularly strong example of exteriorized technical inscription. But the case does not establish that every manufactured ROM is `tertiary retention`, nor that labor-intensive fabrication automatically supplies philosophical significance.
 
@@ -345,13 +421,17 @@ The selected core switches and is reset. What remains unchanged is the bit-beari
 
 The executing AGC cannot rewrite the rope electrically, but humans can manufacture, repair, replace, or destroy modules. `Read-only` is an interface/operational property, not a metaphysical claim.
 
+### Bit-for-bit acceptance is not universal correctness proof
+
+The 1967 plan requires comparison of manufactured fixed-memory contents against the approved configuration. Passing that comparison establishes the intended correspondence relation; it does not by itself prove the absence of every latent hardware fault or that the approved program requirements and algorithms are correct.[^nasa-1967-verification]
+
 ### Apollo did not invent the general idea of wired-in fixed memory
 
 By the mid-1960s, contemporary patents and technical literature already treated wired-in / wired-core read-only memories and geometry-based encoding as an existing class. This case makes no priority claim for Apollo, MIT, or Raytheon beyond the specific bounded implementation and manufacturing evidence used here.[^mit-wired-patent][^nelson]
 
 ### The four-week figure is a program-change production-cycle witness, not a universal rope-manufacturing constant
 
-NASA SP-8070 gives an approximately four-week procurement cycle in the Apollo context. Different module versions, production phases, verification regimes, and later retrospective accounts may report different elapsed times.
+NASA SP-8070 gives an approximately four-week procurement cycle in the Apollo context and separately notes verification cycles at least as long. Different module versions, production phases, verification regimes, and later retrospective accounts may report different elapsed times.
 
 ---
 
@@ -366,11 +446,16 @@ NASA SP-8070 gives an approximately four-week procurement cycle in the Apollo co
 | Rope wiring also embodied part of address decoding | H/P | strong MIT final-report evidence | supported |
 | Normal program steps could not rewrite rope contents | H/P | strong MIT final-report evidence | supported |
 | Apollo program change could require roughly a four-week new-module production cycle | H/P | contemporary NASA design-criteria evidence | supported, bounded |
+| NASA SP-8070 reports verification cycles at least as long as Apollo rope production cycles | H/P | contemporary NASA design-criteria evidence | supported, bounded |
 | Tape-guided operator threading translated software requirements into physical routing | H/P | strong MIT construction description | supported |
+| NASA's 1967 plan required the manufactured fixed memory to be identical bit for bit to the approved program and formally accepted/certified | H/P | direct §5.5.1 evidence | supported |
+| After FACI, configuration-controlled changes including any memory-cell change required GSCP approval | H/P | direct §7.1.1 evidence | supported |
+| Runtime read-only status, bitwise correspondence, and mission authorization/currentness are distinct predicates | E | reconstruction from mechanism + 1967 process | supported, bounded |
 | Apollo/MIT invented wired-in read-only memory | X | contradicted by contemporary prior-art record | rejected |
 | Core rope and classic core RAM have the same retention mechanism because both use ferrite cores | X | contradicted by state-bearing mechanism | rejected |
 | Core rope is historically equivalent to semiconductor mask ROM | A/X | functional analogy only; no genealogy established | rejected as historical identity |
 | Core-rope fixedness proves a philosophical theory of technical memory | I/X | interpretation exceeds evidence | rejected |
+| Bit-for-bit fixed-memory acceptance proves the approved program itself was semantically correct or the hardware fault-free | X | exceeds the 1967 acceptance claim | rejected |
 
 ---
 
@@ -380,10 +465,10 @@ Useful later deepening is narrow:
 
 1. inspect a directly renderable facsimile of the 1964 Hayden A. Nelson `A Wired Core Memory for Airborne Computers` article;
 2. trace the pre-Apollo wired-in / Dimond-ring / transformer-ROM genealogy only if a future prior-art argument requires it;
-3. inspect mission-specific rope manufacturing/verification records if a case on software-freeze, configuration control, or production errors is opened;
+3. mission-specific **rope anomaly, acceptance-test, rework, or configuration-change records** can now deepen the general 1967 production/certification plan rather than merely establish that such a process existed;
 4. test a physical or simulated rope reader in `mechanical-computing-playground` if an experiment would clarify topology-versus-magnetization semantics.
 
-None of those are blockers for the bounded Case 60 claims above.
+The former broad `mission-specific rope production/configuration records` gap is partially closed at the plan/certification level by the 1967 NASA deepening. None of the remaining items blocks the bounded Case 60 claims above.
 
 ---
 
@@ -391,8 +476,10 @@ None of those are blockers for the bounded Case 60 claims above.
 
 [^r700]: MIT Instrumentation Laboratory / Charles Stark Draper Laboratory, _MIT's Role in Project Apollo: Final Report on Contracts NAS 9-153 and NAS 9-4065, Volume III — Computer Subsystem_, Report R-700, August 1972, especially §2.3.6 and §3.5.2, pp. 46 and 90–92, plus the memory-module construction discussion around Figs. 3-33/3-34. Archived scan: https://www.ibiblio.org/apollo/Documents/R-700.pdf
 
-[^nasa-sp8070]: NASA, _Spaceborne Digital Computer Systems — Space Vehicle Design Criteria_, NASA SP-8070, March 1971, §2.2.2 `Memory`. NTRS record: https://ntrs.nasa.gov/citations/19710024203 ; accessible historical HTML transcription: https://klabs.org/history/history_docs/sp-8070/ch2/2p2/2p2p2_memory.htm
+[^nasa-sp8070]: NASA, _Spaceborne Digital Computer Systems — Space Vehicle Design Criteria_, NASA SP-8070, March 1971, §2.2.2 `Memory`. NTRS record: https://ntrs.nasa.gov/citations/19710024203 ; NTRS PDF: https://ntrs.nasa.gov/api/citations/19710024203/downloads/19710024203.pdf ; accessible historical HTML transcription: https://klabs.org/history/history_docs/sp-8070/ch2/2p2/2p2p2_memory.htm
 
 [^mit-wired-patent]: Ramon L. Alonso, Robert E. Oleksiak, William B. Turner, `Process for manufacturing digital computer memories`, U.S. Patent 3,451,129, filed January 5, 1966, assigned to MIT. https://patents.google.com/patent/US3451129A/en
 
 [^nelson]: Hayden A. Nelson, `Coincident current wired core memory for computers`, U.S. Patent 3,419,855, filed December 24, 1964. https://patents.google.com/patent/US3419855
+
+[^nasa-1967-verification]: NASA Manned Spacecraft Center, Guidance Software Validation Committee, _Apollo Guidance Software — Development and Verification Plan_, October 4, 1967, especially summary pp. 2-1–2-2, §5.5 / §5.5.1, Fig. 5-1, and §7.1.1. Facsimile: https://www.ibiblio.org/apollo/hrst/archive/1695.pdf ; NASA Office of Logic Design index/transcription: https://klabs.org/history/history_docs/mit_docs/sw.htm
