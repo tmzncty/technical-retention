@@ -10,6 +10,8 @@ Prior-art deepening: [`../evidence/10-hitachi-1982-1984-leakage-comparator-self-
 
 Named-product boundary deepening: [`../evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md`](../evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md).
 
+Cross-vendor proxy-topology deepening: [`../evidence/10-sharp-1997-1998-array-coupled-leakage-refresh-deepening.md`](../evidence/10-sharp-1997-1998-array-coupled-leakage-refresh-deepening.md).
+
 ## Scope
 
 This case asks what changes when DRAM refresh no longer depends on an external controller for refresh cadence and instead uses an on-chip monitor of charge decay to decide when an intermittent refresh pass begins. It is not a general history of DRAM self-refresh and does not identify the patent embodiment with a named Toshiba commercial product.
@@ -77,6 +79,30 @@ This makes the safety margin relational rather than merely a single nominal refr
 
 The patent's motivation is lower standby power by avoiding refresh that is more frequent than required by the monitored condition. When refresh is needed, however, the disclosed design still performs the array-maintenance pass. Dynamic state has not become nonvolatile.
 
+## Cross-vendor proxy-topology deepening — Sharp, 1997–1998
+
+A later Sharp patent family provides a useful negative control for the idea of a single canonical `leak monitor`. Makoto Ihara / Sharp Corp. US6075739A claims priority from **17 February 1997**; the Japanese family was publicly laid open as JPH10289573A on **27 October 1998**, while the US publication followed on 13 June 2000. The earlier priority date is not treated as a public-disclosure date. See the [cross-vendor proxy-topology addendum](../evidence/10-sharp-1997-1998-array-coupled-leakage-refresh-deepening.md).
+
+Sharp's first embodiment derives timer behavior from leakage demand on an existing bit-line-precharge network. The patent describes many array-connected diffusion / PN-junction leakage sources, a timer capacitor coupled to the pull-up path that compensates that leakage, an oscillator whose rate follows capacitor discharge, and binary counting that emits a refresh clock. It explicitly argues that monitoring many leakage sources averages individual junction variation.
+
+The same patent family also discloses a materially different embodiment in which substrate-potential / back-bias restoration activity supplies the tracked condition from which refresh timing is derived. The bounded cross-vendor result is therefore:
+
+```text
+same broad preservation objective
+    !=
+same monitored physical state
+    !=
+same proxy population / aggregation boundary
+    !=
+same comparison or threshold logic
+    !=
+same refresh-clock generation path
+```
+
+Hitachi's two-capacitor differential proxy, Toshiba's deliberately conservative single-monitor preferred embodiment, Sharp's aggregate bit-line-precharge leakage path, and Sharp's substrate/back-bias path are functional relatives but not interchangeable circuits. The comparison does not establish Hitachi→Toshiba→Sharp genealogy or commercial deployment.
+
+This adds a useful engineering distinction. **Physical similarity, conservatism, and population coverage are separate properties of a retention proxy.** An aggregate sensor may reduce sensitivity to one junction's variation without thereby proving that it safely bounds the worst-retention payload cell. Product characterization or fault-validation evidence would be needed for that stronger claim.
+
 ## Named-product boundary deepening — Toshiba pseudo-SRAM, 1994–2001
 
 The patent record leaves a product-identity question open. A later Toshiba product-documentation chain now answers only the broad half of that question.
@@ -115,19 +141,19 @@ The physical payload remains dynamic in the named product descriptions, and `Sel
 
 ## Failure boundaries
 
-The sourced mechanism separates several failure classes. A monitor that is not conservative enough can initiate maintenance too late; an overly conservative monitor can cause needless refresh and power cost; an incorrect threshold can reduce safety margin; and correct triggering still does not guarantee correct row enumeration or correct row restoration. These are engineering implications of the disclosed partition, not measured failure rates for a commercial Toshiba device.
+The sourced mechanism separates several failure classes. A monitor that is not conservative enough can initiate maintenance too late; an overly conservative monitor can cause needless refresh and power cost; an incorrect threshold can reduce safety margin; and correct triggering still does not guarantee correct row enumeration or correct row restoration. The Sharp deepening adds another boundary: an aggregate leakage proxy can smooth individual-source variation without proving that it captures the worst-retention cell. These are engineering implications of the disclosed partitions, not measured failure rates for commercial Toshiba or Sharp devices.
 
 ## Functional analogy and anti-anachronism
 
-`Adaptive refresh`, `condition-derived scheduling`, `proxy state`, and `sentinel` can be useful modern comparisons, but they are not presented as period Toshiba terminology. Historical claims remain in the patent's own vocabulary.
+`Adaptive refresh`, `condition-derived scheduling`, `proxy state`, and `sentinel` can be useful modern comparisons, but they are not presented as period Toshiba terminology. Historical claims remain in the patents' own vocabulary.
 
-US4682306A is a manufacturer-primary design disclosure, not proof that a named Toshiba DRAM or pseudo-SRAM used the exact preferred embodiment. It also cannot support a `first adaptive self-refresh` claim because the patent itself identifies earlier Hitachi work.
+US4682306A is a manufacturer-primary design disclosure, not proof that a named Toshiba DRAM or pseudo-SRAM used the exact preferred embodiment. It also cannot support a `first adaptive self-refresh` claim because the patent itself identifies earlier Hitachi work. Likewise, the Sharp family is design disclosure rather than proof of a named shipping part.
 
 Later SDRAM `AUTO REFRESH`, JEDEC self-refresh entry/exit, DDR per-bank refresh, temperature-compensated refresh, and modern retention-aware policies remain separate regimes.
 
 ## Philosophical limit
 
-A bounded conceptual question follows from the mechanism: apparent persistence can be maintained by instrumenting an approaching loss condition and converting it into maintenance work. This is an interpretation of the engineering relation, not a historical claim that Toshiba engineers formulated a philosophy of retention or precarity.
+A bounded conceptual question follows from the mechanism: apparent persistence can be maintained by instrumenting an approaching loss condition and converting it into maintenance work. The Sharp comparison adds that the useful signal need not be a miniature copy of the payload state; it can be an aggregate signature emitted by surrounding infrastructure. This is an interpretation of the engineering relation, not a historical claim that Toshiba, Hitachi, or Sharp engineers formulated a philosophy of retention or representation.
 
 ## Cross-case result
 
@@ -136,7 +162,9 @@ The refresh-control decomposition is now:
 ```text
 payload decay / retention constraint
     !=
-condition monitor
+condition monitor / proxy topology
+    !=
+proxy aggregation boundary
     !=
 maintenance trigger
     !=
@@ -149,7 +177,7 @@ row selection
 sense / restoration
 ```
 
-Case 09 grounds the separation between external trigger cadence and internal row enumeration. Case 10 grounds a disclosed design in which an on-chip monitored condition starts the oscillator/counter sequence.
+Case 09 grounds the separation between external trigger cadence and internal row enumeration. Case 10 grounds designs in which monitored physical conditions participate in generating refresh timing while showing that the monitored proxy and aggregation topology can vary materially across manufacturer disclosures.
 
 ## Claim ledger
 
@@ -162,6 +190,11 @@ Case 09 grounds the separation between external trigger cadence and internal row
 | Hitachi publicly disclosed a two-capacitor leakage-simulation + comparator self-refresh mechanism by 31 March 1984 | H/P | directly inspected JPS5956291A |
 | The 1982 Hitachi filing/priority date is itself a public-disclosure date | X | filing/priority must remain distinct from 1984 publication |
 | Hitachi's two-capacitor comparator circuit and Toshiba's single-monitor preferred embodiment are the same circuit | X | shared preservation function does not erase circuit differences |
+| Sharp publicly disclosed an array-coupled leakage-derived refresh-timing family by 27 Oct 1998 | H/P | JPH10289573A / US6075739A family record |
+| Sharp's first embodiment couples timer behavior to leakage demand on the bit-line-precharge network and many array-connected junctions | H/P | US6075739A |
+| The Sharp family also discloses substrate/back-bias-cycle-derived refresh timing | H/P | US6075739A |
+| Aggregate leakage sensing proves coverage of the worst-retention payload cell | X | patent gives averaging rationale, not worst-cell validation |
+| A named Sharp commercial part is proven to use either disclosed mechanism | X | no product tie established here |
 | A named Toshiba pseudo-SRAM family is documented with Auto Refresh and Self Refresh | H/P* | Toshiba 1994 data-book artifact + preserved `TC51832A` family text |
 | `TC51832A` Self Refresh is documented as using an internal timer while Auto Refresh uses an internal refresh-address counter | H/P* | preserved Toshiba family text; direct facsimile page anchors remain open |
 | Toshiba publicly announced a named `TC51W3216XB` pseudo-SRAM with a one-transistor DRAM-like cell, SRAM interface, and self refresh in 2001 | H/P | Toshiba corporate release, 18-Jun-2001 |
@@ -170,10 +203,11 @@ Case 09 grounds the separation between external trigger cadence and internal row
 | Toshiba invented adaptive refresh generally | X | blocked by the patent's own Hitachi prior-art discussion |
 | Internal refresh addressing automatically implies internal refresh scheduling | X | contradicted by the Case-09/Case-10 comparison |
 | A deliberately decaying proxy can trigger payload-preservation work | E | bounded reconstruction from the monitor role |
+| Leakage-derived refresh can use materially different proxy and aggregation topologies | E | bounded cross-vendor reconstruction from Hitachi, Toshiba, and Sharp records |
 
 ## Related repositories
 
-A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated treatment of this Toshiba leak-monitor self-refresh mechanism. A broader history of DRAM generations, pseudo-SRAM, oscillator design, process leakage, and later standards belongs there rather than being duplicated here.
+Current searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for the Toshiba leak-monitor mechanism, `US6075739`, and self-refresh leakage terms found no dedicated treatment to reuse. A broader history of DRAM generations, pseudo-SRAM, oscillator and back-bias design, process leakage, manufacturer competition, and later standards belongs there rather than being duplicated here.
 
 `tmzncty/problem-history` remains the methodological guard against projecting later `adaptive refresh` or JEDEC terminology backward.
 
@@ -185,3 +219,4 @@ A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty
 4. Toshiba Semiconductor, **TC51832A family / TC51832AP, 32,768 word × 8-bit CMOS Pseudo Static RAM**, preserved manufacturer-datasheet mirror: <https://www.alldatasheet.com/datasheet-pdf/pdf/1462395/TOSHIBA/TC51832AP.html>.
 5. Toshiba Corporation, **“Toshiba Announces its 32Mb Pseudo SRAM Solution,”** 18 June 2001: <https://www.global.toshiba/ww/news/corporate/2001/06/pr1802.html>.
 6. H. Kawamoto et al., “A 288Kb CMOS Pseudo SRAM,” _ISSCC Digest of Technical Papers_, 1984, pp. 276–277, DOI 10.1109/ISSCC.1984.1156683 — period context cited by the patent, not a central mechanism source in this case.
+7. Makoto Ihara / Sharp Corp., US6075739A, _Semiconductor storage device performing self-refresh operation in an optimal cycle_; Japanese family laid open as JPH10289573A on 27 October 1998: <https://patents.google.com/patent/US6075739A/en>.
