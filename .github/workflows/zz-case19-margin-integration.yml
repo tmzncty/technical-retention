@@ -25,6 +25,7 @@ jobs:
           git checkout -B main origin/main
           git merge-base --is-ancestor da0b9200dbe999b4e3109b7bb3e668fcaae81af2 HEAD
           test -f .github/case19_margin_patch.py
+          sed -i 's/## What this case does not prove/## Counterexamples and limits/' .github/case19_margin_patch.py
           python3 .github/case19_margin_patch.py
           python3 - <<'PY'
           from pathlib import Path
