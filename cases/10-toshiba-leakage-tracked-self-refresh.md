@@ -12,6 +12,8 @@ Named-product boundary deepening: [`../evidence/10-toshiba-1994-2001-pseudo-sram
 
 Cross-vendor proxy-topology deepening: [`../evidence/10-sharp-1997-1998-array-coupled-leakage-refresh-deepening.md`](../evidence/10-sharp-1997-1998-array-coupled-leakage-refresh-deepening.md).
 
+Standards-era TCSR control-boundary deepening: [`../evidence/10-micron-2005-2009-temperature-compensated-self-refresh-control-boundary.md`](../evidence/10-micron-2005-2009-temperature-compensated-self-refresh-control-boundary.md).
+
 ## Scope
 
 This case asks what changes when DRAM refresh no longer depends on an external controller for refresh cadence and instead uses an on-chip monitor of charge decay to decide when an intermittent refresh pass begins. It is not a general history of DRAM self-refresh and does not identify the patent embodiment with a named Toshiba commercial product.
@@ -139,9 +141,45 @@ Finally, Toshiba's 2001 statement that a separate refresh controller/glue logic 
 
 The physical payload remains dynamic in the named product descriptions, and `Self Refresh` does not establish unpowered nonvolatility.
 
+## Standards-era temperature-proxy / control-authority deepening — Micron, 2005–2009
+
+Micron's Mobile DDR / low-power-DDR technical notes provide a deliberately later negative control for the earlier leakage-derived circuits. See [`../evidence/10-micron-2005-2009-temperature-compensated-self-refresh-control-boundary.md`](../evidence/10-micron-2005-2009-temperature-compensated-self-refresh-control-boundary.md).
+
+TN-46-12, whose revision history records a first draft in **October 2005**, says Micron and other JEDEC members had defined `Temperature Compensated Self Refresh (TCSR)` as a mobile-DRAM power-saving feature. It describes two control placements: an on-DRAM temperature sensor can adjust self-refresh intervals automatically, or—if no on-board sensor exists—the memory controller can use its own temperature sensor and program the appropriate DRAM control bits.
+
+Micron's January **2007** TN-46-15 then documents a stronger implementation boundary. It says low-power DDR uses an **on-chip temperature sensor** to control refresh interval, and that programming the **JEDEC-standard TCSR bits will not have an effect** on that device because the on-chip self-refresh oscillator continues at a factory-optimized rate for the device temperature. The extended-mode-register figure repeats the point: an on-die sensor is used in place of TCSR-bit control. The same figure keeps PASR selection active.
+
+This establishes several bounded relations without claiming circuit genealogy:
+
+```text
+temperature-derived maintenance
+    !=
+direct charge-decay / leakage-state sensing
+
+control field exists
+    !=
+control field is causally effective on this implementation
+
+sensor location
+    !=
+policy-decision location
+    !=
+control-field visibility
+    !=
+effective cadence authority
+
+maintenance cadence policy
+    !=
+maintenance coverage policy
+```
+
+The comparison is functional. Nothing inspected here proves that Hitachi, Toshiba, or Sharp influenced Micron TCSR or the JEDEC field. Likewise, the actual 2005–2007 normative JEDEC TCSR clause was not directly inspected; the source supports only Micron's historical statement that the bits were JEDEC-standard and the documented implementation behavior in which they were ineffective.
+
+This later evidence changes the conceptual emphasis of Case 10. A preservation system need not derive its maintenance decision from a proxy that physically resembles the payload cell. Temperature can be used as a retention-relevant condition from which cadence is selected. And even when the interface retains a named policy field, the actual authority over preservation work can migrate behind that interface.
+
 ## Failure boundaries
 
-The sourced mechanism separates several failure classes. A monitor that is not conservative enough can initiate maintenance too late; an overly conservative monitor can cause needless refresh and power cost; an incorrect threshold can reduce safety margin; and correct triggering still does not guarantee correct row enumeration or correct row restoration. The Sharp deepening adds another boundary: an aggregate leakage proxy can smooth individual-source variation without proving that it captures the worst-retention cell. These are engineering implications of the disclosed partitions, not measured failure rates for commercial Toshiba or Sharp devices.
+The sourced mechanism separates several failure classes. A monitor that is not conservative enough can initiate maintenance too late; an overly conservative monitor can cause needless refresh and power cost; an incorrect threshold can reduce safety margin; and correct triggering still does not guarantee correct row enumeration or correct row restoration. The Sharp deepening adds another boundary: an aggregate leakage proxy can smooth individual-source variation without proving that it captures the worst-retention cell. The Micron TCSR deepening adds a different class: a controller-sensed design can fail in temperature observation / policy programming, while an on-die automatic design moves the relevant authority and failure path behind the external TCSR field. These are engineering implications of the documented partitions, not measured failure rates for commercial Toshiba, Sharp, or Micron devices.
 
 ## Functional analogy and anti-anachronism
 
@@ -149,11 +187,11 @@ The sourced mechanism separates several failure classes. A monitor that is not c
 
 US4682306A is a manufacturer-primary design disclosure, not proof that a named Toshiba DRAM or pseudo-SRAM used the exact preferred embodiment. It also cannot support a `first adaptive self-refresh` claim because the patent itself identifies earlier Hitachi work. Likewise, the Sharp family is design disclosure rather than proof of a named shipping part.
 
-Later SDRAM `AUTO REFRESH`, JEDEC self-refresh entry/exit, DDR per-bank refresh, temperature-compensated refresh, and modern retention-aware policies remain separate regimes.
+Later SDRAM `AUTO REFRESH`, JEDEC self-refresh entry/exit, DDR per-bank refresh, and modern retention-aware policies remain separate regimes. The new Micron addendum only narrows one later bridge: standards-era TCSR can use temperature and can place effective cadence authority somewhere other than the host-visible TCSR field. It does not turn that later regime into the same mechanism as the 1980s leakage-monitor designs.
 
 ## Philosophical limit
 
-A bounded conceptual question follows from the mechanism: apparent persistence can be maintained by instrumenting an approaching loss condition and converting it into maintenance work. The Sharp comparison adds that the useful signal need not be a miniature copy of the payload state; it can be an aggregate signature emitted by surrounding infrastructure. This is an interpretation of the engineering relation, not a historical claim that Toshiba, Hitachi, or Sharp engineers formulated a philosophy of retention or representation.
+A bounded conceptual question follows from the mechanism: apparent persistence can be maintained by instrumenting an approaching loss condition and converting it into maintenance work. The Sharp comparison adds that the useful signal need not be a miniature copy of the payload state; it can be an aggregate signature emitted by surrounding infrastructure. The Micron comparison adds that a visible control representation need not exhaust the effective policy relation: a named field can remain present while the preservation decision has moved to an internal sensor/control path. These are interpretations of engineering relations, not historical claims that Toshiba, Hitachi, Sharp, Micron, or JEDEC engineers formulated a philosophy of retention, representation, or authority.
 
 ## Cross-case result
 
@@ -166,6 +204,14 @@ condition monitor / proxy topology
     !=
 proxy aggregation boundary
     !=
+sensor / observation location
+    !=
+maintenance-policy decision location
+    !=
+control-field visibility
+    !=
+effective cadence authority
+    !=
 maintenance trigger
     !=
 active-pass timing source
@@ -177,7 +223,7 @@ row selection
 sense / restoration
 ```
 
-Case 09 grounds the separation between external trigger cadence and internal row enumeration. Case 10 grounds designs in which monitored physical conditions participate in generating refresh timing while showing that the monitored proxy and aggregation topology can vary materially across manufacturer disclosures.
+Case 09 grounds the separation between external trigger cadence and internal row enumeration. Case 10 grounds designs in which monitored physical conditions participate in generating refresh timing while showing that the monitored proxy, aggregation topology, sensor location, and effective policy authority can vary materially across manufacturer disclosures.
 
 ## Claim ledger
 
@@ -200,14 +246,22 @@ Case 09 grounds the separation between external trigger cadence and internal row
 | Toshiba publicly announced a named `TC51W3216XB` pseudo-SRAM with a one-transistor DRAM-like cell, SRAM interface, and self refresh in 2001 | H/P | Toshiba corporate release, 18-Jun-2001 |
 | Named-product self refresh proves deployment of the US4682306A leak-monitor threshold path | X | product evidence does not expose the patent's monitor/threshold mechanism |
 | A named Toshiba commercial part is proven to use this exact leakage-tracked circuit | X | still unsupported; broad self-refresh productization is now grounded, exact circuit identity is not |
+| Micron documented TCSR as a JEDEC-member mobile-DRAM power-saving feature by Oct. 2005 | H/P | TN-46-12 revision history + text |
+| TN-46-12 permits either on-DRAM automatic temperature sensing or controller-side sensing + programmed DRAM control bits | H/P | TN-46-12 |
+| Micron TN-46-15 states that an on-chip temperature sensor controls the LPDDR self-refresh interval | H/P | TN-46-15, Jan. 2007 |
+| TN-46-15 calls the TCSR fields JEDEC-standard but says programming them has no effect on the documented device | H/P | TN-46-15 text + extended-mode-register note |
+| A standards-visible maintenance field necessarily has effective policy authority on every implementation | X | directly contradicted by TN-46-15 |
+| Temperature-derived TCSR is electrically the same mechanism as the 1980s leakage-monitor patents | X | different observed condition; genealogy not established |
+| The exact 2005–2007 normative JEDEC TCSR clause is established by this case | X | normative standard text not directly inspected in this slice |
 | Toshiba invented adaptive refresh generally | X | blocked by the patent's own Hitachi prior-art discussion |
 | Internal refresh addressing automatically implies internal refresh scheduling | X | contradicted by the Case-09/Case-10 comparison |
 | A deliberately decaying proxy can trigger payload-preservation work | E | bounded reconstruction from the monitor role |
 | Leakage-derived refresh can use materially different proxy and aggregation topologies | E | bounded cross-vendor reconstruction from Hitachi, Toshiba, and Sharp records |
+| Sensor location, control-field visibility, and effective refresh-cadence authority are separable | E | bounded reconstruction from Micron TN-46-12 / TN-46-15 |
 
 ## Related repositories
 
-Current searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for the Toshiba leak-monitor mechanism, `US6075739`, and self-refresh leakage terms found no dedicated treatment to reuse. A broader history of DRAM generations, pseudo-SRAM, oscillator and back-bias design, process leakage, manufacturer competition, and later standards belongs there rather than being duplicated here.
+Current searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for the Toshiba leak-monitor mechanism, `US6075739`, `TN-46-15`, `temperature compensated self refresh`, and related self-refresh leakage terms found no dedicated treatment to reuse. A broader history of DRAM generations, pseudo-SRAM, LPDDR standardization, oscillator and back-bias design, temperature sensing, process leakage, manufacturer competition, and later standards belongs there rather than being duplicated here.
 
 `tmzncty/problem-history` remains the methodological guard against projecting later `adaptive refresh` or JEDEC terminology backward.
 
@@ -220,3 +274,7 @@ Current searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty
 5. Toshiba Corporation, **“Toshiba Announces its 32Mb Pseudo SRAM Solution,”** 18 June 2001: <https://www.global.toshiba/ww/news/corporate/2001/06/pr1802.html>.
 6. H. Kawamoto et al., “A 288Kb CMOS Pseudo SRAM,” _ISSCC Digest of Technical Papers_, 1984, pp. 276–277, DOI 10.1109/ISSCC.1984.1156683 — period context cited by the patent, not a central mechanism source in this case.
 7. Makoto Ihara / Sharp Corp., US6075739A, _Semiconductor storage device performing self-refresh operation in an optimal cycle_; Japanese family laid open as JPH10289573A on 27 October 1998: <https://patents.google.com/patent/US6075739A/en>.
+8. Micron Technology, Inc., **TN-46-12: _Mobile DRAM Power-Saving Features and Power Calculations_**, Rev. A Oct. 2005 / Rev. B May 2009, inspected manufacturer text preserved at: <https://dtsheet.com/doc/1384408/tn-46-12--mobile-dram-power-saving-features-calculations>.
+9. Micron Technology, Inc., **TN-46-15: _Low-Power Versus Standard DDR SDRAM_**, Rev. A, 22 Jan. 2007, inspected manufacturer text preserved at: <https://dtsheet.com/doc/1384279/tn4615--low-power-versus-standard-ddr-sdram>.
+10. Micron Technology, **DRAM power calculators**, current support page listing Mobile LPDRAM TN-46-12: <https://www.micron.com/sales-support/design-tools/dram-power-calculator>.
+11. Freescale Semiconductor, **_MPC5121e DRAM Controller_**, Rev. 2 (2009), surviving copy preserving TN-46-15's legacy Micron URL and separately referencing JESD209: <https://manuals.plus/m/fd2a88e34742801074da475b621e1bec8a57e5b296ebe5e29d01ecf797b92919>.
