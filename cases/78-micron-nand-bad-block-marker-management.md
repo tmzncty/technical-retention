@@ -2,12 +2,14 @@
 
 ## Scope
 
-- **Bounded historical/technical regime:** Linux MTD flash-resident BBT implementation/documentation from 2004, ONFI 1.0 factory-defect mapping (ratified in late 2006), a Micron 8Gb NAND product datasheet dated February 2009, and Micron Technical Note TN-29-59 Rev. H (April 2011).
+- **Bounded historical/technical regime:** Linux MTD flash-resident BBT implementation/documentation from 2004, ONFI 1.0 factory-defect mapping (ratified in late 2006), a Micron 8Gb NAND product datasheet dated February 2009, Micron Technical Note TN-29-59 Rev. H (April 2011), and a KIOXIA TH58NYG3S0HBAI6 Rev. 2.00 product witness whose reliability-management wording is conservatively bounded to 2018–2019.
 - **Primary question:** what must remain when NAND contains physical blocks that must *not* be treated as usable even though those blocks remain electrically addressable and their defect marker can itself be erased?
-- **Retention-specific focus:** factory bad-block evidence, construction and persistence of a bad-block table (BBT), lifetime-developed bad-block replacement, and reserved replacement capacity.
+- **Retention-specific focus:** factory bad-block evidence, construction and persistence of a bad-block table (BBT), lifetime-developed bad-block replacement, reserved replacement capacity, and the distinction between correctable/maintainable error evidence and block-retirement authority.
 - **Excluded from this case:** a general history of NAND, all FTL algorithms, garbage collection, wear leveling, read disturb, program interference, SSD sanitization, or invention priority for bad-block management.
 
 This slice is deliberately adjacent to, but not a repetition of, Case 04. Case 04 asks how a logical identity survives ordinary Flash relocation and reclamation. Case 78 asks how **negative media-qualification state** survives long enough to prevent a physically present block from being accepted as an admissible storage target, and how that exclusion relation is renewed when new blocks fail during service.
+
+KIOXIA soft-error / retirement-classification deepening: [`../evidence/78-kioxia-2018-2019-soft-error-vs-bad-block-retirement-deepening.md`](../evidence/78-kioxia-2018-2019-soft-error-vs-bad-block-retirement-deepening.md).
 
 ---
 
@@ -159,6 +161,36 @@ The bounded relations are:
 - `version convergence != bad-block event-history recovery`.
 
 See [`evidence/78-linux-mtd-2004-2021-bbt-currentness-admissibility-deepening.md`](../evidence/78-linux-mtd-2004-2021-bbt-currentness-admissibility-deepening.md).
+
+### H/P — KIOXIA 2018–2019 separates soft/read-error maintenance from block-retirement authority
+
+KIOXIA's TH58NYG3S0HBAI6 Rev. 2.00 product datasheet supplies a later manufacturer control that sharpens what `bad block` means operationally. Its revision history says `Reliability Guidance` was renewed and `NAND Management` was added on **14 December 2018**; the 1 October 2019 revision rebrands the document as KIOXIA. The exact reliability-management wording inspected here is therefore bounded conservatively to 2018–2019 rather than silently back-projected to the 2013 preliminary revision.
+
+The product's failure table distinguishes three responses: erase failure → block replacement; page-program failure → block replacement; read-bit error → inspect host ECC status and take measures such as rewrite before errors become uncorrectable. The following reliability section says explicitly that a random bit error does **not necessarily** mean a block is bad and says that, generally, program/erase status failure is the event for marking a block bad. It separately explains that retention-loss and read-disturb errors may leave a block usable again after erase/reprogram.
+
+At the same time, the bad-block section repeats the Case-78 negative-retention rule: detected bad blocks must be managed as unusable and should not be erased because the bad-block information may become impossible to recover.
+
+This creates a sharp product-level boundary:
+
+```text
+read / random bit error
+    -> ECC observation and possible rewrite
+    != automatic permanent block retirement
+
+program / erase status failure
+    -> block replacement + future-access prevention
+
+retention/read-disturb maintenance-eligible block
+    -> erase/reprogram may restore usability
+
+detected bad block
+    -> erase can destroy exclusion evidence and is prohibited
+```
+
+Thus `error detected != block retired`, and the same erase/reprogram primitive can be restorative in one classification while evidence-destroying in another. This does not mean every soft error is always recoverable or every controller retires blocks only on the two documented status failures.
+
+See [`evidence/78-kioxia-2018-2019-soft-error-vs-bad-block-retirement-deepening.md`](../evidence/78-kioxia-2018-2019-soft-error-vs-bad-block-retirement-deepening.md).
+
 ---
 
 ## Retained state
@@ -222,9 +254,15 @@ Erase has two very different consequences depending on the target:
 - ordinary erase prepares a usable Flash block for future programming;
 - erasing the original factory marker can destroy defect evidence while leaving the underlying reason for exclusion unresolved.
 
+KIOXIA's product-level negative control now sharpens that distinction further: erase/reprogram can be a recovery action for a retention/read-disturb-degraded but still maintenance-eligible block, while erase remains prohibited for a block already classified bad because the action may destroy its exclusion evidence.
+
 Therefore:
 
 > **marker erasure ≠ defect repair.**
+
+and:
+
+> **maintenance erase/reprogram ≠ permission to recycle a retired bad block.**
 
 ### Forgetting
 
@@ -258,6 +296,17 @@ Reserved good blocks become useful precisely when an existing physical embodimen
 
 A BBT can answer `which blocks must not be used now?` without retaining every test condition, timestamp, raw error count, or sequence by which each entry became bad. It is current operational control state, not automatically an audit log.
 
+### E — error evidence and retirement authority must remain separate
+
+The KIOXIA product witness shows a read-bit-error path that remains within ECC/rewrite maintenance and a program/erase-failure path that leads to replacement and future-access prevention. The system can therefore retain error evidence sufficient to schedule maintenance without yet creating the stronger future-use rule represented by permanent block exclusion.
+
+Bounded relations:
+
+- `correctable/read error != permanent bad-block classification`;
+- `rewrite opportunity != replacement obligation`;
+- `payload recoverability != carrier admissibility`;
+- `carrier retirement != proof that every page is unreadable`.
+
 ---
 
 ## Functional comparisons — not genealogy
@@ -277,6 +326,16 @@ Ordinary Flash relocation/reclamation and bad-block replacement can both change 
 
 Therefore `bad-block replacement ≠ garbage collection ≠ wear leveling`.
 
+### A — Cases 36 and 52, correct/refresh and read-disturb maintenance
+
+Case 36 treats ECC-bounded retention maintenance and Case 52 treats read-disturb-induced decay/recovery. KIOXIA's product guidance supplies a manufacturer-side bridge without collapsing the mechanisms: read/random bit errors can justify ECC observation and rewrite, while program/erase status failures can justify replacement and exclusion.
+
+Thus:
+
+- `error-margin maintenance != bad-block retirement`;
+- `read-disturb damage != automatically a lifetime bad block`;
+- shared use of relocation/erase/reprogram does not establish one algorithm or historical genealogy.
+
 ### A — Cases 41/42/74, negative control evidence
 
 A tombstone, delete marker, journal revoke, and bad-block entry all can make a still-physically-present positive candidate inadmissible. The similarity stops at that abstract control relation. Their objects, propagation rules, persistence windows, and failure semantics are different.
@@ -293,6 +352,8 @@ SMART/health counters summarize device condition and history. A BBT instead dire
 
 This case is useful because the retained technical state is not only a positive `what is stored where?` relation. The system also has to preserve `this material location must not count as usable`.
 
+The KIOXIA classification control adds a second restrained point: **retention can depend on preserving distinctions among kinds of failure evidence, because correction, rewrite, replacement, and exclusion do not authorize the same future actions.**
+
 The philosophical point should remain modest: **technical availability is partly produced by retained exclusions**. A medium does not become operationally available merely because matter and addresses survive. No stronger Heideggerian claim follows from this engineering fact, and `bad block = Bestand` would be a category mistake.
 
 ---
@@ -301,8 +362,11 @@ The philosophical point should remain modest: **technical availability is partly
 
 - The sources do not establish who first invented NAND bad-block marking or bad-block tables.
 - The Micron marker locations are device/family specific; they are not a universal NAND geometry.
+- The KIOXIA whole-page marker/test procedure is likewise product-specific and is not substituted for ONFI/Micron geometry.
 - The factory mark is not asserted to encode the complete failure mechanism or test history.
 - `Bad` does not mean every bit/page in the block is unreadable. The bounded definition is a reliability/admissibility classification.
+- A random/read bit error does not automatically imply a bad block in the KIOXIA witness, but that does not prove every such error is always recoverable or that every controller uses identical retirement thresholds.
+- KIOXIA's statement that retention/read-disturb-degraded blocks may become usable again after erase/reprogram does not authorize erasing a block already classified bad; the same document explicitly warns against doing so.
 - The documented PAGE PROGRAM failure boundary should not be generalized to every failure mode or every NAND generation.
 - The 2% reserve statement is limited to the Micron devices covered by TN-29-59 and is not a universal NAND requirement.
 - The sources specify operational exclusion/replacement, not secure sanitization of retired blocks.
@@ -313,15 +377,15 @@ The philosophical point should remain modest: **technical availability is partly
 
 ## Prior-art boundary
 
-This case makes **no invention-priority claim** for factory bad-block marking, bad-block tables, or block replacement.
+This case makes **no invention-priority claim** for factory bad-block marking, bad-block tables, block replacement, ECC rewrite, or read-disturb/retention maintenance.
 
 The defensible historical statement is narrower:
 
-> By ONFI 1.0 (late 2006), factory-defect mapping and a host-created initial bad-block table were standardized chip-interface obligations; Micron's 2009 product documentation and 2011 technical note make the retention consequence explicit by requiring pre-erase capture of erasable factory defect evidence, durable BBT storage, reboot reconstruction, and runtime replacement of newly bad blocks.
+> By ONFI 1.0 (late 2006), factory-defect mapping and a host-created initial bad-block table were standardized chip-interface obligations; Micron's 2009 product documentation and 2011 technical note make the retention consequence explicit by requiring pre-erase capture of erasable factory defect evidence, durable BBT storage, reboot reconstruction, and runtime replacement of newly bad blocks. KIOXIA's surviving 2018–2019 reliability-management wording later makes a complementary classification boundary explicit: a random/read bit error is not automatically a bad-block verdict, while program/erase status failure can move the carrier onto a replacement/exclusion path.
 
 A separate bounded pre-ONFI witness now reaches back to Linux MTD in May 2004: its flash-resident BBT code/documentation already exposes mirrored tables, version-based currentness selection, missing/stale-peer rewrite, and protected BBT regions. This is a historical floor for the inspected implementation, **not** an invention-priority claim.
 
-The `computing-archaeology` repository was searched again for `NAND bad block table`; no directly reusable case was found. Broader NAND/MTD/bootloader/SSD engineering genealogy still belongs there rather than being recreated here.
+The `computing-archaeology` repository was searched again for `NAND bad block table`, the KIOXIA part number, and its reliability-guidance wording; no directly reusable case was found. Broader NAND/MTD/bootloader/SSD engineering genealogy still belongs there rather than being recreated here.
 
 ---
 
@@ -332,10 +396,14 @@ The `computing-archaeology` repository was searched again for `NAND bad block ta
 | NAND may ship with defective blocks and acquire additional bad blocks | H/P | grounded by ONFI/Micron primary documentation |
 | manufacturer defect evidence is recorded in spare/defect area | H/P | grounded |
 | host should create an initial BBT before erase/program | H/P | grounded |
-| original bad-block information can be erased and then become unrecoverable | H/P | grounded in Micron TN and product documentation |
+| original bad-block information can be erased and then become unrecoverable | H/P | grounded in Micron TN and product documentation; independently corroborated by KIOXIA product guidance |
 | BBT can be saved in a good NAND block and loaded into RAM at reboot | H/P | grounded in Micron TN |
-| PROGRAM/ERASE failure can create lifetime bad-block retirement/replacement work | H/P | grounded in Micron TN |
+| PROGRAM/ERASE failure can create lifetime bad-block retirement/replacement work | H/P | grounded in Micron TN and KIOXIA product guidance |
 | reserve blocks can carry replacement payload and BBT state | H/P | grounded in Micron TN |
+| random/read bit error necessarily means the block is bad | X | explicitly rejected by KIOXIA product guidance |
+| read-bit error can remain on an ECC/rewrite path while program/erase failure moves to replacement/exclusion | H/P/E | grounded in KIOXIA failure table; relation is bounded reconstruction |
+| retention/read-disturb degradation may become usable again after erase/reprogram | H/P | explicit KIOXIA product statement, not generalized to already-retired bad blocks |
+| exact KIOXIA reliability-management wording is conservatively dated to 2018–2019 | H/P/E | grounded by Rev. 2.00 revision history |
 | physical addressability ≠ admissible allocation | E | reconstruction from documented exclusion semantics |
 | marker erasure ≠ defect repair | E | reconstruction bounded by explicit erasability warning |
 | negative defect metadata can preserve positive payload reliability | E | reconstruction |
@@ -347,7 +415,7 @@ The `computing-archaeology` repository was searched again for `NAND bad block ta
 | mirrored/versioned BBT ≠ universal crash-atomic update | E/X | bounded reconstruction and explicit limit |
 | reserved-for-BBT ≠ physically defective | E/X | bounded implementation distinction |
 | `bad block` proves every page unreadable | X | rejected |
-| Micron/ONFI invented bad-block management | X | unsupported / not investigated |
+| Micron/ONFI/KIOXIA invented bad-block management | X | unsupported / not investigated |
 | retired bad block is securely erased | X | unsupported |
 
 ---
@@ -361,14 +429,17 @@ The `computing-archaeology` repository was searched again for `NAND bad block ta
 3. Micron Technology, TN-29-59, *Bad Block Management in NAND Flash Memory*, Rev. H, April 2011: <https://e2e.ti.com/cfs-file/__key/communityserver-discussions-components-files/791/tn2959_5F00_bbm_5F00_in_5F00_nand_5F00_flash.pdf>.
 4. Linux MTD, Thomas Gleixner, *MTD NAND Driver Programming Interface*, `Bad block table support`, copyright 2004: <https://www.kernel.org/doc./htmldocs/mtdnand/Bad_Block_table_support.html>.
 5. Linux MTD CVS archive, 28 May 2004, `nand_bbt.c` 1.9→1.10 and related NAND changes: <https://lists.infradead.org/pipermail/linux-mtd-cvs/2004-May/003683.html>.
+6. KIOXIA Corporation, *TH58NYG3S0HBAI6, 8 Gbit (1G × 8 bit) CMOS NAND E2PROM*, Rev. 2.00, `2019-10-01C`, especially pp. 4 and 61–64 plus revision history p. 66: <https://americas.kioxia.com/content/dam/kioxia/newidr/productinfo/datasheet/201910/DST_TH58NYG3S0HBAI6-TDE_EN_31567.pdf>.
 
 ### Related cases
 
 - [`04-flash-virtual-mapping-logical-identity.md`](04-flash-virtual-mapping-logical-identity.md)
 - [`14-scsi-disk-defect-reassignment-logical-identity.md`](14-scsi-disk-defect-reassignment-logical-identity.md)
+- [`36-nand-flash-correct-and-refresh-maintenance.md`](36-nand-flash-correct-and-refresh-maintenance.md)
 - [`47-fast11-ssd-sanitization-verification.md`](47-fast11-ssd-sanitization-verification.md)
+- [`52-nand-flash-read-disturb-access-induced-decay.md`](52-nand-flash-read-disturb-access-induced-decay.md)
 - [`55-nvme-smart-health-endurance-telemetry.md`](55-nvme-smart-health-endurance-telemetry.md)
 
 ### Related repository
 
-- [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) — broad NAND/SSD technical history belongs there; this case keeps only the retention-specific negative-metadata/replacement argument.
+- [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) — broad NAND/SSD technical history belongs there; this case keeps only the retention-specific negative-metadata/replacement/error-classification argument.
