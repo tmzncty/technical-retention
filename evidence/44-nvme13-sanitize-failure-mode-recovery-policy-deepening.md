@@ -18,8 +18,6 @@ When an NVMe 1.3 sanitize operation fails, does the interface merely report a ge
 
 The primary-source answer is the latter. Revision 1.3 makes the operation's initiation policy consequential after the initiating command has already completed and the background sanitize has subsequently failed.
 
-This yields a retention relation that is easy to miss if `Sanitize` is treated as one instantaneous erase verb:
-
 ```text
 accepted start command + launch policy
         -> background sanitize operation
@@ -47,25 +45,23 @@ Revision 1.3 defines `AUSE` (`Allow Unrestricted Sanitize Exit`) in Sanitize com
 
 At operation launch:
 
-- `AUSE = 0` selects **restricted** sanitize completion/failure behavior;
-- `AUSE = 1` selects **unrestricted** sanitize completion/failure behavior;
+- `AUSE = 0` selects **restricted** completion mode;
+- `AUSE = 1` selects **unrestricted** completion mode;
 - `AUSE` is ignored when the requested Sanitize Action is `Exit Failure Mode`.
 
-The bit therefore does not select Block Erase versus Crypto Erase versus Overwrite. `SANACT` selects the sanitize action; `AUSE` selects a policy governing how a later failure may be exited.
+The bit does not select Block Erase versus Crypto Erase versus Overwrite. `SANACT` selects the sanitize action; `AUSE` selects a policy that later matters if the operation fails.
 
-This distinction matters because the policy remains relevant after the initiating command is gone:
+> **sanitize mechanism choice != sanitize-failure recovery policy**
 
-> **sanitize mechanism choice != sanitize-failure recovery policy**.
+## Historical record 2 — restricted and unrestricted failures have different legal exits
 
-## Historical record 2 — restricted and unrestricted failure states have different legal exits
+Revision 1.3 distinguishes two failure regimes.
 
-Revision 1.3 §8.15.1 distinguishes two failure regimes.
+If the most recent failed sanitize was started in **unrestricted** mode, failure recovery may use a subsequent Sanitize command in restricted or unrestricted completion mode, or a subsequent Sanitize command with the `Exit Failure Mode` action.
 
-If a sanitize operation started in **restricted** mode fails, the NVM subsystem remains in sanitize failure mode until a subsequent sanitize operation completes successfully. In that state, a later attempt to use `Exit Failure Mode`, or to start a subsequent sanitize in unrestricted mode, is rejected with `Invalid Field` under the bounded specification text.
+If the most recent failed sanitize was started in **restricted** mode, failure recovery requires a subsequent Sanitize command in **restricted** completion mode. Before such a new sanitize operation is started, a subsequent `Exit Failure Mode` command or a subsequent Sanitize command issued in unrestricted completion mode is aborted with **`Sanitize Failed`**.
 
-If a sanitize operation started in **unrestricted** mode fails, the host has a broader recovery set: it may start another sanitize operation or use the `Exit Failure Mode` Sanitize Action.
-
-So the later recovery graph depends on an earlier policy choice:
+That exact status matters: `Invalid Field in Command` is used elsewhere for an unsupported sanitize operation type; it is not the status specified for these disallowed exits from a restricted failure state.
 
 ```text
 AUSE=0 at accepted operation start
@@ -79,26 +75,17 @@ AUSE=1 at accepted operation start
     -> subsequent sanitize OR Exit Failure Mode may recover service
 ```
 
-This supports a precise engineering statement:
+Engineering reconstruction:
 
 > **retained initiating policy can constrain future recovery authority**.
 
-That sentence is project-level engineering reconstruction, not wording used by the NVMe authors.
+That sentence is project vocabulary, not wording used by the NVMe authors.
 
 ## Historical record 3 — command rejection is not sanitize-operation failure
 
-Revision 1.3 separately defines what happens when the **Sanitize command itself does not complete successfully**. In that case, the Sanitize Status log is not modified and user data is not modified by the rejected command.
+Revision 1.3 separately defines what happens when the **Sanitize command itself does not complete successfully**. If the controller does not complete the command with `Successful Completion`, it shall not start the sanitize operation for that command, shall not modify the Sanitize Status log page, and shall not alter user data as a result of that rejected command.
 
-That is a materially different state from:
-
-1. a Sanitize command completing successfully;
-2. the background sanitize operation actually starting;
-3. the operation later failing;
-4. the subsystem entering sanitize failure mode.
-
-The case therefore must not collapse these events into a single `sanitize failed` label.
-
-A safer state decomposition is:
+That is materially different from an accepted command whose background sanitize later fails.
 
 ```text
 command rejected before operation start
@@ -110,48 +97,44 @@ operation later failed
 failed-state recovery completed
 ```
 
-This also blocks a common diagnostic error: an unsuccessful command submission is not evidence that a destructive sanitize ran partially or that the subsystem entered its sanitize-failure service state.
+An unsuccessful command submission is therefore not evidence that a destructive sanitize ran partially or that the subsystem entered sanitize failure mode.
 
-## Historical record 4 — the status log retains both terminal state and initiating command context
+## Historical record 4 — the status log retains terminal state and initiating-command context
 
-The Revision-1.3 **Sanitize Status** log is global to the NVM subsystem and is retained across power cycles and resets. Its `SSTAT` field distinguishes at least:
+The Revision-1.3 **Sanitize Status** log is global to the NVM subsystem and is retained across power cycles and resets. Its `SSTAT` field distinguishes states including:
 
 - no sanitize operation has ever been completed;
 - the most recent sanitize completed successfully;
-- a sanitize operation is currently in progress;
-- the most recent sanitize operation failed.
+- a sanitize operation is in progress;
+- the most recent sanitize failed.
 
-The log also contains `SCDW10`, the command dword 10 of the Sanitize command that **started** the operation whose status is being reported. Because command dword 10 contains both `SANACT` and `AUSE`, the interface preserves a compact relation between later operation status and the launch parameters that created that operation.
+The log also contains `SCDW10`, the command dword 10 of the Sanitize command that started the operation whose status is reported. Because command dword 10 contains `SANACT` and `AUSE`, later operation status remains associated with the launch parameters that created the operation.
 
-This is stronger than merely retaining a generic progress percentage:
+> **retained terminal status + retained initiating parameters != generic “last command failed” telemetry**
 
-> **retained terminal status + retained initiating parameters > generic “last command failed” telemetry**.
-
-The specification does not state where a controller physically stores this state. It may be implemented in controller metadata, reserved nonvolatile storage, reconstructed state, or another conforming mechanism. This case therefore makes no claim that `SSTAT` or `SCDW10` must exist as a byte-identical NAND record.
+The specification does not state where a controller physically stores this state. This case therefore makes no claim that `SSTAT` or `SCDW10` must exist as a byte-identical NAND record.
 
 ## Historical record 5 — failure-state exit restores admissibility, not erasure proof
 
-`Exit Failure Mode` is itself a Sanitize Action. It is available only in the unrestricted failure regime described above. Its role is to exit sanitize failure mode; it is not defined as Block Erase, Crypto Erase, or Overwrite.
+`Exit Failure Mode` is a Sanitize Action used in the unrestricted recovery path; it is not Block Erase, Crypto Erase, or Overwrite.
 
-The Sanitize Status log separately defines **Global Data Erased (`GDE`)** in relation to manufacture and the most recent **successful sanitize operation**, and it tracks whether nonvolatile storage has subsequently been written.
+The Sanitize Status log separately defines **Global Data Erased (`GDE`)** in relation to manufacture and the most recent **successful sanitize operation**, and tracks whether nonvolatile storage has subsequently been written.
 
-Those definitions require a conservative reading:
+A conservative boundary is therefore:
 
-> **successful Exit Failure Mode != evidence that a sanitize operation successfully erased prior user data**.
+> **successful Exit Failure Mode != evidence that a sanitize operation successfully erased prior user data**
 
-And:
+and:
 
-> **restored command admissibility != erasure assurance**.
+> **restored command admissibility != erasure assurance**
 
-This does not assert a device-specific `GDE` transition after every Exit Failure Mode implementation. It states the narrower interface boundary: service-state recovery must not be silently promoted into proof that one of the successful sanitize mechanisms completed.
-
-That boundary connects directly to Case 47 and later NIST assurance vocabulary: a command path becoming usable again is not empirical verification that stale physical embodiments are unrecoverable.
+This does not assert a device-specific `GDE` transition after every Exit Failure Mode implementation. It states only that service-state recovery must not be promoted into proof that a successful Block Erase, Crypto Erase, or Overwrite operation completed.
 
 ## Historical record 6 — sanitize failure changes ordinary command admissibility
 
-While the NVM subsystem is in sanitize failure mode, Revision 1.3 requires commands that are not allowed in that state to be aborted with `Sanitize Failed`. The failed operation therefore leaves behind more than a historical event record: its retained state participates in the admission decision for future commands.
+After a sanitize operation fails, controllers in the NVM subsystem abort commands not allowed during a sanitize operation with status **`Sanitize Failed`** until either a subsequent sanitize operation is started or successful recovery from the failed sanitize occurs.
 
-This gives a compact relation:
+The failure therefore leaves behind more than a historical event record:
 
 ```text
 past maintenance outcome
@@ -159,28 +142,28 @@ past maintenance outcome
     -> present command-admission policy
 ```
 
-The point is not that all commands are blocked identically or that a sanitize failure destroys payload. The point is that a past failed forgetting attempt remains operationally authoritative until an allowed recovery transition changes that state.
+The point is not that every command is blocked identically or that failure destroys payload. The point is that a past failed forgetting attempt remains operationally authoritative until an allowed recovery transition changes the state.
 
-## Operational witness — Seagate openSeaChest keeps the restricted/unrestricted distinction explicit
+## Operational witness — Seagate openSeaChest keeps the distinction explicit
 
-Seagate's current openSeaChest erase help exposes `--ause` for NVMe sanitize and describes the default as **restricted** failure-exit behavior: after a failure, the way out is another sanitize that eventually succeeds. With `--ause`, the tool describes the **unrestricted** path, in which `Exit Failure Mode` becomes an additional recovery option.
+Seagate's current openSeaChest erase help exposes `--ause` for NVMe sanitize and describes the default as **restricted** failure-exit behavior. With `--ause`, the tool exposes the **unrestricted** path in which `Exit Failure Mode` is an additional recovery option.
 
 The project's `openSeaChest_Erase` version history records, for **v4.6.0 (28-Aug-2024)**, a sanitize-handling refactor, addition of an option to run sanitize in unrestricted mode, and improved handling of an existing sanitize-failure condition by continuing/retrying sanitize rather than immediately exiting it.
 
-This is useful operational continuity because a vendor-maintained utility still has to expose the state-machine distinction to users. It is **not** evidence that every Seagate SSD, every NVMe SSD, or any named firmware build exhibits a particular failure under test.
+This is an operational/tooling witness only. It does not prove that every Seagate SSD, every NVMe SSD, or any named firmware build exhibits a particular failure under test.
 
 ## Engineering reconstruction
 
-The source-supported relation can be modeled as four separate state classes:
+The sourced interface can be decomposed into four distinct state classes:
 
 | Layer | Example state | What it governs |
 | --- | --- | --- |
 | launch policy | `AUSE=0/1`, `SANACT` | what operation starts and what failure exits may later be legal |
-| runtime maintenance | sanitize in progress | background destructive/cryptographic/overwrite work and ordinary-service restrictions |
+| runtime maintenance | sanitize in progress | background work and ordinary-service restrictions |
 | terminal outcome | success / failure | whether the intended operation completed and whether failure mode exists |
 | recovery authority | retry-only vs retry-or-exit | which transitions may restore ordinary command admissibility |
 
-The useful technical-retention relations are therefore:
+The useful technical-retention relations are:
 
 ```text
 operation-start policy != runtime progress != terminal outcome
@@ -191,15 +174,13 @@ service recovery != sanitization verification
 retained initiating policy -> constrains later recovery transitions
 ```
 
-This is not a claim that NVMe internally implements four literal objects or tables. It is an analytical decomposition of distinct interface-visible obligations.
+This is an analytical decomposition of interface-visible obligations, not a claim that every controller implements four literal internal objects.
 
 ## Cross-case comparison
 
 ### Case 47 — FAST '11 SSD sanitization verification
 
-Case 47 supplies implementation/empirical evidence that a nominal erase or sanitize interface can require independent validation against hidden Flash state. Case 44 supplies a standards-level control-state boundary.
-
-The functional comparison is:
+Case 47 supplies implementation/empirical evidence about whether hidden Flash state was actually sanitized. Case 44 supplies a standards-level control-state boundary.
 
 ```text
 NVMe failure-state exit / service restoration
@@ -213,21 +194,19 @@ There is no genealogy claim from the FAST '11 paper to NVMe 1.3.
 
 Case 148 shows another NVMe 1.3-era background maintenance operation whose lifecycle is not reducible to the initiating command. Both cases therefore warn against `command completion == maintenance completion`.
 
-But the mechanisms remain different. Sanitize has destructive/forgetting scope and a dedicated failure-mode admission policy; Device Self-test has its own result/resume/abort semantics. Functional similarity does not establish shared implementation lineage.
+The mechanisms remain different: Sanitize has destructive/forgetting scope and a dedicated failure-mode admission policy; Device Self-test has its own result/resume/abort semantics. Functional similarity does not establish shared implementation lineage.
 
-## Philosophical interpretation — explicitly downstream of the engineering record
+## Philosophical interpretation — downstream of the engineering record
 
 A narrow project-level interpretation is that a system can preserve **a constraint on future action** even when the maintenance action that created the constraint has failed.
 
-In this case the retained thing of interest is not user payload. It is a relation of authority:
+Here the retained thing of interest is not user payload. It is a relation of authority: a past launch policy plus a later failure determines which future recovery transitions are admissible.
 
-> a past launch policy plus a later failure determines which future recovery transitions are admissible.
-
-That may be philosophically suggestive for `technical-retention`, but it is not historical NVMe vocabulary and must not be used as evidence about the intentions of the standards authors.
+That interpretation is not historical NVMe vocabulary and must not be used as evidence about the intentions of the standards authors.
 
 ## Explicit non-claims
 
-This deepening does **not** establish any of the following:
+This deepening does **not** establish:
 
 1. that NVMe 1.3 invented restricted/unrestricted sanitize failure recovery;
 2. that May 1, 2017 is the invention date of the mechanism;
@@ -238,7 +217,7 @@ This deepening does **not** establish any of the following:
 7. that exiting failure mode sets `GDE` or proves `GDE=1` on every implementation;
 8. that an unsuccessful Sanitize command implies a partially executed sanitize operation;
 9. that the Sanitize Status log is physically stored in ordinary NAND user blocks or in any specific medium;
-10. that a retained status record is itself adequate sanitization verification;
+10. that a retained status record is adequate sanitization verification;
 11. that Seagate openSeaChest behavior proves a named SSD firmware's internal implementation;
 12. that NVMe 1.4, NVMe 2.x, SCSI sanitize, ATA sanitize/security erase, or TCG Opal use an identical failure-state machine;
 13. that service recovery and confidentiality-risk validation are the same operation;
