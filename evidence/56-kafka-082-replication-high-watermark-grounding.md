@@ -246,17 +246,17 @@ If a later `computing-archaeology` case covers Kafka's distributed-log engineeri
 ## Follow-on deepening
 
 - [`56-kafka-0110-leader-epoch-lineage-truncation-deepening.md`](56-kafka-0110-leader-epoch-lineage-truncation-deepening.md) closes the initial Kafka 0.11.0.0 leader-epoch follow-up. It separates the high-watermark committed/visibility frontier from retained leader-epoch lineage used for truncation, inspects the exact `leader-epoch-checkpoint` implementation and KIP-101 acceptance tests, preserves mixed-version high-watermark fallback as a distinct regime, and uses KIP-279 as later counterevidence against claiming that the initial KIP-101 protocol solved every divergence history.
+- [`56-kafka-2000-kip279-largest-common-epoch-deepening.md`](56-kafka-2000-kip279-largest-common-epoch-deepening.md) closes the explicit post-0.11 KIP-279 follow-up. It grounds the observed KAFKA-6361 failure, Kafka 2.0 response-V1 `leader_epoch` provenance, iterative largest-common-epoch backtracking, compatibility/high-watermark fallbacks, the 2.0 unclean-election acceptance test, and the KIP's explicit compaction/reconstruction boundary for retained epoch history.
 
 ---
 
 ## Remaining gaps
 
-- KIP-279/post-0.11 leader-epoch correction chronology and exact largest-common-epoch convergence semantics;
 - later change of `unclean.leader.election.enable` default (0.11.0.0 disabled it by default) as a policy-history case;
 - KRaft metadata/leader epoch evolution;
 - transactional high watermark versus last stable offset;
-- independent failure injection against a named release;
+- independent failure injection against a named release, especially checkpoint-loss plus compacted-log reconstruction;
 - exact filesystem/device durability boundary below Kafka's log append/flush behavior;
 - source-controlled ZooKeeper ISR/leader-state crash behavior if that becomes necessary for a later synthesis claim.
 
-None of these gaps blocks `grounded` status for the bounded 0.8.2.0 mechanism or the separate 0.11 leader-epoch deepening.
+None of these gaps blocks `grounded` status for the bounded 0.8.2.0 mechanism or the separate 0.11 / 2.0 leader-epoch deepenings.
