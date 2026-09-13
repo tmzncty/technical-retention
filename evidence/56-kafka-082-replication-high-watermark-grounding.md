@@ -205,7 +205,7 @@ The config explicitly says the high watermark is saved periodically. The case do
 
 ### 4. Offset-based 0.8.2 recovery is not later leader-epoch recovery
 
-Later Kafka work changed recovery semantics and added stronger leader-epoch mechanisms. Those later mechanisms must not be back-projected into this source slice. A separate case can test whether later epoch history changes the project's `currentness` model.
+Later Kafka work changed recovery semantics and added stronger leader-epoch mechanisms. Those later mechanisms must not be back-projected into this source slice. The first bounded follow-on is now grounded separately in [`56-kafka-0110-leader-epoch-lineage-truncation-deepening.md`](56-kafka-0110-leader-epoch-lineage-truncation-deepening.md): Kafka 0.11.0.0 retains per-replica leader-epoch/start-offset history and uses it as a lineage-aware truncation relation, while the high watermark remains a distinct committed/visibility frontier.
 
 ### 5. Consumer visibility is not the same question as producer completion
 
@@ -243,9 +243,15 @@ If a later `computing-archaeology` case covers Kafka's distributed-log engineeri
 
 ---
 
+## Follow-on deepening
+
+- [`56-kafka-0110-leader-epoch-lineage-truncation-deepening.md`](56-kafka-0110-leader-epoch-lineage-truncation-deepening.md) closes the initial Kafka 0.11.0.0 leader-epoch follow-up. It separates the high-watermark committed/visibility frontier from retained leader-epoch lineage used for truncation, inspects the exact `leader-epoch-checkpoint` implementation and KIP-101 acceptance tests, preserves mixed-version high-watermark fallback as a distinct regime, and uses KIP-279 as later counterevidence against claiming that the initial KIP-101 protocol solved every divergence history.
+
+---
+
 ## Remaining gaps
 
-- Kafka 0.11+ leader-epoch checkpoint recovery and exact divergent-log truncation semantics;
+- KIP-279/post-0.11 leader-epoch correction chronology and exact largest-common-epoch convergence semantics;
 - later change of `unclean.leader.election.enable` default (0.11.0.0 disabled it by default) as a policy-history case;
 - KRaft metadata/leader epoch evolution;
 - transactional high watermark versus last stable offset;
@@ -253,4 +259,4 @@ If a later `computing-archaeology` case covers Kafka's distributed-log engineeri
 - exact filesystem/device durability boundary below Kafka's log append/flush behavior;
 - source-controlled ZooKeeper ISR/leader-state crash behavior if that becomes necessary for a later synthesis claim.
 
-None of these gaps blocks `grounded` status for the bounded 0.8.2.0 mechanism.
+None of these gaps blocks `grounded` status for the bounded 0.8.2.0 mechanism or the separate 0.11 leader-epoch deepening.
