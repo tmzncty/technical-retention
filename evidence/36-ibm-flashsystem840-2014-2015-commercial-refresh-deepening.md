@@ -10,6 +10,8 @@ This addendum deepens [`../cases/36-nand-flash-correct-and-refresh-maintenance.m
 
 This is therefore a **commercial-product implementation deepening**, not an FCR deployment claim.
 
+Chronology/provenance deepening: [`36-ibm-flashsystem840-support-record-provenance-chronology-deepening.md`](36-ibm-flashsystem840-support-record-provenance-chronology-deepening.md) now separates the IBM Support record's `Original Publication Date` from the current page revision, current attachment, product-announcement, and GA dates. It closes the bounded interpretation of the page's `16 October 2013` field without inventing an exact first-publication date for the current PDF.
+
 ## Sources inspected
 
 ### A. IBM Support — `Flash Data Retention`
@@ -32,9 +34,11 @@ IBM hardware announcement record, dated 16 January 2014:
 
 <https://www.ibm.com/docs/en/announcement_archive/ENUS114-032/ENUS114-032.PDF>
 
-This announcement refers back to FlashSystem 840 hardware announcements dated 17 December 2013 and establishes the product-era chronology around early 2014.
+This announcement refers back to FlashSystem 840 hardware announcements dated 17 December 2013 and establishes the product-era chronology around early 2014. Current IBM lifecycle records independently give 24 January 2014 General Availability for 9840-AE1 and 9843-AE1.
 
-**Chronology caveat:** the current IBM Support landing page for `Flash Data Retention` displays `Original Publication Date: 16 October 2013`, while the attached file name contains `External-6-6-14` and the FlashSystem 840 product announcement chronology is later than October 2013. The repository therefore does **not** use the landing-page date as a secure publication date for the 840-specific PDF. This addendum conservatively treats the attachment as a **2014 product-era IBM artifact**, with the landing-page metadata retained only as a provenance inconsistency that should not be silently normalized.
+**Chronology correction:** the current IBM Support record exposes `Original Publication Date: 16 October 2013`, while the current abstract names both FlashSystem 840 and V840 and the current attachment is named `External-6-6-14.pdf`. The dedicated provenance deepening shows that these are different chronological objects. The 16-October-2013 value is safe as IBM's current metadata for the **support record identity**, but it is not a secure publication date for the **current 840-specific PDF** or the current 840/V840 wording. IBM's 840 public-announcement references begin on 17 December 2013, the 840 lifecycle records give 24 January 2014 GA, and IBM publicly introduced V840 in February 2014. The attachment's `6-6-14` string is retained only as a date-coded filename/title because no inspected formal revision field defines it.
+
+Therefore this addendum treats the attachment as a **2014 product-era IBM artifact** while leaving the exact first-publication date of the current PDF open. This is no longer described merely as a metadata `conflict`; it is a support-record-versus-current-revision provenance distinction.
 
 ### C. IBM Redbooks — FlashSystem 720 / 820 context
 
@@ -184,6 +188,12 @@ No arrow in that chain is asserted as a direct design genealogy.
 
 The FlashSystem 720/820 Redbook is especially useful as a stop condition: it directly documents periodic reads to avoid data fade, but not enough to infer rewrite renewal. The later 840 document uses stronger `refresh` language, but still does not identify the algorithm with FCR.
 
+The chronology/provenance deepening adds a separate methodological rule:
+
+> **support-record original-publication metadata != exact publication date of every current attachment/revision**.
+
+That rule protects the prior-art boundary from accidentally moving the commercial-product evidence floor backward to October 2013 on the basis of an untyped support-page metadata field.
+
 ## Functional analogies and limits
 
 ### FCR comparison
@@ -229,7 +239,9 @@ That is a project-level interpretation. IBM's support document is not evidence t
 | FlashSystem 840 implements Cai et al.'s exact FCR algorithm | X | no algorithm-identity or genealogy evidence in inspected product sources |
 | 90 days at 40 °C is a universal raw-NAND retention constant | X | IBM statement is a named-system operating/qualification envelope |
 | Day 91 implies deterministic total data loss | X | IBM instead describes recovery methods beyond the stated envelope |
-| IBM Support landing-page `Original Publication Date` securely dates the 840-specific PDF to 16-Oct-2013 | X | current metadata conflicts with the 840 product chronology and the attachment file name; exact publication chronology remains unresolved |
+| IBM currently reports `Original Publication Date: 16-Oct-2013` for support record `ssg1S7004533` | H/P | current IBM Support record |
+| `16-Oct-2013` securely dates the current 840-specific PDF or current 840/V840 abstract | X | dedicated provenance deepening shows record metadata and current revision/attachment are different chronological objects |
+| `External-6-6-14` is independently authenticated as the PDF's formal publication date | X | it is a date-coded artifact filename/title; exact formal publication chronology remains unresolved |
 | Commercial-product maintenance contract != independent field validation | E/X | manufacturer behavior is documented; controlled independent validation remains open |
 
 ## Related-repository audit
@@ -237,13 +249,15 @@ That is a project-level interpretation. IBM's support document is not evidence t
 A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `FlashSystem 840` and for Flash-refresh/NAND-retention material returned no dedicated case to reuse. The division of labor therefore remains:
 
 - broader Texas Memory Systems -> IBM FlashSystem device/controller genealogy, FPGA/data-path history, and exact refresh implementation should primarily be developed in `computing-archaeology`;
-- the retention-specific relation between nonvolatile embodiment, powered maintenance opportunity, product qualification envelope, automatic refresh, and logical continuity belongs here.
+- the retention-specific relation between nonvolatile embodiment, powered maintenance opportunity, product qualification envelope, automatic refresh, logical continuity, and source-controlled evidence dating belongs here.
 
 This addendum does not assert that the 720/820 and 840 maintenance mechanisms form one uninterrupted engineering lineage merely because IBM documentation places them in adjacent product generations.
 
 ## Remaining open work
 
-- exact public/provenance chronology of the 840 `Flash Data Retention` attachment;
+- **bounded chronology interpretation closed:** `16-Oct-2013` is support-record original-publication metadata, not a secure date for the current PDF/current abstract; see [`36-ibm-flashsystem840-support-record-provenance-chronology-deepening.md`](36-ibm-flashsystem840-support-record-provenance-chronology-deepening.md);
+- exact first-publication date / formal document-control history of the current `External-6-6-14` attachment remains open;
+- an archived 2013 snapshot of support UID `ssg1S7004533` would be needed to recover its original title/body/attachment with confidence;
 - firmware/source-level reconstruction of `deep scrub and refresh`;
 - whether the 840 path used in-place reprogramming, remapping, read-reference adaptation, ECC-threshold policy, or some combination;
 - independent named-product observation/fault validation of the refresh path;
@@ -256,5 +270,8 @@ This addendum does not assert that the 720/820 and 840 maintenance mechanisms fo
 1. IBM Support, **`Flash Data Retention`**, current landing page and attached FlashSystem 840 product document: <https://www.ibm.com/support/pages/flash-data-retention>.
 2. IBM, **`Flashsystem 840 Data Retention - External-6-6-14.pdf`**, one-page product-era support attachment: <https://www.ibm.com/support/pages/system/files/support/ssg/ssgdocs.nsf/0/e02429f9c68ec7ea85257c0600743ccd/$FILE/Flashsystem%20840%20Data%20Retention%20-%20External-6-6-14.pdf>.
 3. IBM United States Hardware Announcement 114-032, 16 January 2014, with references to the 17-December-2013 FlashSystem 840 product announcements: <https://www.ibm.com/docs/en/announcement_archive/ENUS114-032/ENUS114-032.PDF>.
-4. Ilya Krutov, **`IBM FlashSystem 720 and IBM FlashSystem 820`**, IBM Redbooks Product Guide, published 11 April 2013, updated 13 October 2014: <https://www.redbooks.ibm.com/redbooks.nsf/5193609f3941e9cf85256bc300724cfc/c7d2bf380cb6304f85257b3c0051f4a3>.
-5. Karen Orlando et al., **`Implementing IBM FlashSystem 840`**, IBM Redbooks SG24-8189-02, published 9 July 2015: <https://www.redbooks.ibm.com/abstracts/sg248189.html>.
+4. IBM product lifecycle, FlashSystem 840 9840-AE1: <https://www.ibm.com/support/pages/node/7094794>.
+5. IBM product lifecycle, FlashSystem 840 9843-AE1: <https://www.ibm.com/support/pages/node/7092436>.
+6. Ilya Krutov, **`IBM FlashSystem 720 and IBM FlashSystem 820`**, IBM Redbooks Product Guide, published 11 April 2013, updated 13 October 2014: <https://www.redbooks.ibm.com/redbooks.nsf/5193609f3941e9cf85256bc300724cfc/c7d2bf380cb6304f85257b3c0051f4a3>.
+7. Karen Orlando et al., **`Implementing IBM FlashSystem 840`**, IBM Redbooks SG24-8189-02, published 9 July 2015: <https://www.redbooks.ibm.com/abstracts/sg248189.html>.
+8. IBM Storage announcement/blog, **`Fall In Love with IBM FlashSystem V840 Enterprise Performance Solution`**, 11 February 2014: <https://community.ibm.com/community/user/blogs/tony-pearson1/2014/02/11/fall-in-love-with-ibm-flashsystem-v840-enterprise-performance-solution>.
