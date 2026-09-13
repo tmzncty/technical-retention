@@ -132,3 +132,9 @@ and, after a repair:
 `readability recovered != full future-failure margin recovered`.
 
 The f4 source documents both the intended placement invariant and the possibility of a rare reconstruction-time violation, making it a strong witness that coded-storage repair state includes not just **which fragments exist**, but **where correlated faults can remove them together**.
+
+## Follow-on production witness and status
+
+The adjacent deepening [`19-facebook-f4-production-correlated-failure-and-rebuild-deepening.md`](19-facebook-f4-production-correlated-failure-and-rebuild-deepening.md) now supplies the production/operational witness that this note deliberately did not claim: the same OSDI paper reports a bad-disk cohort plus elevated temperature driving AFR above 60% for weeks within one cell, with no reported data loss because buddy/XOR material lived in unaffected cells, and separately reports a 240-TB two-host rebuild drill taking three days while p99 latency rose to 500 ms.
+
+That follow-on closes the **bounded production correlated-failure / rebuild-window witness** debt for Case 19. It does not convert the placement violation above into a documented data-loss incident, and it leaves direct per-fragment currentness evidence during incomplete reconstruction open.
