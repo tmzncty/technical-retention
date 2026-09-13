@@ -47,3 +47,11 @@ Case 02's 1991 NCSC `clearing`/`purging` vocabulary remains a separate historica
 
 ## Related-repository check
 Fresh searches of `tmzncty/computing-archaeology` for `NIST 800-88 sanitization validation verification` and `media sanitization` found no dedicated overlapping case. Broader standards/device/cloud genealogy belongs there.
+
+## Follow-on navigation / status
+
+The NVMe-side failure-state question has now been split out into a bounded primary-source deepening: [`44-nvme13-sanitize-failure-mode-recovery-policy-deepening.md`](44-nvme13-sanitize-failure-mode-recovery-policy-deepening.md).
+
+That record closes the Revision-1.3 normative slice linking launch-time `AUSE`, later sanitize-operation failure, retained `SSTAT` / `SCDW10`, and the restricted-versus-unrestricted recovery graph. It also keeps this NIST assurance layer separate: **restoring NVMe command admissibility after a sanitize failure is not itself NIST verification or validation of sanitization effectiveness**.
+
+The remaining open work is implementation-facing rather than another standards paraphrase: named-controller fault injection/conformance, real-device `GDE` behavior around `Exit Failure Mode`, later NVMe revision genealogy, and empirical media verification remain open.
