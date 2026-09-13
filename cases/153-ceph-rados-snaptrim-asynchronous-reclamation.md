@@ -487,3 +487,21 @@ This case does not establish:
 7. Case 73 — GFS lazy garbage collection: [`73-gfs-lazy-garbage-collection.md`](73-gfs-lazy-garbage-collection.md)
 8. Case 147 — S3 multipart pre-object retention: [`147-s3-multipart-upload-preobject-retention.md`](147-s3-multipart-upload-preobject-retention.md)
 9. Case 05 — RADOS replicated object repair: [`05-rados-replicated-object-repair.md`](05-rados-replicated-object-repair.md)
+
+## 2017–2019 representation transition deepening
+
+Evidence 153C traces the source-level transition that Evidence 153B left open. In December 2017, Ceph added OSDMap `new_removed_snaps`, `new_purged_snaps`, and `removed_snaps_queue`, with the introducing commit explicitly distinguishing current removed-but-not-purged work from the older all-time removed-snapshot set. A same-day Mimic-gated PG change then kept the old `PGPool.cached_removed_snaps` path only for `<= luminous`, while Mimic activation derived trim work from the OSDMap queue reconciled with `pg_info_t.purged_snaps`.
+
+In May 2019, `PeeringState` deliberately stopped using `snap_trimq` itself during that reconciliation: it derived a local `to_trim` set and passed the result into the PG, where the worker queue was materialized. The July 2019 Octopus-targeting cleanup then removed the pre-Mimic cache branch. The bounded conclusion is therefore stronger than a field-renaming story: **the retained cleanup relation survives while its container, ownership layer, compatibility path, and transient execution representation change**.
+
+This supports:
+
+```text
+retained cleanup obligation != retained exact queue object
+retained authority != activation-time handoff != worker queue
+same obligation relation != same software representation
+```
+
+It does not identify the invention of snap trimming, equate commit dates with production deployment, prove exact cursor resume or universal idempotence, or make lower-layer physical reclamation/sanitization claims.
+
+Evidence: [`evidence/153-ceph-2017-2019-removed-snaps-representation-transition-deepening.md`](../evidence/153-ceph-2017-2019-removed-snaps-representation-transition-deepening.md).

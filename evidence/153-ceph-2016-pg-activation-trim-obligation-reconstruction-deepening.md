@@ -223,3 +223,7 @@ The broader engineering/history belongs primarily in `tmzncty/computing-archaeol
    <https://github.com/ceph/ceph/blob/a2c71ca92826a08801d9e5e7668c5a14e94cce91/doc/dev/osd_internals/snaps.rst>
 8. Rendered Mimic PGPool documentation (continuity witness, not first-introduction evidence):
    <https://docs.ceph.com/en/mimic/dev/osd_internals/pgpool/>
+
+## Follow-on closure: 2017–2019 representation transition
+
+The representation-transition debt intentionally left open by this record is now closed by [`153-ceph-2017-2019-removed-snaps-representation-transition-deepening.md`](153-ceph-2017-2019-removed-snaps-representation-transition-deepening.md). That follow-on traces the December-2017 Mimic OSDMap cutover, the May-2019 `PeeringState` `to_trim` separation, and the July-2019 removal of the pre-Mimic PGPool cache path. Exact first-introduction genealogy, per-object crash/fault injection, and lower-layer allocator timing remain open.
