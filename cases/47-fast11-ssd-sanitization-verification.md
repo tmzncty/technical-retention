@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/47-fast11-2011-ssd-sanitization-grounding.md`](../evidence/47-fast11-2011-ssd-sanitization-grounding.md).
 
+Named-device key-store deepening: [`../evidence/47-samsung-840-850-crypto-blob-remanence-deepening.md`](../evidence/47-samsung-840-850-crypto-blob-remanence-deepening.md).
+
 ## Scope
 
 This case asks a question deliberately left open by [`44-nvme13-deallocate-sanitize-forgetting.md`](44-nvme13-deallocate-sanitize-forgetting.md):
@@ -13,6 +15,8 @@ This case asks a question deliberately left open by [`44-nvme13-deallocate-sanit
 > A storage specification can define a stronger forgetting operation, but how do we know that an actual SSD implementation has made prior data unavailable below the ordinary logical interface?
 
 Wei et al. answer that question experimentally for a bounded 2011 sample. Their method writes identifiable fingerprints, performs the sanitization operation under test, dismantles the SSD, and reads raw flash through custom hardware rather than trusting the drive’s normal ATA/SCSI view.
+
+The 2019 named-device deepening asks the same verification question for a different forgetting target: controller **key state**. Meijer and van Gastel show that a Samsung 840 EVO could have one current protection configuration while an older key-bearing `crypto blob` still survived in raw NAND because the internal metadata store was wear-leveled.
 
 The bounded relation is:
 
@@ -26,24 +30,30 @@ sanitization request or overwrite
     -> ordinary interface may report deletion / success
     -> experiment bypasses the controller and reads raw flash
     -> surviving fingerprints qualify or falsify the forgetting claim
+
+current encryption/protection state
+    -> current key-bearing metadata
+    -> older internal metadata revisions may still survive physically
+    -> key-store verification must therefore exceed current-state inspection
 ```
 
 This case is **not**:
 
 - a claim about every SSD in 2011 or every SSD today;
-- a named-product compliance audit — the paper deliberately labels tested drives `A` through `L` rather than publishing consumer model identities;
-- a claim that ATA `SECURITY ERASE UNIT`, ACS-2 `SANITIZE BLOCK ERASE`, NVMe `Sanitize`, TRIM, filesystem deletion, and file overwriting are the same operation;
-- an analysis of analog remanence after a correctly executed flash erase — the paper explicitly does not pursue analog erasure further;
-- evidence that the paper’s proposed immediate/background/scan-based FTL scrubbing mechanisms shipped in commercial controllers;
+- a named-product compliance audit of the FAST ’11 sample — that paper deliberately labels tested drives `A` through `L` rather than publishing consumer model identities;
+- a claim that ATA `SECURITY ERASE UNIT`, ACS-2 `SANITIZE BLOCK ERASE`, NVMe `Sanitize`, TRIM, filesystem deletion, file overwriting, password changes, and TCG Opal key transitions are the same operation;
+- a claim that the 2019 Samsung 840 EVO stale-crypto-blob attack directly demonstrates failure of an ATA/NVMe sanitize command — it demonstrates a stale key-bearing metadata path after a protection-state update;
+- an analysis of analog remanence after a correctly executed flash erase — FAST ’11 explicitly does not pursue analog erasure further;
+- evidence that FAST ’11’s proposed immediate/background/scan-based FTL scrubbing mechanisms shipped in commercial controllers;
 - a replacement for Case 44’s later NVMe 1.3 normative interface semantics.
 
-The contribution is a bounded **implementation-verification and hidden-embodiment case**: logical disappearance, raw-flash digital remnants, controller-command reporting, empirical command compliance, and the difference between a forgetting contract and evidence that a particular implementation actually fulfilled it.
+The contribution is a bounded **implementation-verification and hidden-embodiment case**: logical disappearance, raw-flash digital remnants, controller-command reporting, empirical command compliance, stale key-bearing controller metadata, and the difference between a forgetting contract and evidence that a particular implementation actually fulfilled it.
 
 ## Relation to Case 44
 
 Case 44 is specification-level. It shows that NVMe 1.3 deliberately separates Deallocate from Sanitize and separately tracks sanitize-operation completion.
 
-Case 47 is empirical and earlier. It shows why a standards-level contract is not enough by itself: in the FAST ’11 sample, some drives reported support for ATA security erase yet did not execute the operation reliably, including one tested drive that reported successful sanitization while all data remained intact.
+Case 47 is empirical and earlier at its core. FAST ’11 shows why a standards-level contract is not enough by itself: in its sample, some drives reported support for ATA security erase yet did not execute the operation reliably, including one tested drive that reported successful sanitization while all data remained intact. The 2019 deepening adds a later empirical reason to inspect cryptographic erase below the current interface state: obsolete key-bearing metadata can itself have hidden physical history.
 
 The cases therefore separate:
 
@@ -52,10 +62,12 @@ interface semantics
     !=
 implementation compliance
     !=
-independent verification evidence
+current controller security state
+    !=
+independent residual-state verification evidence
 ```
 
-No direct genealogy from the 2011 paper to NVMe 1.3 is asserted.
+No direct genealogy from the 2011 paper to NVMe 1.3 is asserted, and the Samsung 840 EVO evidence is not treated as an NVMe Sanitize experiment.
 
 ## Historical vocabulary
 
@@ -76,7 +88,9 @@ The 2011 paper directly uses:
 - `fingerprint` for the experiment’s structured test pattern;
 - `scrubbing` for the authors’ proposed page-reprogramming mechanism.
 
-`hidden embodiment`, `verification boundary`, `forgetting contract`, `implementation compliance`, and `forensic witness versus current state` are project engineering terms, not the paper’s historical vocabulary.
+The 2019 deepening directly uses `data encryption key (DEK)`, `crypto blob`, `wear leveling`, ATA Security, and TCG Opal. Those later terms are not projected backward into FAST ’11’s historical vocabulary.
+
+`hidden embodiment`, `verification boundary`, `forgetting contract`, `implementation compliance`, `key closure`, and `forensic witness versus current state` are project engineering terms, not the papers’ historical vocabulary.
 
 ## Historical record
 
@@ -158,6 +172,36 @@ These mechanisms are useful experiments demonstrating possible implementation tr
 
 **Primary anchors:** §§4.2–4.4.
 
+### H/P — a later named-device study found stale key-bearing metadata below the current protection state
+
+Meijer and van Gastel’s 2019 IEEE Security & Privacy study reverse-engineered named self-encrypting SSDs. For the Samsung 840 EVO they identify a 64 KiB internal NAND `crypto blob` carrying encryption state. In their demonstrated transition, an unprotected blob containing the DEK existed at one physical location; after password protection was configured, an updated protected blob could be written at another location because the internal metadata store was wear-leveled.
+
+The researchers report successfully recovering a previous crypto-blob revision and making it active through a vendor-specific command path. They measured old/new physical locations differing in roughly one out of twenty crypto-state updates in their setup, and observed the stale location eventually being overwritten under later use.
+
+The bounded historical result is:
+
+> **a current protected state did not by itself prove that every older key-bearing NAND representation had already disappeared.**
+
+This is not a direct sanitize-command failure experiment.
+
+**Primary anchor:** Meijer & van Gastel 2019, §VI-E.
+
+### H/P — Samsung 850 EVO provides a bounded negative control for that specific placement mechanism
+
+The same paper reports that Samsung told the researchers that from the 850 EVO onward the crypto blob was no longer wear-leveled and instead occupied a fixed physical NAND address. The authors therefore say the 850 EVO was not vulnerable to the **same wear-leveling crypto-blob recovery attack**.
+
+That narrows the mechanism:
+
+```text
+same broad key-management function
+    + different metadata-placement policy
+    -> different stale-copy exposure for this attack
+```
+
+It does not establish that the 850 EVO is secure against every other key-management or erase failure.
+
+**Primary anchor:** Meijer & van Gastel 2019, §VI-F.
+
 ## Retained state and forgetting target
 
 The case contains several distinct state classes:
@@ -168,9 +212,12 @@ The case contains several distinct state classes:
 4. **over-provision / spare-area contents** — physical flash not directly enumerable as host LBAs;
 5. **controller command-support/reporting state** — what the device says it supports and whether it reports an erase as successful;
 6. **experimental fingerprint evidence** — an external verification witness used after bypassing the controller;
-7. **encryption-key state** — relevant to cryptographic sanitization, but not directly verifiable by the authors for the encrypted test drive.
+7. **active encryption-key state** — the currently authoritative DEK or equivalent key relationship;
+8. **password/key-wrapping metadata** — state governing access to or protection of the DEK;
+9. **obsolete key-bearing metadata embodiments** — earlier crypto-blob revisions that can survive outside the controller’s current protection-state view;
+10. **internal placement/reclamation state** — wear-leveling and later overwrite history that determines whether a stale key witness still exists.
 
-The forgetting target must therefore be named. `The file disappeared`, `the LBA no longer returns the old value`, `the controller reported erase success`, and `no old fingerprint remained in raw flash` are four different claims.
+The forgetting target must therefore be named. `The file disappeared`, `the LBA no longer returns the old value`, `the controller reported erase success`, `the current DEK changed`, and `no usable old payload/key witness remained below the interface` are different claims.
 
 ## Access geometry and verification boundary
 
@@ -182,7 +229,7 @@ LBA
     -> current mapped physical page
 ```
 
-The experiment intentionally changes the observation path:
+The FAST ’11 experiment intentionally changes the observation path:
 
 ```text
 raw flash chip pins
@@ -191,11 +238,20 @@ raw flash chip pins
     -> reconstruct surviving old data
 ```
 
+The 2019 key-store deepening changes it again:
+
+```text
+raw/internal controller state
+    -> reverse engineering / low-level access
+    -> recover obsolete crypto-blob revision
+    -> test whether stale key-bearing state remains actionable
+```
+
 This produces one of the case’s strongest distinctions:
 
 > **ordinary interface inaccessibility ≠ absence of a lower-layer digital witness**.
 
-It also prevents a false conclusion in the other direction. A surviving raw-flash witness is evidence that digital sanitization failed under the paper’s definition, but it is not automatically the current logical value of the SSD.
+It also prevents a false conclusion in the other direction. A surviving raw-flash witness is evidence about the stated forgetting target and attacker layer, but it is not automatically the current logical value or an ordinary host-accessible state.
 
 ## Failure and forgetting modes
 
@@ -210,6 +266,7 @@ Keep separate:
 - **whole-drive host overwrite miss** — repeated logical coverage does not guarantee physical coverage of every remnant;
 - **single-file overwrite miss** — current file LBAs are overwritten while stale physical copies survive elsewhere;
 - **cryptographic sanitization uncertainty** — ciphertext can remain while security depends on the key store actually being sanitized;
+- **stale key-metadata remanence** — current protection state changes while an obsolete key-bearing physical representation remains recoverable;
 - **analog remanence** — a different attack layer not experimentally resolved by this case.
 
 These are not one generic event called `delete failure`.
@@ -274,7 +331,7 @@ Therefore:
 
 > **service-interface evidence ≠ raw-media verification evidence**.
 
-This does not imply that every verification method must physically dismantle a device. It records the bounded method used in 2011 and the epistemic problem it exposes.
+This does not imply that every verification method must physically dismantle a device. It records the bounded methods used in the cited studies and the epistemic problem they expose.
 
 ### E — physical destruction technique is substrate-relative
 
@@ -294,6 +351,55 @@ Therefore:
 
 This is grounded only for the measured/reconstructed mechanisms in the paper, not as a universal quantitative law.
 
+### E — cryptographic erase moves the forgetting obligation into the key store
+
+If ciphertext may remain after cryptographic erasure, the old plaintext is forgotten only insofar as the old DEK and every usable route back to it are irrecoverable under the chosen threat model.
+
+Therefore:
+
+```text
+ciphertext physically remains
+    != cryptographic forgetting failed
+
+current DEK changed
+    != cryptographic forgetting verified
+```
+
+A stronger bounded assurance chain is:
+
+```text
+fresh-key transition
+    + sufficient new-key entropy
+    + old key no longer authoritative
+    + obsolete usable key-bearing copies retired
+    + no alternate credential/key path restoring old access
+```
+
+The 2019 Samsung study directly demonstrates why the obsolete-copy term matters; it does not prove that this list is a universal formal specification.
+
+### E — current security state can coexist with obsolete physical key state
+
+The 840 EVO attack shows the controller can have one current protection configuration while an older crypto-blob revision still exists below that logical state.
+
+Therefore:
+
+> **one current key/protection state ≠ one surviving physical key-state embodiment**.
+
+This is a key-metadata analogue of the stale-payload multiplicity already documented by FAST ’11, but the retained object and recovery mechanism are different.
+
+### E — later overwrite can close a stale-key window without validating the original transition
+
+The 2019 study observed eventual overwriting of stale 840 EVO crypto blobs during subsequent use.
+
+Therefore:
+
+```text
+later reclamation destroys stale key state
+    != original protection transition destroyed it immediately
+```
+
+That distinction matters whenever an erase/sanitize guarantee is supposed to hold at command completion rather than after an unspecified later workload.
+
 ## Cross-case comparison
 
 ### Case 04 — mapped Flash
@@ -308,23 +414,41 @@ No claim is made that the 1993 patent architecture is identical to the 2011 test
 
 ### Case 44 — NVMe Deallocate / Sanitize
 
-Case 44 is a normative 2017 interface case. Case 47 is an empirical 2011 ATA-era compliance/verification case.
+Case 44 is a normative 2017 interface case. Case 47 is an empirical verification case spanning FAST ’11 and the later 2019 named-device deepening.
 
-Together they justify a three-layer comparison:
+Together they justify a four-layer comparison:
 
 ```text
 specified forgetting semantics
     !=
 controller-reported operation result
     !=
+current key/protection state
+    !=
 independently observed residual state
 ```
 
+The Samsung 840 EVO stale-blob attack is not evidence that an NVMe Sanitize command failed.
+
+### Case 37 — Samsung 840 EVO old-data performance refresh
+
+Case 37 concerns old-data read performance / recovery behavior in the Samsung 840 EVO family. The 2019 evidence here concerns encryption metadata and a stale crypto blob.
+
+Sharing the model family does not establish mechanism identity, causal connection, or common remediation.
+
+### Synthesis 22 — erase / invalidation / sanitization / verification
+
+[`../docs/SYNTHESIS_22_ERASE_INVALIDATION_SANITIZATION_VERIFICATION.md`](../docs/SYNTHESIS_22_ERASE_INVALIDATION_SANITIZATION_VERIFICATION.md) distinguishes forgetting operation semantics from evidence that residual state is actually gone.
+
+The 2019 key-store result sharpens that verification layer:
+
+> **proof that the active key changed ≠ proof that every usable old-key witness disappeared**.
+
 ### Kirschenbaum / forensic-materiality test
 
-The existing philosophical test already warns that a physical witness is not necessarily authoritative current state. Case 47 strengthens the technical side of that warning: raw-flash remnants can be recoverable after the FTL has ceased to expose them as current logical data.
+The existing philosophical test already warns that a physical witness is not necessarily authoritative current state. Case 47 strengthens the technical side of that warning: raw-flash remnants can be recoverable after the FTL or key-management layer has ceased to expose them as current logical state.
 
-The case does **not** conclude that all deleted SSD data remains recoverable indefinitely. Garbage collection, block erase, sanitization, encryption, wear, and later controller behavior can eliminate or transform those witnesses.
+The case does **not** conclude that all deleted SSD data or old key material remains recoverable indefinitely. Garbage collection, block erase, sanitization, encryption, wear, later controller behavior, and metadata-placement policy can eliminate or transform those witnesses.
 
 ## Functional analogy and philosophical limit
 
@@ -332,9 +456,11 @@ A bounded functional analogy describes sanitization as **technical forgetting**,
 
 The engineering evidence supports this narrow statement:
 
-> A system can have stopped presenting a value as current while still retaining lower-layer material conditions from which that value can be reconstructed.
+> A system can have stopped presenting a value or key relation as current while still retaining lower-layer material conditions from which that earlier state can be reconstructed.
 
-It does not establish claims about human forgetting, repression, institutional oblivion, or cultural memory. Nor does it prove that every physical trace should count as the same object for every purpose.
+Cryptographic erasure adds a second project-level interpretation: forgetting can act on the **decoding relation** rather than every payload-bearing physical bit. If ciphertext is intentionally retained, then the key relation becomes a privileged retention object whose old embodiments matter to the forgetting claim.
+
+That is project interpretation, not historical vocabulary from the cited authors. It does not establish claims about human forgetting, repression, institutional oblivion, or cultural memory. Nor does it prove that every physical trace should count as the same object for every purpose.
 
 ## Claim ledger
 
@@ -348,9 +474,15 @@ It does not establish claims about human forgetting, repression, institutional o
 | `logical invisibility != digital sanitization` | E | paper’s explicit taxonomy + raw-flash experiments |
 | `reported erase success != verified media sanitization` | E | Drive B counterexample |
 | `one current logical value != one surviving physical embodiment` | E | FTL mechanism + stale-copy measurement |
+| Samsung 840 EVO could retain an older unprotected crypto-blob revision after current protection metadata was updated | H/P | Meijer & van Gastel 2019 §VI-E |
+| the 840 EVO stale-blob attack was demonstrated with low-level recovery and a vendor-specific reactivation path | H/P | Meijer & van Gastel 2019 §VI-E |
+| Samsung reported 850 EVO and later used fixed-address rather than wear-leveled crypto-blob storage, removing that specific stale-placement attack | H/P | Meijer & van Gastel 2019 §VI-F; bounded vendor statement through paper |
+| `current key/protection state != complete set of physically retained key-bearing states` | E | 840 EVO stale-blob demonstration |
 | the paper’s proposed scrub-enabled FTL shipped commercially | X | not established; evaluated in a simulator |
-| the twelve SSD labels identify named commercial models | X | identities are anonymized A–L |
-| the paper proves universal modern NVMe sanitize failure | X | outside date, interface, and sample scope |
+| the twelve FAST ’11 SSD labels identify named commercial models | X | identities are anonymized A–L |
+| the papers prove universal modern NVMe sanitize failure | X | outside date, interface, sample, and command-path scope |
+| Samsung 840 EVO sanitize was directly shown to fail by the 2019 stale-blob experiment | X | not established; protection-state transition is not a sanitize-command trace |
+| fixed-address 850 EVO metadata proves complete sanitization security | X | not established |
 
 ## Sources
 
@@ -360,17 +492,24 @@ It does not establish claims about human forgetting, repression, institutional o
 - Open-access conference PDF: <https://static.usenix.org/event/fast11/tech/full_papers/Wei.pdf>
 - Richard Kissel, Matthew Scholl, Steven Skolochenko, Xing Li, **NIST SP 800-88, Guidelines for Media Sanitization**, September 2006: <https://csrc.nist.gov/pubs/sp/800/88/upd1/final>
 
+### Later named-device deepening
+
+- Carlo Meijer and Bernard van Gastel, **“Self-Encrypting Deception: Weaknesses in the Encryption of Solid State Drives,”** *2019 IEEE Symposium on Security and Privacy*, pp. 72–87, DOI `10.1109/SP.2019.00088`: <https://www.cs.ru.nl/~cmeijer/publications/Self_Encrypting_Deception_Weaknesses_in_the_Encryption_of_Solid_State_Drives.pdf>
+- Open Universiteit research portal bibliographic record: <https://research.ou.nl/en/publications/self-encrypting-deception-weaknesses-in-the-encryption-of-solid-s/>
+
 ### Related internal cases
 
 - [`04-flash-virtual-mapping-logical-identity.md`](04-flash-virtual-mapping-logical-identity.md)
+- [`37-samsung-840-evo-old-data-performance-refresh.md`](37-samsung-840-evo-old-data-performance-refresh.md)
 - [`44-nvme13-deallocate-sanitize-forgetting.md`](44-nvme13-deallocate-sanitize-forgetting.md)
+- [`../docs/SYNTHESIS_22_ERASE_INVALIDATION_SANITIZATION_VERIFICATION.md`](../docs/SYNTHESIS_22_ERASE_INVALIDATION_SANITIZATION_VERIFICATION.md)
 - [`../docs/PHILOSOPHICAL_TEST_04_KIRSCHENBAUM_FORENSIC_MATERIALITY.md`](../docs/PHILOSOPHICAL_TEST_04_KIRSCHENBAUM_FORENSIC_MATERIALITY.md)
 
 ## Next work
 
-- named-product / named-controller sanitization-compliance evidence, especially where firmware versions and exact command paths are recoverable;
+- extend named-product / named-controller sanitization-compliance evidence beyond the 840/850 key-store deepening, especially where firmware revisions and exact erase/sanitize command paths are recoverable;
 - later ATA SANITIZE and NVMe Sanitize implementation studies;
-- cryptographic-erase verification, including key-store scope and recoverability;
+- direct cryptographic-erase experiments that execute a named sanitize/key-regeneration path and then independently search every relevant key store for usable old key material;
 - controller-hidden-area and over-provisioning forensics across newer NAND generations;
 - secure-delete composition with filesystems, databases, encryption layers, and cloud lifecycle policy;
-- analog-remanence work kept separate from this paper’s digital-remnant experiments.
+- analog-remanence work kept separate from FAST ’11’s digital-remnant experiments.
