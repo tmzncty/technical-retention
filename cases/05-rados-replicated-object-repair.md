@@ -2,12 +2,11 @@
 
 ## Scope
 
-- **Object / system:** Ceph's Reliable Autonomic Distributed Object Store (RADOS), as described in the 2006 OSDI Ceph paper.
-- **Date range:** bounded primarily to the 2006 prototype and papers immediately surrounding it.
+- **Object / system:** Ceph's Reliable Autonomic Distributed Object Store (RADOS), bounded primarily to the 2006–2007 research system and its immediately surrounding implementation record.
 - **Place / institution:** Storage Systems Research Center, University of California, Santa Cruz.
 - **Retention question:** how can one logical object remain current and recoverable when its physical replicas move, fail, become stale, or are replaced?
 
-This is **not** a history of Ceph, cloud object storage, distributed consensus, or every replication protocol. It uses one early RADOS design as a bounded case in which retention becomes a property of **replica placement + versioned currentness + temporary primary authority + failure detection + repair**.
+This is **not** a general history of Ceph, cloud object storage, consensus, or every replication protocol. It uses early RADOS as a bounded case in which retention becomes a property of **replica placement + versioned currentness + temporary primary authority + failure detection + peering + repair**.
 
 The central question is:
 
@@ -21,15 +20,21 @@ A replicated object remains usable only because the system also retains enough i
 - which replica state is current;
 - who is temporarily authoritative for ordering updates;
 - when an update is merely visible versus safely committed;
+- which prior participants must be consulted after membership changes;
+- which object versions should exist even when some copies are currently missing;
 - when a failed or stale replica must be replaced or repaired.
 
-That makes RADOS a useful transition from **location-independent identity inside one controller** (Case 04, mapped Flash) to **location-independent identity across many independently failing machines**.
+That makes RADOS a useful transition from **location-independent identity inside one controller** (Case 04, mapped Flash) to **location-independent identity across independently failing machines**.
+
+### Evidence deepening
+
+- [`evidence/05-rados-2005-2007-peering-pg-metadata-retention-deepening.md`](../evidence/05-rados-2005-2007-peering-pg-metadata-retention-deepening.md) — contemporaneous August 2005 source plus the mature 2007 RADOS presentation, separating payload completeness, peering/currentness knowledge, PG logs, missing-state metadata, and repair completion.
 
 ---
 
 ## Historical vocabulary
 
-The 2006 Ceph paper uses vocabulary that is already recognizably distributed-storage vocabulary rather than terminology reconstructed by this repository:
+The 2006–2007 RADOS record uses vocabulary that is already recognizably distributed-storage vocabulary rather than terminology reconstructed by this repository:
 
 - `object`;
 - `object store` / `object storage cluster`;
@@ -39,34 +44,65 @@ The 2006 Ceph paper uses vocabulary that is already recognizably distributed-sto
 - `primary`;
 - `cluster map`;
 - `epoch`;
-- `version number`;
+- `version` / version number;
+- `PG log`;
+- `last_update`;
+- `last_complete`;
+- `missing`;
+- `prior set`;
+- `peering`;
 - `replication`;
 - `failure detection`;
 - `recovery`;
 - `commit`.
 
-The paper describes clients and metadata servers as viewing the OSD cluster as a **single logical object store and namespace**, while responsibility for replication, failure detection, migration, and recovery is delegated to OSDs.[^ceph-osdi-5]
+The 2006 OSDI paper describes clients and metadata servers as viewing the OSD cluster as a **single logical object store and namespace**, while responsibility for replication, failure detection, migration, and recovery is delegated to OSDs.[^ceph-osdi-5]
+
+The 2007 RADOS paper and Sage Weil's dissertation sharpen the peering/recovery vocabulary by making PG history, completeness, and missing-state relations explicit.[^rados-2007][^weil-thesis]
 
 That historical language matters. We do not need to invent a modern analogy to say that the system itself presents one logical store while distributing physical embodiments.
+
+Project vocabulary used below includes:
+
+- **currentness reconstruction** — establishing which surviving history/replicas define the authoritative PG state after membership or failure changes;
+- **admission state** — enough reconciled history to permit a PG to resume ordinary service;
+- **repair debt** — expected replica/object state that is known to be missing or stale and still requires material reconstruction.
+
+Those three are engineering reconstructions, not period RADOS terms.
 
 ---
 
 ## Retained state
 
-For the bounded case, the retained state is **the current logical contents of an object together with enough ordering and placement state for the system to identify which physical replicas count as current**.
+For the bounded case, the retained state is **the current logical contents of an object together with enough ordering, placement, membership, and recovery history for the system to identify which physical replicas count as current and which required state is missing**.
 
 The object bytes alone are therefore insufficient.
 
-RADOS also depends on retained control state including:
+RADOS depends on retained control/history state including:
 
 - the current OSD cluster map and its epoch;
 - the mapping from object → placement group → ordered OSD set;
-- object / placement-group version numbers;
-- recent placement-group change logs or content summaries used during recovery.
+- object / PG version numbers;
+- recent PG logs;
+- `last_update` / `last_complete` boundaries in the 2007 design;
+- missing-object/version state used during recovery;
+- enough prior-participant history to avoid silently ignoring an OSD that may contain a newer update.
 
-This makes the case especially important for the repository's developing claim that **metadata can be constitutive of retention**.
+This makes the case especially important for the repository's claim that **metadata can be constitutive of retention**.
 
-In Case 04, Flash mapping metadata decides which physical block currently embodies a logical address. In RADOS, the relevant relation is distributed across placement rules, cluster membership, replica ordering, and version history.
+The deepening now makes the decomposition more explicit:
+
+```text
+payload replica bytes
+    != placement / membership state
+    != version / ordering state
+    != expected-content history
+    != missing / repair-debt state
+    != live peer-session state
+    != completed repair
+```
+
+In Case 04, Flash mapping metadata decides which physical block currently embodies a logical address. In RADOS, the relevant relation is distributed across placement rules, cluster membership, replica ordering, PG history, and recovery state.
 
 ---
 
@@ -98,7 +134,7 @@ So this case strengthens a distinction already visible in mapped Flash:
 
 But RADOS adds another layer:
 
-> **identity persistence does not require persistence of one privileged physical copy either.**
+> **identity persistence does not require persistence of one permanently privileged physical copy either.**
 
 That statement needs qualification. The protocol **does** select a primary OSD at a given moment to order writes. What is absent is a permanently privileged physical device that must remain the object's eternal home.
 
@@ -112,13 +148,11 @@ Ceph first maps objects into placement groups, then uses CRUSH to map each place
 
 The paper emphasizes that this placement does not depend on a conventional per-object location directory. To locate an object, a participant needs the placement group plus the OSD cluster map; clients, OSDs, and metadata servers can independently calculate placement.[^ceph-osdi-placement]
 
-The cluster map includes down/inactive devices and an epoch number that changes with membership state.[^ceph-osdi-placement]
+The cluster map includes device state and an epoch number that changes with membership state.[^ceph-osdi-placement]
 
 The separate 2006 CRUSH paper describes the same family of mechanism as a deterministic pseudo-random mapping from an object or object-group identifier to a list of devices, using a hierarchical cluster description and placement rules that can separate replicas across failure domains.[^crush-2006]
 
 ### Engineering reconstruction
-
-This changes the ontology of `where the object is`.
 
 `Location` is no longer only a stored coordinate. It is a **relation recomputed from identity + placement-group assignment + current cluster state + placement policy**.
 
@@ -128,7 +162,7 @@ That is a stronger form of location independence than Case 04's controller-local
 
 ---
 
-## Replica identity is not enough: currentness requires ordering
+## Replica multiplicity is not currentness
 
 A naive description of replication would say:
 
@@ -136,13 +170,15 @@ A naive description of replication would say:
 object A exists because there are N copies of A
 ```
 
-The 2006 RADOS design is more demanding.
+The bounded RADOS design is more demanding.
 
 ### Historical record
 
-RADOS uses a variant of **primary-copy replication**. Each placement group maps to an ordered list of `n` OSDs for `n`-way replication. Clients send writes to the first non-failed OSD, the primary. The primary assigns a new version number for the object and placement group, forwards the write to the replicas, and coordinates acknowledgement.[^ceph-osdi-replication]
+RADOS uses a variant of **primary-copy replication**. Each placement group maps to an ordered list of OSDs. Clients send writes to the primary; the primary assigns a version, forwards the update to replicas, and coordinates acknowledgement.[^ceph-osdi-replication]
 
-During recovery, OSDs compare placement-group version numbers. If the primary lacks the most recent state, it retrieves recent change logs or a content summary from current or former replicas to determine the correct placement-group contents. Only after the correct state has been determined and shared is I/O permitted; missing or outdated objects are then recovered from peers.[^ceph-osdi-recovery]
+During recovery, OSDs compare PG/version history. If the new primary lacks enough history, it obtains logs or content information from current or former participants before establishing the correct PG state.[^ceph-osdi-recovery]
+
+The 2007 description sharpens this further. It separates the most recently applied update (`last_update`) from the point through which required local object state is complete (`last_complete`), and uses a PG log plus missing-state information to describe updates/deletions and absent objects between those boundaries.[^weil-thesis]
 
 ### Engineering reconstruction
 
@@ -153,24 +189,153 @@ If replicas disagree, the system needs a rule for **currentness**.
 In this bounded design, currentness is reconstructed through:
 
 - temporary primary authority;
-- version numbers;
-- recent PG change logs / content summaries;
-- membership implied by the current cluster map;
-- peering before ordinary I/O resumes.
+- map epochs and membership history;
+- object / PG versions;
+- recent PG logs / content summaries;
+- missing-state information;
+- consultation of prior participants;
+- peering before normal service resumes.
 
-This means the retained object is partly **relational**:
+This means the retained object is partly relational:
 
 ```text
 object identity
-+ replica contents
-+ ordering/version state
-+ current membership/placement state
++ surviving replica contents
++ ordering/version history
++ placement/membership state
++ knowledge of missing/stale state
 = recoverable current object
 ```
 
 A stale physical replica can still contain bytes and yet fail to count as the current object state.
 
-This resembles logical invalidation in mapped Flash, but the failure mode is different. The stale RADOS replica may not have been deliberately invalidated; it can become obsolete simply because another replica accepted later ordered updates while it was absent.
+---
+
+## Peering is not just copying bytes
+
+### 2005 implementation witness
+
+Ceph's historical source commit `88086b83b7dcb0eb5c092e30fde8570475173f5e` (2005-08-06) is explicitly labelled by its own commit message as peering work that was `still not complete`.[^ceph-2005-peering]
+
+That early code predates the mature 2007 CRUSH/PG design and still uses `RG` / RUSH-era structures. It must not be treated as an implementation snapshot of the final 2007 algorithm.
+
+It nevertheless provides a valuable contemporaneous genealogy witness.
+
+`ceph/osd/OSD.h` distinguishes:
+
+- `RG_STATE_COMPLETE` — full local RG contents;
+- `RG_STATE_PEERED` — enough contact/content-list exchange with prior/current participants to know the RG state;
+- `RG_STATE_CLEAN` — fully replicated state on the primary.[^ceph-2005-osdh]
+
+The same source labels active `peers` as **soft state**, while `RG::store()` / `RG::fetch()` persist and reload `role`, `primary`, and `state` through collection attributes.[^ceph-2005-osdh]
+
+So even this unfinished prototype already distinguishes:
+
+```text
+local data completeness
+    != peering/currentness knowledge
+    != full replication
+
+persistent group state
+    != live peer-session state
+```
+
+### Map changes invalidate knowledge before they erase payload
+
+In the same revision, a newer map triggers an RG scan. Role/primary changes clear `RG_STATE_PEERED`, persist the changed group state, and initiate new peering work. Local object bytes need not disappear for prior peering knowledge to become insufficient.[^ceph-2005-osdcc]
+
+Thus:
+
+```text
+membership / authority change
+    -> old peering knowledge no longer sufficient
+    -> repeering required
+
+local bytes may physically survive throughout
+```
+
+### Peering exchanges object/version state
+
+The 2005 `handle_rg_peer()` path returns RG state, deleted-object state, an object inventory, and each object's `version`; the primary installs those responses as per-peer state.[^ceph-2005-osdcc]
+
+This is not yet the full later PG-log algorithm, but it proves that peering was already about **replica-state comparison**, not only liveness.
+
+---
+
+## PG metadata can outlive missing payload replicas
+
+The 2007 RADOS presentation makes the retention consequence explicit.
+
+OSDs maintain short-term PG logs recording recent update/delete operations and versions. Sage Weil's dissertation states that those logs are stored on disk and may also be present in RAM/NVRAM.[^weil-thesis]
+
+More importantly, the recovery design deliberately guards the PG log's record of **what the PG should contain even while some object replicas are missing locally**.[^rados-2007][^weil-thesis]
+
+This gives a new bounded distinction:
+
+```text
+payload copy present here
+    != system remembers that this object/version ought to exist here
+```
+
+That second relation can survive while material repair is still outstanding.
+
+### Engineering reconstruction: retained obligation
+
+The PG log / missing-state design lets the system retain not only positive state (`these copies exist`) but also a negative obligation (`this object/version is expected but absent or incomplete here`).
+
+So Case 05 now distinguishes:
+
+```text
+payload retention
+    != expected-state retention
+    != repair-debt retention
+```
+
+A missing replica does not become equivalent to a legitimate deletion merely because its bytes are absent from one OSD; the retained PG history can still say that the state ought to exist.
+
+This formulation is a project reconstruction from the mechanism, not period terminology.
+
+---
+
+## Peering reconstructs authoritative history before repair completes
+
+### Historical record
+
+The 2007 design considers map epochs and prior participants when a PG's active set changes. A new primary solicits state from OSDs that may have participated since the last successful peering interval, obtains needed log fragments, and can fall back to a fuller PG-content listing when logs are insufficient.[^rados-2007][^weil-thesis]
+
+The reconciled history tells the active replicas what the PG **should** contain even if some objects are not yet local everywhere. Payload recovery can then continue in the background under the described conditions.[^rados-2007]
+
+### Engineering reconstruction
+
+This sequence is better represented as:
+
+```text
+surviving physical replicas / remnants
+    ↓
+collect relevant prior-participant history
+    ↓
+reconstruct authoritative PG state
+    ↓
+identify missing / stale object versions
+    ↓
+admit the PG for service when protocol conditions are met
+    ↓
+continue material repair / redundancy restoration
+```
+
+Therefore:
+
+> **peering is a currentness-reconstruction and admission procedure, not merely a payload-copy operation.**
+
+And:
+
+```text
+serviceable / active
+    != every replica locally complete
+    != desired redundancy fully restored
+```
+
+This is bounded to the historical design described by the sources; do not project it unchanged onto every modern Ceph release.
 
 ---
 
@@ -184,11 +349,10 @@ The more relevant read-side retention issue is **authority and freshness**:
 
 - a physically present replica may be stale;
 - a newly recovered OSD may not immediately be trusted as current;
-- normal I/O waits until peering has established the correct placement-group state.
+- a membership change can require peering even though local payload survives;
+- normal service depends on protocol-established currentness, not mere readability of one disk copy.
 
-So the important comparison axis is no longer `destructive vs nondestructive read` alone.
-
-Distributed retention adds:
+Distributed retention therefore adds:
 
 > **Is this readable physical copy authoritative and current enough to answer?**
 
@@ -207,13 +371,9 @@ The authors explicitly distinguish two client concerns:
 1. making an update visible quickly for synchronization;
 2. knowing that it is safely replicated on disk and can survive failures.[^ceph-osdi-safety]
 
-The prototype's clients by default also retain writes locally until the final commit so that previously acknowledged updates can be replayed after a simultaneous power loss affecting all OSDs in the placement group.[^ceph-osdi-safety]
+The prototype's clients by default retain writes locally until final commit so previously acknowledged updates can be replayed after a simultaneous power loss affecting all OSDs in the placement group.[^ceph-osdi-safety]
 
 ### Engineering reconstruction
-
-This case therefore forces a new question for the repository:
-
-> **At what service-level threshold does an update count as retained?**
 
 A write may be:
 
@@ -227,19 +387,11 @@ acknowledged / visible
 committed to persistent local media
 ```
 
-These are not equivalent states.
+These are not equivalent retention states.
 
 The phrase `stored` can hide protocol-defined stages with different failure guarantees.
 
-This distinction should later be compared with:
-
-- filesystem `fsync`;
-- database WAL commit;
-- battery-backed caches;
-- quorum writes;
-- object-store durability acknowledgements.
-
-Do not project the 2006 RADOS acknowledgement semantics onto modern Ceph releases. This case is historically bounded to the design described in the paper.
+Do not project the 2006 acknowledgement semantics onto modern Ceph releases.
 
 ---
 
@@ -247,68 +399,52 @@ Do not project the 2006 RADOS acknowledgement semantics onto modern Ceph release
 
 ### Historical record
 
-The paper assumes that failures in very large clusters are normal rather than exceptional.[^ceph-osdi-replication]
+The OSDI paper assumes failures in very large clusters are normal rather than exceptional.[^ceph-osdi-replication]
 
-When an OSD is unreachable it is initially marked `down`, and primary responsibility can temporarily pass to the next OSD in affected placement groups. If it does not quickly recover, it is marked `out`; another OSD joins each affected placement group so the desired replication level can be restored.[^ceph-osdi-failure]
+When an OSD is unreachable it is initially marked `down`, and primary responsibility can temporarily pass to another OSD. If it remains unavailable it can be marked `out`; another OSD joins affected PGs so desired replication can be restored.[^ceph-osdi-failure]
 
 Clients with operations outstanding against the failed OSD resubmit to the new primary.[^ceph-osdi-failure]
 
 ### Engineering reconstruction
 
-The logical object's survival is therefore deliberately separated from survival of one member device.
-
-A device can disappear while the object remains:
+The logical object's survival is deliberately separated from survival of one member device:
 
 ```text
 before failure
 PG P → [osd1, osd2, osd3]
 
 osd1 fails
-PG P → primary authority moves
+PG P → authority changes / repeering
 
 osd1 remains out
-PG P → another OSD is selected
-       missing replica is reconstructed
+PG P → replacement participation
+       missing replica reconstructed
 ```
 
 This is **repair-triggered retention maintenance**.
 
-The maintenance trigger is neither:
-
-- continuous circulation (delay line);
-- destructive access (classic core);
-- elapsed-time deadline (DRAM);
-- capacity/reclamation pressure (mapped Flash).
-
-It is a detected loss or membership change that has reduced or threatened redundancy/currentness.
+The maintenance trigger is neither continuous circulation, destructive access, elapsed-time refresh, nor capacity reclamation. It is detected degradation/change in membership, redundancy, or currentness.
 
 ---
 
 ## Recovery: persistence as controlled re-creation
 
-The strongest cross-case bridge is recovery.
-
-### Historical record
-
-When cluster membership changes, OSDs recalculate their placement-group responsibility. Replicated placement groups peer: members exchange version information; the primary determines the correct most-recent PG state using logs or a content summary; then individual OSDs retrieve missing or outdated objects from peers.[^ceph-osdi-recovery]
-
-Recovery occurs across many placement groups in parallel, often toward different replacement OSDs.[^ceph-osdi-recovery]
-
-### Engineering reconstruction
+When cluster membership changes, OSDs recalculate PG responsibility. Peering reconstructs the most recent admissible PG history; missing or outdated objects are then recovered from peers.[^ceph-osdi-recovery][^rados-2007]
 
 The object can remain logically continuous even though:
 
 - one physical copy disappears permanently;
 - another copy becomes temporarily authoritative;
-- a new physical replica is later created on a different device.
+- a new physical replica is later created on a different device;
+- the system can remember that an object/version is missing before that missing copy has been recreated.
 
-This is a distributed version of a pattern already present in the delay line, destructive-read core, DRAM refresh, and mapped Flash:
+This extends a pattern already present in earlier cases:
 
 > **logical identity can survive physical re-creation.**
 
-RADOS extends that principle to **membership replacement**.
+RADOS adds both **membership replacement** and **retained negative/repair state**.
 
-The object persists not because all original copies survive, but because enough current state survives for the protocol to identify and reconstruct the desired replica set.
+The object persists not because all original copies survive, but because enough current payload **and enough currentness/history state** survive for the protocol to identify and reconstruct the intended replica state.
 
 ---
 
@@ -316,20 +452,13 @@ The object persists not because all original copies survive, but because enough 
 
 CRUSH placement rules can encode failure-domain separation. The 2006 Ceph paper gives an example in which three replicas are placed on OSDs in different cabinets to reduce exposure to a shared power circuit or edge-switch failure.[^ceph-osdi-placement]
 
-The CRUSH paper makes this motivation explicit: placement policies can use a hierarchy reflecting devices, shelves, cabinets, rows, and other infrastructure so replicas are separated across chosen failure domains.[^crush-2006]
+The CRUSH paper similarly motivates hierarchy-aware placement across devices, shelves, cabinets, rows, and other failure domains.[^crush-2006]
 
 This means the retained object's durability is partly a property of **physical topology**.
 
 Three copies in one failure domain do not provide the same protection as three copies distributed across independent domains.
 
-So distributed retention connects logical redundancy to:
-
-- power topology;
-- network topology;
-- racks/cabinets/rooms;
-- correlated failure assumptions.
-
-A philosophical account that sees only abstract duplication would miss the infrastructure that makes the copies genuinely independent enough to matter.
+So distributed retention connects logical redundancy to power/network/rack topology and correlated-failure assumptions.
 
 ---
 
@@ -344,59 +473,92 @@ The system makes persistence appear like a stable property of an object, but tha
 - primary selection;
 - version assignment;
 - replica forwarding;
-- peering;
-- change-log exchange;
-- missing/stale object recovery;
+- peering and prior-participant discovery;
+- PG-log/history exchange;
+- missing/stale object identification;
 - re-replication after permanent device loss;
 - data migration after topology changes.
 
 ### Human / institutional work
 
-The bounded paper abstracts most operator labor away, but the mechanism assumes someone maintains:
+The bounded papers abstract much operator labor away, but the mechanism assumes someone maintains:
 
 - functioning replacement hardware;
 - power/network failure domains;
 - monitor infrastructure;
 - cluster configuration and placement policy;
-- enough capacity for repair and migration.
+- enough spare capacity and bandwidth for repair/migration.
 
-Later infrastructure-scale cases should recover this labor explicitly rather than treating `self-healing` as literal absence of maintenance.
+`Self-healing` therefore must not be read as literal absence of maintenance.
 
 ---
 
 ## Failure / forgetting modes
 
-This case adds forms of technical forgetting that are not reducible to destruction of a storage cell.
-
 ### 1. Replica loss
 
-One physical embodiment is destroyed or becomes inaccessible.
-
-Logical state may survive if other current replicas remain.
+One physical embodiment is destroyed or becomes inaccessible. Logical state may survive if enough current state/history remains elsewhere.
 
 ### 2. Staleness
 
 A replica physically survives but lacks later ordered updates.
 
-This is especially important: **physical survival is not semantic currentness**.
+**Physical survival is not semantic currentness.**
 
-### 3. Insufficient surviving current state
+### 3. History/currentness loss
 
-If too many mutually necessary copies/current logs are lost before repair, the system may no longer be able to establish or reconstruct the intended object state.
+Payload fragments may remain while the system lacks enough version/log/membership history to establish which state is authoritative.
 
-The 2006 paper does not justify a universal quantitative durability claim; do not manufacture one.
+### 4. Missing-state forgetting
 
-### 4. Placement / membership state failure
+If the system loses the metadata that a particular object/version ought to exist, physical absence becomes harder to distinguish from legitimate non-membership/deletion. The 2007 design's guarded PG metadata is specifically relevant to avoiding that loss of repair knowledge.
 
-The ability to identify which OSDs should participate depends on a consistent cluster map and epoch progression.
+### 5. Insufficient surviving current state
 
-### 5. Recovery-state failure
+If too much mutually necessary payload/history is lost before repair, the intended object state may no longer be reconstructable.
 
-If version/log information needed to determine current PG contents is unavailable or inconsistent beyond protocol recovery, physical bytes may remain while currentness becomes ambiguous.
+The historical papers do not justify a timeless universal durability number; do not manufacture one.
 
-### 6. Correlated failure
+### 6. Placement / membership state failure
 
-Replica count is not sufficient if replicas share a failure domain. Placement policy therefore becomes part of retention engineering.
+The ability to identify which OSDs should participate depends on cluster-map/epoch progression.
+
+### 7. Correlated failure
+
+Replica count is not sufficient when replicas share failure domains. Placement policy therefore becomes part of retention engineering.
+
+---
+
+## Cross-case comparisons
+
+### Case 04 — mapped Flash
+
+```text
+mapped Flash
+logical address remains stable
+while physical embodiment changes
+because mapping/control state identifies current storage
+
+RADOS
+logical object remains stable
+while replica membership changes
+because placement/version/history state identifies current embodiments
+```
+
+The analogy stops there. Flash is controller-local remapping under erase/reclamation constraints; RADOS is a networked system with independently failing participants, temporary primary authority, peering, and distributed recovery.
+
+### Case 100 — ZFS DTL
+
+Case 100 preserves intervals in which replication was deficient so later repair can be bounded. RADOS PG log/missing state instead preserves ordered object history plus knowledge of object versions that should exist but may be missing on participants.
+
+The functional family resemblance is:
+
+```text
+repair-control metadata
+    != repaired payload itself
+```
+
+But DTL and RADOS PG logs are different algorithms, data structures, historical lineages, and failure models.
 
 ---
 
@@ -404,76 +566,40 @@ Replica count is not sufficient if replicas share a failure domain. Placement po
 
 ### Historical record (`H/P`)
 
-The 2006 OSDI paper directly establishes that the prototype:
+The primary sources directly establish that the bounded systems/designs:
 
-- presented the OSD cluster as a single logical object store;
-- mapped objects to placement groups and PGs to ordered OSD lists through CRUSH;
-- used a cluster map with epochs and device state;
-- used a primary-copy replication variant;
-- assigned version numbers to object / PG updates;
-- acknowledged replicated cache state separately from final disk commit;
-- changed primary responsibility after failure;
-- re-replicated data when an OSD remained out;
-- used version/log exchange and peering to establish correct PG state before I/O;
-- recovered missing/stale objects in the background.
+- present a logical object store over distributed physical OSDs;
+- map objects through PGs to ordered OSD sets;
+- use map epochs and temporary primary authority;
+- version object/PG updates;
+- distinguish visibility/acknowledgement from final disk commit;
+- re-peer after relevant membership changes;
+- compare replica state/history before accepting a reconstructed PG;
+- preserve PG logs/currentness metadata even while some payload replicas are missing;
+- recover missing/stale payload after currentness history has been established;
+- contain a 2005 implementation predecessor that already separates completeness, peering knowledge, clean replication, persisted group attributes, and soft peer-session state.
 
 ### Engineering reconstruction (`E`)
 
-From those documented mechanisms, this repository infers that:
+From those mechanisms, this repository infers that:
 
 - logical persistence is separable from persistence of any one physical replica;
 - `currentness` is a retained relation, not merely a property of bytes;
-- placement metadata / cluster state is part of what makes an object recoverable as the same object;
-- repair can be constitutive of long-lived durability even though it is triggered only after degradation;
-- a distributed store may have multiple service-level thresholds for when a write counts as retained.
+- peering is an admission/currentness-reconstruction procedure, not merely copying;
+- expected-state metadata can retain repair debt before the corresponding payload is restored;
+- negative state (`missing`) can be constitutive of recoverability;
+- distributed write success can have multiple protocol-defined retention thresholds.
 
-These are mechanistic interpretations, not quotations from the authors.
+### Functional analogy (`A`)
 
----
+- Case 04: logical identity can survive changing physical embodiment because control state identifies current state;
+- Case 100: repair-control metadata can persist an outstanding maintenance obligation independently of completed payload repair.
 
-## Philosophical / media-theoretical interpretation
+No shared implementation or genealogy is claimed.
 
-This case should **not** yet be used to claim that distributed object stores directly instantiate Stiegler's `tertiary retention`, Heidegger's `Bestand`, or any other philosophical category.
+### Philosophical interpretation (`Φ`)
 
-It does sharpen three technical problems that later philosophical synthesis must respect.
-
-### 1. Identity can become relational
-
-The `same object` is not tied to one material token. It is stabilized by name, placement relation, version/order state, and repair protocol.
-
-### 2. Persistence can be maintenance of replaceability
-
-Long-lived retention may depend less on making one carrier immortal than on ensuring that a failed carrier can be replaced before the system loses enough current state.
-
-### 3. Availability is not mere physical survival
-
-A physically intact but stale or unauthoritative replica does not automatically count as the presently usable object.
-
-These mechanisms place a hard limit on metaphors of digital storage as a static warehouse of identical copies.
-
----
-
-## Functional analogy
-
-A bounded analogy is useful between mapped Flash (Case 04) and RADOS:
-
-```text
-mapped Flash
-logical address stays stable
-while physical block changes
-because mapping metadata identifies current embodiment
-
-RADOS
-logical object stays stable
-while replica membership changes
-because placement/version/membership state identifies current embodiments
-```
-
-The analogy stops there.
-
-The 1993 Flash system is a single managed storage architecture with controller-local remapping and erase/reclamation constraints. RADOS is a networked distributed system with independently failing OSDs, temporary primary authority, replicated state, failure detection, and peer recovery.
-
-Do not present one as the historical descendant of the other.
+This case may later support arguments that identity can be stabilized by relations, histories, and obligations rather than one enduring material token. That interpretation remains downstream of the engineering record and is not needed to establish the case.
 
 ---
 
@@ -481,39 +607,55 @@ Do not present one as the historical descendant of the other.
 
 ### A primary still exists
 
-It would be too strong to say RADOS has `no privileged copy` without qualification.
-
-The bounded protocol gives one OSD temporary primary authority for ordering writes and serving reads. The safer statement is:
+It would be too strong to say RADOS has `no privileged copy` without qualification. The bounded protocol gives one OSD temporary primary authority. The safer statement is:
 
 > **No permanently privileged physical replica is required for the logical object's identity to persist.**
 
-### Replication is not consensus in the general sense
+### Peering metadata is not payload
 
-This case should not be used as a generic explanation of Paxos, Raft, Byzantine agreement, or quorum databases. It studies the specific replication/recovery scheme described by the 2006 Ceph paper.
+A surviving PG log can say what should exist, but it does not magically recreate lost bytes. Metadata retention can preserve the **knowledge of loss/repair obligation** without guaranteeing repair is possible under arbitrary multi-device failure.
+
+### `Active` is not the same as `fully repaired`
+
+The 2007 design can establish enough PG history for service while background recovery remains outstanding. Do not collapse availability/currentness/completeness/full replication into one state.
+
+### The 2005 source is deliberately immature
+
+Commit `88086b83...` says peering is still incomplete, uses RG/RUSH-era structures, and does not prove that every 2007 PG-log/prior-set mechanism already existed unchanged.
+
+### Replication is not generic consensus
+
+This case is not a generic explanation of Paxos, Raft, Byzantine agreement, or quorum databases.
 
 ### The 2006 system was a prototype
 
-The paper explicitly describes prototype status and notes incompletely implemented elements, including portions of monitor functionality and future work.[^ceph-osdi-future]
-
-Do not silently treat this paper as documentation of modern Ceph behavior.
+The OSDI paper explicitly describes prototype status and future work.[^ceph-osdi-future]
 
 ### `Self-healing` does not mean maintenance-free
 
-Automatic re-replication still consumes devices, bandwidth, spare capacity, software, monitoring, and operator-maintained infrastructure.
+Automatic repair still consumes devices, bandwidth, spare capacity, software, monitoring, and operator-maintained infrastructure.
 
 ### Multiple replicas do not guarantee arbitrary durability
 
-The paper gives a mechanism and performance/recovery argument, not a timeless probabilistic durability guarantee for all deployments. Replica count, correlated failures, placement rules, media failure, detection time, and repair time all matter.
+Replica count, correlated failures, placement rules, media failures, detection time, repair time, and survival of currentness/history state all matter.
 
 ---
 
 ## Cross-case result
 
-Case 05 adds three distinctions to the repository:
+Case 05 now adds five distinctions to the repository:
 
 > **replica multiplicity ≠ retained currentness**
 
 Several physical copies may exist while only some represent the current ordered state.
+
+> **physical survival ≠ admission to service**
+
+A replica may retain bytes while membership/history changes force repeering before it can count as current.
+
+> **repair metadata ≠ repaired payload**
+
+The system can retain what should exist and what is missing before material reconstruction is complete.
 
 > **retention can be repair-triggered**
 
@@ -523,15 +665,15 @@ Redundancy can degrade after failure and be restored by copying current state on
 
 A distributed write can pass through protocol-defined stages with different retention guarantees.
 
-Together with Cases 00–04, the maintenance regimes now include:
+Together with Cases 00–04, the maintenance regimes include:
 
 ```text
-human / positional maintenance      — abacus
+human / positional maintenance       — abacus
 continuous regenerative maintenance — delay line
-access-triggered restore            — classic core
-deadline-driven refresh             — DRAM
-capacity/reclaim-triggered work     — mapped Flash
-failure/repair-triggered work       — RADOS
+access-triggered restore             — classic core
+deadline-driven refresh              — DRAM
+capacity/reclaim-triggered work      — mapped Flash
+failure/repair-triggered work        — RADOS
 ```
 
 The sequence is comparative, not evolutionary.
@@ -540,30 +682,36 @@ The sequence is comparative, not evolutionary.
 
 ## Related repositories
 
-A search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no existing RADOS / Ceph / CRUSH treatment at the time of this case.
+A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated RADOS treatment during the 2005–2007 deepening slice.
 
-If a broader history of object storage, distributed storage, CRUSH, RAID, erasure coding, or storage networking is later added there, `technical-retention` should link to it rather than expanding this case into a general distributed-storage survey.
+A broader history of RUSH → CRUSH, EBOFS, peering implementation evolution, monitor/Paxos development, object storage, RAID, erasure coding, or storage networking belongs there if later developed. `technical-retention` should link to that work instead of expanding this case into a general distributed-storage history.
 
 ---
 
 ## Evidence status
 
-**Status: first-pass candidate, suitable for promotion after navigation updates.**
+**Status: first-pass candidate, materially strengthened; not yet promoted to `grounded`.**
 
-Strong points:
+Strong points now include:
 
 - primary peer-reviewed 2006 system paper with mechanism-level detail;
-- historical vocabulary is explicit;
-- placement, replication, safety acknowledgements, failure detection, and recovery are all described in the same source;
-- the case exposes a new maintenance trigger and a new identity/currentness distinction.
+- direct 2007 RADOS/dissertation evidence for PG logs, `last_update`, `last_complete`, missing state, prior-set peering, and guarded metadata;
+- a dated contemporaneous implementation artifact from August 2005 showing explicit peering/currentness state and persistent-vs-soft control-state separation;
+- explicit historical vocabulary;
+- a sharper retained-state decomposition separating payload, expected state, currentness, repair debt, and transient peer sessions.
 
-Still needed before `grounded`:
+This deepening closes two items from the previous debt list:
 
-1. inspect the OSDI PDF directly and record printed page / figure anchors for central claims;
-2. inspect the 2006 CRUSH paper directly rather than relying on its abstract/searchable rendering;
-3. inspect the 2007 RADOS paper to distinguish what changed between the OSDI prototype and the later object-store presentation;
-4. add one primary implementation artifact or contemporaneous code/documentation for PG peering / recovery semantics;
-5. add an independent scholarly or institutional history if a later historical claim depends on chronology beyond the papers themselves.
+- **inspect the 2007 RADOS presentation** — materially completed for the peering/PG-metadata slice;
+- **add one primary implementation artifact for peering/recovery semantics** — completed with the 2005 source witness, with immaturity caveats retained.
+
+Still needed before promotion:
+
+1. inspect the 2006 OSDI PDF directly and record printed page / figure anchors for the central claims already cited from the USENIX HTML;
+2. inspect the 2006 CRUSH paper directly for placement-specific claims and page anchors;
+3. if implementation genealogy is pursued, bridge the 2005 RG/RUSH-era code to the mature 2007 PG-log/prior-set implementation without assuming continuity;
+4. add an independent institutional/scholarly history only if later chronology claims extend beyond the primary papers/source;
+5. optionally add a bounded historical-revision reproduction/fault-injection experiment if buildability permits.
 
 ---
 
@@ -573,16 +721,26 @@ Still needed before `grounded`:
 
 [^ceph-osdi-placement]: Weil et al., “Ceph,” §5.1 “Data Distribution with CRUSH,” especially the object → placement group → ordered OSD mapping, cluster map, epoch, and replica placement-rule discussion. https://static.usenix.org/event/osdi06/tech/full_papers/weil/weil_html/index.html
 
-[^ceph-osdi-replication]: Weil et al., “Ceph,” §5.2 “Replication,” especially the primary-copy replication description and object / PG version assignment. https://static.usenix.org/event/osdi06/tech/full_papers/weil/weil_html/index.html
+[^ceph-osdi-replication]: Weil et al., “Ceph,” §5.2 “Replication,” especially primary-copy replication and object / PG version assignment. https://static.usenix.org/event/osdi06/tech/full_papers/weil/weil_html/index.html
 
 [^ceph-osdi-safety]: Weil et al., “Ceph,” §5.3 “Data Safety,” especially the distinction between replicated cache acknowledgement and later on-disk commit. https://static.usenix.org/event/osdi06/tech/full_papers/weil/weil_html/index.html
 
 [^ceph-osdi-failure]: Weil et al., “Ceph,” §5.4 “Failure Detection,” especially `down` versus `out`, primary failover, and re-replication. https://static.usenix.org/event/osdi06/tech/full_papers/weil/weil_html/index.html
 
-[^ceph-osdi-recovery]: Weil et al., “Ceph,” §5.5 “Recovery and Cluster Updates,” especially PG version exchange, recent-change logs/content summaries, peering, and retrieval of missing or outdated objects. https://static.usenix.org/event/osdi06/tech/full_papers/weil/weil_html/index.html
+[^ceph-osdi-recovery]: Weil et al., “Ceph,” §5.5 “Recovery and Cluster Updates,” especially PG version exchange, recent-change logs/content summaries, peering, and retrieval of missing/outdated objects. https://static.usenix.org/event/osdi06/tech/full_papers/weil/weil_html/index.html
 
 [^ceph-osdi-ebofs]: Weil et al., “Ceph,” §5.6 “Object Storage with EBOFS.” https://static.usenix.org/event/osdi06/tech/full_papers/weil/weil_html/index.html
 
-[^ceph-osdi-future]: Weil et al., “Ceph,” §9 “Future Work,” which explicitly records unfinished prototype elements and planned changes. https://static.usenix.org/event/osdi06/tech/full_papers/weil/weil_html/index.html
+[^ceph-osdi-future]: Weil et al., “Ceph,” §9 “Future Work.” https://static.usenix.org/event/osdi06/tech/full_papers/weil/weil_html/index.html
 
 [^crush-2006]: Sage A. Weil, Scott A. Brandt, Ethan L. Miller, and Carlos Maltzahn, “CRUSH: Controlled, Scalable, Decentralized Placement of Replicated Data,” *SC '06*, November 2006. Project-hosted paper: https://ceph.io/assets/pdfs/weil-crush-sc06.pdf
+
+[^rados-2007]: Sage A. Weil, Andrew W. Leung, Scott A. Brandt, and Carlos Maltzahn, “RADOS: A Scalable, Reliable Storage Service for Petabyte-scale Storage Clusters,” *PDSW '07*, pp. 35–44, DOI 10.1145/1374596.1374606. UCSC SSRC publication record: https://ssrc.us/pub/weil-pdsw07.html
+
+[^weil-thesis]: Sage A. Weil, *Ceph: Reliable, Scalable, and High-Performance Distributed Storage*, PhD dissertation, University of California, Santa Cruz, December 2007, Chapter 6, especially §§6.3.4–6.3.5, printed pp. 134–137. https://www.ceph.io/assets/pdfs/weil-thesis.pdf
+
+[^ceph-2005-peering]: Ceph historical commit `88086b83b7dcb0eb5c092e30fde8570475173f5e`, 2005-08-06, `lots of OSD peering stuff (still not complete)`. https://github.com/ceph/ceph/commit/88086b83b7dcb0eb5c092e30fde8570475173f5e
+
+[^ceph-2005-osdh]: `ceph/osd/OSD.h` at `88086b83...`, including `RGReplicaInfo`, `RGPeer`, `RG_STATE_COMPLETE`, `RG_STATE_PEERED`, `RG_STATE_CLEAN`, and `RG::store/fetch`. https://github.com/ceph/ceph/blob/88086b83b7dcb0eb5c092e30fde8570475173f5e/ceph/osd/OSD.h
+
+[^ceph-2005-osdcc]: `ceph/osd/OSD.cc` at `88086b83...`, especially map handling, `scan_rg`, `handle_rg_peer`, and `handle_rg_peer_ack`. https://github.com/ceph/ceph/blob/88086b83b7dcb0eb5c092e30fde8570475173f5e/ceph/osd/OSD.cc
