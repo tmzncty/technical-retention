@@ -8,6 +8,8 @@ Grounding record: [`../evidence/112-jedec-hbm3-2022-2023-rfm-grounding.md`](../e
 
 ARFM chronology/policy deepening: [`../evidence/112-jedec-hbm3-2022-2023-arfm-deepening.md`](../evidence/112-jedec-hbm3-2022-2023-arfm-deepening.md).
 
+Named commercial controller-support deepening: [`../evidence/112-rambus-2021-2026-hbm3-controller-rfm-commercial-support-deepening.md`](../evidence/112-rambus-2021-2026-hbm3-controller-rfm-commercial-support-deepening.md).
+
 ## Scope
 
 Case 54 already grounds the broad DDR5 split-authority pattern: a DRAM may advertise an RFM requirement/thresholds while the controller retains activation-pressure state and schedules time for opaque in-DRAM work. Case 112 asks a narrower HBM3 question:
@@ -184,6 +186,79 @@ This distinction matters because Case 112 already separates public controller-si
 
 Full source mapping and limits are recorded in [`../evidence/112-jedec-hbm3-2022-2023-arfm-deepening.md`](../evidence/112-jedec-hbm3-2022-2023-arfm-deepening.md).
 
+## 9. Named commercial controller witness: Rambus HBM3E/HBM3 Controller IP
+
+A new bounded product-level witness closes the shallowest form of the earlier `named controller implementation` debt without pretending that public marketing material exposes internal scheduling logic.
+
+### H/P — HBM3-ready controller engineering predates the final public HBM3 standard
+
+Rambus announced an **HBM3-ready memory interface subsystem** on **16 August 2021**, consisting of a digital controller plus PHY. The release advertised HBM3 RAS support and a built-in hardware-level performance activity monitor.
+
+That dated record is useful as a pre-JESD238 controller-engineering floor, but it does **not** explicitly mention RFM, RAA, or ARFM.
+
+> **2021 HBM3-ready + RAS/activity monitor != proved 2021 RFM support claim**.
+
+The current RFM wording must not be back-projected into that announcement.
+
+### H/P — the controller became a named licensable product
+
+On **25 October 2023**, Rambus announced HBM3 Memory Controller IP supporting up to 9.6 Gbps, described it as modular/configurable, said it could be integrated with a customer's choice of third-party HBM3 PHY, and stated that the controller was available for licensing.
+
+That establishes a commercial controller-product boundary rather than a standards-only example. The dated release itself still does not enumerate RFM.
+
+### H/P — the current controller feature list explicitly includes RFM
+
+The current Rambus HBM3E/HBM3 Controller IP page, inspected **14 September 2026**, explicitly lists:
+
+- `Refresh Management (RFM) support`;
+- self-refresh and power-down low-power modes;
+- HBM3 RAS features;
+- a built-in hardware-level performance Activity Monitor;
+- DFI compatibility and AXI/native user interfaces.
+
+Therefore the bounded public-product claim is now grounded:
+
+> **at least one named commercial HBM3 controller-IP product explicitly advertises RFM support**.
+
+The exact first date on which Rambus publicly used that RFM wording remains unknown because the current product page is undated.
+
+### E — feature support does not reveal the bookkeeping implementation
+
+The tempting shortcut is rejected. Rambus calls the other block a **performance Activity Monitor**; the public page does not say it stores per-bank RAA, applies `RAAIMT`/`RAAMMT`/`RAADEC`, or drives RFM scheduling.
+
+```text
+RFM support
+    + Activity Monitor
+    !=
+proved JEDEC RAA implementation
+```
+
+Likewise:
+
+```text
+controller feature support
+    != runtime RFM enabled in every system
+    != ARFM capability
+    != ARFM level selected
+    != particular RFM command currently due
+```
+
+The standard contract and the commercial feature claim are complementary evidence layers, not interchangeable ones.
+
+### E — controller, PHY, and DRAM are separate maintenance boundaries
+
+Rambus describes the controller as combinable with a customer-selected PHY. For retention analysis this supports a bounded decomposition:
+
+```text
+controller command / scheduling logic
+    != PHY electrical transport
+    != opaque in-DRAM maintenance
+```
+
+It does not prove the location of every counter in every customer integration.
+
+Detailed source mapping and explicit non-claims are in [`../evidence/112-rambus-2021-2026-hbm3-controller-rfm-commercial-support-deepening.md`](../evidence/112-rambus-2021-2026-hbm3-controller-rfm-commercial-support-deepening.md).
+
 ## Cross-case comparison
 
 ### Case 54 — DDR5 RFM
@@ -228,7 +303,13 @@ It does **not** prove that HBM3 RFM derives from that paper, implements PARA, or
 
 `JESD238` is dated January 2022; `JESD238A` is dated January 2023. Those dates establish a public standard interface by then, not the origin of refresh management. Earlier patents, vendor-private mechanisms, committee drafts, or DDR5/HBM development may predate publication.
 
+Rambus's August-2021 HBM3-ready controller/subsystem announcement now supplies a pre-final-standard commercial engineering floor, but because that release does not explicitly name RFM it does not establish a pre-2022 RFM-publication floor.
+
 > **January 2022 HBM3 publication ≠ RFM invention date**
+
+and:
+
+> **pre-standard HBM3-ready controller engineering ≠ pre-standard public RFM claim**.
 
 ## Claim ledger
 
@@ -243,6 +324,12 @@ It does **not** prove that HBM3 RFM derives from that paper, implements PARA, or
 | `RAAMMT` can block further ACTIVATE until maintenance | H/P | strong |
 | sufficiently long self-refresh may reset RAA | H/P | strong |
 | RFM target scope differs from retained-set coverage | E | strong |
+| Rambus publicly announced an HBM3-ready controller+PHY subsystem in Aug. 2021 | H/P | strong |
+| the inspected Aug. 2021 release explicitly names RFM | X | rejected |
+| Rambus HBM3 Memory Controller IP was available for licensing in Oct. 2023 | H/P | strong |
+| current Rambus HBM3E/HBM3 controller page explicitly lists RFM support | H/P | strong for current product contract |
+| Rambus performance Activity Monitor is proven to be JEDEC RAA bookkeeping | X | rejected |
+| controller/PHY/DRAM are separable maintenance-responsibility boundaries | E | strong as bounded reconstruction |
 | RAA threshold equals physical corruption threshold | X | rejected |
 | RFM completion proves a particular victim-row rewrite | X | rejected |
 | HBM3 `RFMpb` equals DDR5 `RFMsb` geometry | X | rejected |
@@ -251,10 +338,13 @@ It does **not** prove that HBM3 RFM derives from that paper, implements PARA, or
 
 ## Open work
 
-Pre-2022 committee/patent genealogy; named HBM3 stack and controller behavior; independent HBM3 command traces; hidden victim selection; commercial ARFM level-selection policy and later HBM evolution beyond the inspected 2022–2023 contract; threshold/fault injection; performance/energy validation.
+Pre-2022 committee/patent genealogy remains open. The **named commercial controller public-support witness is now closed at feature-list level**, but detailed controller behavior remains open: archived/datable first RFM-support wording, actual RAA bookkeeping/scheduling, commercial ARFM level-selection policy, and independent HBM3 command traces. Named HBM3 stack/device parameter values, hidden victim selection, threshold/fault injection, customer deployment evidence, and performance/energy validation also remain open. Later HBM evolution beyond the inspected 2022–2023 standards contract remains a separate revision-specific question.
 
 ## Sources
 
 1. JEDEC, **JESD238 — High Bandwidth Memory DRAM (HBM3)**, January 2022, especially §6.3.2.6–§6.3.2.7 and `DEVICE_ID` RAA/RFM fields. Public text mirror: <https://studylib.net/doc/28350036/jesd238-hbm3>.
 2. JEDEC, **JESD238A — High Bandwidth Memory DRAM (HBM3)**, January 2023, revision of JESD238 January 2022. Public text mirror: <https://studylib.net/doc/27298996/jesd238a>.
 3. Yoongu Kim et al., **“Flipping Bits in Memory Without Accessing Them: An Experimental Study of DRAM Disturbance Errors,”** ISCA 2014. CMU institutional page: <https://istc-cc.cmu.edu/publications/papers/2014/kim-isca14_abs.shtml>.
+4. Rambus Inc., **“Rambus Advances AI/ML Performance with 8.4 Gbps HBM3-Ready Memory Subsystem,”** 16 August 2021: <https://investor.rambus.com/press-releases/press-release-details/2021/Rambus-Advances-AIML-Performance-with-8.4-Gbps-HBM3-Ready-Memory-Subsystem/default.aspx>.
+5. Rambus Inc., **“Rambus Boosts AI Performance with 9.6 Gbps HBM3 Memory Controller IP,”** 25 October 2023: <https://investor.rambus.com/press-releases/press-release-details/2023/Rambus-Boosts-AI-Performance-with-9.6-Gbps-HBM3-Memory-Controller-IP/default.aspx>.
+6. Rambus, **“HBM3E / HBM3 Controller IP,”** official current product page, inspected 14 September 2026: <https://www.rambus.com/interface-ip/hbm/hbm3-controller/>.
