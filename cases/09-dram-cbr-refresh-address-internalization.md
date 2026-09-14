@@ -2,26 +2,28 @@
 
 ## Status
 
-**`grounded`** — bounded to Texas Instruments' TMS4164 contrast, TMS4256/TMS4257 refresh behavior, and TI's 1984-filed on-chip refresh-counter design.
+**`grounded`** — bounded to Texas Instruments' TMS4164 contrast, TMS4256/TMS4257 refresh behavior, TI's 1984-filed on-chip refresh-counter design, and a late-1999 Micron SDRAM successor comparison separating externally repeated AUTO REFRESH from device-clocked SELF REFRESH.
 
 Grounding record: [`../evidence/09-ti-cbr-refresh-address-grounding.md`](../evidence/09-ti-cbr-refresh-address-grounding.md).
 
 Deepening record: [`../evidence/09-dram-refresh-counter-initialization-test-deepening.md`](../evidence/09-dram-refresh-counter-initialization-test-deepening.md).
 
+SDRAM control-boundary deepening: [`../evidence/09-micron-1999-sdram-auto-vs-self-refresh-deepening.md`](../evidence/09-micron-1999-sdram-auto-vs-self-refresh-deepening.md).
+
 ---
 
 ## Scope
 
-- **Object / system:** a bounded transition from externally enumerated DRAM refresh rows toward CAS-before-RAS refresh with an on-chip refresh-address counter.
-- **Date range:** 1983–1986 for the central commercial/device evidence; a 1984-filed TI patent supplies the mechanism-level design account. A January 1988 revision of the TMS4256/TMS4257 sheet was directly inspected only as a page-stable facsimile witness to the same documented device-family behavior.
-- **Primary comparison:** TMS4164 as an explicitly named commercial device lacking the patented refresh counter versus the TMS4256/TMS4257 family's documented CAS-before-RAS and hidden-refresh behavior.
-- **Question:** what changes when the DRAM still has a periodic retention deadline but part of the work required to cover all rows moves from system logic onto the memory chip?
+- **Object / system:** a bounded transition from externally enumerated DRAM refresh rows toward CAS-before-RAS refresh with an on-chip refresh-address counter, followed by a bounded late-1999 SDRAM comparison in which AUTO REFRESH and SELF REFRESH place recurring refresh cadence under different authorities.
+- **Date range:** 1983–1986 for the central commercial/device evidence; a 1984-filed TI patent supplies the mechanism-level design account. A January 1988 revision of the TMS4256/TMS4257 sheet was directly inspected only as a page-stable facsimile witness to the same documented device-family behavior. Micron's November-1999 64 Mb SDRAM documentation is used only as a later product-level successor witness for AUTO REFRESH versus SELF REFRESH control partition.
+- **Primary comparison:** TMS4164 as an explicitly named commercial device lacking the patented refresh counter versus the TMS4256/TMS4257 family's documented CAS-before-RAS and hidden-refresh behavior; the later Micron SDRAM comparison asks what changes when recurring refresh clocking, not only refresh-row enumeration, can move on-chip after an explicit mode transition.
+- **Question:** what changes when the DRAM still has a periodic retention deadline but parts of the work required to cover all rows move from system logic onto the memory chip?
 
-This is **not** a general history of DRAM evolution. It does not cover SDRAM auto-refresh commands, DDR per-bank refresh, temperature-compensated refresh, retention-aware refresh research, or all meanings of `self refresh`.
+This is **not** a general history of DRAM evolution. The SDRAM material is a bounded AUTO REFRESH / SELF REFRESH control comparison, not a JEDEC genealogy or a full SDRAM history. DDR per-bank refresh, temperature-compensated refresh, retention-aware refresh research, and broad controller/test-mode history remain outside this case unless needed for a later retention comparison.
 
 Case 03 already grounds the physical reason dynamic semiconductor state needs periodic reconstruction. This case starts one layer higher:
 
-> **Does moving refresh-row enumeration on-chip change the retention mechanism, the maintenance obligation, or merely the location of some maintenance control?**
+> **Does moving refresh-row enumeration or recurring refresh cadence on-chip change the retention mechanism, the maintenance obligation, or the location and authority of maintenance control?**
 
 ---
 
@@ -46,7 +48,14 @@ row selection
 sense / restoration
 ```
 
-The case matters because these functions need not live at the same layer.
+The Micron SDRAM successor evidence adds another distinction:
+
+```text
+maintenance mode entry / exit
+    != recurring refresh-cadence authority
+```
+
+The case matters because these functions need not live at the same layer or under the same authority.
 
 ---
 
@@ -60,17 +69,20 @@ The period sources use:
 - `hidden refresh`;
 - `refresh address`;
 - `refresh counter`;
-- `self refresh circuitry` in the title and description of TI's US4653030A.
+- `self refresh circuitry` in the title and description of TI's US4653030A;
+- `AUTO REFRESH` and `SELF REFRESH` in Micron's 1999 SDRAM documentation.
 
 ### Terminology warning
 
-`Self refresh` in the 1984-filed patent must be read from its disclosed mechanism, not from later DRAM expectations. The patent's refresh counter is activated by a CAS-before-RAS sequence and explicitly says the processor or memory controller external to the memory device controls how often that sequence occurs.
+`Self refresh` in the 1984-filed TI patent must be read from its disclosed mechanism, not from later DRAM expectations. The patent's refresh counter is activated by a CAS-before-RAS sequence and explicitly says the processor or memory controller external to the memory device controls how often that sequence occurs.
+
+Micron's 1999 `SELF REFRESH`, by contrast, documents a mode in which the SDRAM supplies internal clocking and performs recurring refresh cycles after externally requested entry.
 
 Therefore:
 
-> **historical `self refresh circuitry` in this source ≠ automatically autonomous oscillator/timer-driven self-refresh in later DRAM generations.**
+> **same historical phrase `self refresh` ≠ same distribution of retention work.**
 
-The period term is historical record. Any later taxonomy is functional comparison only.
+The period terms are historical record. Any cross-period taxonomy is functional comparison only.
 
 ---
 
@@ -173,6 +185,81 @@ and conversely a correctly progressing counter does not prove that external logi
 
 The counter-test result is also event-bounded evidence, not a permanent certificate of future refresh correctness.
 
+---
+
+## 1999 SDRAM AUTO REFRESH vs SELF REFRESH control-boundary deepening
+
+Detailed record: [`../evidence/09-micron-1999-sdram-auto-vs-self-refresh-deepening.md`](../evidence/09-micron-1999-sdram-auto-vs-self-refresh-deepening.md).
+
+### H/P — AUTO REFRESH internalizes addressing without internalizing repeated-command cadence
+
+Micron's November-1999 64 Mb SDRAM datasheet (`MT48LC16M4A2 / MT48LC8M8A2 / MT48LC4M16A2`, `Rev. 11/99`) explicitly calls `AUTO REFRESH` analogous to conventional CAS-before-RAS refresh.
+
+The same paragraph says the command is **nonpersistent** and must be issued each time refresh is required. The refresh address is generated internally; ordinary address bits are `Don't Care` during the command. For the documented family, 4,096 AUTO REFRESH cycles are required within 64 ms.
+
+So this later product preserves the core Case-09 split:
+
+```text
+internal refresh-row enumeration
+    !=
+internal recurring refresh-cadence authority
+```
+
+### H/P — SELF REFRESH additionally internalizes recurring clocking after entry
+
+The adjacent `SELF REFRESH` description says the SDRAM can retain data without external clocking. Entry resembles AUTO REFRESH except CKE is held low; once the command is registered, the SDRAM provides its own internal clocking and performs its own AUTO REFRESH cycles while the mode remains active.
+
+The bounded control partition is therefore:
+
+```text
+AUTO REFRESH
+    external system/controller: repeated refresh commands / cadence
+    DRAM: row enumeration + refresh execution
+
+SELF REFRESH steady state
+    external system/controller: establishes/maintains the mode condition
+    DRAM: internal clocking + recurring refresh + row enumeration + execution
+```
+
+This is product-level evidence for internal scheduling within the entered self-refresh regime. It is not a claim that the DRAM is globally independent of system power, mode control, or exit timing.
+
+### H/P — both modes share the row refresh counter but not the same authority relation
+
+Micron states that AUTO REFRESH and SELF REFRESH both use the row refresh counter.
+
+That directly supplies a useful negative control:
+
+> **shared maintenance-control state != shared scheduling authority.**
+
+The current counter phase may be common infrastructure even while the authority that advances recurring maintenance differs by mode.
+
+### H/P — SELF REFRESH exit is a maintenance handoff, not an instantaneous semantic flip
+
+Micron requires the external clock to be stable before CKE returns high and requires NOP commands during `tXSR` because an internal refresh may still be in progress.
+
+Thus:
+
+```text
+exit requested
+    != internal refresh necessarily already complete
+    != normal command service immediately available
+```
+
+After the exit interval, ordinary AUTO REFRESH cadence again becomes an external obligation.
+
+### E — a maintenance mode can retain a control regime rather than a history
+
+AUTO REFRESH is explicitly nonpersistent: the request must recur. SELF REFRESH instead establishes a mode in which refresh recurrence continues internally until exit.
+
+This makes a bounded distinction between:
+
+```text
+repeated maintenance request
+    vs
+retained maintenance regime
+```
+
+The mode is not application history. It is retained control state that changes who must initiate the recurring work needed to preserve payload.
 
 ---
 
@@ -188,11 +275,13 @@ As in the grounded DRAM case, the memory array holds volatile dynamic state that
 
 The refresh counter has a current count that determines which row will be selected on a later refresh request. This count is not application payload and does not preserve user history. It is nevertheless retained control state that helps ensure maintenance is distributed across the row set.
 
+In the Micron SDRAM successor comparison, the entered SELF REFRESH mode is another control condition: it changes the source of recurring refresh clocking without turning that condition into application history.
+
 This gives the repository a recursive retention relation:
 
-> **a mechanism for preserving payload can itself depend on a smaller retained state that organizes preservation work.**
+> **a mechanism for preserving payload can itself depend on smaller retained states or modes that organize preservation work.**
 
-That is an engineering reconstruction from the documented counter role, not a philosophical claim that the counter is an archive or memory in the cultural sense.
+That is an engineering reconstruction from the documented counter/mode roles, not a philosophical claim that the counter or mode is an archive or memory in the cultural sense.
 
 ---
 
@@ -221,6 +310,28 @@ In the bounded TI design:
 
 The maintenance obligation survives while one part of its control path migrates across the package boundary.
 
+### SDRAM AUTO REFRESH regime
+
+In the bounded Micron 1999 product:
+
+1. external logic issues each AUTO REFRESH command;
+2. the command is nonpersistent;
+3. refresh addressing is internal;
+4. the DRAM performs refresh work;
+5. enough commands must still be supplied within the documented refresh window.
+
+### SDRAM SELF REFRESH regime
+
+After explicit mode entry in the bounded Micron product:
+
+1. external logic establishes the required entry/mode condition;
+2. the DRAM supplies internal clocking;
+3. recurring refresh proceeds internally;
+4. the shared row refresh counter continues to organize row coverage;
+5. exit requires a handoff interval before normal command service resumes.
+
+Thus retention-work locus is mode-dependent rather than a single permanent property of the device.
+
 ---
 
 ## Addressing and access geometry
@@ -235,17 +346,17 @@ The normal row/column address designates payload for read/write service.
 
 The refresh row designates payload for reconstruction, not because software requested that data, but because the array must revisit it before a retention deadline.
 
-CAS-before-RAS therefore creates a bounded case in which:
+CAS-before-RAS and later SDRAM AUTO/SELF REFRESH therefore create bounded cases in which:
 
-> **service addressing and maintenance addressing share row-selection infrastructure but can have different address sources.**
+> **service addressing and maintenance addressing share row-selection infrastructure but can have different address sources and different scheduling authorities.**
 
-The same physical row can be selected for an application access using an external address or selected for retention work using an internally generated refresh address.
+The same physical row can be selected for an application access using an external address or selected for retention work using internally generated refresh addressing.
 
 ---
 
 ## Read / write / refresh semantics
 
-This case does not redefine DRAM read/write physics. Its contribution is the additional operation class.
+This case does not redefine DRAM read/write physics. Its contribution is the additional operation classes and control regimes.
 
 ### RAS-only refresh
 
@@ -265,6 +376,14 @@ This means:
 
 The system can be actively maintaining retained state while one interface appears unchanged.
 
+### SDRAM AUTO REFRESH
+
+A command explicitly requests one refresh operation while the DRAM supplies the internal refresh address. The command's nonpersistent nature keeps recurrence as an external responsibility.
+
+### SDRAM SELF REFRESH
+
+A mode-entry command establishes a regime in which recurring refresh clocking proceeds internally until exit. The product documentation therefore distinguishes a one-shot externally repeated request from a retained maintenance regime.
+
 ---
 
 ## Maintenance and labor
@@ -273,17 +392,18 @@ The case should not be narrated as `refresh became automatic`.
 
 A more accurate decomposition is:
 
-| Function | Bounded locus |
-| --- | --- |
-| physical need to refresh before the deadline | array/device physics |
-| decision that refresh cycles must occur often enough | external processor/controller in the bounded patent |
-| request encoding | CAS-before-RAS timing sequence |
-| next refresh-row enumeration | on-chip refresh counter |
-| row selection / sensing / restoration | on-chip memory circuitry |
+| Function | TI bounded CBR locus | Micron 1999 AUTO REFRESH | Micron 1999 SELF REFRESH steady state |
+| --- | --- | --- | --- |
+| physical need to refresh before deadline | array/device physics | array/device physics | array/device physics |
+| recurring cadence authority | external processor/controller | external system/controller | internal clocking after external mode entry |
+| request / mode establishment | CAS-before-RAS timing sequence | AUTO REFRESH command each time | SELF REFRESH entry + maintained CKE condition |
+| next refresh-row enumeration | on-chip refresh counter | on-chip refresh controller/counter | on-chip refresh controller/counter |
+| row sensing / restoration | on-chip memory circuitry | on-chip memory circuitry | on-chip memory circuitry |
+| transition back to ordinary operation | not this mode distinction | ordinary command regime | external clock stabilization + `tXSR` handoff |
 
-The relevant historical change is **redistribution of retention work**, not disappearance of work.
+The relevant historical changes are **redistributions of retention work and authority**, not disappearance of work.
 
-This is closely related to the repository's maintenance-visibility audit: automation can remove a responsibility from one interface or board-level circuit while making another internal state/path more important.
+This is closely related to the repository's maintenance-visibility audit: automation can remove a responsibility from one interface or board-level circuit while making another internal state/path or mode more important.
 
 ---
 
@@ -293,19 +413,27 @@ The mechanism distinguishes several failures that would all look like `refresh f
 
 ### Missed deadline
 
-External logic causes too few refresh cycles before the retention interval expires.
+External logic causes too few refresh cycles before the retention interval expires in a regime where cadence remains external.
 
 ### Wrong operation selection
 
-The control sequence fails to invoke the intended refresh path.
+The control sequence fails to invoke the intended refresh path or maintenance mode.
 
 ### Enumeration failure
 
 The internal counter/address path fails to cover the required rows correctly.
 
+### Internal cadence failure
+
+Within a documented self-refresh regime, internal recurring clocking fails to cause the required refresh work.
+
 ### Reconstruction-path failure
 
 The correct row is selected, but sensing/restoration does not correctly reconstruct its logical state.
+
+### Handoff failure
+
+A system violates entry/exit timing or assumes normal service before the documented transition has completed.
 
 These are not asserted as specific measured silicon failure rates. They are architecture-level failure classes implied by the sourced partition of functions.
 
@@ -321,16 +449,19 @@ The retention requirement can remain stable while maintenance responsibility mov
 
 ### E — internalized refresh addressing ≠ autonomous refresh scheduling
 
-The TI patent directly says the processor or memory controller controls the frequency of the CAS-before-RAS sequence. Therefore `internal refresh address` and `internal refresh schedule` are different properties.
+The TI patent directly says the processor or memory controller controls the frequency of the CAS-before-RAS sequence. Micron's 1999 AUTO REFRESH similarly uses internal addressing while requiring each refresh command externally; only SELF REFRESH adds internal recurring clocking after entry.
+
+Therefore `internal refresh address` and `internal refresh schedule` are demonstrably different properties even within closely related refresh regimes.
 
 This gives a cleaner vocabulary for future cases:
 
 ```text
 refresh deadline
-refresh scheduler
-refresh trigger
+refresh scheduler / cadence authority
+refresh trigger or mode-entry mechanism
 refresh enumerator
 refresh executor / restorer
+transition / handoff semantics
 ```
 
 Do not collapse them back into one word, `refresh`.
@@ -343,7 +474,20 @@ Hidden refresh can maintain an output while refresh cycles proceed. The operatio
 
 The refresh counter itself must carry enough sequential state between refresh requests to choose successive rows. This is not payload retention, but it is constitutive control state for the bounded maintenance scheme.
 
-The deepening record adds a horizon boundary: the TI disclosed phase is initialized at power-on rather than preserved as a durable cross-power checkpoint. The state is constitutive **during the maintenance regime** without needing to become application history.
+The earlier deepening record adds a horizon boundary: the TI disclosed phase is initialized at power-on rather than preserved as a durable cross-power checkpoint. The Micron evidence adds an authority boundary: the same row refresh counter participates in both AUTO REFRESH and SELF REFRESH even though cadence authority differs by mode.
+
+> **maintenance-control-state location != maintenance-authority location.**
+
+### E — autonomy is regime-scoped
+
+Micron's SELF REFRESH evidence supports autonomous refresh recurrence only after explicit entry and only while the required mode condition is maintained. Entry and exit still belong to a system/device handoff.
+
+Thus:
+
+```text
+internal recurring refresh
+    != globally autonomous memory system
+```
 
 ---
 
@@ -351,35 +495,51 @@ The deepening record adds a horizon boundary: the TI disclosed phase is initiali
 
 ### I — persistence can involve relocation of responsibility
 
-This case sharpens the project's maintenance thesis without turning it into a metaphor. The relevant technical fact is not merely that `DRAM needs refresh`; that was already established. The new fact is that the functions making refresh possible can migrate across an interface while the underlying physical obligation remains.
+This case sharpens the project's maintenance thesis without turning it into a metaphor. The relevant technical fact is not merely that `DRAM needs refresh`; that was already established. The new fact is that the functions making refresh possible can migrate across an interface or switch authority by mode while the underlying physical obligation remains.
 
-This makes `where is the maintenance?` as important as `is there maintenance?`
+This makes `where is the maintenance?` and `who currently initiates it?` as important as `is there maintenance?`
 
 ### I — invisibility is a relation between mechanism and observer
 
-Hidden refresh is a concrete engineering example in which continued output availability can coexist with ongoing reconstruction beneath that interface. It supports the project's bounded claim that invisible work must always be specified relative to an observer/layer.
+Hidden refresh is a concrete engineering example in which continued output availability can coexist with ongoing reconstruction beneath that interface. SELF REFRESH adds a second bounded example: recurring maintenance may continue without external clocking even though the system still controls entry and exit conditions.
 
-This does not by itself establish Heideggerian `Bestand`, Stieglerian tertiary retention, or a general philosophy of technological invisibility.
+These observations do not by themselves establish Heideggerian `Bestand`, Stieglerian tertiary retention, or a general philosophy of technological autonomy.
 
 ---
 
 ## Functional analogies and limits
 
-### A — analogy to later autonomous self-refresh
+### A/H/P — bounded later comparison to SDRAM SELF REFRESH
 
-Later DRAM can internalize more of the scheduling/timing needed for self-refresh. That makes it useful as a future comparison.
+Micron's November-1999 product documentation provides the later comparison that the earlier Case-09 text had intentionally left open.
 
-But this bounded case does **not** establish that mechanism. The historical TI patent explicitly leaves refresh-request cadence with external processor/controller logic.
+It does **not** create a genealogy. The bounded comparison is:
+
+```text
+TI 1984-filed CBR-counter design
+    internal row enumeration
+    external request cadence
+
+Micron 1999 AUTO REFRESH
+    internal row enumeration
+    external repeated-command cadence
+
+Micron 1999 SELF REFRESH
+    internal row enumeration
+    internal recurring clocking after external mode entry
+```
+
+The useful conclusion is a control-locus distinction, not a claim that one implementation descends directly from the other.
 
 ### A — analogy to controller offload
 
-Moving row enumeration from board/controller logic into the DRAM can be described functionally as an offload of one maintenance-control function.
+Moving row enumeration or recurring cadence from board/controller logic into the DRAM can be described functionally as an offload of maintenance-control functions.
 
-`Offload` is a modern analytical term here, not a recovered 1984 actor category.
+`Offload` is a modern analytical term here, not a recovered 1984 or 1999 actor category.
 
 ### A — analogy to HDFS scanner progress state
 
-Case 83's HDFS scanner cursor is also retained control state that distributes maintenance work across a payload population. The analogy stops at that function. HDFS checkpoints traversal position so a process/restart can resume without replaying the entire scan; the TI DRAM embodiment initializes the cyclic refresh phase at power-on. Their persistence horizons and authority semantics are therefore different.
+Case 83's HDFS scanner cursor is also retained control state that distributes maintenance work across a payload population. The analogy stops at that function. HDFS checkpoints traversal position so a process/restart can resume without replaying the entire scan; the TI DRAM embodiment initializes the cyclic refresh phase at power-on, and the Micron SDRAM evidence shows a mode-local handoff of cadence authority. Their persistence horizons and authority semantics are therefore different.
 
 > **maintenance-control state != one universal checkpoint contract.**
 
@@ -389,9 +549,13 @@ This is a functional comparison, not a DRAM-to-HDFS genealogy.
 
 US4653030A and the TMS4256/TMS4257 datasheet are complementary evidence classes. The patent provides manufacturer-primary mechanism detail; the commercial datasheet provides product-family behavior. The patent does not identify its preferred embodiment as the exact TMS4256/TMS4257 circuit.
 
+### Limit — Micron product documentation ≠ JEDEC genealogy
+
+The 1999 Micron datasheet establishes a named-product control boundary. It does not establish when JEDEC first standardized SELF REFRESH, which vendor invented the feature, the first commercial shipment, or the exact internal oscillator topology.
+
 ### Limit — no general DRAM generation history
 
-Density, process, package, page/nibble modes, controller IC history, SDRAM command protocols, ECC, and later DDR refresh policy are outside this slice unless they alter a future retention comparison.
+Density, process, package, page/nibble modes, broad controller IC history, DDR per-bank refresh, ECC, and later retention-aware refresh policy are outside this slice unless they alter a future retention comparison.
 
 ---
 
@@ -412,17 +576,22 @@ Case 03
     why refresh is required
     deadline-driven reconstruction
 
-Case 09
+Case 09 — 1980s CBR
     who supplies the maintenance address
     who triggers the maintenance cycle
     which part of refresh moves across the interface
+
+Case 09 — 1999 SDRAM successor
+    whether recurring cadence remains an external repeated obligation
+    or becomes internal within an entered maintenance regime
 ```
 
-This produces three particularly useful controls:
+This produces four particularly useful controls:
 
 1. **refresh obligation ≠ refresh-address-generation locus**;
 2. **internalized refresh addressing ≠ autonomous refresh scheduling**;
-3. **hidden refresh ≠ absence of retention work**.
+3. **hidden refresh ≠ absence of retention work**;
+4. **shared maintenance-control state ≠ shared scheduling authority**.
 
 ---
 
@@ -439,13 +608,21 @@ This produces three particularly useful controls:
 | TI's disclosed refresh counter starts at zero at power-on and increments on CBR refresh cycles | H/P | US4653030A counter-stage description |
 | Motorola documents a product-level CBR refresh-counter test using internal row selection and controlled data writes | H/P | 1989 *Motorola Memory Data* product section |
 | The Motorola counter test requires initialization cycles and uses 512 cycles to exercise the documented row set | H/P | Motorola counter-test procedure |
+| Micron Rev. 11/99 calls SDRAM AUTO REFRESH analogous to conventional CBR refresh | H/P | manufacturer-authored 64 Mb SDRAM datasheet, printed p. 13 via page-preserving mirror |
+| Micron AUTO REFRESH is nonpersistent and uses internally generated refresh addressing | H/P | same 1999 page |
+| Micron SELF REFRESH retains data without external clocking and uses internal clocking for recurring refresh | H/P | same 1999 page |
+| AUTO REFRESH and SELF REFRESH share the row refresh counter in the bounded Micron product | H/P | same 1999 page |
+| SELF REFRESH exit includes a `tXSR` handoff because internal refresh may still be in progress | H/P | same 1999 page |
+| Internal row enumeration proves internal recurring scheduling | X | directly rejected by AUTO REFRESH control partition |
+| Sharing one row refresh counter proves identical maintenance authority | X | directly rejected by AUTO vs SELF REFRESH mode distinction |
 | Motorola's product counter is proven to use TI's power-on-zero circuit | X | unsupported cross-vendor implementation identity |
 | A successful counter test permanently certifies future refresh correctness | X | bounded diagnostic event ≠ continuing scheduler/coverage correctness |
 | Maintenance-control state must persist across power loss whenever it helps retain payload | X/E | TI's disclosed counter is intentionally initialized at power-on; persistence horizon is regime-specific |
 | Moving refresh enumeration on-chip removes the periodic retention obligation | X | contradicted by the same source set |
-| `self refresh circuitry` in this patent automatically means later autonomous self-refresh | X | rejected by the patent's external-trigger statement |
-| The patent is proven to be the exact TMS4256 circuit | X | unsupported product-identity leap |
-| Retention infrastructure can itself contain retained control state | E | bounded reconstruction from refresh-counter role |
+| `self refresh circuitry` in the TI patent automatically means later autonomous self-refresh | X | rejected by TI's external-trigger statement and Micron's distinct later product semantics |
+| The TI patent is proven to be the exact TMS4256 circuit | X | unsupported product-identity leap |
+| Micron's 1999 datasheet proves JEDEC invention/standardization chronology | X | product evidence ≠ normative genealogy |
+| Retention infrastructure can itself contain retained control state | E | bounded reconstruction from refresh-counter and mode roles |
 
 ---
 
@@ -453,15 +630,15 @@ This produces three particularly useful controls:
 
 ### `tmzncty/computing-archaeology`
 
-Fresh related-repository searches for `TMS4256` and `CAS-before-RAS` again found no dedicated case to reuse. A broad DRAM refresh-counter, test-mode, and product-history account still belongs there:
+Fresh related-repository searches for `TMS4256`, `CAS-before-RAS`, and `SDRAM self refresh` found no dedicated case to reuse. A broad DRAM refresh-counter, SDRAM-standardization, test-mode, oscillator, and product-history account still belongs there:
 
 <https://github.com/tmzncty/computing-archaeology>
 
-This repository should keep only the retention-specific comparison about the **locus and visibility of maintenance work**.
+This repository should keep only the retention-specific comparison about the **locus, authority, and visibility of maintenance work**.
 
 ### `tmzncty/problem-history`
 
-Use its anti-anachronism discipline for the word `self refresh`. The patent's period phrase must be interpreted through the mechanism it actually describes rather than through later DRAM vocabulary.
+Use its anti-anachronism discipline for the phrase `self refresh`. The TI patent's period phrase and Micron's 1999 mode name must each be interpreted through the mechanism actually described rather than treated as timelessly identical vocabulary.
 
 ---
 
@@ -472,3 +649,5 @@ Use its anti-anachronism discipline for the word `self refresh`. The patent's pe
 3. Tadashi Tachibana, Chitranjan N. Reddy, Ngai H. Hong, `Self refresh circuitry for dynamic memory`, US4653030A, filed 31 August 1984, assigned to Texas Instruments: <https://patents.google.com/patent/US4653030A/en>.
 4. Texas Instruments, *MOS Memory Data Book 1984*, TMS4164 family documentation: <https://vintage-computer-books.netlify.app/Texas%20Instruments%20-%20MOS%20Memory%20Data%20Book%20-%201984.pdf>.
 5. Motorola, *Memory Data*, 1989, MCM514256A / MCM51L4256A product section, especially `REFRESH CYCLES` and `CAS BEFORE RAS REFRESH COUNTER TEST`: <https://www.bitsavers.org/components/motorola/_dataBooks/1989_DL113r6_Motorola_Memory_Data.pdf>.
+6. Micron Technology, `MT48LC16M4A2 / MT48LC8M8A2 / MT48LC4M16A2` 64 Mb SDRAM, `Rev. 11/99`, printed p. 13, manufacturer-authored content preserved by a page-stable mirror: <https://www.alldatasheet.fr/html-pdf/228369/MICRON/MT48LC4M16A2/2945/13/MT48LC4M16A2.html>.
+7. Micron Technology, same 64 Mb SDRAM family, `Rev. V 09/14`, later manufacturer-authored continuity witness preserved as PDF by Mouser, especially p. 33 and SELF REFRESH timing material: <https://www.mouser.com/datasheet/2/671/micts06234_1-2290735.pdf>.
