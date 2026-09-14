@@ -129,6 +129,30 @@ Kafka's own 0.8.2 design says PacificA is the most similar academic publication 
 
 **Evidence use:** prior-art/novelty boundary only. It is not used to infer undocumented Kafka details.
 
+### I. KAFKA-1647 checkpoint-loss bug and fix — primary project record + implementation
+
+ASF JIRA: <https://issues.apache.org/jira/browse/KAFKA-1647>
+
+Fix commit: <https://github.com/apache/kafka/commit/1ed9cf6d03603518d950f7e9a5f122c4ed5d7cee>
+
+Pre-fix parent: <https://github.com/apache/kafka/blob/89831204c092f3a417bf41945925a2e9a0ec828e/core/src/main/scala/kafka/server/ReplicaManager.scala>
+
+Exact-tag serializer: <https://github.com/apache/kafka/blob/0.8.2.0/core/src/main/scala/kafka/server/OffsetCheckpoint.scala>
+
+Exact-tag log recovery-point implementation: <https://github.com/apache/kafka/blob/0.8.2.0/core/src/main/scala/kafka/log/LogManager.scala>
+
+Directly supports:
+
+- the production-observed 2014 failure in which a partition could retain its local log yet disappear from a rewritten high-watermark checkpoint because no local `Replica` object had been created;
+- missing checkpoint membership falling back to high watermark zero when the local replica was later reconstructed;
+- the 30 October 2014 fix explicitly creating the local replica even if the new leader is unavailable so its high watermark is included in the checkpoint;
+- the distinction between `replication-offset-checkpoint` and `recovery-point-offset-checkpoint` despite their use of the same `OffsetCheckpoint` serializer;
+- the exact temp-file, file-fsync, rename replacement sequence used by `OffsetCheckpoint.write()` without establishing universal filesystem crash atomicity.
+
+**Evidence strength:** unusually strong bug/fix genealogy because issue report, pre-fix source, fixing commit, and released exact-tag behavior all align.
+
+Detailed bounded record: [`56-kafka-2014-kafka1647-high-watermark-checkpoint-loss-deepening.md`](56-kafka-2014-kafka1647-high-watermark-checkpoint-loss-deepening.md).
+
 ---
 
 ## Evidence-to-claim map
@@ -148,6 +172,10 @@ Kafka's own 0.8.2 design says PacificA is the most similar academic publication 
 | 0.8.2 unclean election default is true | B | release-specific primary |
 | non-ISR leader election may lose data | A, B | primary |
 | returning longer follower can be truncated to current leader | E | exact source |
+| checkpoint rewrite membership depends on enumerated local `Replica` objects | I | pre-fix/fix/exact-tag source |
+| an absent partition checkpoint entry reconstructs local HW as zero | C, I | exact source |
+| KAFKA-1647 could preserve payload log while losing the remembered committed frontier | I | production issue + source genealogy |
+| `replication-offset-checkpoint` ≠ `recovery-point-offset-checkpoint` | I | exact source ownership/use |
 | Kafka replication predates 0.8.2 | F, G | primary release history |
 | Kafka did not invent replicated-log replication | A, H | explicit prior-art boundary |
 
@@ -166,6 +194,8 @@ The following are source-grounded historical facts for the bounded 0.8.2.0 regim
 - ISR could shrink and expand.
 - unclean election could admit a non-ISR replica and risk data loss.
 - the source contained a recovery path that truncates a returning follower to a shorter current leader.
+- KAFKA-1647 recorded a production-observed failure where checkpoint rewrite membership could omit a partition whose local replica object had not been created after an unavailable-leader transition.
+- the October 2014 fix explicitly ensured local-replica creation so that partition high-watermark state remained included in checkpoint generation.
 
 ### Engineering reconstruction
 
@@ -177,11 +207,14 @@ The project-level formulations below are not Apache's historical vocabulary even
 - `retained protocol metadata can define which surviving bytes count`;
 - `failover convergence can require forgetting`;
 - `longer surviving suffix ≠ greater authority`;
-- `high-watermark checkpoint ≠ complete replication-history retention`.
+- `high-watermark checkpoint ≠ complete replication-history retention`;
+- `durable checkpoint value ≠ durable checkpoint membership`;
+- `surviving payload ≠ surviving knowledge of committed prefix`;
+- `same checkpoint serializer ≠ same retained semantic frontier`.
 
 ### Functional analogy
 
-Comparisons to RADOS peering, HDFS generation-stamp recovery, GFS checkpoints, and Kafka log compaction are functional only. No common genealogy is inferred from shared words such as `log`, `replica`, `checkpoint`, `current`, or `truncate`.
+Comparisons to RADOS peering, HDFS generation-stamp recovery, GFS checkpoints, ZFS DTL persistence, and Kafka log compaction are functional only. No common genealogy is inferred from shared words such as `log`, `replica`, `checkpoint`, `current`, or `truncate`.
 
 ### Philosophical interpretation
 
@@ -211,11 +244,17 @@ Later Kafka work changed recovery semantics and added stronger leader-epoch mech
 
 This case grounds ordinary consumer exposure against the high watermark. Producer acknowledgement has its own policy/configuration path. They interact but should not be collapsed into one generic `durable` event.
 
+### 6. KAFKA-1647 is pre-fix history, not a defect claim against the released tag
+
+The October 2014 commit fixes the omitted-replica checkpoint-membership path and the final `0.8.2.0` source contains the fix. The bug is used as historical evidence of why checkpoint membership matters, not as a claim that released 0.8.2.0 still loses that entry through the same path.
+
+The same slice also does **not** promote `FileDescriptor.sync()` plus Java `renameTo()` into a universal crash-atomicity theorem. The exact filesystem/device durability boundary remains open.
+
 ---
 
 ## Cross-case contribution
 
-This slice changes the repository's comparison in four useful ways.
+This slice changes the repository's comparison in five useful ways.
 
 ### A. Replication introduces a retained **prefix boundary**
 
@@ -233,11 +272,15 @@ Cases 47 and 44 emphasize traces that survive too long during forgetting. Kafka 
 
 Case 42 compaction removes superseded committed keyed history. Case 56 failover truncation removes a non-authoritative/divergent suffix. Both are `forgetting` only at a very abstract level; their safety conditions are different.
 
+### E. Map membership can itself be retained recovery state
+
+KAFKA-1647 adds a useful comparison to Case 100's persisted ZFS DTL basis: in both systems small non-payload control metadata changes subsequent recovery work even when payload media still exist. Kafka's specific failure is not a corrupted payload or an incorrect stored number but omission of a partition key from a full-map checkpoint rewrite. The analogy is functional only.
+
 ---
 
 ## Related-repository duplication check
 
-A repository search of `tmzncty/computing-archaeology` for `Kafka` returned no dedicated result for Kafka replication, ISR, or high-watermark recovery during this slice. Accordingly this record contains only the retention-specific bounded mechanism and does not create a generic Kafka history.
+A fresh repository search of `tmzncty/computing-archaeology` for `KAFKA-1647` returned no dedicated result. Accordingly this record contains only the retention-specific bounded mechanism and does not create a generic Kafka restart/checkpoint history.
 
 If a later `computing-archaeology` case covers Kafka's distributed-log engineering history, link it here and trim any duplicated chronology.
 
@@ -245,6 +288,7 @@ If a later `computing-archaeology` case covers Kafka's distributed-log engineeri
 
 ## Follow-on deepening
 
+- [`56-kafka-2014-kafka1647-high-watermark-checkpoint-loss-deepening.md`](56-kafka-2014-kafka1647-high-watermark-checkpoint-loss-deepening.md) closes the historical high-watermark checkpoint-membership failure slice. It traces the production-observed KAFKA-1647 scenario, the pre-fix missing local-replica object, the 30 October 2014 fix, the released 0.8.2.0 inclusion behavior, the zero-on-missing fallback, and the semantic distinction between replication and local-log recovery checkpoints.
 - [`56-kafka-0110-leader-epoch-lineage-truncation-deepening.md`](56-kafka-0110-leader-epoch-lineage-truncation-deepening.md) closes the initial Kafka 0.11.0.0 leader-epoch follow-up. It separates the high-watermark committed/visibility frontier from retained leader-epoch lineage used for truncation, inspects the exact `leader-epoch-checkpoint` implementation and KIP-101 acceptance tests, preserves mixed-version high-watermark fallback as a distinct regime, and uses KIP-279 as later counterevidence against claiming that the initial KIP-101 protocol solved every divergence history.
 - [`56-kafka-2000-kip279-largest-common-epoch-deepening.md`](56-kafka-2000-kip279-largest-common-epoch-deepening.md) closes the explicit post-0.11 KIP-279 follow-up. It grounds the observed KAFKA-6361 failure, Kafka 2.0 response-V1 `leader_epoch` provenance, iterative largest-common-epoch backtracking, compatibility/high-watermark fallbacks, the 2.0 unclean-election acceptance test, and the KIP's explicit compaction/reconstruction boundary for retained epoch history.
 
@@ -255,8 +299,8 @@ If a later `computing-archaeology` case covers Kafka's distributed-log engineeri
 - later change of `unclean.leader.election.enable` default (0.11.0.0 disabled it by default) as a policy-history case;
 - KRaft metadata/leader epoch evolution;
 - transactional high watermark versus last stable offset;
-- independent failure injection against a named release, especially checkpoint-loss plus compacted-log reconstruction;
-- exact filesystem/device durability boundary below Kafka's log append/flush behavior;
+- independent failure injection reproducing a pre-fix KAFKA-1647 sequence and confirming fixed behavior;
+- exact filesystem/device crash durability of `OffsetCheckpoint` temp-file + file-fsync + rename replacement;
 - source-controlled ZooKeeper ISR/leader-state crash behavior if that becomes necessary for a later synthesis claim.
 
 None of these gaps blocks `grounded` status for the bounded 0.8.2.0 mechanism or the separate 0.11 / 2.0 leader-epoch deepenings.
