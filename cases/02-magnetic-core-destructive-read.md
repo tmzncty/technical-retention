@@ -10,6 +10,8 @@ Security-erasure vocabulary deepening: [`../evidence/02-1991-ncsc-core-clearing-
 
 Power-transition retention deepening: [`../evidence/02-1965-1966-core-power-transition-retention-deepening.md`](../evidence/02-1965-1966-core-power-transition-retention-deepening.md). This later IBM/DEC machine evidence grounds `unpowered retention != transition immunity != whole-machine restart continuity`; it does not replace the case's 1950–1954 MIT anchor.
 
+Power-cycle diagnostic validation deepening: [`../evidence/02-dec-1966-1969-pdp8-memory-power-cycle-diagnostic-deepening.md`](../evidence/02-dec-1966-1969-pdp8-memory-power-cycle-diagnostic-deepening.md). DEC's PDP-8 `Memory Power On/Off Test` makes post-transition bit dropout/pickup an explicit maintenance observation, while later restoration runs show the surviving diagnostic exposing real power-cycle corruption; this validates a bounded machine-level retention property rather than establishing a universal ferrite lifetime.
+
 Papian direct-facsimile deepening: [`../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md`](../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md). This Case-70 record supplies the page-level 1952 IRE inspection that Case 02 previously carried as archival cleanup; its quantitative disturbance analysis remains scoped to Case 70 rather than being duplicated here.
 
 ## Scope
@@ -245,6 +247,28 @@ The retention work here is not periodic refresh. It is **boundary control**: pre
 
 See the dedicated deepening record for sources, limits, and the division of labor with `computing-archaeology`.
 
+### Diagnostic validation: nonvolatile does not mean untested
+
+DEC's 1966 PDP-8 Program Abstracts add a maintenance-side witness that is different from both the PDP-7 power-sequencing description and Case 86's automatic-restart path. `Maindec 829`, **PDP-8 Memory Power On/Off Test**, is described as testing memory for **bit dropout and pickup after a simulated power failure**. Later archival indexes preserve `MAINDEC-08-D1A` / revision-C `D1AC` as the replacement Memory Power On/Off Test, and surviving paper-tape media show that the test existed as executable maintenance software rather than only as a prose requirement.
+
+Modern restoration work supplies a deliberately later experiment boundary. The Rhode Island Computer Museum reports running revision-C D1AC on a restored PDP-8/L and reaching the diagnostic's error halt; David Gesswein's Straight-8 restoration separately reports intermittent D1AC failures in which memory locations were cleared on power-off. These are not 1960s field-failure statistics, but they demonstrate that the retained relation can still be operationalized as a machine test on surviving hardware.
+
+The important decomposition is:
+
+```text
+magnetic remanence as a substrate property
+    !=
+power-cycle retention as a machine requirement
+    !=
+coverage of one diagnostic
+    !=
+a particular diagnostic pass
+```
+
+A wrong post-cycle bit also does not by itself prove ferrite remanence decayed. The observed failure can lie in power-transition circuitry, write/inhibit paths, sensing, margins, or the core stack itself. The diagnostic qualifies the retained logical result; further work is needed to localize the physical cause.
+
+See [`../evidence/02-dec-1966-1969-pdp8-memory-power-cycle-diagnostic-deepening.md`](../evidence/02-dec-1966-1969-pdp8-memory-power-cycle-diagnostic-deepening.md) for the source-custody limits, replacement genealogy, restoration evidence, and explicit non-claims.
+
 ---
 
 ## Time: two different retention intervals coexist
@@ -406,6 +430,22 @@ trigger / authority
 + when ordinary service may resume
 ```
 
+### Finding 7 — nonvolatility can be a diagnostic obligation, not merely a material adjective
+
+The PDP-8 power-cycle diagnostic adds an observation layer to the retention model. A machine can be built around a nonvolatile substrate and still carry a maintenance program whose job is to establish whether the assembled memory system actually preserves the intended bit pattern across the tested transition.
+
+This adds another useful separation:
+
+```text
+substrate capability
+    !=
+transition qualification
+    !=
+observed pass
+    !=
+root-cause localization
+```
+
 ---
 
 ## Philosophical / media-theoretical interpretation
@@ -459,6 +499,10 @@ Nondestructive-read magnetic-core techniques were actively investigated. Later p
 
 Even if core contents survive loss of power, a historical computer may still lose volatile registers, control state, peripheral state, timing context, or restart information. No claim is made that every core-memory computer could resume transparently after arbitrary power failure.
 
+### A passing power-cycle test is not a universal retention guarantee
+
+The DEC diagnostic deepening concerns the state patterns and transition conditions exercised by a maintenance program. It does not establish a universal shelf-retention interval, arbitrary brownout immunity, or every environmental margin for every magnetic-core computer.
+
 ### Whirlwind is an anchor, not the universal template
 
 Array organizations, word widths, read/write cycles, driver circuits, and sensing schemes varied. The mechanism-level comparison here should not be treated as an exact schematic of every production core memory.
@@ -486,8 +530,11 @@ The patent and MIT reports establish one major development line. They do not by 
 | repeated sub-threshold excitations should not materially alter the stored core state | `H/P` | patent + Papian contemporary paper |
 | classic read can erase the prior state and require rewrite | `H/P` | explicit in Forrester patent |
 | the 32 × 32 MTC memory required controlled drive and sensing parameters for reliable operation | `H/P` | Widrow M-2383 |
+| DEC documented a PDP-8 Memory Power On/Off Test for bit dropout/pickup after simulated power failure | `H/P` | DEC 1966 Program Abstracts |
+| surviving D1AC artifacts and modern restoration runs show power-cycle retention was operationally testable | `H/P* / Experiment` | archival media/indexes + later restoration logs; not a historical field-failure rate |
 | `nonvolatile` does not imply `passive during access` | `E` | mechanism reconstruction |
 | quiescent retention and access-cycle retention should be compared separately | `E` | case-derived distinction |
+| a passing power-cycle test proves a universal ferrite retention lifetime | `X` | rejected; bounded diagnostic coverage only |
 | core and DRAM are historically the same kind of memory because both restore after read | `X` | rejected overreach |
 | all magnetic-core memories used destructive readout | `X` | rejected; nondestructive schemes existed |
 
@@ -503,7 +550,7 @@ This case is `grounded`. The dedicated grounding record closes the former promot
 - Widrow 1954 and Brown's 1953-filed patent as bounded contemporary nondestructive-read counterexamples;
 - a separate Case 86 system-level witness showing why remanent main-memory state must not be equated with whole-machine restart state.
 
-The former Papian-1952 facsimile cleanup is now **closed** by the direct inspection recorded in [`../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md`](../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md). Case 02 therefore no longer carries a page-level Papian evidence debt. Further work is narrower and belongs mainly to Case 70 or `computing-archaeology`: named-machine quantitative half-select/current/sense margins, production material distributions, temperature dependence, exact correspondence between Papian test materials and deployed arrays, and broader invention-priority genealogy.
+The former Papian-1952 facsimile cleanup is now **closed** by the direct inspection recorded in [`../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md`](../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md). Case 02 therefore no longer carries a page-level Papian evidence debt. The PDP-8 power-cycle diagnostic deepening now also **partially closes the hardware-restoration / diagnostic-validation debt** by adding a period DEC test purpose, surviving executable artifacts, and bounded modern restored-machine observations. Further work is narrower and belongs mainly to Case 70 or `computing-archaeology`: named-machine quantitative half-select/current/sense margins, production material distributions, temperature dependence, exact correspondence between Papian test materials and deployed arrays, 1950s power-transition diagnostic genealogy, controlled brownout/partial-rail experiments, page-level D1AC revision comparison, and broader invention-priority genealogy.
 
 ---
 
