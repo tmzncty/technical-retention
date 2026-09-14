@@ -2,24 +2,24 @@
 
 ## Scope
 
-- **Bounded system:** OpenStack Swift erasure-coded object storage as released in Swift 2.3.0 (Kilo, 30 April 2015) and sharpened by Swift 2.10.1 (December 2016). A later bounded deepening uses Swift 2.28.0 (27 July 2021) only for the `commit_window` / concurrent non-durable-cleanup race.
-- **Bounded mechanism:** mutable object PUT/overwrite under an erasure-code storage policy, especially fragment-archive timestamps/indexes, the multi-phase PUT conversation, `.durable` commit markers, same-timestamp GET reconstruction, delayed deletion of older object versions, and reconstructor repair.
-- **Primary source base:** the OpenStack Swift source tree and release documentation at the signed `2.3.0` tag and `2.10.1` tag/release state. The 2021 deepening additionally inspects commits `2934818d`, `bbaed18e`, `2696a79f`, and the signed/tagged 2.28.0 release state.
+- **Bounded system:** OpenStack Swift erasure-coded object storage as released in Swift 2.3.0 (Kilo, 30 April 2015) and sharpened by Swift 2.10.1 (Newton patch line, 13 December 2016). A bounded 2.11.0/Ocata deepening (18 November 2016) follows the on-disk durability-witness migration from a separate `.durable` inode to a `#d` marker in the fragment filename. A later bounded deepening uses Swift 2.28.0 (27 July 2021) only for the `commit_window` / concurrent non-durable-cleanup race.
+- **Bounded mechanism:** mutable object PUT/overwrite under an erasure-code storage policy, especially fragment-archive timestamps/indexes, the multi-phase PUT conversation, durability markers (`<timestamp>.durable` and, from 2.11.0 new writes, `#d` in the fragment filename), same-timestamp GET reconstruction, delayed deletion of older object versions, and reconstructor repair.
+- **Primary source base:** the OpenStack Swift source tree and release documentation at the signed `2.3.0` and `2.10.1` release states; commit `b13b49a2`, the annotated `2.11.0` tag, its release note, EC overview, and `diskfile.py` for the durability-representation migration; and commits `2934818d`, `bbaed18e`, `2696a79f` plus the tagged 2.28.0 release state for the 2021 cleanup-race deepening.
 - **Research question:** when several coded fragments and several object timestamps can coexist, what retained relations let Swift decide that a particular coded object version is sufficiently committed to serve, repair, and eventually replace an older one?
 
-This is **not** a general history of OpenStack Swift, object storage, Reed–Solomon coding, eventual consistency, two-phase commit, or OpenStack releases. It does not claim that Swift invented erasure coding, quorum storage, version timestamps, or transaction commit protocols.
+This is **not** a general history of OpenStack Swift, object storage, Reed–Solomon coding, eventual consistency, two-phase commit, or OpenStack releases. It does not claim that Swift invented erasure coding, quorum storage, version timestamps, transaction commit protocols, or storage-format migration.
 
 The bounded retention claim is:
 
-> **For mutable erasure-coded objects, mathematical reconstructability is insufficient. Swift must retain and recover a version-qualified relation among a timestamp, distinct fragment indexes, and a durability marker before that coded version is admissible for normal recovery and before older timestamped state can be retired.**
+> **For mutable erasure-coded objects, mathematical reconstructability is insufficient. Swift must retain and recover a version-qualified relation among a timestamp, distinct fragment indexes, and a durability indication before that coded version is admissible for normal recovery and before older timestamped state can be retired. The local representation of that durability relation can itself change across software versions.**
 
-That statement is an **engineering reconstruction** from documented Swift behavior. `timestamp cohort`, `admissible coded version`, and `version-retirement gate` below are project terms, not historical Swift vocabulary.
+That statement is an **engineering reconstruction** from documented Swift behavior. `timestamp cohort`, `admissible coded version`, `durability witness`, and `version-retirement gate` below are project terms, not historical Swift vocabulary.
 
 ---
 
 ## Historical vocabulary
 
-The 2015–2016 Swift material directly uses:
+The inspected Swift material directly uses:
 
 - `erasure code` / `EC`;
 - `storage policy`;
@@ -29,6 +29,8 @@ The 2015–2016 Swift material directly uses:
 - `fragment archive index`;
 - `.data`;
 - `.durable` / `durable file`;
+- `#d` / durable marker in the filename;
+- `durable fragment archive`;
 - `timestamp`;
 - `quorum`;
 - `multi-phase` / `multiphase commit`;
@@ -38,15 +40,17 @@ The 2015–2016 Swift material directly uses:
 - `primary` node;
 - `ssync`;
 - `bit rot`;
-- `quarantine`.
+- `quarantine`;
+- `commit_window`.
 
 The following are **project engineering terms** only:
 
 - `timestamp cohort` — fragments sharing one object timestamp and usable fragment-index relation;
-- `durability witness` — the role played by `.durable` in qualifying a timestamped fragment set;
+- `durability witness` — the role played first by `.durable` and later by the durable-filename state in qualifying a timestamped fragment set;
 - `admissible coded version`;
 - `version-retirement gate`;
-- `coded currentness`.
+- `coded currentness`;
+- `representation migration` when describing the `.durable` -> `#d.data` transition.
 
 Swift's own documentation warns that its multi-phase conversation is used **without introducing strong consistency semantics** and describes it only as having the `essence` of a two-phase commit. This case therefore does not silently normalize the mechanism into database `2PC` or distributed consensus.
 
@@ -185,8 +189,47 @@ This source is used only for an implementation boundary:
 
 It does not prove that all earlier Swift fragments were unreliable, and it does not substitute for the timestamp/commit rule above.
 
-**Primary anchor:** Swift 2.10.1 release changelog / release-note entry, December 2016.
+**Primary anchor:** Swift 2.10.1 release changelog / release-note entry, 13 December 2016.
 
+### H/P — Swift 2.11.0 changes the durability witness from a separate inode to a filename marker
+
+OpenStack Swift commit `b13b49a27caac17ae55b19f315d5ce31801c9522` (10 October 2016), released in annotated tag **2.11.0** on **18 November 2016**, changes new EC commits from creating a separate `<timestamp>.durable` file to renaming the fragment archive:
+
+```text
+<timestamp>#<frag_index>.data
+    ->
+<timestamp>#<frag_index>#d.data
+```
+
+The commit and release note state that this saves one inode per EC data file. Existing `.durable` files are not removed and continue to work. In `diskfile.py`, new and legacy forms are both recognized; suffix hashing deliberately represents either form as the same abstract `<timestamp>.durable` durability state for consistency comparison.
+
+The release note simultaneously establishes an asymmetric compatibility boundary: once Swift 2.11.0-or-later has written EC data in the new representation, earlier Swift versions cannot access that data through their normal path.
+
+This closes the original case's broad `later releases changed the on-disk durability marker` caveat with a bounded revision-specific record. See the [2016 durability-representation migration deepening](../evidence/25-swift-2016-durable-marker-representation-migration-deepening.md).
+
+**Primary anchors:** commit `b13b49a27caac17ae55b19f315d5ce31801c9522`; Swift 2.11.0 annotated tag; 2.11.0 release note; 2.11.0 `overview_erasure_code.rst`; 2.11.0 `swift/obj/diskfile.py`.
+
+### E — durability relation != concrete durability representation
+
+The 2.10-style representation uses a payload fragment plus a separate marker inode; the 2.11-style representation encodes durable status in the payload-bearing fragment's filename. Yet the 2.11 implementation intentionally normalizes both to the same consistency-engine durability state.
+
+Thus:
+
+```text
+same retained durability/currentness relation
+    !=
+same filesystem representation
+```
+
+and:
+
+```text
+new software reads old representation
+    !=
+old software reads new representation
+```
+
+The second relation is a compatibility/access boundary, not evidence that the fragment payload bytes are physically destroyed on downgrade.
 
 ### H/P — Swift 2.28.0 adds a grace window against deleting in-flight non-durable fragments
 
@@ -252,9 +295,11 @@ The timestamp distinguishes versions of the same object name and participates di
 
 Distinct indexes identify complementary encoded contributions. Several archives with the same index are not equivalent to a reconstructable set of distinct indexes.
 
-### 4. Durability marker
+### 4. Durability state and its representation
 
-`<timestamp>.durable` records that the timestamp has crossed Swift's documented commit condition. It is zero-byte control state, not application payload.
+In the 2.3.0/2.10.1 form, `<timestamp>.durable` is zero-byte control state recording that a timestamp has crossed Swift's documented commit condition. In the 2.11.0 new-write form, durable status is encoded by `#d` in a fragment archive filename. The newer implementation accepts both representations and normalizes them for consistency hashing.
+
+The **durability relation** is therefore distinct from any one concrete marker-file layout.
 
 ### 5. Placement and handoff state
 
@@ -262,11 +307,15 @@ The ring determines primaries; handoffs temporarily extend the search/placement 
 
 ### 6. Reconstruction / synchronization state
 
-The reconstructor repairs missing fragment archives, returns handoff data toward primaries, and propagates durability markers.
+The reconstructor repairs missing fragment archives, returns handoff data toward primaries, and propagates durability state.
 
 ### 7. Integrity metadata
 
 Fragment metadata, object ETag/content length metadata, and later validation/quarantine behavior help distinguish a usable fragment archive from bytes that merely exist on disk.
+
+### 8. Format/interpreter compatibility
+
+The 2.11.0 release adds another retained dependency: software must understand the on-disk durability encoding it encounters. New software deliberately understands legacy `.durable`; older software does not understand EC state newly written in the 2.11.0 form.
 
 ---
 
@@ -277,12 +326,14 @@ The case spans:
 - ordinary files in object-server filesystems;
 - timestamped `.data` fragment archives;
 - fragment-index naming;
-- zero-byte `.durable` files;
+- legacy zero-byte `.durable` files;
+- durable `#d.data` filenames from Swift 2.11.0 new writes;
 - ring-derived node placement;
 - proxy-side erasure coding and reconstruction;
-- storage-node metadata and `ssync`/reconstructor maintenance.
+- storage-node metadata and `ssync`/reconstructor maintenance;
+- software-version-specific parsers that decide which on-disk forms count as durability evidence.
 
-The mathematical code determines what combinations *could* reconstruct a payload. Swift's retained timestamp/index/durability relations determine which combinations the object service is willing to treat as one successfully committed version.
+The mathematical code determines what combinations *could* reconstruct a payload. Swift's retained timestamp/index/durability relations determine which combinations the object service is willing to treat as one successfully committed version. The 2.11.0 change additionally shows that those relations can outlive one concrete filesystem encoding if the current interpreter retains compatibility knowledge.
 
 ---
 
@@ -292,17 +343,19 @@ The mathematical code determines what combinations *could* reconstruct a payload
 
 The proxy encodes the object, distributes indexed fragment archives, waits for the documented first-phase threshold, sends a commit confirmation, then waits for the documented commit threshold before client success.
 
+In the older representation, commit creates a separate `<timestamp>.durable` marker. In Swift 2.11.0 new writes, commit renames `<ts>#<fi>.data` to `<ts>#<fi>#d.data` and fsyncs the containing directory. The higher-level role remains a durability qualification; the local filesystem primitive changes.
+
 ### Across overwrite/version replacement
 
 Older timestamped state remains protected from deletion until the newer timestamp crosses the commit boundary. The new representation therefore has a transition period in which old and new physical state may coexist.
 
 ### During GET
 
-The proxy selects enough **same-timestamp** and **distinct-index** archives and requires a same-timestamp durability indication before reconstructing the client-visible object.
+The proxy selects enough **same-timestamp** and **distinct-index** archives and requires a same-timestamp durability indication before reconstructing the client-visible object. In the 2.11.0 documentation that indication can be a durable fragment archive rather than a separate `.durable` file.
 
 ### During repair
 
-The reconstructor can synthesize a missing fragment index from surviving fragments and propagate missing `.durable` state; repair and steady-state placement can therefore continue after an object is already serviceable.
+The reconstructor can synthesize a missing fragment index from surviving fragments and propagate durability state; repair and steady-state placement can therefore continue after an object is already serviceable. During the 2.11.0 representation transition, consistency hashing deliberately treats legacy and new durability encodings as the same abstract durability state.
 
 ---
 
@@ -322,7 +375,7 @@ account/container/object
     -> return client-visible object
 ```
 
-The case therefore adds a **version-qualified coded-access geometry** to Cases 19 and 24. A physical fragment location alone does not identify the retained object, and coding algebra alone does not identify the current version.
+The case therefore adds a **version-qualified coded-access geometry** to Cases 19 and 24. A physical fragment location alone does not identify the retained object, and coding algebra alone does not identify the current version. Across the 2.11.0 format boundary, interpreting durability also depends on recognizing the on-disk representation in use.
 
 ---
 
@@ -330,7 +383,7 @@ The case therefore adds a **version-qualified coded-access geometry** to Cases 1
 
 A successful GET is reconstructive: the proxy may contact several nodes and decode from enough fragment archives.
 
-The important bounded read rule is not simply `collect k fragments`. The 2.10.1 proxy checks timestamp equality, fragment-index distinctness, and durability evidence. A returned object is therefore the result of **selection + admissibility + decoding**, not decoding alone.
+The important bounded read rule is not simply `collect k fragments`. The 2.10.1 proxy checks timestamp equality, fragment-index distinctness, and durability evidence; the 2.11.0 documentation preserves that relation while changing the local encoding of durable state. A returned object is therefore the result of **selection + admissibility + decoding**, not decoding alone.
 
 This case does not claim linearizable reads or a universal Swift consistency model.
 
@@ -341,6 +394,8 @@ This case does not claim linearizable reads or a universal Swift consistency mod
 A PUT can create newer timestamped fragment archives while the previous version still exists. The newer bytes do not immediately erase or deauthorize the old version.
 
 Deletion of older timestamp files is gated by successful completion of the newer commit phase. In the bounded docs, this is explicitly intended to avoid destroying the older object before enough of the replacement coded representation is known to have landed.
+
+Swift 2.11.0 also demonstrates that **commit-state representation** can change without requiring immediate removal of the old representation: legacy `.durable` files remain supported while new writes use `#d.data`.
 
 This is not secure erasure. `older timestamp deletion` here is logical/filesystem retirement in the object-store implementation, not a claim about raw-media sanitization.
 
@@ -353,11 +408,12 @@ Relevant timescales include:
 - streaming/encoding time during PUT;
 - time between first-phase fragment landing and commit confirmation;
 - a period of coexistence between old and new timestamps;
-- delayed propagation of `.durable` markers;
+- delayed propagation of durability state;
+- software-upgrade intervals during which legacy and new durability encodings may coexist;
 - reconstruction after partial failure, rebalance, handoff use, or bit rot;
 - cleanup of stale pre-commit fragment archives.
 
-Unlike DRAM refresh, none of these is a fixed physical decay deadline. They are **protocol-, failure-, workload-, and maintenance-triggered** retention intervals.
+Unlike DRAM refresh, none of these is a fixed physical decay deadline. They are **protocol-, version-, failure-, workload-, and maintenance-triggered** retention intervals.
 
 ---
 
@@ -370,6 +426,7 @@ Persistence depends on invisible distributed work:
 - multi-phase commit messaging;
 - ring placement and handoffs;
 - object-server file/metadata maintenance;
+- parser and consistency-hash compatibility across durability representations;
 - `ssync`;
 - reconstructor scanning, decoding, and transfer;
 - auditor/integrity validation and quarantine;
@@ -385,8 +442,8 @@ Keep these distinct:
 
 - insufficient first-phase fragment landing;
 - proxy failure before commit;
-- newer partial fragments without a durability marker;
-- missing `.durable` propagation;
+- newer partial fragments without a durability indication;
+- missing durability-state propagation;
 - too few distinct fragment indexes;
 - fragment archives from incompatible timestamps;
 - primary-node unavailability requiring handoff search;
@@ -394,7 +451,8 @@ Keep these distinct:
 - fragment metadata failure and quarantine;
 - drive loss / bit rot requiring reconstruction;
 - premature deletion of an older timestamp before replacement durability — explicitly the condition the documented commit gate is meant to avoid;
-- stale pre-commit fragment archives that survive physically but are not a successful committed version.
+- stale pre-commit fragment archives that survive physically but are not a successful committed version;
+- software-version incompatibility with the durability-marker representation, including the 2.11.0 release's explicit downgrade-read boundary.
 
 These are not one generic `data loss` mechanism.
 
@@ -416,15 +474,45 @@ Old files are deleted only after the new commit phase succeeds. Version order al
 
 ### E4 — currentness can be cohort-level rather than fragment-local
 
-In 2.10.1, one same-timestamp `.durable` indication can qualify a reconstructable set whose other contributing nodes lack their own marker. The relevant retained currentness fact concerns a distributed set relation.
+In 2.10.1, one same-timestamp `.durable` indication can qualify a reconstructable set whose other contributing nodes lack their own marker. In 2.11.0 the local durability encoding moves into a fragment filename, but GET still reasons over a same-timestamp cohort with durability evidence. The relevant currentness fact therefore concerns a distributed set relation rather than one payload file in isolation.
 
 ### E5 — client success ≠ completed placement/marker convergence
 
-The reconstructor can later fill missing fragments and propagate durability markers. The service boundary and the fully repaired steady-state topology can finish at different times.
+The reconstructor can later fill missing fragments and propagate durability state. The service boundary and the fully repaired steady-state topology can finish at different times.
 
 ### E6 — durability semantics are protocol-version-specific
 
-Swift 2.3.0 and 2.10.1 do not use identical commit thresholds. The repository must therefore cite the version before turning `Swift EC durability` into a stable abstract property.
+Swift 2.3.0 and 2.10.1 do not use identical commit thresholds. The repository must therefore cite the release/series before turning `Swift EC durability` into a stable abstract property.
+
+### E7 — durability relation ≠ durability representation
+
+Swift 2.11.0 preserves the service role of durability evidence while changing its local filesystem encoding from a separate marker inode to `#d` in a fragment filename. Its suffix-hash logic deliberately normalizes both encodings to one abstract durability update.
+
+Therefore:
+
+```text
+semantic/control-state continuity
+    !=
+physical representation continuity
+```
+
+### E8 — migration readability ≠ downgrade readability
+
+New Swift code accepts legacy `.durable` files, so old retained state can remain serviceable without eager conversion. But the 2.11.0 release note warns that earlier Swift versions cannot access EC data written by 2.11.0-or-later.
+
+Therefore:
+
+```text
+new reader understands old state
+    !=
+old reader understands new state
+```
+
+Payload survival alone is insufficient if the interpreter no longer recognizes the control-state schema that makes those bytes admissible.
+
+### E9 — later wall-clock release date ≠ later format generation
+
+The 2.10.1/Newton patch tag (13 December 2016) is later in wall-clock time than the 2.11.0/Ocata tag (18 November 2016) but retains the older `.durable` representation. Release lineage must therefore accompany dates when reconstructing format history.
 
 ---
 
@@ -438,9 +526,10 @@ The retained object is not exhausted by one material fragment, nor even by `enou
 - one timestamp;
 - a sufficient set of distinct coded indexes;
 - a durability witness;
-- placement/recovery machinery capable of resolving and decoding them.
+- placement/recovery machinery capable of resolving and decoding them;
+- an interpreter capable of recognizing the durability representation in use.
 
-That makes **availability an achieved technical relation**, not evidence of immateriality. The interpretation stops there. `.durable` is not a philosophical memory object, and Swift's object protocol is not automatically a case of Stieglerian tertiary retention or Heideggerian `Bestand`.
+That makes **availability an achieved technical relation**, not evidence of immateriality. The 2.11.0 migration adds a narrower point: continuity of a retained relation need not imply continuity of its physical encoding, but it still depends on compatible interpretation. The analysis stops there. `.durable`, `#d`, and Swift's object protocol are not automatically cases of Stieglerian tertiary retention or Heideggerian `Bestand`.
 
 ---
 
@@ -463,6 +552,10 @@ Both cases gate retirement of an older representation on a stronger completion r
 
 All use coded reconstruction. Swift adds a different currentness problem: surviving fragments must not only be sufficient; they must belong to one admissible timestamped version.
 
+### With Case 100 — ZFS DTL persistence
+
+Case 100 separates the durable maintenance basis from runtime-derived maintenance views. Swift 2.11.0 instead shows one durability/currentness relation surviving two different local encodings. The functional comparison is limited to **control state not being identical to one runtime or physical representation**; the implementations and historical lineages are unrelated.
+
 ---
 
 ## Counterexamples and limits
@@ -470,22 +563,26 @@ All use coded reconstruction. Swift adds a different currentness problem: surviv
 - **Not a universal Swift consistency claim.** The source explicitly says the multi-phase mechanism is not the introduction of strong consistency semantics.
 - **Not generic two-phase commit.** Swift says `essence of a 2 phase commit`; this case preserves that bounded wording.
 - **Not invention priority.** Reed–Solomon and erasure coding predate Swift by decades; Cases 19 and 24 already retain that prior-art boundary.
-- **Not one timeless Swift protocol.** The 2.3.0 and 2.10.1 commit thresholds differ and are intentionally reported separately.
+- **Not one timeless Swift protocol.** The 2.3.0 and 2.10.1 commit thresholds differ and are intentionally reported separately; 2.11.0 additionally changes the local durability representation.
 - **Not a secure-deletion case.** Removal of older timestamp files is not physical sanitization.
-- **Not a complete object-versioning history.** User-facing versioned-container modes, tombstone history, and later Swift EC-on-disk format changes are outside scope.
+- **Not a complete object-versioning history.** User-facing versioned-container modes, tombstone history, and unrelated later EC format changes remain outside scope.
 - **Not proof that any physically decodable cross-timestamp mixture would produce useful bytes.** The historical claim needed here is stronger and simpler: the implementation requires same-timestamp archives, so cross-version mixing is not an admissible GET set.
-- **Not a statement about current Swift.** Later releases changed on-disk durability-marker representation and other implementation details; those require their own revision-specific case if relevant.
+- **`#d` is not a new coding symbol.** It is an on-disk durability marker in the fragment filename.
+- **Legacy readability is not downgrade safety.** Swift 2.11.0 explicitly warns that data written in the new form is inaccessible to earlier versions.
+- **Hash equivalence is not byte-level equivalence.** Swift normalizes an abstract durability state for consistency comparison while filenames and inode layout remain different.
+- **`os.rename()` + `fsync_dir()` is not promoted here into a universal crash-atomicity guarantee.** The source establishes the implementation sequence, not every filesystem/failure-mode theorem.
+- **Not a statement about current Swift implementation details.** This case now bounds the 2.11.0 representation migration rather than treating all later Swift as identical to it.
 
 ---
 
 ## Related repositories
 
-A GitHub code search of `tmzncty/computing-archaeology` for a dedicated OpenStack Swift EC / fragment-currentness treatment returned no indexed dedicated result during this slice.
+A current GitHub code search of `tmzncty/computing-archaeology` for a dedicated OpenStack Swift EC / fragment-currentness treatment returned no indexed dedicated result during this slice.
 
 Routing remains:
 
-- general OpenStack Swift architecture/history, coding-library genealogy, and storage-policy evolution → `computing-archaeology` if developed there;
-- this bounded comparison of **mutable coded-version admissibility, commit markers, and safe old-version retirement** → `technical-retention`.
+- general OpenStack Swift architecture/history, coding-library genealogy, storage-policy evolution, and broad release/upgrade history → `computing-archaeology` if developed there;
+- this bounded comparison of **mutable coded-version admissibility, durability-state representation, commit markers, compatibility direction, and safe old-version retirement** → `technical-retention`.
 
 Case 19 and Case 24 are reused for coding-theory and immutable-coded-system comparisons rather than rebuilding their historical material here.
 
@@ -498,16 +595,20 @@ Case 19 and Case 24 are reused for coding-theory and immutable-coded-system comp
 1. OpenStack Swift, signed tag **2.3.0**, tagger date 2015-04-30, commit `f8dee761bd36f857aa1288c27e095907032fad68`: <https://github.com/openstack/swift/tree/2.3.0>
 2. OpenStack Swift 2.3.0, `CHANGELOG`, `swift (2.3.0)` entry: <https://github.com/openstack/swift/blob/2.3.0/CHANGELOG>
 3. OpenStack Swift 2.3.0, `doc/source/overview_erasure_code.rst`: <https://github.com/openstack/swift/blob/2.3.0/doc/source/overview_erasure_code.rst>
-4. OpenStack Swift **2.10.1**, `doc/source/overview_erasure_code.rst`: <https://github.com/openstack/swift/blob/2.10.1/doc/source/overview_erasure_code.rst>
-5. OpenStack Swift 2.10.1 release commit `3129a55d4418e0dc4207c2026e7ef8c59704c6a1`, including the EC fragment-validation release-note change: <https://github.com/openstack/swift/commit/3129a55d4418e0dc4207c2026e7ef8c59704c6a1>
-
-
-6. OpenStack Swift commit `2934818d608e6cedd30ecb81900d02969476275c`, 24 June 2021, `reconstructor: Delay purging reverted non-durable datafiles`: <https://github.com/openstack/swift/commit/2934818d608e6cedd30ecb81900d02969476275c>
-7. OpenStack Swift commit `bbaed18e9b681ce9cf26ffa6a5d5292f5cb219b7`, 19 July 2021, `diskfile: don't remove recently written non-durables`: <https://github.com/openstack/swift/commit/bbaed18e9b681ce9cf26ffa6a5d5292f5cb219b7>
-8. OpenStack Swift commit `2696a79f098b02988136b13caf1c2565ec09481f`, 19 July 2021, `reconstructor: retire nondurable_purge_delay option`: <https://github.com/openstack/swift/commit/2696a79f098b02988136b13caf1c2565ec09481f>
-9. OpenStack Swift **2.28.0**, tag date 27 July 2021, `CHANGELOG` `Erasure coding fixes`: <https://github.com/openstack/swift/blob/2.28.0/CHANGELOG>
+4. OpenStack Swift **2.10.1**, annotated tag dated 2016-12-13, Newton series: <https://github.com/openstack/swift/tree/2.10.1>
+5. OpenStack Swift 2.10.1, `doc/source/overview_erasure_code.rst`: <https://github.com/openstack/swift/blob/2.10.1/doc/source/overview_erasure_code.rst>
+6. OpenStack Swift 2.10.1 release commit `3129a55d4418e0dc4207c2026e7ef8c59704c6a1`, including the EC fragment-validation release-note change: <https://github.com/openstack/swift/commit/3129a55d4418e0dc4207c2026e7ef8c59704c6a1>
+7. OpenStack Swift commit `b13b49a27caac17ae55b19f315d5ce31801c9522`, 10 October 2016, `EC - eliminate .durable files`: <https://github.com/openstack/swift/commit/b13b49a27caac17ae55b19f315d5ce31801c9522>
+8. OpenStack Swift **2.11.0**, annotated tag dated 2016-11-18, Ocata series: <https://github.com/openstack/swift/tree/2.11.0>
+9. OpenStack Swift 2.11.0 release note: <https://github.com/openstack/swift/blob/2.11.0/releasenotes/notes/2_11_0_release-ac1d256e455d347e.yaml>
+10. OpenStack Swift 2.11.0, `doc/source/overview_erasure_code.rst`: <https://github.com/openstack/swift/blob/2.11.0/doc/source/overview_erasure_code.rst>
+11. OpenStack Swift 2.11.0, `swift/obj/diskfile.py`: <https://github.com/openstack/swift/blob/2.11.0/swift/obj/diskfile.py>
+12. OpenStack Swift commit `2934818d608e6cedd30ecb81900d02969476275c`, 24 June 2021, `reconstructor: Delay purging reverted non-durable datafiles`: <https://github.com/openstack/swift/commit/2934818d608e6cedd30ecb81900d02969476275c>
+13. OpenStack Swift commit `bbaed18e9b681ce9cf26ffa6a5d5292f5cb219b7`, 19 July 2021, `diskfile: don't remove recently written non-durables`: <https://github.com/openstack/swift/commit/bbaed18e9b681ce9cf26ffa6a5d5292f5cb219b7>
+14. OpenStack Swift commit `2696a79f098b02988136b13caf1c2565ec09481f`, 19 July 2021, `reconstructor: retire nondurable_purge_delay option`: <https://github.com/openstack/swift/commit/2696a79f098b02988136b13caf1c2565ec09481f>
+15. OpenStack Swift **2.28.0**, tag date 27 July 2021, `CHANGELOG` `Erasure coding fixes`: <https://github.com/openstack/swift/blob/2.28.0/CHANGELOG>
 
 ### Reused prior-art boundary
 
-10. [`Case 19`](19-facebook-f4-erasure-coded-failure-domains.md) and its grounding record retain the Reed–Solomon/coding-theory priority boundary.
-11. [`Case 24`](24-windows-azure-lrc-repair-locality-handoff.md) retains the LRC/Pyramid-code repair-locality and immutable redundancy-handoff boundary.
+16. [`Case 19`](19-facebook-f4-erasure-coded-failure-domains.md) and its grounding record retain the Reed–Solomon/coding-theory priority boundary.
+17. [`Case 24`](24-windows-azure-lrc-repair-locality-handoff.md) retains the LRC/Pyramid-code repair-locality and immutable redundancy-handoff boundary.
