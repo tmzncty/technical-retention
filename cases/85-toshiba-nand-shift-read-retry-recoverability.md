@@ -4,6 +4,8 @@
 
 Grounding record: [`../evidence/85-flash-2000-2021-read-threshold-retry-grounding.md`](../evidence/85-flash-2000-2021-read-threshold-retry-grounding.md)
 
+Vendor parameter-state deepening: [`../evidence/85-linux-2014-2017-vendor-read-retry-parameter-state-deepening.md`](../evidence/85-linux-2014-2017-vendor-read-retry-parameter-state-deepening.md)
+
 ## Scope
 
 This case asks a narrow retention question:
@@ -68,7 +70,7 @@ They are useful only if their reconstructed status remains explicit.
 
 ## Retained state
 
-At least four different state classes matter in the bounded mechanism.
+At least five different state classes matter in the bounded mechanism.
 
 ### 1. Physical cell state
 
@@ -91,6 +93,20 @@ Thus recoverability is not a property of raw media state alone.
 The Toshiba family explicitly discusses standing time, operation counts, temperature data, and management tables used to select read conditions. Later embodiments can retain a successful shift/index so future reads begin from a more appropriate boundary.
 
 Again, this is not payload history. It is maintenance/interpretation state that helps future reads decide how to interrogate the payload.
+
+### 5. Vendor capability and calibration state
+
+Upstream Linux implementations from 2014 and 2017 expose another layer beneath the abstract act of “retrying a read.” Micron support obtains a retry-mode count from a vendor-specific ONFI parameter block and selects modes through vendor-specific feature address `89h`. Hynix 1x-nm MLC support can construct NAND-specific retry-register values from fixed parameters or an on-device retry-OTP area, validating repeated OTP values before use.
+
+This adds two distinctions:
+
+> **retry capability/calibration state != currently selected retry mode**
+
+and
+
+> **user payload state != metadata needed to establish a useful reader state**.
+
+The detailed implementation record is kept in the linked vendor parameter-state deepening rather than generalized into a universal NAND format.
 
 ---
 
@@ -160,6 +176,20 @@ Their experiments also show that retry behavior changes with operating condition
 
 This evidence is useful as a modern empirical witness, not as proof that every detail of Toshiba's 2009 embodiment was implemented identically in every later 3D NAND SSD.
 
+### H/S — Linux 2014–2017 exposes vendor-specific retry state below the generic operation
+
+A 2014 upstream Linux Micron implementation records read-retry capability through a vendor-specific ONFI parameter block and switches the active retry mode through ONFI feature commands at vendor-specific address `89h`; after the retry sequence it returns the device to mode `0`. A 2017 Hynix implementation exposes a different shape: NAND-specific register values may be fixed or obtained from a read-retry OTP area, and the OTP-derived path validates repeated values with majority logic before using them.
+
+This is historical **software-artifact** evidence rather than a claim that the two commits are first commercial implementations. Its retention-specific result is narrower:
+
+> **a generic retry operation can depend on vendor-specific retained or discoverable calibration state, while the selected retry mode itself remains transient control state.**
+
+The two implementations also block an easy standardization mistake:
+
+> **common software hook != common vendor parameter representation**.
+
+See the linked [`vendor read-retry parameter-state deepening`](../evidence/85-linux-2014-2017-vendor-read-retry-parameter-state-deepening.md) for exact commit provenance and non-claims.
+
 ---
 
 ## Engineering reconstruction
@@ -214,7 +244,8 @@ For this bounded case, logical recoverability depends jointly on at least:
 2. the chosen read/reference voltages;
 3. the ECC code and correction capability;
 4. controller policy for retry order and stopping;
-5. optionally retained condition/history metadata used to choose a better starting point.
+5. optionally retained condition/history metadata used to choose a better starting point;
+6. on implementations such as the 2014 Micron and 2017 Hynix Linux paths, vendor-specific capability/calibration state needed to establish valid retry settings.
 
 No one component alone is `the retained data`.
 
@@ -229,6 +260,16 @@ But:
 > `successful-read parameter ≠ complete physical-health model`.
 
 The cell distribution continues to evolve, so a once-successful reference may become stale.
+
+### E — retry calibration metadata can have its own integrity problem
+
+The 2017 Hynix Linux path does not merely trust one OTP-derived retry value. It reconstructs values from repeated encodings and uses majority checking because the implementation explicitly anticipates unreliable reads of the MLC OTP area storing retry parameters.
+
+This supports a narrower relation than “metadata is fragile”:
+
+> **nonvolatile recovery metadata != automatically infallible recovery metadata**.
+
+A payload may still carry recoverable physical structure while a particular reader has difficulty establishing the vendor-specific calibration relation needed to exploit it. That is an engineering reconstruction from the implementation, not Hynix's historical vocabulary.
 
 ### E — recoverability frontier can move without payload relocation
 
@@ -270,6 +311,12 @@ If no available retry reference produces a codeword within the ECC budget, the c
 ### Stale condition metadata
 
 A formerly successful shift can become stale as retention age, cycling, temperature history, disturbance, or other cell characteristics change. Retaining a read condition therefore creates its own maintenance problem: **interpretation metadata can age even when it is not the user payload.**
+
+### Invalid or unavailable retry calibration
+
+Vendor-specific retry capability or calibration state can also become an operational dependency. The Hynix Linux implementation's repeated OTP values and majority validation are a concrete example of software treating recovery parameters as state that must itself be established credibly before use.
+
+This failure mode should not be confused with proof that user payload charge has vanished.
 
 ### Recovery without renewal
 
@@ -328,6 +375,16 @@ Together they require at least three independent axes:
 
 > `location continuity`, `interpretation continuity`, and `integrity-margin continuity`.
 
+### Case 149 — NAND OTP authority vs retry calibration
+
+[`149-micron-nand-otp-data-protect-irreversible-authority.md`](149-micron-nand-otp-data-protect-irreversible-authority.md) studies an OTP area as intentionally programmed payload/control state whose future programming authority can be irreversibly retired. The 2017 Hynix implementation used here instead consumes an OTP area as a source of read-retry calibration parameters and validates redundant values before applying them.
+
+The comparison is functional only:
+
+> **OTP-resident state != one universal OTP semantic role.**
+
+No shared command set, protection semantics, or direct vendor genealogy is inferred.
+
 ### Case 76 — JEDEC SSD endurance / retention qualification
 
 [`76-jedec-ssd-endurance-retention-qualification.md`](76-jedec-ssd-endurance-retention-qualification.md) concerns a qualification contract at rated endurance and power-off retention conditions. Case 85 concerns a runtime mechanism for making a particular page readable. A read-retry success does not change the drive-level JESD218 qualification meaning, and a JESD218 retention requirement does not specify one universal retry implementation.
@@ -371,6 +428,8 @@ Safe claims:
 
 - by a **2000-priority** MLC-Flash patent family, ECC-triggered reference-voltage adjustment and rereading were already explicit engineering proposals;
 - by Toshiba's **2009-priority** family, an SSD/NAND design explicitly separated default read, positive/negative shift read, retry read, ECC evaluation, condition/history tables, and a distinct refresh/copy operation;
+- by **2014**, upstream Linux Micron support exposed a vendor-specific retry-mode count and vendor-specific feature address `89h` behind a generic NAND retry interface;
+- by **2017**, upstream Linux Hynix support exposed NAND-specific retry registers and fixed-or-OTP-derived calibration values, including validation of repeated OTP data;
 - by **2021**, independent characterization of 160 real 3D TLC NAND chips showed modern read-retry repeatedly adjusting read-reference voltages and relying on the relation between RBER and ECC capability.
 
 Unsafe claims rejected here:
@@ -378,6 +437,8 @@ Unsafe claims rejected here:
 - Toshiba invented read retry;
 - the 2000 patent is the first adaptive sensing proposal of any kind;
 - the 2000 patent directly caused the Toshiba design;
+- Linux's 2014/2017 merge dates are the first commercial dates for Micron/Hynix read retry;
+- ONFI standardizes one cross-vendor retry parameter format or Micron feature address `89h`;
 - every commercial SSD stores per-page successful retry voltages in the same way;
 - all modern NAND uses the same retry direction/table/step count;
 - retry read is equivalent to refresh, reclaim, COPYBACK, or secure rewrite.
@@ -393,6 +454,8 @@ Primary / contemporary:
 - Hiroyuki Nagashima, **“Memory system,”** US20120268994A1 / US8929140B2, Japanese priority 2009-11-06, Toshiba assignment record: <https://patents.google.com/patent/US20120268994A1/en>.
 - Hiroyuki Nagashima, later continuation **US9524786B2**, “Memory system changing a memory cell read voltage upon detecting a memory cell read error”: <https://patents.google.com/patent/US9524786B2/en>.
 - Frank Yu et al., **“Cell-Downgrading and Reference-Voltage Adjustment for a Multi-Bit-Cell Flash Memory,”** US20070201274A1 / US7333364B2, claimed priority 2000-01-06: <https://patents.google.com/patent/US20070201274A1/en>.
+- Linux upstream commit `8429bb3975ef81c114cde4da111e64d224d19f83`, **“mtd: nand: support Micron READ RETRY,”** 2014-01-14: <https://github.com/torvalds/linux/commit/8429bb3975ef81c114cde4da111e64d224d19f83>.
+- Linux upstream commit `626994e0748019f9987ac520f1dcfd0adb7e34c6`, **“mtd: nand: hynix: Add read-retry support for 1x nm MLC NANDs,”** 2017-03-08: <https://github.com/torvalds/linux/commit/626994e0748019f9987ac520f1dcfd0adb7e34c6>.
 
 Independent later empirical witness:
 
@@ -407,6 +470,7 @@ Related repository cases:
 - [`67-sk-hynix-3d-nand-read-disturb-adaptive-reclaim.md`](67-sk-hynix-3d-nand-read-disturb-adaptive-reclaim.md)
 - [`76-jedec-ssd-endurance-retention-qualification.md`](76-jedec-ssd-endurance-retention-qualification.md)
 - [`82-micron-nand-copyback-ecc-requalification.md`](82-micron-nand-copyback-ecc-requalification.md)
+- [`149-micron-nand-otp-data-protect-irreversible-authority.md`](149-micron-nand-otp-data-protect-irreversible-authority.md)
 
 ---
 
@@ -416,6 +480,6 @@ Case 85 adds a retention regime that is easy to miss if storage is treated only 
 
 > **the same physical NAND cells can move from default-read failure back into logical recoverability because the system changes how it reads them, not because it has already rewritten them.**
 
-The retained object is therefore not adequately described by media survival alone. Operational availability depends on a relation among physical threshold distributions, adjustable read boundaries, ECC capability, and controller policy. When that relation becomes unfavorable, interpretation work can temporarily restore access; when the physical representation itself must be renewed, refresh/copy is a separate maintenance act.
+The retained object is therefore not adequately described by media survival alone. Operational availability depends on a relation among physical threshold distributions, adjustable read boundaries, ECC capability, controller policy, and — in some implementations — vendor-specific capability/calibration state needed to establish a useful read condition. When that relation becomes unfavorable, interpretation work can temporarily restore access; when the physical representation itself must be renewed, refresh/copy is a separate maintenance act.
 
 That distinction — `recoverability renewal ≠ representation renewal` — is the bounded contribution of this case.
