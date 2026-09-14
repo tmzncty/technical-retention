@@ -8,6 +8,8 @@ Grounding record: [`../evidence/37-samsung-840-evo-2014-2015-performance-refresh
 
 Restoration-transaction deepening: [`../evidence/37-samsung-2014-restoration-transaction-deepening.md`](../evidence/37-samsung-2014-restoration-transaction-deepening.md).
 
+Form-factor rollout deepening: [`../evidence/37-samsung-2015-form-factor-remediation-rollout-deepening.md`](../evidence/37-samsung-2015-form-factor-remediation-rollout-deepening.md) separates the April 2015 `EXT0DB6Q` path from the later mSATA `EXT43B6Q` / Magician 4.7 path and fixes the boundary `eventual common feature scope != simultaneous historical introduction`.
+
 Operational continuation: [`Case 111 — Enterprise SSD Extended Shutdown`](111-enterprise-ssd-extended-shutdown-maintenance.md) moves the powered-maintenance comparison outward from this named-product episode to IBM/Dell operator-facing shutdown schedules; the link is functional, not genealogical.
 
 ## Scope
@@ -21,7 +23,8 @@ The bounded sequence is:
 1. **September–October 2014:** users and reviewers document markedly slower reads of old, little-modified data on Samsung 840 EVO drives;
 2. **October 2014:** Samsung publishes a Performance Restoration package. A period Samsung statement attributes the behavior to an error in the flash-management software algorithm, says the drive was performing read-retry aggressively on old once-written data, and says the restoration software rewrites old data;
 3. **April 2015:** after the first fix proved insufficient for some stale-data samples, Samsung tells PC Perspective that a revised firmware algorithm uses a **periodic refresh feature** to maintain read performance of older data. Samsung explicitly says this background algorithm does not operate while power is off and provides Advanced Performance Optimization as a supplementary recovery path for drives with insufficient run-time or long powered-off intervals;
-4. **later vendor continuity:** Samsung's own Magician documentation continues to list Advanced Performance Optimization as a special feature for the 840 EVO / 840 family.
+4. **April–October 2015 variant rollout:** contemporary reporting shows that the April `EXT0DB6Q` remediation did not then apply to 840 EVO mSATA. Magician 4.7 later named Advanced Performance Optimization support for the mSATA variant while requiring new firmware, and `EXT43B6Q` became publicly available for mSATA by late September / early October;
+5. **later vendor continuity:** Samsung's own Magician documentation continues to list Advanced Performance Optimization as a special feature for the 840 EVO / 840 family.
 
 This is **not**:
 
@@ -30,6 +33,8 @@ This is **not**:
 - a claim that read-performance degradation is identical to uncorrectable retention failure;
 - a claim that Samsung's periodic refresh is identical to Cai et al.'s 2012 FCR algorithm;
 - a claim that every performance improvement observed after the 2015 firmware came from rewriting old pages;
+- a claim that `EXT0DB6Q` and `EXT43B6Q` implement different refresh algorithms merely because they are different firmware artifacts;
+- a claim that the mSATA form factor physically caused the later remediation rollout;
 - a general history of Samsung TLC NAND, read-retry, ECC, voltage-reference tuning, or SSD firmware;
 - an invention-priority claim for NAND refresh or age-aware read calibration.
 
@@ -43,7 +48,9 @@ Contemporary technical reporting preserves Samsung's explanation of the 2014 fai
 
 The first remediation did not end the historical episode. In April 2015, PC Perspective tested a revised 840 EVO firmware identified in the article as `EXT0DB6Q` and published a direct Q&A with Samsung. Samsung's answer used the historical term **`periodic refresh feature`** and said it could maintain old-data read performance in the background without Magician. Samsung also stated that this algorithm **does not operate when power is off**. If the drive had not had enough run-time, or had been powered off for an extended period, Samsung named **Advanced Performance Optimization** in Magician 4.6 as a supplementary path to recover performance.
 
-A later Samsung Magician 5.2.1 Installation Guide (June 2018) still documents `Advanced Performance Optimization` and says the function is supported on Samsung SSD 840 EVO (2.5-inch and mSATA) and 840 Series models. That later document is used only to confirm continued vendor-recognized feature scope; it is not projected backward as the exact 2015 implementation specification.
+The April 2015 remediation was not a simultaneous family-wide rollout. On 28 April, PC Perspective explicitly noted that the then-current updater did not appear to apply to mSATA 840 EVO drives. A 31 August 2015 Magician 4.7 release-note record preserved by Tweakers adds **Advanced Performance Optimization support for 840 EVO mSATA** while stating that new firmware is required. On 1 October, PC Perspective reported `EXT43B6Q` availability for the mSATA variant and demonstrated the update plus Advanced Performance Optimization on a 1 TB sample. Samsung's current official firmware ledger independently preserves `EXT0DB6Q` for the ordinary 840 EVO and `EXT43B6Q` for the 840 EVO mSATA. These records ground a rollout boundary; they do not expose the reason for the delay or prove different internal refresh algorithms.
+
+A later Samsung Magician 5.2.1 Installation Guide (June 2018) still documents `Advanced Performance Optimization` and says the function is supported on Samsung SSD 840 EVO (2.5-inch and mSATA) and 840 Series models. That later document is used only to confirm continued vendor-recognized feature scope; it is not projected backward as the exact 2015 implementation specification or as evidence of simultaneous April 2015 availability.
 
 ## Retained state and constitutive control relations
 
@@ -55,9 +62,10 @@ The case contains several distinct states and relations:
 4. **physical embodiment age** — how long the current NAND embodiment has remained without migration/overwrite;
 5. **logical-to-physical mapping** — the FTL relation that lets rewritten or migrated data remain the same host-visible content while its physical embodiment changes;
 6. **background-maintenance opportunity** — powered run-time in which firmware can execute the periodic refresh behavior;
-7. **manual/supplementary maintenance authority** — host-side Magician invocation of Advanced Performance Optimization when background maintenance has not caught up.
+7. **manual/supplementary maintenance authority** — host-side Magician invocation of Advanced Performance Optimization when background maintenance has not caught up;
+8. **maintenance-feature admission state** — whether a given model variant, firmware revision, and host tool expose the documented remediation path at a particular historical moment.
 
-`read-recovery state`, `physical embodiment age`, and `background-maintenance opportunity` are project reconstruction terms. Samsung's period vocabulary includes `flash management software algorithm`, `read-retry`, `Performance Restoration`, `periodic refresh feature`, and `Advanced Performance Optimization`.
+`read-recovery state`, `physical embodiment age`, `background-maintenance opportunity`, and `maintenance-feature admission state` are project reconstruction terms. Samsung's period vocabulary includes `flash management software algorithm`, `read-retry`, `Performance Restoration`, `periodic refresh feature`, and `Advanced Performance Optimization`.
 
 ## Engineering reconstruction
 
@@ -142,6 +150,26 @@ A one-time rewrite can renew the current physical embodiment without proving tha
 
 This is a useful product-level complement to Case 36. Cai et al.'s FCR paper proposed periodic renewal before ECC margin is exhausted; Samsung's 840 EVO episode shows a commercial product moving from a one-time restoration action toward a continuing background refresh policy for a different target — old-data read performance.
 
+### Product-family identity is not simultaneous maintenance-policy availability
+
+The 2015 form-factor rollout supplies a second boundary. The ordinary 840 EVO received the `EXT0DB6Q` / Magician 4.6 remediation path before the mSATA variant received its `EXT43B6Q` path. Magician 4.7 then explicitly tied mSATA Advanced Performance Optimization to new firmware.
+
+Therefore:
+
+> **same product family ≠ same update availability date ≠ same maintenance-feature admission state**.
+
+And:
+
+> **eventual common feature scope ≠ simultaneous historical introduction**.
+
+The later Samsung documentation can correctly list both 2.5-inch and mSATA as supported while still obscuring the historical period during which the mSATA variant lacked the corresponding public remediation path.
+
+The source record also requires a negative boundary:
+
+> **distinct firmware artifact identity ≠ proved distinct internal maintenance algorithm**.
+
+`EXT0DB6Q` and `EXT43B6Q` are documented as different variant-specific firmware identities, but the inspected sources do not expose their internal code or establish why the mSATA release lagged.
+
 ### Nonvolatile retention while powered off is not the same as maintenance availability while powered off
 
 Samsung's 2015 answer is unusually explicit: the periodic-refresh algorithm **does not operate when power is off**. The same answer says an SSD that had insufficient run-time or remained powered off for an extended period might need Advanced Performance Optimization to recover performance.
@@ -185,9 +213,10 @@ The bounded 840 EVO episode exposes several ways a retained state can become wor
 - a one-time rewrite can restore the immediate state yet fail to establish a sufficient future maintenance policy;
 - the firmware's background maintenance cannot run while the drive is powered off;
 - insufficient powered run-time can leave maintenance backlog that requires explicit optimization;
+- a model variant can remain a valid readable 840 EVO while the corresponding public maintenance/remediation path is not yet available for that variant;
 - foreground service may compete with background restoration work.
 
-This case therefore treats **degraded availability/performance** as distinct from forgetting. Slow recovery is not automatically data loss, just as physical presence is not automatically fast orderability.
+This case therefore treats **degraded availability/performance** as distinct from forgetting. Slow recovery is not automatically data loss, just as physical presence is not automatically fast orderability or maintenance-path availability.
 
 ## Prior art and anti-anachronism
 
@@ -197,7 +226,9 @@ Case 36 already grounds Cai et al.'s 2012 academic FCR proposal and earlier NAND
 
 Likewise, `periodic refresh feature` is Samsung's 2015 product vocabulary. It must not be projected backward onto early Flash cases or treated as proof that Samsung implemented Cai et al.'s FCR algorithm. Similarity at the level of repeated renewal is a **functional analogy**, not a demonstrated genealogy.
 
-Current inspection of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated Samsung 840 EVO / old-data refresh case to reuse. A broader TLC-NAND/controller reliability history belongs there; this repository keeps the retention-specific distinction among payload survival, read interpretation, rewrite renewal, powered maintenance opportunity, and service performance.
+The 2018 Magician guide also must not be projected backward into April 2015 as if its later `(2.5-inch, mSATA)` feature scope had existed synchronously. The new form-factor rollout evidence is included precisely to preserve that historical distinction.
+
+Current inspection of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated Samsung 840 EVO / old-data refresh case to reuse. A broader TLC-NAND/controller reliability history belongs there; this repository keeps the retention-specific distinction among payload survival, read interpretation, rewrite renewal, powered maintenance opportunity, feature admission, and service performance.
 
 ## Functional analogies and limits
 
@@ -244,7 +275,9 @@ The narrow conceptual pressure is:
 
 > A technically retained object can remain the same logical object while the **effort required to call it back** changes with age, and a system may expend hidden maintenance not to keep the payload from immediately vanishing but to keep later retrieval inside a practical service envelope.
 
-This is an engineering/philosophical interpretation, not Samsung's historical claim. It should not be inflated into the proposition that every performance optimization is `retention` or that slow data is forgotten data.
+The 2015 form-factor rollout adds a second bounded pressure: a product family's nominal identity does not by itself determine which maintenance relations are historically available to every variant. Availability can be versioned through firmware, host tooling, model eligibility, and date.
+
+This is an engineering/philosophical interpretation, not Samsung's historical claim. It should not be inflated into the proposition that every performance optimization is `retention`, that slow data is forgotten data, or that firmware alone defines the identity of the stored object.
 
 ## Cross-case result
 
@@ -259,6 +292,8 @@ normal old-data read performance
     !=
 firmware read-path adaptation
     !=
+model / firmware / tool maintenance admission
+    !=
 background periodic refresh opportunity
     !=
 manual Advanced Performance Optimization
@@ -270,9 +305,9 @@ restored performance envelope
 
 The key new axis is therefore:
 
-> **payload continuity → interpretation/recovery cost → service performance → powered maintenance opportunity → renewal action**
+> **payload continuity → interpretation/recovery cost → service performance → maintenance-path admission → powered maintenance opportunity → renewal action**
 
-rather than treating all five as one property called `data retention`.
+rather than treating all six as one property called `data retention`.
 
 ## Claim ledger
 
@@ -285,6 +320,13 @@ rather than treating all five as one property called `data retention`.
 | Samsung said the periodic feature does not operate with power off | H/S | direct Samsung Q&A published by PC Perspective |
 | Samsung identified Advanced Performance Optimization as a supplementary recovery path after insufficient powered run-time / long power-off | H/S | direct Samsung Q&A; later Samsung Magician guide independently confirms the named feature and 840-family scope |
 | The 2015 firmware produced immediate stale-data performance improvement before background refresh had time to run | H/S | PC Perspective controlled before/after test |
+| The April 2015 `EXT0DB6Q` updater did not then apply to 840 EVO mSATA | H/S-period | PC Perspective 28 April 2015 contemporaneous scope note |
+| Magician 4.7 release-note text added Advanced Performance Optimization support for 840 EVO mSATA and required new firmware | H/S-vendor-provenance | 31 August 2015 Tweakers preservation attributed to Samsung; direct historical Samsung PDF still open |
+| Samsung's current firmware ledger separately retains `EXT0DB6Q` for 840 EVO and `EXT43B6Q` for 840 EVO mSATA | H/P-current | manufacturer-primary artifact identity; no original-release-date or algorithm inference |
+| `EXT43B6Q` was publicly available for mSATA by 1 October 2015 and worked with Advanced Performance Optimization on one tested 1 TB sample | H/S-period + test | PC Perspective period report; one sample, not fleet-wide proof |
+| Later common 2.5-inch/mSATA feature scope proves simultaneous April 2015 availability | X | contradicted by period rollout evidence |
+| Distinct 840 EVO / mSATA firmware identifiers prove different internal refresh algorithms | X | unsupported |
+| The mSATA form factor itself caused the rollout lag | X | unsupported |
 | The immediate improvement proves the exact internal read-reference algorithm | X | reviewer inferred read-algorithm adaptation; no inspected Samsung implementation document exposes the exact algorithm |
 | The 840 EVO incident proves payload data was being lost | X | Samsung framed the bounded problem as read-performance degradation, not data loss/reliability loss |
 | Samsung periodic refresh is Cai et al. FCR | X | no genealogy or algorithm-identity evidence |
@@ -297,3 +339,7 @@ rather than treating all five as one property called `data retention`.
 3. Allyn Malventano, **“Samsung Magician 4.6 and 840 EVO EXT0DB6Q Firmware Review – Finally Fixed,”** *PC Perspective*, 14 April 2015. Includes a direct Q&A with Samsung describing the periodic-refresh feature, power-off boundary, and Advanced Performance Optimization fallback, plus independent before/after testing: <https://pcper.com/2015/04/samsung-magician-4-6-and-840-evo-ext0db6q-firmware-review-finally-fixed/>.
 4. Samsung Electronics, **Samsung Magician 5.2.1 Installation Guide**, Revision 2.4, June 2018, p. 7 (`Performance Optimization` limitations). Manufacturer-primary later continuity evidence that Advanced Performance Optimization is a special supported feature for Samsung SSD 840 EVO / 840 Series: <https://semiconductor.samsung.com/resources/data-sheet/Samsung_Magician_5_2_1_Installation_Guide_v2.4.pdf>.
 5. Yu Cai et al., **“Flash Correct-and-Refresh: Retention-Aware Error Management for Increased Flash Memory Lifetime,”** ICCD 2012, used only for the separate research-proposal comparison in Case 36: <https://users.ece.cmu.edu/~omutlu/pub/flash-correct-and-refresh_iccd12.pdf>.
+6. Samsung Semiconductor, **Tool & Software Download**, current firmware ledger. Separately lists 840 EVO `EXT0DB6Q` and 840 EVO mSATA `EXT43B6Q`: <https://semiconductor.samsung.com/consumer-storage/support/tools/>.
+7. Allyn Malventano, **“Samsung 840 EVO Standalone ISO Updater Now Available,”** *PC Perspective*, 28 April 2015. Contemporary note that the then-current update did not appear to apply to the mSATA 840 EVO: <https://pcper.com/2015/04/samsung-840-evo-standalone-iso-updater-now-available/>.
+8. Tweakers, **“Software-update: Samsung Magician 4.7,”** 31 August 2015. Preserves release-note text attributed to Samsung adding Advanced Performance Optimization support for 840 EVO mSATA and requiring new firmware: <https://tweakers.net/downloads/35337/samsung-magician-47.html>.
+9. Allyn Malventano, **“Samsung 840 EVO mSATA Gets Long Awaited EXT43B6Q Firmware, Fixes Read Speed Issue,”** *PC Perspective*, 1 October 2015. Period report and one-sample observation of the mSATA firmware / optimization path: <https://pcper.com/2015/10/samsung-840-evo-msata-gets-long-awaited-ext43b6q-firmware-fixes-read-speed-issue/>.
