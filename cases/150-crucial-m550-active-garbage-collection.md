@@ -21,6 +21,7 @@ The case is useful because the same product family exposes `Active Garbage Colle
 ## Evidence navigation
 
 - [Powered idle, sleep states, and maintenance opportunity deepening](../evidence/150-crucial-powered-idle-sleep-maintenance-opportunity-deepening.md) — separates host-visible idleness, device/interface sleep, controller maintenance eligibility, and actual GC execution; also records the M550's co-listed Device Sleep support and a firmware-version boundary around power-state transitions.
+- [2013–2015 AGC provenance and m4 experiment deepening](../evidence/150-crucial-2013-2015-agc-provenance-experiment-deepening.md) — narrows the public-circulation floor of Crucial's `6–8 hours` powered-idle support wording to contemporaneous 2013–2014 preservation witnesses and uses a peer-reviewed named Crucial m4 experiment to separate GC presence, deallocation/reclaim eligibility, execution, physical erase, and observed stale-data recoverability.
 
 ---
 
@@ -80,6 +81,26 @@ An idle interval can therefore be operationally productive even when the host se
 
 The follow-on power-state deepening adds an important qualification. Crucial's maintained troubleshooting procedure deliberately keeps an SSD powered and idle for **6–8 hours**, including by using BIOS/UEFI or Startup Manager, and recommends changing sleep-related power settings so the device remains powered long enough for background cleanup. Meanwhile the 2014 M550 flyer separately lists `Device Sleep support`. These records justify treating **host idle**, **interface/device sleep**, **maintenance eligibility**, and **actual maintenance execution** as distinct analytical states. They do **not** prove whether M550 garbage collection can or cannot run in SATA DevSleep, Partial, or Slumber.
 
+### Period-provenance and named-device follow-on
+
+The [2013–2015 provenance/experiment deepening](../evidence/150-crucial-2013-2015-agc-provenance-experiment-deepening.md) narrows two remaining seams.
+
+First, a public **18 August 2013** reproduction of a Crucial-support email concerning a V4 SSD already contains the `Active Garbage Collection` + `6–8 hours` powered-idle procedure, and a **22 March 2014** forum post reproduces a passage attributed to Crucial's website under the heading `Crucial SSDs and TRIM/Garbage Collection`. These are contemporaneous preservation witnesses, not authenticated Crucial-origin archives, so they narrow chronology without being promoted into primary web captures.
+
+Second, Shah, Mahmood, and Slay's SecureComm 2014 experiment names a **Crucial m4 CT064M4SSD2 64 GB** and reports sharply different stale-data recovery outcomes across USB/secondary-SATA and primary-SATA-with-Windows-7/TRIM setups. The paper itself infers from the survivor cases that the m4 lacked background garbage collection. This repository records that inference but does not adopt it as established device fact: recoverability can show that physical embodiments survived the tested path, but cannot by itself distinguish `GC engine absent` from `pages not made discard-eligible`, `GC not scheduled`, or `erase not completed`.
+
+The added boundary is therefore:
+
+```text
+maintenance mechanism present
+    != pages authorized for reclamation
+    != maintenance execution on those pages
+    != physical erase before observation
+    != stale-data recoverability outcome
+```
+
+The m4 experiment is an adjacent named-device witness, not evidence that the later M550 uses the same controller, scheduler, or reclaim policy.
+
 ---
 
 ## TRIM and garbage collection are different relations
@@ -106,6 +127,8 @@ Therefore:
 - `logical free space != immediately erased NAND capacity`.
 
 Crucial's maintained material also presents Active Garbage Collection as useful where TRIM is unavailable. That means controller-local reclamation cannot be reduced to merely “executing a TRIM command.” The two mechanisms can cooperate, but they are not one state transition.
+
+The m4 experiment adds a useful observability guardrail: when a tested host path did not produce the authors' expected TRIM effect, stale payload remained recoverable. That result does not establish that no garbage collector existed; a controller that still regards pages as live may have to preserve/relocate them rather than discard them. Thus `TRIM absent != GC absent`, just as `TRIM delivered != physical erase necessarily synchronous with the command`.
 
 ---
 
@@ -237,6 +260,8 @@ Cases 44 and 47 remain the stronger sanitize/remanence boundary.
 
 Case 04 shows that logical designation can survive physical relocation. Case 150 adds the reclamation motive: live data may be relocated specifically so that a mixed old erase block can be erased and returned to the free pool. Same broad abstraction layer, different bounded question.
 
+The new m4 experiment deepening adds the reverse-side control question: if device-level retirement/deallocation evidence is absent or not acted on, upper-layer deletion need not make a physical embodiment reclaimable. That is a functional reconstruction, not a claim that the m4 implements Case 04's historical patent structures.
+
 ### Case 145 — JFFS2 raw-Flash garbage collection
 
 Both cases relocate live data and reclaim erase-block space, but the authority boundary differs sharply. JFFS2 exposes filesystem nodes, versions, obsolete-node state, and `CLEANMARKER` logic in open source. A managed SSD hides the corresponding mapping/victim-selection/recovery machinery behind a block interface. Shared `garbage collection` vocabulary does not make their state machines identical.
@@ -257,6 +282,8 @@ Case 111 also demonstrates that future powered opportunity can matter, but for a
 
 Ordinary garbage collection reclaims capacity while preserving all data that remains current. Sanitization aims to retire recoverability itself. Similar erase primitives can participate in both, but their authority, completeness, and verification contracts differ.
 
+The SecureComm m4 tests use quick format and forensic recovery, not a security sanitize command. Their path-dependent survivor result therefore strengthens `logical retirement != physical trace retirement` while remaining outside sanitize-conformance claims.
+
 ---
 
 ## Prior-art and genealogy boundary
@@ -270,7 +297,7 @@ Guardrails:
 - the M550 evidence therefore serves as a **named-product embodiment floor**, not an invention date;
 - chronology does not prove a Micron/Crucial genealogy from any particular earlier paper, patent, controller family, or SSD vendor.
 
-A fresh search of `tmzncty/computing-archaeology` found no dedicated SSD garbage-collection or M550/DEVSLP study to reuse. Broader FTL genealogy, early commercial SSD GC, controller architecture, SATA low-power-state genealogy, and product-by-product scheduler history belong primarily there if pursued; Case 150 keeps only the retention/reclamation relation.
+A fresh search of `tmzncty/computing-archaeology` found no dedicated SSD garbage-collection, Crucial m4/M550, or M550/DEVSLP study to reuse. Broader FTL genealogy, early commercial SSD GC, controller architecture, SATA low-power/TRIM transport genealogy, and product-by-product scheduler history belong primarily there if pursued; Case 150 keeps only the retention/reclamation relation.
 
 ---
 
@@ -283,6 +310,8 @@ A mixed erase block cannot be forgotten wholesale. The controller must discrimin
 A second observation is that **inactivity at one layer can be maintenance activity at another**. Host idleness can provide the interval in which a controller reorganizes physical state while leaving the logical namespace apparently unchanged.
 
 The power-state deepening adds a further limit to that observation: apparent inactivity does not itself guarantee that lower-layer maintenance machinery remains eligible. Energy-saving policy can consume the same idle interval in a different way.
+
+The m4 experiment deepening adds one more bounded condition: forgetting safely can require retained authority that an old embodiment is no longer current. A forensic trace can survive after upper-layer retirement without thereby remaining authoritative current state.
 
 These are mechanism-level observations. They do not make SSD garbage collection a theory of human forgetting, archival memory, or ontology.
 
@@ -361,11 +390,17 @@ Crucial Support, **M550 SSD firmware and support**:
 
 The published release note includes improved stability/efficiency/performance during power-state transitions and corrected NCQ TRIM error handling. It does not say that garbage-collection scheduling changed.
 
-### F1 — follow-on bounded deepening
+### F1 — powered-idle follow-on bounded deepening
 
 [Evidence 150 — Crucial SSD Active Garbage Collection: Powered Idle, Sleep States, and Maintenance Opportunity](../evidence/150-crucial-powered-idle-sleep-maintenance-opportunity-deepening.md)
 
 This follow-on is the authoritative location for the power-state/maintenance-opportunity decomposition and its explicit non-claims.
+
+### F2 — period-provenance / named-device experiment follow-on
+
+[Evidence 150 — Crucial 2013–2015 AGC Provenance and m4 Experiment Boundary](../evidence/150-crucial-2013-2015-agc-provenance-experiment-deepening.md)
+
+This follow-on records the source-class limits of the 2013/2014 contemporaneous support-text reproductions and the SecureComm m4 experiments. It is the authoritative location for the distinction `recoverable stale data != proved absence of a garbage-collection engine`.
 
 ---
 
@@ -373,18 +408,20 @@ This follow-on is the authoritative location for the power-state/maintenance-opp
 
 - **Strong:** named M550 product documentation explicitly lists Active Garbage Collection and TRIM as separate features; Micron gives a dated 2014 availability anchor.
 - **Strong for current vendor behavior:** Crucial's maintained support material explicitly describes controller-local Active Garbage Collection, powered idle opportunity, free-space dependence, and power-setting changes that preserve a long idle maintenance window.
+- **Moderate period-provenance evidence:** contemporaneous 2013 support-email reproduction and March-2014 website quotation show the AGC / powered-idle vocabulary circulating near the M550 period, but neither is an authenticated Crucial-origin archive.
+- **Strong named-device experimental evidence for the tested setups:** SecureComm identifies a Crucial m4 CT064M4SSD2 and reports USB/secondary-SATA stale-data survival versus primary-SATA/Windows-7/TRIM non-recovery; the internal causal interpretation remains more limited than the observable outcome.
 - **Strong generic mechanism:** SNIA describes relocation of valid data before erase-block reclamation and its write-amplification/performance cost.
 - **Strong protocol boundary:** SATA-IO distinguishes DevSleep from active/other reduced-power interface states, but does not specify M550's internal GC eligibility.
 - **Moderate historical guardrail:** 2011 SNIA and 2005 academic flash-management literature establish that the relevant problem family predates M550.
 - **Moderate product revision guardrail:** M550 MU02 explicitly changed power-state-transition handling, but no inspected source ties that change to GC.
-- **Not established:** exact M550 GC algorithm, victim policy, internal metadata, free-space threshold, power-fail transaction, per-power-state GC eligibility, firmware-version scheduler differences, or complete physical sanitization effect.
+- **Not established:** exact M550 GC algorithm, victim policy, internal metadata, free-space threshold, power-fail transaction, per-power-state GC eligibility, firmware-version scheduler differences, command-level trace for the m4 experiments, or complete physical sanitization effect.
 
 ---
 
 ## Open debt
 
-1. Recover an origin-hosted or archived **2010–2014 Crucial** support page that dates the powered-idle / 6–8-hour Active Garbage Collection instructions closer to M550 rather than relying on maintained 2024 support text.
+1. Recover an authenticated origin-hosted or archived **2010–2014 Crucial** support page containing the powered-idle / `6–8 hours` Active Garbage Collection instructions. The new deepening narrows public circulation to August 2013 but does not close origin provenance.
 2. Find a first-party controller/firmware document exposing an actual managed-SSD GC state machine, victim selection, crash protocol, or explicit power-state eligibility table.
-3. Add named-device traces that correlate TRIM, active idle, low-power states, internal writes, and reclaimed space without mistaking performance recovery for direct block-level proof.
-4. Trace early commercial SSD GC / FTL and SATA low-power-state genealogy in `computing-archaeology` rather than expanding this case into a general SSD history.
-5. Keep ordinary reclamation erase separate from sanitize/remanence testing unless lower-layer evidence is obtained.
+3. Extend the new named-device evidence with controlled traces that separately correlate deallocation delivery, active idle, low-power states, internal writes, and reclaimed space; the SecureComm m4 results establish path-dependent recoverability but do not instrument internal GC or exact ATA command delivery.
+4. Trace early commercial SSD GC / FTL and SATA low-power/TRIM transport genealogy in `computing-archaeology` rather than expanding this case into a general SSD history.
+5. Keep ordinary reclamation erase and quick-format forensic recovery separate from sanitize/remanence testing unless lower-layer security-command evidence is obtained.
