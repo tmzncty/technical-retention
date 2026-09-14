@@ -8,6 +8,8 @@ Grounding record: [`../evidence/135-micron-emmc-2021-2023-self-refresh-grounding
 
 Deepening record: [`../evidence/135-jedec-emmc51-bkops-maintenance-opportunity-deepening.md`](../evidence/135-jedec-emmc51-bkops-maintenance-opportunity-deepening.md).
 
+Time/maintenance-control deepening: [`../evidence/135-jesd84-b50-2013-rtc-periodic-wakeup-time-maintenance-deepening.md`](../evidence/135-jesd84-b50-2013-rtc-periodic-wakeup-time-maintenance-deepening.md).
+
 ## Scope
 
 This case asks a narrow managed-Flash retention question:
@@ -278,7 +280,7 @@ The interpretation stops there. Atmark and Micron do not present this mechanism 
 
 ## Related repositories
 
-Fresh searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `Micron eMMC` and `SET_TIME eMMC` found no dedicated matching technical-history module during this pass.
+Fresh searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `Micron eMMC`, `SET_TIME eMMC`, `PERIODIC_WAKEUP`, and `eMMC RTC` found no dedicated matching technical-history module during this pass.
 
 A broad genealogy of eMMC maintenance commands, JEDEC revision history, BKOPS, controller architecture, read reclaim, and Micron firmware generations belongs primarily in `computing-archaeology` if developed. This case keeps only the retention-specific relation among time evidence, execution opportunity, selective renewal, and retained maintenance state.
 
@@ -303,12 +305,11 @@ JESD84-B51 also defines `SANITIZE_START[165]` separately from `BKOPS_START[164]`
 
 The bounded evidence and chronology ledger is in [`../evidence/135-jedec-emmc51-bkops-maintenance-opportunity-deepening.md`](../evidence/135-jedec-emmc51-bkops-maintenance-opportunity-deepening.md). February 2015 is used only as the public floor for the inspected e.MMC 5.1 control semantics, not as an invention date for Flash background maintenance or manual BKOPS.
 
-
 ## Open research debt
 
 - obtain and directly inspect the full Micron TN-FC-60 body;
 - identify the exact Micron eMMC part/firmware revision in the bounded Armadillo configuration and any product errata;
-- trace `SET_TIME (CMD49)` and the relevant vendor extension against official JEDEC eMMC revision history without assuming command-number identity across contexts;
+- directly inspect JESD84-B451 and earlier normative revisions before assigning a first-introduction point to `SET_TIME (CMD49)`, RTC, or `PERIODIC_WAKEUP`; the September-2013 B50 semantics are now directly bounded in the linked deepening;
 - trace pre-5.1 manual BKOPS and the later background-operation-control genealogy directly in JEDEC revisions; do not infer the full genealogy from JESD84-B51 alone;
 - obtain independent fault-injection evidence for interrupted self-refresh and time-source faults;
 - determine the exact physical rewrite/relocation and ECC-codeword geometry only from appropriate implementation evidence;
@@ -318,6 +319,7 @@ The bounded evidence and chronology ledger is in [`../evidence/135-jedec-emmc51-
 
 - Atmark Techno, **Armadillo-IoT Gateway G4 Product Manual, version 1.0.0**, 9 December 2021. eMMC data-retention section 9.9: <https://manual.atmark-techno.com/armadillo-iot-g4/armadillo-iotg-g4_product_manual_ja-1.0.0/ch09.html>. Versioned PDF cover/date: <https://armadillo.atmark-techno.com/files/downloads/armadillo-iot-g4/document/armadillo-iotg-g4_product_manual_ja-1.0.0.pdf?v=1639041210>.
 - Atmark Techno, **Armadillo-IoT Gateway G4 Product Manual, current maintained HTML**, eMMC data-retention section (later editions preserve the mechanism with section renumbering): <https://manual.atmark-techno.com/armadillo-iot-g4/armadillo-iotg-g4_product_manual_ja/ch06.html>.
+- JEDEC, **JESD84-B50, _Embedded Multi-Media Card (e•MMC) Electrical Standard (5.0)_**, September 2013. Public text-preserving inspection copy used for §§6.6.38, 6.6.38.1, 7.4.89 and CMD49: <https://pdfcoffee.com/jesd84-b50-pdf-free.html>.
 - Micron Technology, **eMMC software / technical-note catalog**, entry for `TN-FC-60: Refresh Features for Micron e.MMC Automotive 5.1 Devices`, dated 11 April 2023: <https://www.micron.com/sales-support/downloads/software-drivers/emmc-software>.
 
 ## Prior-art follow-up — manual BKOPS is publicly grounded by e.MMC 4.41
@@ -336,3 +338,33 @@ scheduling authority != physical-target authority != hidden algorithm identity
 The 2009 e.MMC 4.4 public title lacks the later `Background Operation` phrase, but title metadata is not a clause-level A44→A441 diff and therefore cannot prove a first-introduction event. Direct normative diffing and the 4.41→4.5→4.51→5.0→5.1 genealogy remain evidence debt, with broader pre-eMMC maintenance history routed to `computing-archaeology`.
 
 Prior-art deepening: [`../evidence/135-emmc441-2010-manual-bkops-prior-art-deepening.md`](../evidence/135-emmc441-2010-manual-bkops-prior-art-deepening.md).
+
+## Deepening — e.MMC 5.0 standardizes maintenance-relevant time input and periodic wakeup
+
+JESD84-B50 (September 2013) now supplies the standard-level boundary that the original Case 135 left open. Its §6.6.38 says real-time-clock information supplied by the host **may be useful for internal maintenance operations**. `CMD49 (SET_TIME)` transfers a typed 512-byte time-information block and supports absolute UTC, a relative-time base, and relative time since that base. The host is advised to update this relation after power-up, after waking from sleep, and periodically.
+
+The same standard separately defines `PERIODIC_WAKEUP[131]`. When configured, the host must wake the device at least as often as the interval requires, power it, start at least one background operation through `BKOPS_START`, and let that operation run to completion without interruption before powering down. The field also has an infinity/no-wakeup state.
+
+This sharpens the control-state decomposition:
+
+```text
+host time source
+    != device time relation
+    != maintenance eligibility
+    != wakeup schedule
+    != BKOPS debt/status
+    != maintenance execution
+    != completion
+```
+
+The later Armadillo/Micron path can therefore be read more precisely. `SET_TIME` is not itself proprietary, but the **one-day eligibility rule, reset-bounded Delay 1 window, bus-idle / Delay 2 gating, ECC-threshold target selection, and vendor self-refresh telemetry remain product/vendor-specific evidence** in the inspected sources. Nothing inspected establishes that Micron self refresh is literally driven by `PERIODIC_WAKEUP` or that it is implemented as generic `BKOPS_START` work.
+
+Accordingly:
+
+```text
+standard SET_TIME semantics != standardized vendor self-refresh algorithm
+PERIODIC_WAKEUP interval != raw NAND retention deadline
+BKOPS completion != Micron self-refresh completion demonstrated
+```
+
+The bounded evidence ledger and explicit non-claims are in [`../evidence/135-jesd84-b50-2013-rtc-periodic-wakeup-time-maintenance-deepening.md`](../evidence/135-jesd84-b50-2013-rtc-periodic-wakeup-time-maintenance-deepening.md). The safe chronology is only that these semantics are directly inspectable in e.MMC 5.0 / September 2013; direct JESD84-B451 and earlier clause comparison remains necessary before any first-introduction claim.
