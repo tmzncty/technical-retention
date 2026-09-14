@@ -2,7 +2,7 @@
 
 ## Scope
 
-- **Object / system:** T10 SCSI Background Medium Scan (BMS) and related Background Pre-Scan controls, bounded from the archived 2004 proposal family through the March 2005 T10 approval, January 2006 clarification work, and a February 2007 Seagate Cheetah 15K.5 FC product witness.
+- **Object / system:** T10 SCSI Background Medium Scan (BMS) and related Background Pre-Scan controls, bounded from the archived 2004 proposal family through the March 2005 T10 approval, January 2006 clarification work, a February 2007 Seagate Cheetah 15K.5 FC product witness, and a bounded 2005–2006 Dell PERC controller-level `Patrol Read` comparison.
 - **Retention question:** what work is required when a disk sector may still physically exist and remain addressable, yet its future readability has become uncertain before any application happens to request it?
 - **Status:** `grounded`.
 
@@ -10,7 +10,9 @@ This is **not** a general history of disk scrubbing, SCSI VERIFY, SMART, RAID-co
 
 > **How can a storage device proactively discover that a still-present block has become difficult or impossible to read, retain evidence of that discovery, and condition later repair without confusing detection with repair?**
 
-The project terms `readability qualification`, `coverage age`, `repair admissibility`, and `maintenance evidence` below are **engineering reconstructions**, not T10 or Seagate historical vocabulary.
+The project terms `readability qualification`, `coverage age`, `repair admissibility`, and `maintenance evidence` below are **engineering reconstructions**, not T10, Seagate, or Dell historical vocabulary.
+
+Bounded controller-level deepening: [`../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md`](../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md).
 
 ---
 
@@ -34,7 +36,9 @@ The inspected T10 and Seagate sources directly use terms including:
 - `unreadable` / `medium error`;
 - `P-list` / `G-list` in the Seagate product manual.
 
-Do not silently normalize these into later vendor-specific `patrol read`, filesystem `scrub`, or distributed `scanner` vocabulary. Those terms can be compared functionally but do not establish one lineage.
+The bounded Dell controller witness adds period vendor terms including `Background Patrol Read`, `Patrol Read`, `Auto mode`, `Manual mode`, `Consistency Check`, `SMART alerts`, and the `MegaPR` utility. Later Dell support documentation additionally exposes `PR completed Bitmap`, `Last complete Bitmap`, scheduling state, and NVRAM-held error information for the legacy implementation family.
+
+Do not silently normalize T10 `Background Medium Scan` into Dell `Patrol Read`, later vendor-specific patrol terminology, filesystem `scrub`, or distributed `scanner` vocabulary. Those terms can be compared functionally but do not establish one lineage.
 
 ---
 
@@ -128,6 +132,23 @@ This prevents a false engineering inference from the earlier proposal text:
 
 The retained scan/control relation can specify that coverage is due and report progress without exposing the complete internal physical scheduling algorithm.
 
+### H/P — Dell PERC supplies a named controller-level `Patrol Read` witness by June 2005
+
+Dell's still-live record for **MegaPR for Linux v.1.03, A02**, released **7 June 2005**, says the utility can start, stop, and display the status of `Patrol Read` on specified PERC 3, PERC 4, and PERC 4e controllers. This closes one bounded `named RAID controller` evidence gap without establishing invention priority or first firmware availability.
+
+A February 2006 *Dell Power Solutions* article by Drew Habas and John Sieber then describes `Background Patrol Read` as a PERC feature that issues commands across configured array drives, detects media defects, and, where redundancy permits, reconstructs data from peer drives before the affected drive writes to a reassigned sector. The same article explicitly separates Background Patrol Read from parity/mirror `Consistency Check` and predictive `SMART alerts`.
+
+This gives a controller-level maintenance locus that must not be silently collapsed into the drive-side T10 BMS relation:
+
+```text
+device-side BMS
+    != controller-orchestrated PERC Patrol Read
+```
+
+Chronological proximity in 2005–2006 is not proof that one implementation descended from the other or that PERC invoked the standardized T10 BMS operation internally.
+
+Detailed record: [`../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md`](../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md).
+
 ### H/P — a 2007 Seagate product manual documents BMS as shipped drive behavior
 
 Seagate's **Cheetah 15K.5 FC Product Manual, Rev. C**, February 2007, describes `Background Media Scan` as a self-initiated scan defined in the T10 SPC-4 work. The manual says the drive performs reads across the medium while idle, can use BMS on RAID hot spares before they enter service, exposes a BMS log so a host can avoid suspect locations, and logs or reallocates unreadable/recovered-error sites according to `ARRE/AWRE` settings.
@@ -146,7 +167,7 @@ This independent study is useful context for why proactive reading can matter. I
 
 ## Retained state and maintenance relations
 
-The bounded case contains at least five distinct state classes.
+The bounded case contains at least six distinct state classes.
 
 ### 1. User payload on the medium
 
@@ -172,11 +193,21 @@ This is neither a complete failure history nor a permanent integrity certificate
 
 `ARRE/AWRE` determine whether certain automatic relocation paths are permitted. The actual availability of replacement capacity, the ability to recover the old payload, and successful completion of reassignment remain distinct from those permission bits.
 
+### 6. Controller-level maintenance summary and recurrence state
+
+The Dell PERC deepening adds a higher-layer variant. Later Dell support documentation for the legacy PERC family says Patrol Read data are stored in controller NVRAM for physical-drive progress/completion summaries, scheduling, and error logging. It exposes PR-completion bitmaps, a prior-completion bitmap, bitmap-clear time, next desired start time, and recovered/unrecovered error information.
+
+The same documentation says an interrupted **Auto** Patrol Read restarts from the beginning after server reboot, while **Manual** mode does not automatically restart. Therefore:
+
+> **persistent maintenance policy / summary / error evidence ≠ persistent exact execution checkpoint.**
+
+The completion bitmap is also a recent per-drive summary, not a per-LBA timeless certificate.
+
 ---
 
 ## Trigger and timing structure
 
-BMS makes several clocks visible:
+BMS and the bounded controller comparison make several clocks visible:
 
 1. time since the prior scan cycle;
 2. idle time before a background pass may resume;
@@ -185,13 +216,18 @@ BMS makes several clocks visible:
 5. physical defect creation time, which may be unknown;
 6. defect discovery time during a scan or foreground access;
 7. delay between discovery and any repair/reassignment;
-8. power-on pre-scan coverage progress.
+8. power-on pre-scan coverage progress;
+9. controller-level recurrence scheduling time;
+10. recent completion-summary window;
+11. one interrupted pass's execution frontier.
 
 These times must not be collapsed.
 
 A medium error discovered at time `t2` may have been created at some unknown earlier `t1`. A successful scan at `t0` is evidence about the blocks exercised then, not a guarantee about `t3`.
 
 > **scan completion ≠ timeless readability certificate.**
+
+Likewise, a retained schedule or recent completion bitmap does not necessarily retain the exact LBA/frontier required to continue an interrupted controller scan without repeating work.
 
 ---
 
@@ -206,9 +242,11 @@ Keep these separate:
 - scan-result logging fills or is unavailable;
 - a defect is logged but automatic repair is not permitted;
 - repair is permitted but no successful relocation occurs;
+- a controller detects a defect but the present RAID state cannot reconstruct the payload;
 - reassignment occurs but the old payload could not be recovered;
 - a logical block is remapped while the old physical sector remains on the medium;
 - a log entry is cleared after handling;
+- a controller retains recurring-maintenance policy but loses the exact in-flight execution frontier;
 - secure sanitization of old media embodiments.
 
 Calling all of these `disk failure` would lose the relation under study.
@@ -231,36 +269,45 @@ proactive read
 
 This diagram is an **engineering reconstruction**, not a claim that every drive follows one universal sequence. Case 14 directly proves that reassignment can change the physical medium behind the same LBA and that the reassignment command itself does not guarantee preservation of the affected old data.
 
-Therefore:
+The Dell PERC witness adds one controller-level branch in which redundancy may supply the old payload before a drive reassignment/rewrite. That yields:
 
-> **defect discovery ≠ reassignment ≠ payload preservation.**
+> **defect discovery ≠ payload reconstructability ≠ reassignment ≠ completed payload preservation.**
 
 ### Case 18 — ZFS scrub
 
-Both BMS and ZFS scrub proactively read state before ordinary demand exposes a fault, but they qualify different relations.
+Both BMS/PERC Patrol Read and ZFS scrub proactively read state before ordinary demand exposes a fault, but they qualify different relations.
 
 - BMS is device-local medium readability/recovery work under a SCSI drive interface.
+- PERC Patrol Read is controller-orchestrated media verification with RAID-aware repair context.
 - ZFS scrub is filesystem/pool-level checksum and redundancy verification with end-to-end block identity and repair semantics.
 
 A disk sector can be readable while the filesystem block is semantically/checksum wrong; a filesystem checksum can also identify bad content without explaining the physical-sector defect mechanism.
 
-> **medium readability qualification ≠ higher-layer checksum integrity qualification.**
+> **medium readability qualification ≠ controller redundancy qualification ≠ higher-layer checksum integrity qualification.**
 
 The comparison is functional, not genealogical.
 
 ### Case 55 — NVMe health telemetry
 
-Case 55 exposes counters, warnings, spare margin, and endurance estimates. BMS performs active coverage reads and records concrete scan findings.
+Case 55 exposes counters, warnings, spare margin, and endurance estimates. BMS performs active coverage reads and records concrete scan findings. The 2006 Dell article supplies a period vendor version of the same distinction by putting SMART alerts and active Background Patrol Read into different Fault Management Suite roles.
 
-> **health telemetry ≠ proactive verification coverage.**
+> **health telemetry / prediction ≠ proactive verification coverage.**
 
 A warning/counter may indicate risk without proving which particular block is unreadable; a scan can find a bad block without supplying a complete life/endurance model.
 
 ### Case 83 / Synthesis 08 — HDFS and distributed integrity maintenance
 
-HDFS BlockScanner and GFS idle checking show proactive integrity discovery at the distributed replica layer. BMS shows a device-local predecessor/contemporary function at a lower storage layer.
+HDFS BlockScanner and GFS idle checking show proactive integrity discovery at the distributed replica layer. BMS shows a device-local function; PERC Patrol Read adds a controller-level array function between that layer and a filesystem/distributed checker.
 
-The shared functional pattern is `background verification before demand`. It does not establish a T10→HDFS/GFS genealogy, identical integrity semantics, or identical repair authority.
+The shared functional pattern is `background verification before demand`. It does not establish a T10→PERC→HDFS/GFS genealogy, identical integrity semantics, or identical repair authority.
+
+### Synthesis 26 — maintenance-control-state persistence horizons
+
+The Dell PERC evidence provides a bounded controller example in which NVRAM-held schedule/completion/error metadata can outlive one maintenance execution while an interrupted Auto scan still restarts from the beginning.
+
+> **maintenance-control persistence horizon ≠ maintenance-execution persistence horizon.**
+
+This is a functional comparison, not a claim of shared implementation with DRAM, NAND, SSD, or HDFS maintenance-state cases.
 
 ---
 
@@ -276,11 +323,11 @@ This case makes **no invention-priority claim** for:
 - filesystem scrub;
 - distributed checksum scanning.
 
-`04-198r5` itself says proprietary drive methods and operating-system scanning already existed. The March 2005 plenary evidence establishes a standards-inclusion decision, not invention. The 2007 Seagate manual establishes one product witness, not universal adoption.
+`04-198r5` itself says proprietary drive methods and operating-system scanning already existed. The March 2005 plenary evidence establishes a standards-inclusion decision, not invention. Dell's June 2005 MegaPR record establishes a named PERC controller Patrol Read control surface, not first invention or direct descent from T10 BMS. The 2007 Seagate manual establishes one drive-side product witness, not universal adoption.
 
-The broader ROADMAP phrase `controller patrol-read history` therefore remains partly open. This case closes only a bounded **device-side SCSI Background Medium Scan** slice. A full history would need named RAID controllers, period LSI/ServeRAID/other manuals, SCSI VERIFY-based host/controller implementations, parity consistency checks, and evidence about how `patrol read` terminology moved across vendors.
+The broader ROADMAP phrase `controller patrol-read history` therefore remains partly open, but one bounded gap is now closed: **Dell PERC 3/4/4e supplies a period named controller-level Patrol Read witness by June 2005.** A full history still needs pre-2005 genealogy, LSI/MegaRAID material independent of Dell branding, IBM ServeRAID and other controller vendors, SCSI VERIFY-based host/controller implementations, cross-vendor parity consistency-check distinctions, and evidence about how `patrol read` terminology moved across vendors.
 
-A fresh repository search found no dedicated `patrol read` / `background medium scan` history in `tmzncty/computing-archaeology`. If that broader engineering genealogy is built later, it should live there and Case 101 should remain the retention-specific BMS boundary.
+A fresh repository search found no dedicated `patrol read` / `background medium scan` history in `tmzncty/computing-archaeology`. If that broader engineering genealogy is built later, it should live there and Case 101 should remain the retention-specific BMS/PERC boundary.
 
 ---
 
@@ -304,6 +351,35 @@ Detailed record: [`../evidence/101-wd-2024-bms-progress-repair-policy-deepening.
 
 ---
 
+## 2005–2006 Dell PERC controller deepening
+
+The Dell slice closes a different layer than the Western Digital drive witness above. Dell's 7 June 2005 MegaPR release proves a public controller-side `Patrol Read` control/status interface on named PERC families. The February 2006 Dell Power Solutions article then describes controller-orchestrated media testing, redundancy-assisted reconstruction, drive reassignment/rewrite, Auto/Manual recurrence, and workload-sensitive command issue.
+
+The same period article explicitly separates three maintenance/health relations:
+
+```text
+Patrol Read
+    -> proactive media-defect coverage/recovery
+
+Consistency Check
+    -> parity/mirror data-consistency qualification/correction
+
+SMART alerts
+    -> predictive drive-health warning
+```
+
+A later Dell support record for the legacy PERC family adds NVRAM-held scheduling, recent completion summaries, and error information. Crucially, it also states that an interrupted Auto Patrol Read starts again from the beginning after reboot, while Manual mode does not automatically restart. Therefore the retained controller state cannot be treated as one undifferentiated checkpoint:
+
+> **retained maintenance policy / summary / error evidence != retained exact execution frontier.**
+
+The record also describes RAID-state-dependent repair, so a controller can discover a medium defect in a state where redundant reconstruction is not admissible. Hence:
+
+> **coverage != reconstructability != remediation.**
+
+Detailed source and claim ledger: [`../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md`](../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md).
+
+---
+
 ## Engineering reconstruction
 
 Case 101 adds these controlled relations:
@@ -321,15 +397,23 @@ Case 101 adds these controlled relations:
 11. `pre-scan write-and-verify ≠ ordinary post-coverage write semantics`;
 12. `logical coverage ≠ fixed LBA-order physical traversal`;
 13. `device-local readability verification ≠ filesystem/distributed checksum integrity`;
-14. `BMS standardization ≠ invention of background scanning or proof of a patrol-read genealogy`.
+14. `BMS standardization ≠ invention of background scanning or proof of a patrol-read genealogy`;
+15. `device-local proactive scan ≠ controller-level redundancy-aware proactive scan`;
+16. `Patrol Read ≠ parity/mirror Consistency Check ≠ SMART prediction`;
+17. `defect discovery ≠ payload reconstructability ≠ completed controller repair`;
+18. `persistent maintenance policy/summary/error evidence ≠ persistent exact scan-position checkpoint`;
+19. `recent per-drive completion bitmap ≠ per-LBA verification ledger`;
+20. `restarted maintenance from the beginning ≠ loss of all retained maintenance policy/history`.
 
-These are project analytical statements. They are not assertions that T10 participants used this ontology.
+These are project analytical statements unless a distinction is explicitly marked above as Dell/T10 historical vocabulary. They are not assertions that T10 participants or Dell engineers used this ontology.
 
 ---
 
 ## Philosophical interpretation — bounded
 
 Case 101 strengthens a narrow theme already visible in Synthesis 08: some retention work is **epistemic maintenance**. A physical embodiment can remain present while the system's justified confidence in its future readability decays because no recent operation has exercised it. A background scan creates new evidence by deliberately reading before application demand forces the question.
+
+The Dell controller comparison adds another bounded point: a system can retain evidence that maintenance is due, recently completed, or encountered errors without retaining an exact continuation point for the interrupted act itself. The `obligation/history` relation and the `execution frontier` are different retained objects.
 
 The stronger universal claim must be rejected. Storage does not become persistent merely because it is repeatedly observed, and not every medium needs proactive reading to remain physically stable. Here the scan does not cause magnetic retention in the ordinary sense; it changes what the system knows about the embodiment and can trigger later repair before redundancy or recoverability margin is lost.
 
@@ -342,12 +426,15 @@ Still open:
 - full archival reconstruction of `04-198r0` through `r4` and every CAP change;
 - exact final SBC-3/SPC-4 publication wording and later revision genealogy;
 - host-initiated SCSI VERIFY scrub history before device-side BMS;
-- named hardware RAID-controller `Patrol Read` genealogy and vendor terminology;
-- distinction between patrol read and parity `Consistency Check` across products;
-- field fault injection on BMS-capable drives;
-- quantitative BMS scheduling, bandwidth, and detection-latency behavior in deployed arrays;
+- pre-June-2005 Dell/LSI Patrol Read firmware-development and shipment chronology;
+- LSI/MegaRAID, IBM ServeRAID, and other controller vendors' period `Patrol Read` genealogy and terminology;
+- cross-vendor distinction between patrol read and parity `Consistency Check` beyond the bounded Dell witness;
+- direct evidence for or against a T10-BMS-to-controller-Patrol-Read genealogy;
+- field fault injection on BMS- or period-PERC-capable hardware;
+- quantitative BMS/controller scheduling, bandwidth, and detection-latency behavior in deployed arrays;
 - interaction with drive-internal ECC, SMART predictive attributes, and error-recovery firmware;
 - correlated/multi-sector defects and URE-aware RAID rebuild policy;
+- exact persistence of legacy PERC NVRAM Patrol Read fields across controller replacement, NVRAM loss/corruption, and firmware transition;
 - lower-layer forensic persistence after reassignment or logical retirement.
 
 These limits do not block the bounded result.
@@ -358,11 +445,11 @@ These limits do not block the bounded result.
 
 ### `tmzncty/computing-archaeology`
 
-Repository search found no dedicated SCSI BMS / patrol-read case at the time of this slice. Case 101 therefore keeps only the retention-specific historical boundary and relation decomposition. A broader history of host scrubbing, SCSI VERIFY, drive firmware, RAID patrol read, and consistency checking should be developed there and linked back rather than duplicated here.
+Repository search found no dedicated SCSI BMS / patrol-read case at the time of this slice. Case 101 therefore keeps only the retention-specific historical boundary and relation decomposition. A broader history of host scrubbing, SCSI VERIFY, drive firmware, LSI/MegaRAID/ServeRAID patrol read, and consistency checking should be developed there and linked back rather than duplicated here.
 
 ### `tmzncty/problem-history`
 
-Useful anti-anachronism guardrail: `readability qualification`, `coverage age`, and `maintenance evidence` are project reconstructions. Historical actors in the bounded sources spoke of medium scan, pre-scan, recovered/unreadable errors, ARRE/AWRE, log pages, and reassignment status.
+Useful anti-anachronism guardrail: `readability qualification`, `coverage age`, `maintenance evidence`, and `maintenance-control persistence horizon` are project reconstructions. Historical actors in the bounded sources spoke of medium scan, pre-scan, Patrol Read, Auto/Manual mode, Consistency Check, SMART, recovered/unreadable errors, ARRE/AWRE, log pages, reassignment status, NVRAM, and completion bitmaps.
 
 ---
 
@@ -374,7 +461,13 @@ Useful anti-anachronism guardrail: `readability qualification`, `coverage age`, 
 - T10, Weber & Lohmeyer, **Minutes of T10 Plenary Meeting #66 — March 10, 2005**, `05-097r0`, especially §10.5 recording approval of `04-198r5`: <https://www.t10.org/ftp/t10/document.05/05-097r0.htm>
 - T10, Rob Elliott (HP), **`05-340r3 — SBC-3 SPC-4 Background scan additions`**, 18 January 2006: <https://www.t10.org/ftp/t10/document.05/05-340r3.pdf>
 - T10, **2005 document register**, identifying CAP minutes `05-096r0`, plenary minutes `05-097r0`, and the `05-340` proposal family: <https://www.t10.org/doc05.htm>
+- Dell, **MegaPR for Linux, v.1.03, A02**, release date 7 June 2005: <https://www.dell.com/support/home/en-us/drivers/driversdetails?driverid=nfpxp>
+- Drew Habas and John Sieber, **“Background Patrol Read for Dell PowerEdge RAID Controllers,”** *Dell Power Solutions*, February 2006, pp. 73–75. Historical Dell URL: <http://www.dell.com/downloads/global/power/ps1q06-20050212-Habas.pdf>. Inspected surviving page-preserving PDF: <https://device.report/m/6f19713c57627fcded037f379ce7f40935f82e64231047790be0b44ae2498823.pdf>
 - Seagate, **_Cheetah 15K.5 FC Product Manual_, Publication 100384772 Rev. C**, February 2007, §7.4 `Background Media Scan`: <https://www.seagate.com/staticfiles/support/disc/manuals/fc/100384772c.pdf>
+
+### Later vendor continuity / implementation detail
+
+- Dell, **Patrol ReadによるRAIDアレイのメンテナンス**, document `000129145`, version 7, last updated 24 February 2026: <https://www.dell.com/support/kbdoc/ja-jp/000129145/patrol-read%E3%81%AB%E3%82%88%E3%82%8Braid%E3%82%A2%E3%83%AC%E3%82%A4%E3%81%AE%E3%83%A1%E3%83%B3%E3%83%86%E3%83%8A%E3%83%B3%E3%82%B9>
 
 ### Independent scholarly context
 
@@ -387,6 +480,7 @@ Useful anti-anachronism guardrail: `readability qualification`, `coverage age`, 
 - [`cases/55-nvme-smart-health-endurance-telemetry.md`](55-nvme-smart-health-endurance-telemetry.md)
 - [`cases/83-apache-hdfs-block-scanner-checksum-verification.md`](83-apache-hdfs-block-scanner-checksum-verification.md)
 - [`docs/SYNTHESIS_08_PROACTIVE_INTEGRITY_REPAIR_MARGIN.md`](../docs/SYNTHESIS_08_PROACTIVE_INTEGRITY_REPAIR_MARGIN.md)
+- [`docs/SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md`](../docs/SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md)
 
 ---
 
@@ -394,4 +488,4 @@ Useful anti-anachronism guardrail: `readability qualification`, `coverage age`, 
 
 **Grounded bounded case.**
 
-The core mechanism and historical boundary are supported by T10 proposal/committee records plus a named Seagate product manual; the SIGMETRICS field study is used only as independent latent-error context. The case closes a device-side SCSI BMS relation slice without claiming invention of scrubbing, complete patrol-read history, or equivalence with higher-layer integrity verification.
+The core drive-side mechanism and historical boundary are supported by T10 proposal/committee records plus a named Seagate product manual; the SIGMETRICS field study is used only as independent latent-error context. The Dell deepening now closes one bounded named controller-level Patrol Read gap and adds a documented controller-state counterexample in which maintenance schedule/completion/error evidence can persist while an interrupted Auto pass does not retain an exact restart frontier. The case still does not claim invention of scrubbing, a direct T10→PERC genealogy, complete cross-vendor patrol-read history, or equivalence with higher-layer integrity verification.
