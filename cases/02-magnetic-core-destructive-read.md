@@ -14,12 +14,14 @@ Power-cycle diagnostic validation deepening: [`../evidence/02-dec-1966-1969-pdp8
 
 Papian direct-facsimile deepening: [`../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md`](../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md). This Case-70 record supplies the page-level 1952 IRE inspection that Case 02 previously carried as archival cleanup; its quantitative disturbance analysis remains scoped to Case 70 rather than being duplicated here.
 
+Temperature-compensation prior-art deepening: [`../evidence/02-1970-1973-core-temperature-compensation-operating-margin-deepening.md`](../evidence/02-1970-1973-core-temperature-compensation-operating-margin-deepening.md). This later patent slice complements, rather than duplicates, Case 70's named-machine DEC/IBM margin evidence by separating remanent payload state from temperature-dependent drive/inhibit control and by showing that active compensation was one design strategy rather than a universal core-memory property.
+
 ## Scope
 
 - **Object / system:** classic coincident-current magnetic-core memory, with MIT Project Whirlwind / Memory Test Computer as the principal historical anchor;
 - **Date range:** approximately 1950–1954 for the core evidence used here;
 - **Place / institution:** MIT Digital Computer Laboratory / Project Whirlwind and early Lincoln Laboratory work;
-- **Why this case matters for technical retention:** magnetic core introduces a retention regime that is almost the inverse of the mercury delay line. The stored magnetic state can remain without continuous recirculation or refresh, yet a normal read can deliberately destroy the physical state and require restoration.
+- **why this case matters for technical retention:** magnetic core introduces a retention regime that is almost the inverse of the mercury delay line. The stored magnetic state can remain without continuous recirculation or refresh, yet a normal read can deliberately destroy the physical state and require restoration.
 
 This case is deliberately narrower than a general history of core memory. Detailed engineering history, manufacturing labor, and the broader Whirlwind transition are already treated in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md). The purpose here is to isolate the retention problem created by **remanence + destructive read + rewrite**.
 
@@ -446,6 +448,21 @@ observed pass
 root-cause localization
 ```
 
+### Finding 8 — remanent payload and temperature-dependent access control are distinct
+
+The later temperature-compensation evidence adds another layer without changing the early MIT grounding. Call's 1970 filing treats inhibit current as a temperature-dependent relation to switching current; HP's 1971 filing models drive-current needs from ambient plus activity-related stack heating; Ampex's 1973 filing supplies a negative control by proposing material/pulse choices intended to avoid active compensation.
+
+Therefore:
+
+```text
+remanent payload state
+    != thermal operating condition
+    != drive / inhibit calibration relation
+    != proof of successful access
+```
+
+This is a later prior-art/control-architecture deepening. Named-machine quantitative service evidence remains stronger in Case 70.
+
 ---
 
 ## Philosophical / media-theoretical interpretation
@@ -532,11 +549,13 @@ The patent and MIT reports establish one major development line. They do not by 
 | the 32 × 32 MTC memory required controlled drive and sensing parameters for reliable operation | `H/P` | Widrow M-2383 |
 | DEC documented a PDP-8 Memory Power On/Off Test for bit dropout/pickup after simulated power failure | `H/P` | DEC 1966 Program Abstracts |
 | surviving D1AC artifacts and modern restoration runs show power-cycle retention was operationally testable | `H/P* / Experiment` | archival media/indexes + later restoration logs; not a historical field-failure rate |
+| 1970–1973 patent records show multiple approaches to temperature-dependent access-margin control rather than one universal compensation architecture | `H/P + E` | Call + HP + Ampex; later prior-art/control-architecture evidence |
 | `nonvolatile` does not imply `passive during access` | `E` | mechanism reconstruction |
 | quiescent retention and access-cycle retention should be compared separately | `E` | case-derived distinction |
 | a passing power-cycle test proves a universal ferrite retention lifetime | `X` | rejected; bounded diagnostic coverage only |
 | core and DRAM are historically the same kind of memory because both restore after read | `X` | rejected overreach |
 | all magnetic-core memories used destructive readout | `X` | rejected; nondestructive schemes existed |
+| all magnetic-core memories require active temperature compensation | `X` | rejected; later design counterexample and cross-machine variability |
 
 ---
 
@@ -550,7 +569,7 @@ This case is `grounded`. The dedicated grounding record closes the former promot
 - Widrow 1954 and Brown's 1953-filed patent as bounded contemporary nondestructive-read counterexamples;
 - a separate Case 86 system-level witness showing why remanent main-memory state must not be equated with whole-machine restart state.
 
-The former Papian-1952 facsimile cleanup is now **closed** by the direct inspection recorded in [`../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md`](../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md). Case 02 therefore no longer carries a page-level Papian evidence debt. The PDP-8 power-cycle diagnostic deepening now also **partially closes the hardware-restoration / diagnostic-validation debt** by adding a period DEC test purpose, surviving executable artifacts, and bounded modern restored-machine observations. Further work is narrower and belongs mainly to Case 70 or `computing-archaeology`: named-machine quantitative half-select/current/sense margins, production material distributions, temperature dependence, exact correspondence between Papian test materials and deployed arrays, 1950s power-transition diagnostic genealogy, controlled brownout/partial-rail experiments, page-level D1AC revision comparison, and broader invention-priority genealogy.
+The former Papian-1952 facsimile cleanup is now **closed** by the direct inspection recorded in [`../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md`](../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md). Case 02 therefore no longer carries a page-level Papian evidence debt. The PDP-8 power-cycle diagnostic deepening now also **partially closes the hardware-restoration / diagnostic-validation debt** by adding a period DEC test purpose, surviving executable artifacts, and bounded modern restored-machine observations. The later temperature-compensation architecture seam is now separately deepened by [`../evidence/02-1970-1973-core-temperature-compensation-operating-margin-deepening.md`](../evidence/02-1970-1973-core-temperature-compensation-operating-margin-deepening.md), while Case 70 remains the stronger home for named-machine quantitative margins. Further work is narrower and belongs mainly to Case 70 or `computing-archaeology`: cross-machine margin distributions, deployed core-material/vendor distributions, quantitative temperature coefficients and environmental curves, earlier production correspondence, exact correspondence between Papian test materials and deployed arrays, 1950s power-transition diagnostic genealogy, controlled brownout/partial-rail experiments, page-level D1AC revision comparison, and broader invention-priority genealogy.
 
 ---
 
