@@ -2,11 +2,13 @@
 
 ## Status
 
-**`grounded`** — bounded to the HDFS DataNode maintenance-state design recorded in 2014–2017 ASF issue/design material and the released Hadoop 2.9.0 / 3.0.1 documentation and source. This case does not claim that HDFS invented maintenance modes, temporary node withdrawal, relaxed redundancy, or failure-domain-aware operations.
+**`grounded`** — bounded to the HDFS DataNode maintenance-state design recorded in 2014–2017 ASF issue/design material and the released Hadoop 2.9.0 / 3.0.1 documentation and source, with later bounded deepenings for restart reconstitution and the Hadoop 3.3.5→3.3.6 erasure-coded maintenance-sufficiency correction. This case does not claim that HDFS invented maintenance modes, temporary node withdrawal, relaxed redundancy, erasure coding, or failure-domain-aware operations.
 
 Grounding record: [`../evidence/116-hadoop-2014-2018-datanode-maintenance-grounding.md`](../evidence/116-hadoop-2014-2018-datanode-maintenance-grounding.md).
 
 Restart-reconstitution deepening: [`../evidence/116-hadoop-301-maintenance-restart-reconstitution-deepening.md`](../evidence/116-hadoop-301-maintenance-restart-reconstitution-deepening.md).
+
+EC-maintenance-sufficiency deepening: [`../evidence/116-hadoop-335-336-ec-maintenance-sufficiency-deepening.md`](../evidence/116-hadoop-335-336-ec-maintenance-sufficiency-deepening.md).
 
 ## Scope
 
@@ -27,7 +29,7 @@ The bounded regime includes:
 - automatic return from the maintenance regime when that time expires;
 - re-replication or cleanup work when the temporary assumption no longer holds.
 
-This is **not** a general Hadoop rolling-upgrade history, a DataNode hardware-maintenance manual, an HDFS erasure-coding case, or a claim about every later Hadoop release. It also does not replace Case 80's older decommission/rack-placement analysis.
+This is **not** a general Hadoop rolling-upgrade history, a DataNode hardware-maintenance manual, a general HDFS erasure-coding case, or a claim about every later Hadoop release. The later EC deepening covers only the maintenance-admission sufficiency predicate and its reconstruction boundary for striped block groups. It also does not replace Case 80's older decommission/rack-placement analysis.
 
 ---
 
@@ -48,6 +50,9 @@ The inspected ASF/Hadoop sources directly use:
 - `refreshNodes`;
 - `BlockMap` / block maps;
 - replication / reconstruction;
+- striped block / striped block group;
+- `getMinMaintenanceStorageNum`;
+- `getRealDataBlockNum`;
 - over-replicated / extra redundancy.
 
 The following are **project engineering terms**, not period quotations:
@@ -57,7 +62,9 @@ The following are **project engineering terms**, not period quotations:
 - `retained return expectation`;
 - `expiry-bounded dependency`;
 - `temporary embodiment credit`;
-- `withdrawal horizon`.
+- `withdrawal horizon`;
+- `representation-specific sufficiency predicate`;
+- `coded reconstructability floor`.
 
 ---
 
@@ -195,6 +202,40 @@ Deepening record: [`../evidence/116-hadoop-301-maintenance-restart-reconstitutio
 
 ---
 
+## Erasure-coded maintenance sufficiency deepening — Hadoop 3.3.5 → 3.3.6
+
+The released Hadoop 3.3.5 `DatanodeAdminManager.isSufficient(...)` used the generic `getMinReplicationToBeInMaintenance()` threshold for the maintenance branch. In the inspected method, that decision did not distinguish an ordinary replicated block from a striped erasure-coded block group.
+
+ASF issue HDFS-16809, opened 20 October 2022 and resolved 5 December 2022, records the resulting bounded problem as **“EC striped block is not sufficient when doing in maintenance.”** Apache Hadoop PR #5050 changes the predicate to `getMinMaintenanceStorageNum(block)` and adds a striped-maintenance regression test.
+
+The released Hadoop 3.3.6 `BlockManager` makes the new boundary explicit:
+
+```text
+ordinary replicated block
+    -> min(configured maintenance minimum, block replication)
+
+striped EC block group
+    -> BlockInfoStriped#getRealDataBlockNum()
+```
+
+`getRealDataBlockNum()` is itself representation-aware: for a short complete/committed block group it can be below the policy's full data-unit count, while a full stripe uses the configured data-unit count. The same 3.3.6 maintenance threshold also participates in maintenance-reconstruction need and expected-live-redundancy calculations; placement qualification remains separate.
+
+The released regression test places five of the default test stripe's nine internal-block holders into maintenance. Its post-reconstruction assertions expect six live internal blocks and five maintenance internal blocks, and its before/after file checksums match. This is Apache regression evidence for the intended fixed behavior, not independent field validation or proof that every possible EC/failure-domain case is safe.
+
+The bounded result is:
+
+> **same maintenance administrative state != same preservation predicate across redundancy representations**
+
+and:
+
+> **replica-count floor != coded reconstructability floor**.
+
+Expected future return can justify relaxing ordinary redundancy work, but it does not authorize crossing the current representation's minimum live recoverability floor. Conversely, reaching the minimum live data-block count is not the same as restoring full parity margin or satisfying every placement requirement.
+
+Deepening record: [`../evidence/116-hadoop-335-336-ec-maintenance-sufficiency-deepening.md`](../evidence/116-hadoop-335-336-ec-maintenance-sufficiency-deepening.md).
+
+---
+
 ## Retained state
 
 At least eight state classes should remain distinct.
@@ -211,9 +252,9 @@ The NameNode's block map records which DataNodes are known to embody each block.
 
 The ordinary file/block redundancy objective remains a policy state even when maintenance temporarily relaxes what must be live elsewhere.
 
-### 4. Maintenance minimum
+### 4. Maintenance minimum / representation-specific live floor
 
-`dfs.namenode.maintenance.replication.min` is a separate threshold governing how much non-maintenance redundancy is required before the temporary withdrawal is admitted.
+For ordinary replicated blocks, `dfs.namenode.maintenance.replication.min` contributes the separate threshold governing how much non-maintenance redundancy is required before temporary withdrawal is admitted, bounded by the block's replication factor in the later 3.3.6 helper. The EC deepening shows that striped block groups cannot safely be treated as though the same replica-count scalar described their recoverability: Hadoop 3.3.6 instead uses the block group's real data-internal-block count.
 
 ### 5. Administrative state
 
@@ -281,6 +322,16 @@ That is a strong repository-wide distinction:
 
 This is analogous at a high functional level to other cases where physically surviving state is not currently admissible, but the mechanism here is distributed administrative policy rather than version staleness, checksum failure, or access protection.
 
+### Maintenance-policy identity does not imply encoding-independent sufficiency
+
+The HDFS-16809 correction makes a different layer visible. The same administrative state can govern blocks whose redundancy units mean different things. For a replicated block, one valid replica is a complete payload embodiment; for a striped EC block group, one live internal block is only one coded/data contribution.
+
+Therefore:
+
+> **same policy label != same mechanically sufficient live-state predicate.**
+
+The maintenance optimization remains valid only inside a representation-aware preservation envelope. This is also independent of restart persistence: retained maintenance intent can survive while the predicate governing that intent is either correct or incorrect.
+
 ### Expiry is revocation of a temporary assumption
 
 The most useful cross-case abstraction is not `timer deletes data`. It is:
@@ -325,6 +376,16 @@ Both show that payload-copy policy depends on retained metadata, but the control
 - temporal namespace/version authority in Case 115;
 - node administrative horizon and expiry in Case 116.
 
+### Versus coded-recovery cases
+
+The HDFS-16809 deepening uses a real-data-block count as a maintenance-admission live floor for striped EC. This is functionally comparable to the repository's broader coded-recovery distinction between enough surviving contributions to reconstruct and later restoration of the full redundancy margin.
+
+But the relations must remain separate:
+
+> **maintenance admission at a coded live floor != full redundancy restoration != placement-policy completion.**
+
+This is a functional comparison only; it does not assert a genealogy from RAID/ZFS mechanisms into HDFS erasure coding.
+
 ### Versus media-level retention cases
 
 Maintenance expiry is not DRAM refresh deadline, SSD retention rating, NAND charge-loss time, or magnetic decay. It is a distributed control-policy deadline.
@@ -338,16 +399,18 @@ Maintenance expiry is not DRAM refresh deadline, SSD retention rating, NAND char
 Keep these failure modes separate:
 
 - administrator requests maintenance but minimum replica conditions are not yet satisfied;
+- a generic replicated-block maintenance threshold is incorrectly applied to a striped EC block group, admitting an insufficient live set in the bounded pre-fix path;
 - a node enters maintenance and does not return before expiry;
 - maintenance-expiration state is incorrect or lost;
 - a dead maintenance node continues to be counted after the temporary contract should have ended;
 - a returning node creates over-redundancy that is not cleaned up;
 - ordinary clients are accidentally directed to an unavailable `IN_MAINTENANCE` node;
-- insufficient non-maintenance replicas make temporary withdrawal unsafe;
+- insufficient non-maintenance replicas/internal blocks make temporary withdrawal unsafe;
+- enough internal blocks survive but placement/failure-domain constraints are not satisfied;
 - liveness state is mistaken for administrative intent;
 - `IN_MAINTENANCE` is mistaken for physical erasure, decommissioning, or permanent membership removal.
 
-The bounded sources do not establish secure erasure, disk sanitization, or physical destruction of any replica.
+The bounded sources do not establish secure erasure, disk sanitization, or physical destruction of any replica. HDFS-16809 also does not by itself establish a public production data-loss incident.
 
 ---
 
@@ -359,10 +422,11 @@ The repository must not say that HDFS-7877 invented temporary storage-node maint
 - HDFS-7877 begins in March 2015 and absorbs/coordinates the feature work.
 - HDFS-7877's 2015 design document is a design record, not a release record.
 - HDFS-7877's September 2017 resolution/fix versions and Apache 2.9.0/3.0.x documentation/source supply the bounded released-interface floor used here.
+- HDFS-16809 in 2022 records a later correction to maintenance sufficiency for striped EC blocks; it does not establish invention of erasure coding, reconstruction, or maintenance mode.
 - The earlier existence of decommissioning (Case 80) does not make maintenance state identical to decommissioning.
-- This case does not attempt the broader history of planned temporary replica withdrawal in distributed storage. That belongs in `computing-archaeology` if developed.
+- This case does not attempt the broader history of planned temporary replica withdrawal or erasure coding in distributed storage. That belongs in `computing-archaeology` if developed.
 
-A repository search found no dedicated HDFS DataNode-maintenance-state case in `tmzncty/computing-archaeology` during this round.
+A fresh repository search found no dedicated HDFS DataNode-maintenance-state / HDFS-16809 EC-maintenance case in `tmzncty/computing-archaeology` during this round.
 
 ---
 
@@ -374,15 +438,23 @@ A repository search found no dedicated HDFS DataNode-maintenance-state case in `
 - the 2015 HDFS-7877 design added distinct entering/in-maintenance states and a maintenance-specific minimum-replication concept;
 - HDFS-7877 resolved in 2017 with 2.9.0 / 3.0.0-beta1 / 3.1.0 fix versions;
 - released 2.9.0 documentation exposes maintenance admin-state reporting;
-- released 3.0.1 source retains expiration, tracks maintenance transitions, and applies different reconstruction/cleanup behavior from ordinary decommissioning.
+- released 3.0.1 source retains expiration, tracks maintenance transitions, and applies different reconstruction/cleanup behavior from ordinary decommissioning;
+- released 3.3.5 uses the generic configured maintenance-replication minimum in the inspected maintenance-sufficiency branch;
+- HDFS-16809 / PR #5050 changes that later path to a block-type-aware maintenance minimum;
+- released 3.3.6 uses `getRealDataBlockNum()` for striped blocks and a replication-derived minimum for ordinary replicated blocks, with a striped-maintenance regression test.
 
 ### Engineering reconstruction
 
 - `liveness != admin state`;
 - `physical replica presence != ordinary service eligibility`;
 - `maintenance minimum != ordinary replication factor`;
+- `same maintenance state != same sufficiency predicate across redundancy representations`;
+- `replica-count floor != coded reconstructability floor`;
 - `maintenance admission != decommission completion`;
+- `coded live floor != full redundancy restoration`;
 - `temporary redundancy relaxation != permanent factor reduction`;
+- `expected return != permission to cross the current representation's recoverability floor`;
+- `policy persistence != policy correctness`;
 - `expiry != data deletion`;
 - `expiry = loss of authority for the bounded relaxed-dependency assumption`;
 - `expected return can be retained control state that changes present replication work`.
@@ -390,6 +462,7 @@ A repository search found no dedicated HDFS DataNode-maintenance-state case in `
 ### Functional analogy only
 
 - Dynamo temporary failure vs membership change;
+- coded-recovery cases separating reconstructability from restored redundancy margin;
 - other cases in which a surviving embodiment is retained but not currently service-authoritative.
 
 ### Not established
@@ -397,10 +470,11 @@ A repository search found no dedicated HDFS DataNode-maintenance-state case in `
 - invention priority for maintenance mode;
 - first production deployment;
 - universal semantics across every Hadoop 3.x release;
-- exact behavior for every erasure-coded block layout;
-- fault-injection validation of expiry/restart races;
+- universal EC maintenance semantics across every HDFS policy, partial stripe, branch, or failure-domain topology;
+- a public production data-loss incident caused by HDFS-16809;
+- fault-injection validation of expiry/restart/EC-maintenance races;
 - physical media sanitization after maintenance/decommission;
-- broad distributed-storage maintenance-mode genealogy.
+- broad distributed-storage maintenance-mode or erasure-coding genealogy.
 
 ---
 
@@ -409,9 +483,10 @@ A repository search found no dedicated HDFS DataNode-maintenance-state case in `
 Useful later work is deliberately narrower than another generic HDFS overview:
 
 1. inspect the exact commit series/subtasks that moved HDFS-7877 from the 2015 design to the final 2017 implementation;
-2. audit NameNode restart/failover persistence of maintenance expiration across the relevant 2.9/3.0 transition;
+2. audit HA active/standby failover persistence of maintenance expiration beyond the bounded 3.0.1 process-restart/configuration path already inspected;
 3. test maintenance expiry with dead/live returning nodes and observe reconstruction/over-replication convergence;
-4. separately analyze erasure-coded HDFS maintenance semantics if they differ materially;
-5. move a broader history of temporary-node-maintenance mechanisms across distributed stores to `computing-archaeology`.
+4. deepen EC maintenance beyond HDFS-16809 with short final block groups, multiple EC policies, placement-domain failures, branch/backport genealogy, and injected loss during maintenance transition/expiry;
+5. find production/operator evidence for EC maintenance failures if available without promoting project bug records into incident claims;
+6. move a broader history of temporary-node-maintenance mechanisms and HDFS EC implementation history across distributed stores to `computing-archaeology`.
 
-The bounded Case 116 itself is grounded.
+The bounded Case 116 itself remains grounded.
