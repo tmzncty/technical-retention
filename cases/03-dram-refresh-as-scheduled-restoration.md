@@ -2,8 +2,8 @@
 
 ## Scope
 
-- **Object / system:** Robert H. Dennard's one-transistor / one-capacitor field-effect-transistor memory, with the Intel 1103 used only as a bounded commercial comparison.
-- **Date range:** 1967–1975 for the central evidence used here.
+- **Object / system:** Robert H. Dennard's one-transistor / one-capacitor field-effect-transistor memory, with the Intel 1103 used only as a bounded commercial comparison and the Intel 2164A/8203 used as a later bounded refresh-control comparison.
+- **Date range:** 1967–1975 for the central grounding, with a bounded 1982–1984 deepening for hidden refresh and external refresh-control state.
 - **Why this case matters for technical retention:** it separates two obligations that magnetic core had partially joined: **restoration caused by access** and **restoration caused merely by the passage of time**.
 
 This case does **not** attempt a general history of DRAM, SDRAM, DDR, sense amplifiers, row-buffer organization, or modern refresh policy. Those belong primarily in `computing-archaeology` when that repository fills its identified semiconductor-memory gap.
@@ -11,6 +11,11 @@ This case does **not** attempt a general history of DRAM, SDRAM, DDR, sense ampl
 The question here is narrower:
 
 > What kind of persistence is it when the retained state is expected to decay even if nobody reads it, and the system must schedule work simply to keep the present state present?
+
+### Evidence navigation
+
+- grounding record: [`../evidence/03-dram-1967-1982-grounding.md`](../evidence/03-dram-1967-1982-grounding.md);
+- bounded controller-state deepening: [`../evidence/03-intel-1982-1984-hidden-refresh-controller-state-deepening.md`](../evidence/03-intel-1982-1984-hidden-refresh-controller-state-deepening.md) — Intel 2164A hidden refresh plus 8203 timer/counter/arbitration separate payload retention from refresh-control state and fix `hidden refresh != autonomous refresh`.
 
 ---
 
@@ -28,7 +33,7 @@ The 1968 patent is titled **"Field-effect transistor memory"**, not "DRAM". It s
 
 Modern terminology such as **1T1C DRAM**, **refresh**, and **dynamic memory** is useful for classification, but it should not replace the patent's own vocabulary when describing what Dennard actually claimed.
 
-A later Intel data catalog explicitly calls the 1103 a **1024-bit dynamic memory** and specifies a **refresh period**.
+A later Intel data catalog explicitly calls the 1103 a **1024-bit dynamic memory** and specifies a **refresh period**. Intel's 1982 2164A documentation uses `RAS-only refresh` and `Hidden Refresh`; the 1984 8203 controller documentation separately names a `refresh timer`, `refresh counter`, and refresh/access arbitration.
 
 ---
 
@@ -75,6 +80,40 @@ The deeper feature is that the information-bearing electrical state is not assum
 
 The Computer History Museum's semiconductor-memory history identifies the Intel 1103 as using a three-transistor dynamic cell derived from work by Honeywell's William Regitz; it should therefore not be silently treated as an implementation of Dennard's one-transistor cell.
 
+### H/P — Intel 2164A `Hidden Refresh` preserves output availability while refresh remains row-addressed
+
+Intel's April 1982 2164A datasheet specifies **128 refresh cycles within 2 ms** and documents RAS-only and hidden refresh. In the `Hidden Refresh` description, valid data can remain on DOUT while a refresh cycle is performed, but the following page states that the part is internally refreshed at **the row addressed at the time of the second RAS**.
+
+The historical term `hidden` therefore describes a bounded interface behavior. It does not establish that the DRAM has eliminated refresh addressing, refresh scheduling, or system-level refresh control.
+
+The same datasheet requires initialization cycles after extended periods of bias without clocks, providing a useful negative boundary:
+
+```text
+powered device
+    != actively refreshed device
+```
+
+This does not imply that payload survives such a clock gap; the datasheet does not make that claim.
+
+**Deepening record:** [`../evidence/03-intel-1982-1984-hidden-refresh-controller-state-deepening.md`](../evidence/03-intel-1982-1984-hidden-refresh-controller-state-deepening.md).
+
+### H/P — Intel 8203 makes refresh timing and coverage state explicit in a separate controller
+
+Intel's 8203 dynamic-RAM controller documentation identifies a refresh timer, refresh counter, address multiplexer, and refresh/access arbiter. The timer requests refresh after a clock-derived interval; the counter contains the address for the next refresh cycle and advances after each refresh; during refresh the multiplexer places that counter value on the address outputs.
+
+This provides a named historical implementation in which the state being preserved and the state coordinating preservation are physically and functionally distinct:
+
+```text
+DRAM payload state
+    != refresh-deadline / phase state
+    != refresh-coverage position
+    != refresh/access arbitration state
+```
+
+The controller documentation does not describe these timer/counter states as nonvolatile. They are powered operational control state, not durable checkpoints.
+
+**Deepening record:** [`../evidence/03-intel-1982-1984-hidden-refresh-controller-state-deepening.md`](../evidence/03-intel-1982-1984-hidden-refresh-controller-state-deepening.md).
+
 ---
 
 ## Retained state
@@ -94,6 +133,17 @@ This is already a useful distinction between:
 - **physical state** — an analog electrical quantity that drifts;
 - **logical state** — the binary value the system repeatedly reconstructs from it.
 
+The 2164A/8203 deepening adds a third category that should not be folded into either of those:
+
+- **maintenance-control state** — timer phase, next-row/coverage position, and arbitration/request state used to make refresh occur in time and over the required address set.
+
+Thus:
+
+```text
+state being retained
+    != state required to retain it
+```
+
 ---
 
 ## Physical substrate
@@ -112,6 +162,8 @@ This is a recurring retention pattern:
 
 > density at the retained-state site can increase by moving maintenance work into shared infrastructure.
 
+The later Intel controller comparison makes that displacement concrete at system scale: refresh timing, address progression, and access arbitration can reside in a dedicated controller rather than in the payload-bearing cell array.
+
 ---
 
 ## Retention mechanism
@@ -129,6 +181,8 @@ It is better described as:
 > **bounded physical survival + scheduled restoration.**
 
 A DRAM cell can be left electrically undisturbed for a while, but not indefinitely.
+
+The 8203 deepening further shows that scheduled restoration itself can require multiple control variables: a timer for **when**, a counter for **which refresh address**, and arbitration for **when maintenance may occupy the shared memory interface**.
 
 ---
 
@@ -149,6 +203,8 @@ periodic regeneration revisits the array
 ```
 
 The address looks timeless only because the maintenance schedule is hidden below it.
+
+Intel's 2164A/8203 pair sharpens that statement: ordinary access addresses and refresh addresses share part of the same physical address path, while the controller can substitute a refresh-counter value during a maintenance cycle. Stable logical addressability therefore coexists with a second, maintenance-specific traversal of the row-address space.
 
 ---
 
@@ -175,6 +231,10 @@ destructive read
 ```
 
 They are separable mechanisms.
+
+### Boundary: output visibility is not maintenance autonomy
+
+Intel's 2164A can keep useful output data valid during a hidden refresh sequence. That is a read-interface property. It does not mean refresh has disappeared, that the row-selection obligation has vanished, or that the DRAM device itself owns all timing/coverage state needed to maintain the array.
 
 ---
 
@@ -204,6 +264,10 @@ The interval over which leakage has not yet destroyed the recoverable distinctio
 
 The system-maintenance schedule chosen to revisit state before the retention interval is exceeded.
 
+### Refresh-controller phase and coverage
+
+The Intel 8203 comparison adds a controller timescale inside the refresh interval: a timer determines when another refresh request becomes due, while a row counter determines which refresh address comes next. These are not the payload's retention time; they are operational state used to satisfy it.
+
 ### Temperature-dependent leakage timescale
 
 The patent explicitly connects leakage, and thus usable storage time, to junction temperature.
@@ -224,6 +288,8 @@ At system level, that simplicity requires surrounding work:
 - sensing;
 - rewrite after destructive read where applicable;
 - periodic regeneration / refresh scheduling;
+- refresh-address coverage;
+- arbitration between refresh and useful access;
 - timing;
 - temperature-aware design margins;
 - power and control circuitry.
@@ -234,6 +300,8 @@ It is also a redistribution of complexity:
 
 > **fewer devices per stored bit, more coordinated maintenance around the array.**
 
+The 2164A/8203 pair makes the redistribution unusually visible: `hidden` maintenance at one interface still depends on explicit controller state elsewhere.
+
 ---
 
 ## Failure / forgetting modes
@@ -242,10 +310,12 @@ This case adds several distinct forms of technical forgetting:
 
 - leakage until the charge difference is no longer recoverable;
 - missed or late refresh;
+- incomplete refresh-address coverage even if refresh cycles continue to occur;
 - failed restore after destructive read;
 - sense error followed by rewriting the wrong logical value;
 - temperature increase shortening the safe retention interval;
-- failure of shared refresh / sense / timing infrastructure affecting many cells.
+- failure of shared refresh / sense / timing infrastructure affecting many cells;
+- loss or corruption of powered refresh-control state followed by incorrect maintenance sequencing.
 
 These should not all be called merely `volatile memory loss`.
 
@@ -264,6 +334,35 @@ Thus **quiescent** does not mean **maintenance-free**.
 Dennard's examples allocate recurring memory cycles to regeneration. In functional terms, array bandwidth is periodically borrowed from ordinary work so that the current state remains available for future work.
 
 Persistence consumes time.
+
+### E — the refresh deadline and refresh coverage are separate obligations
+
+The Intel controller deepening shows that `refresh every N milliseconds` is not one scalar action. The system must both trigger maintenance often enough **and** distribute those cycles over the required refresh addresses.
+
+In the 8203 implementation:
+
+```text
+refresh timer
+    -> when maintenance becomes due
+
+refresh counter
+    -> which refresh address comes next
+```
+
+Repeatedly servicing the wrong row set would not satisfy the array-wide retention requirement merely because refresh cycles were occurring.
+
+### E — hidden refresh is a visibility property, not autonomous retention
+
+The 2164A can hide a refresh cycle from the useful data output, but the row remains addressed and a controller can still own the timer, counter, request, and arbitration state.
+
+Therefore:
+
+```text
+maintenance hidden from one interface
+    != maintenance absent
+    != maintenance autonomous
+    != maintenance-control state durable
+```
 
 ### E — The logical bit survives repeated analog replacement
 
@@ -300,6 +399,8 @@ These are engineering categories first. They should not yet be promoted into a u
 
 To software, a memory location appears simply available at its address. Physically, the cell's state is decaying and must be restored on schedule.
 
+The 2164A/8203 evidence sharpens the point: part of that discipline can be displaced into timer, counter, and arbitration infrastructure that is not itself the represented payload and may be hidden from the data interface.
+
 The philosophical value of the case is therefore not that DRAM is a metaphor for human memory. It is that it demonstrates mechanically how **stable availability can be an effect produced by hidden temporal organization**.
 
 That observation can later be tested against Ernst's operational / microtemporal account. It should not yet be equated with Stiegler's tertiary retention or Heidegger's `Bestand`.
@@ -326,13 +427,30 @@ But:
 - delay line requires continuous circulation as the retention mechanism;
 - DRAM gives each cell an interval of local persistence before scheduled regeneration.
 
+### A — similarity to later maintenance-control metadata is functional only
+
+The 8203 timer/counter and later repository cases involving scrub checkpoints, repair maps, or retained maintenance policy all encode control state about maintenance. But their persistence horizons are different. The 8203 state is ordinary powered controller state; later systems may checkpoint maintenance progress durably.
+
+Therefore:
+
+```text
+maintenance-control state
+    != durable maintenance checkpoint
+```
+
+No historical genealogy is implied.
+
 ### Limit — not every DRAM read is destructive
 
 The Intel 1103 boundary case and nondestructive embodiments in Dennard's own patent show that `dynamic` cannot be defined merely by destructive readout.
 
+### Limit — `hidden refresh` does not mean self-refresh
+
+For the 2164A evidence used here, hidden refresh preserves output availability while a refresh cycle occurs, but the refreshed row remains externally addressed. The term must not be silently replaced by later meanings of CAS-before-RAS refresh or self-refresh.
+
 ### Limit — not a complete modern DRAM account
 
-Modern DRAM adds much richer sensing, row-buffer, refresh, error, packaging, power, and controller behavior. This case deliberately does not project later architecture backward into the 1967 patent.
+Modern DRAM adds much richer sensing, row-buffer, refresh, error, packaging, power, and controller behavior. This case deliberately does not project later architecture backward into the 1967 patent or the 1982 Intel device/controller pair.
 
 ---
 
@@ -359,6 +477,10 @@ The important new distinction is:
 
 > **maintenance can be triggered by time even when no useful access occurs.**
 
+The 1982–1984 Intel deepening adds another:
+
+> **the state being maintained can be different from the control state that schedules and covers the maintenance.**
+
 This will matter later for Flash retention/read-disturb management, SSD background work, scrubbing, replica repair, lease renewal, and long-term archival migration — but those comparisons must be established case by case rather than assumed now.
 
 ---
@@ -374,6 +496,9 @@ This will matter later for Flash retention/read-disturb management, SSD backgrou
 | Regeneration can be scheduled independently of ordinary accesses | H/P/E | patent's recurring-cycle and sequential regeneration examples |
 | Intel 1103 documentation combines dynamic storage, nondestructive read, and a 2 ms refresh requirement | H/P | Intel 1975 Data Catalog, p. 2-7 |
 | Dynamic retention is therefore not identical to destructive read | E | bounded inference from the patent + Intel commercial comparison |
+| Intel 2164A documentation combines a 128-cycle/2 ms refresh requirement with Hidden Refresh that keeps output data valid while refresh remains row-addressed | H/P | Intel 2164A datasheet, pp. 3-219, 3-229–3-230 |
+| Intel 8203 documentation places refresh timing, next-row coverage state, and refresh/access arbitration in a dedicated controller | H/P | Intel 1984 Memory Components Handbook, 8203 §§2.2.2–2.2.6 |
+| Hidden refresh is not evidence of autonomous or durable refresh-control state | E | bounded device/controller reconstruction |
 | DRAM exposes periodic deadline-driven maintenance as distinct from continuous circulation and access-triggered restore | E/I | cross-case reconstruction |
 | DRAM is identical to tertiary retention or `Bestand` | X | explicitly unsupported |
 
@@ -385,13 +510,15 @@ This will matter later for Flash retention/read-disturb management, SSD backgrou
 
 That repository currently identifies SRAM / DRAM / ROM / EEPROM / Flash / cache / ECC as a missing historical middle. A future full technical history of semiconductor memory should be developed there. This case should remain focused on the retention problem and link outward rather than pre-empting that work.
 
+A direct search for `2164A`, `8202A`, `8203`, and the paired hidden-refresh/controller-state question did not find an existing companion-repository treatment during this deepening, so only the retention-specific slice is added here. Broader controller genealogy, CAS-before-RAS history, self-refresh history, and semiconductor-memory generation history remain better candidates for `computing-archaeology`.
+
 Current relevant memory track:
 
 <https://github.com/tmzncty/computing-archaeology/tree/main/docs/memory>
 
 ### `tmzncty/problem-history`
 
-Use its anti-anachronism rule here: `DRAM`, `refresh`, and `1T1C` are useful modern organizing terms, but the 1968 patent's own wording is `Field-effect transistor memory`, `regeneration`, `destructive memory`, and `retained in storage`.
+Use its anti-anachronism rule here: `DRAM`, `refresh`, and `1T1C` are useful modern organizing terms, but the 1968 patent's own wording is `Field-effect transistor memory`, `regeneration`, `destructive memory`, and `retained in storage`. Likewise, Intel's 1982 term `Hidden Refresh` should not be silently replaced by later self-refresh terminology.
 
 ---
 
@@ -408,14 +535,22 @@ Use its anti-anachronism rule here: `DRAM`, `refresh`, and `1T1C` are useful mod
    - nondestructive read;
    - refresh of all 1024 bits in 32 read cycles;
    - required refresh period of 2 ms for 0–70 °C ambient.
+3. Intel Corporation, **`2164A FAMILY — 65,536 x 1 BIT DYNAMIC RAM`**, order no. 210425-001, April 1982. Archived scan: <https://www.minuszerodegrees.net/memory/4164/datasheet_2164A.pdf>.
+   - p. 3-219: 128 refresh cycles / 2 ms and Hidden Refresh feature;
+   - p. 3-229: refresh-row geometry and start of Hidden Refresh description;
+   - p. 3-230: hidden-refresh row-address boundary, DOUT behavior, and initialization after extended bias without clocks.
+4. Intel Corporation, **`8203 — 64K DYNAMIC RAM CONTROLLER`**, reproduced in *Intel Memory Components Handbook* (1984). Bitsavers archive: <https://www.bitsavers.org/components/intel/_dataBooks/1984_Intel_Memory_Components_Handbook.pdf>. Alternative archive: <https://deramp.com/downloads/mfe_archive/050-Component%20Specifications/Intel/Memory%20Components/1984_Intel_Memory_Components_Handbook.pdf>.
+   - p. 3-82: refresh/access arbiter; refresh timer and counter; refresh-address multiplexer; internal/external refresh description.
 
 ### Institutional secondary / artifact context
 
-3. Computer History Museum, **"1970: Semiconductors Compete with Magnetic Cores,"** *The Storage Engine*: <https://www.computerhistory.org/storageengine/semiconductors-compete-with-magnetic-cores/>.
+5. Computer History Museum, **"1970: Semiconductors Compete with Magnetic Cores,"** *The Storage Engine*: <https://www.computerhistory.org/storageengine/semiconductors-compete-with-magnetic-cores/>.
    - useful for placing Intel 1103's three-transistor dynamic cell in the early semiconductor-memory transition;
    - not used as the primary source for Dennard's 1T1C mechanism.
-4. Computer History Museum, **Intel 1103 1024-bit (1K) DRAM** object record: <https://www.computerhistory.org/revolution/memory-storage/8/368/1017>.
+6. Computer History Museum, **Intel 1103 1024-bit (1K) DRAM** object record: <https://www.computerhistory.org/revolution/memory-storage/8/368/1017>.
 
 ## Source notes
 
 The patent is the authoritative source for what Dennard disclosed and for the distinction between destructive read and periodic regeneration. The 1975 Intel catalog is later than the 1103's 1970 introduction, so it should be treated as primary manufacturer documentation of the product family rather than as evidence for the exact first-shipment specification. The 1103 comparison is intentionally used to bound the concept of dynamic retention, not to claim that the 1103 implements Dennard's exact one-transistor cell.
+
+The 2164A scan was directly inspected at printed pp. 3-219, 3-229, and 3-230, including the Hidden Refresh timing diagram and Power On section. The 8203 handbook text is used to locate refresh timer/counter/arbitration state in a named Intel controller; it is not used to claim invention priority or universal 1980s practice. See the dedicated deepening record for the full non-claim and source ledger.
