@@ -6,6 +6,8 @@
 
 Grounding record: [`../evidence/77-ibm-data-general-1971-1988-ecc-scrub-grounding.md`](../evidence/77-ibm-data-general-1971-1988-ecc-scrub-grounding.md).
 
+Failed-page / maintenance-eligibility deepening: [`../evidence/77-data-general-1985-sniff-page-inhibit-deepening.md`](../evidence/77-data-general-1985-sniff-page-inhibit-deepening.md).
+
 ## Scope
 
 This case asks one narrow question left open by the DRAM-refresh cases and by Case 45's later DDR5 ECS case:
@@ -34,7 +36,7 @@ This case is **not**:
 - a claim that charge refresh and ECC scrub are the same physical operation merely because this design schedules them together;
 - a complete history of SEC-DED memory, semiconductor soft errors, alpha-particle failures, patrol scrub, Chipkill, DRAM RAS, or DDR5 ECS.
 
-The contribution is a retention-specific separation of **charge restoration, error detection, logical correction, stored-codeword repair, scan coverage, and maintenance scheduling** inside one period design that deliberately composes them.
+The contribution is a retention-specific separation of **charge restoration, error detection, logical correction, stored-codeword repair, scan coverage, maintenance scheduling, and later carrier-exclusion state** inside period Data General designs that compose these concerns without making them identical.
 
 ## Relation to earlier cases
 
@@ -73,6 +75,16 @@ AVATAR uses runtime ECC evidence to change **future refresh classification**. Da
 Therefore:
 
 > **ECC corrective writeback ≠ retention-aware refresh reclassification**.
+
+### Case 78 — NAND bad-block exclusion
+
+A later Data General patent witness now adds a functional comparison with Case 78. `PAGEINH` can cause recurring `REFRESH` and `SNIFF` maintenance to skip memory already classified as bad/failed/no longer in use, while NAND bad-block state can exclude an electrically addressable block from allocation.
+
+The shared relation is only:
+
+> **physical presence ≠ service admissibility ≠ maintenance/allocation eligibility.**
+
+The mechanisms, persistence rules, replacement semantics, and historical lineages are different; no DRAM↔NAND genealogy is claimed.
 
 ## Historical record
 
@@ -139,6 +151,27 @@ An IBM Research publication record for Blaum, Goodman, and McEliece explicitly u
 The IBM catalog has a bibliographic wrinkle: the page labels the publication `ISIT 1985` while its displayed date is December 1986. This case therefore uses it only as a **mid-1980s terminology and reliability-model witness**, not as proof of a first use or an exact 1985/1986 priority claim.
 
 Source: IBM Research: <https://research.ibm.com/publications/effect-of-soft-error-scrubbing-on-single-error-protected-ram-systems>
+
+### 7. A 1985-filed Data General embodiment separates `sniff` correction from failed-page exclusion
+
+US4908749A is formally a bus-protocol patent, but its preferred embodiment exposes a later Data General memory-controller boundary. The controller still performs a `sniff operation` to detect/correct errors in memory locations, with alpha-particle hits given as an example error source. Separately, a memory-module signal named `PAGEINH` indicates bad/failed memory that is no longer in use. The patent states that recurring `REFRESH` and `SNIFF` operations can use this signal to skip that page.
+
+This supports a narrow later relation:
+
+```text
+correctable error
+    -> correction / continued maintenance
+
+failed page classification
+    -> PAGEINH
+    -> refresh/sniff may skip retired carrier
+```
+
+It does **not** establish how the page-failure classification was created, whether it survived power loss, whether a spare page transparently replaced it, or which named shipping machine implemented the exact preferred embodiment.
+
+Source: Peter G. Marshall and Robert Feldstein / Data General, US4908749A, filed 1985-11-15, granted 1990-03-13; patent-family record: <https://patents.google.com/patent/JPS62163160A/en>.
+
+See [`../evidence/77-data-general-1985-sniff-page-inhibit-deepening.md`](../evidence/77-data-general-1985-sniff-page-inhibit-deepening.md).
 
 ## Mechanism
 
@@ -229,6 +262,22 @@ error evidence
 
 ECC alone is not enough to authorize a later write.
 
+### 8. Coverage applies to the admitted memory set, not blindly to every physical page
+
+The later `PAGEINH` witness qualifies the case's earlier language about scan coverage. Missing an active word because the maintenance engine forgot it is a coverage failure; deliberately bypassing a page already classified as failed/no longer in use can instead be the documented policy outcome.
+
+Therefore:
+
+```text
+active page omitted from sniff/refresh
+    -> possible maintenance failure
+
+retired failed page omitted from sniff/refresh
+    -> can be correct exclusion behavior
+```
+
+The controller therefore needs more than an address counter: maintenance behavior also depends on a carrier-admissibility relation. In the 1985 preferred embodiment the observed interface is `PAGEINH`; the source does not establish a durable bad-page table behind that signal.
+
 ## Retained state
 
 The bounded design involves several state classes:
@@ -236,10 +285,11 @@ The bounded design involves several state classes:
 1. **application payload bits** — the logical user/program word;
 2. **check bits** — redundancy used to detect/correct the bounded error class;
 3. **dynamic-cell charge** — the volatile physical representation periodically refreshed;
-4. **refresh schedule/address state** — enough state to ensure all rows receive charge restoration;
-5. **sniff scan position** — enough full-address progress to eventually inspect all protected words;
+4. **refresh schedule/address state** — enough state to ensure all admitted rows receive charge restoration;
+5. **sniff scan position** — enough full-address progress to eventually inspect all admitted protected words;
 6. **error evidence / diagnosis state** — the disclosed controller can record errored words/addresses and distinguish continuing fault behavior from one corrected event;
-7. **request/maintenance ordering state** — enough control relation to delay and retry maintenance without overwriting a newer foreground value.
+7. **request/maintenance ordering state** — enough control relation to delay and retry maintenance without overwriting a newer foreground value;
+8. **carrier-admissibility state / signal** — in the later 1985 preferred embodiment, `PAGEINH` can tell refresh/sniff machinery that a failed page is no longer an active maintenance target.
 
 These must not be collapsed into `the memory contents`.
 
@@ -247,12 +297,13 @@ These must not be collapsed into `the memory contents`.
 
 The case exposes several distinct failure modes:
 
-- **charge-decay failure** — refresh misses the physical retention deadline;
+- **charge-decay failure** — refresh misses the physical retention deadline for memory still in use;
 - **correctable codeword error** — charge/state has deviated but the code still reconstructs the intended word;
 - **error accumulation** — another error appears before the first defect is repaired, exhausting the bounded correction relation;
-- **coverage failure** — some word is not revisited by the systematic scan within the assumed reliability interval;
+- **coverage failure** — an admitted word is not revisited by the systematic scan within the assumed reliability interval;
 - **stale-maintenance writeback** — a corrected image computed from an old observation overwrites a newer foreground value;
-- **hard/recurrent fault** — repeated correction cannot substitute for repairing a permanently faulty component;
+- **hard/recurrent fault** — repeated correction cannot substitute for repairing or excluding permanently faulty hardware;
+- **classification loss** — a system that forgets which carrier has been retired could confuse physical presence with service admissibility; the inspected Data General patent shows the `PAGEINH` consumption path but does not establish persistence semantics for that classification;
 - **diagnostic-state loss** — payload may remain usable while the system forgets evidence useful for locating a recurring fault.
 
 Likewise, successful corrective writeback is not `forgetting` in a sanitization sense. It intentionally removes an error from the **current codeword state**, but supplies no claim that every prior electrical state is forensically erased.
@@ -265,12 +316,13 @@ Data General explicitly uses already recurring refresh opportunities to reduce i
 - ECC/check-bit logic must evaluate the selected word;
 - an error can cause an extra read/modify/write sequence;
 - foreground traffic can force retry and therefore retain pending maintenance position;
-- permanent faults can create recurring correction/diagnosis work;
-- system designers must choose a scan interval consistent with the error model and capacity.
+- permanent faults can create recurring correction/diagnosis or exclusion work;
+- system designers must choose a scan interval consistent with the error model and capacity;
+- the later preferred embodiment must distinguish pages still owed maintenance from pages excluded as failed.
 
 The useful project formulation is:
 
-> **piggybacked maintenance ≠ zero-cost maintenance**.
+> **piggybacked maintenance ≠ zero-cost maintenance, and complete maintenance coverage ≠ touching carriers already retired from service.**
 
 ## Prior art and anti-anachronism
 
@@ -278,13 +330,14 @@ The useful project formulation is:
 
 - **1971 IBM:** `memory correcting system`, systematic sequential addressing, cycle stealing, correction and reinsertion/rewriting of corrected data.
 - **1980 Data General:** dynamic-RAM refresh plus `sniff` / `sniffing`, full-word error checking, conditional corrective writeback, and a separate illustrative scrub/scan cadence.
+- **1985 Data General filing:** a later preferred embodiment still names `sniff` and separately exposes `PAGEINH` so failed/no-longer-used memory can be skipped by `REFRESH` and `SNIFF`.
 - **mid-1980s IBM Research record:** explicit `soft error scrubbing` terminology and a reliability model parameterized by scrub interval.
 
 ### Engineering reconstruction
 
-This repository uses `integrity scrub`, `patrol-like scan`, `redundancy-margin renewal`, and `second-order retention-control state` as modern engineering descriptors where useful.
+This repository uses `integrity scrub`, `patrol-like scan`, `redundancy-margin renewal`, `second-order retention-control state`, `carrier admissibility`, and `maintenance eligibility` as modern engineering descriptors where useful.
 
-They are **not** silently projected into the 1971 IBM or 1980 Data General documents as the actors' own words.
+They are **not** silently projected into the 1971 IBM, 1980 Data General, or 1985 Data General documents as the actors' own words.
 
 ### Rejected claims
 
@@ -292,25 +345,26 @@ They are **not** silently projected into the 1971 IBM or 1980 Data General docum
 - `IBM 1971 is already the same dynamic-RAM refresh-coupled mechanism` — **rejected**; the IBM scope is broader monolithic memory and cycle stealing, while Data General's bounded mechanism explicitly composes dynamic-RAM refresh with word checking.
 - `Data General sniffing = DDR5 ECS` — **rejected**; only the read/correct/writeback relation is functionally comparable.
 - `refresh = scrub` — **rejected** by the distinct address coverage, timescales, predicates, and writeback conditions inside the Data General design itself.
+- `PAGEINH = NAND bad-block table` — **rejected**; only the negative carrier-qualification relation is functionally comparable.
 - `patent disclosure = proven production deployment` — **rejected**; no named shipping system implementation is claimed here.
 
 ## Functional analogy and philosophical limit
 
-A bounded functional analogy describes the integrity scan as preventive maintenance: a recoverable defect is removed before a second defect consumes the remaining correction margin.
+A bounded functional analogy describes the integrity scan as preventive maintenance: a recoverable defect is removed before a second defect consumes the remaining correction margin. The later failed-page witness adds a second operational limit: maintenance must also know when a carrier has left the set for which such repair remains appropriate.
 
-The analogy is useful only at that operational level. The system does not `remember its mistakes` in a psychological sense, and a check-bit syndrome or scan counter is not an archive simply because it is retained state about other retained state.
+The analogy is useful only at that operational level. The system does not `remember its mistakes` in a psychological sense, and a check-bit syndrome, scan counter, or inhibit signal is not an archive simply because it is retained/control state about other retained state.
 
 The narrower conceptual result is:
 
-> apparent continuity can depend on maintaining not only the payload, but also the **remaining margin by which future errors are still recoverable**.
+> apparent continuity can depend on maintaining not only the payload and the **remaining margin by which future errors are still recoverable**, but also the distinction between carriers that still count and carriers that no longer do.
 
-That margin is neither identical to the payload nor reducible to the DRAM cell's raw charge-retention deadline.
+That relation is neither identical to the payload nor reducible to the DRAM cell's raw charge-retention deadline.
 
 ## Related repositories
 
-A repository search found no dedicated ECC/memory-scrubbing case in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for this slice. A future full genealogy of Hamming/SEC-DED memory, semiconductor soft errors, IBM/Data General implementations, patrol scrub, Chipkill, and DDR-era RAS belongs primarily there.
+A repository search found no dedicated ECC/memory-scrubbing case in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for this slice. A fresh search for `Data General sniff memory ECC` also found no directly reusable treatment of the later `PAGEINH` boundary. A future full genealogy of Hamming/SEC-DED memory, semiconductor soft errors, IBM/Data General implementations, patrol scrub, Chipkill, and DDR-era RAS belongs primarily there.
 
-`technical-retention` should keep only the cross-mechanism distinction developed here: **charge refresh, codeword correction, stored repair, scan coverage, and remaining correction margin are separate retention relations even when one controller schedules them together**.
+`technical-retention` should keep only the cross-mechanism distinction developed here: **charge refresh, codeword correction, stored repair, scan coverage, carrier eligibility, and remaining correction margin are separate retention relations even when one controller schedules them together**.
 
 ## Sources
 
@@ -318,17 +372,18 @@ A repository search found no dedicated ECC/memory-scrubbing case in [`tmzncty/co
 
 1. Gerald A. Maley / IBM, **US3735105A, “Error correcting system and method for monolithic memories”**, filed 11 June 1971, published 22 May 1973. <https://patents.google.com/patent/US3735105A/en>
 2. Michael L. Ziegler II, Michael B. Druke, John R. Van Roekel, Ward Baxter II / Data General, **US4380812A, “Refresh and error detection and correction technique for a data processing system”**, filed 25 April 1980, published 19 April 1983. <https://patents.google.com/patent/US4380812A/en>
+3. Peter G. Marshall and Robert Feldstein / Data General, **US4908749A, “System for controlling access to computer bus having address phase and data phase by prolonging the generation of request signal”**, filed 15 November 1985, granted 13 March 1990; patent-family searchable text: <https://patents.google.com/patent/JPS62163160A/en>.
 
 ### Institutional / scholarly terminology and reliability boundary
 
-3. M. Blaum, Rodney M. Goodman, Robert J. McEliece, **“Effect of Soft Error Scrubbing on Single-Error Protected RAM Systems”**, IBM Research publication record; catalog labels `ISIT 1985` and displays a December 1986 date. <https://research.ibm.com/publications/effect-of-soft-error-scrubbing-on-single-error-protected-ram-systems>
-4. Mario Blaum, Rodney Goodman, Robert McEliece, **“The Reliability of Single-Error Protected Computer Memories,”** *IEEE Transactions on Computers* 37(1), 1988, pp. 114–119; IBM Research record. <https://research.ibm.com/publications/the-reliability-of-single-error-protected-computer-memories>
+4. M. Blaum, Rodney M. Goodman, Robert J. McEliece, **“Effect of Soft Error Scrubbing on Single-Error Protected RAM Systems”**, IBM Research publication record; catalog labels `ISIT 1985` and displays a December 1986 date. <https://research.ibm.com/publications/effect-of-soft-error-scrubbing-on-single-error-protected-ram-systems>
+5. Mario Blaum, Rodney Goodman, Robert McEliece, **“The Reliability of Single-Error Protected Computer Memories,”** *IEEE Transactions on Computers* 37(1), 1988, pp. 114–119; IBM Research record. <https://research.ibm.com/publications/the-reliability-of-single-error-protected-computer-memories>
 
 ## Open questions
 
-- Which named Data General machines, if any, implemented the exact refresh-coupled sniff mechanism disclosed in US4380812A?
-- What period service/engineering manuals expose the scan interval, counters, or ECC fault reports in deployed systems?
+- Which named Data General machines, if any, implemented the exact refresh-coupled sniff mechanism disclosed in US4380812A or the later controller-level `PAGEINH` behavior?
+- What period service/engineering manuals expose the scan interval, counters, ECC fault reports, failed-page classification, or spare/replacement behavior in deployed systems?
+- Did the 1985 preferred embodiment retain failed-page classification across restart/power loss, and if so in what representation?
 - When did `scrub`, `scrubbing`, and later `patrol scrub` become stable vendor/architecture vocabulary rather than one paper's terminology?
 - How did system-level memory scrub move between processor, memory controller, chipset, DIMM, and eventually device-internal DDR5 ECS loci?
 - Which commercial systems coupled scrub to refresh versus running an independent scan engine?
-- How should hard-error sparing/offlining be layered over correction/writeback without treating repeated rewrite as repair of failed hardware?
