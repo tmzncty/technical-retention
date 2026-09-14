@@ -10,6 +10,8 @@ Cadence/source-provenance follow-on: [`111-ibm-lenovo-2020-2021-cadence-provenan
 
 Independent-vendor intervention-topology follow-on: [`111-netapp-ontap-long-poweroff-data-removal-deepening.md`](111-netapp-ontap-long-poweroff-data-removal-deepening.md). NetApp's public ONTAP support path supplies a distinct system-vendor witness: for intended enterprise-SSD power-off beyond two months, the accessible preparation guidance says to remove all data rather than publishing another IBM/Dell-style periodic powered-maintenance cadence. The same deepening records a named-drive post-storage `Failed-Unsupported` field symptom while refusing to infer its lower-level cause from the public issue text.
 
+Earlier independent periodic-power-up follow-on: [`111-hitachi-2014-2016-flashmax-periodic-poweron-deepening.md`](111-hitachi-2014-2016-flashmax-periodic-poweron-deepening.md). Surviving Hitachi/HGST FlashMAX product documentation supplies a separate vendor/product-family witness by instructing operators to turn on the server once every three months during storage, alongside a wear-dependent maximum-power-off table. It closes the broad independent periodic-power-up witness gap while preserving a narrower open question: the inspected FlashMAX sources do **not** state a retention-specific minimum powered duration or completion signal.
+
 ## Source 1 — IBM Support: “Potential for SSD data loss after extended shutdown”
 
 **Current page:** <https://www.ibm.com/support/pages/potential-ssd-data-loss-after-extended-shutdown>
@@ -164,7 +166,33 @@ remove payload before prolonged unpowered storage
 
 A separate public NetApp KB also reports multiple `Failed-Unsupported` failures for three named TPM3/TPM4 SSD identifiers after drives were brought out of storage and repurposed. The public issue text does not expose the root cause, exact storage duration, wear state, or temperature, so the deepening explicitly keeps `post-storage service failure != proved NAND user-payload charge loss`.
 
-The NetApp record therefore narrows one prior evidence gap: Case 111 now has a genuinely separate system-vendor long-offline witness, but not another independent **periodic-power-up** schedule. That latter comparison remains open.
+The NetApp record narrows the broader independent-vendor long-offline-policy gap but exposes a different pre-storage data-removal topology.
+
+## Follow-on — Hitachi / HGST FlashMAX supplies an earlier independent periodic-power-up witness
+
+The bounded follow-on in [`111-hitachi-2014-2016-flashmax-periodic-poweron-deepening.md`](111-hitachi-2014-2016-flashmax-periodic-poweron-deepening.md) adds a separate vendor/product-family record from the FlashMAX PCIe SSD era.
+
+The Hitachi user guide gives a wear-dependent maximum-power-off table: 5 years at 90% remaining write capacity, 18 months at 67%, 9 months at 50%, and 3 months at 0%. Immediately after that table it tells the operator to turn on the server **once every three months even while the device is stored**. A later `-03` guide preserves the same relation. HGST's May/August 2015 FlashMAX datasheet separately lists **3-month retention at 40 °C at EOL** for FlashMAX II/III.
+
+This closes the prior evidence gap for a genuinely separate periodic-power-up instruction outside IBM/Dell/Lenovo lineage:
+
+```text
+wear-conditioned maximum-power-off duration
+    != operator cadence that must vary one-for-one with wear
+
+product retention specification
+    != operator storage runbook
+```
+
+It also creates a new negative control. Unlike IBM/Dell, the inspected FlashMAX guide says **when** to restore server power but does not state a retention-specific minimum powered duration or a completion signal. Therefore:
+
+```text
+periodic power-on instruction
+    != minimum powered duration
+    != maintenance-completion evidence
+```
+
+The same manual separately scopes an integrity check to **unanticipated shutdown**, so that restart check is not silently promoted into the mechanism behind the periodic-storage instruction.
 
 ## Cross-case grounding
 
@@ -174,9 +202,11 @@ Case 76 establishes that the JESD218 number belongs to a workload/endurance/temp
 
 NetApp's public support page paraphrases a JEDEC-derived 2–3 month horizon and says risk varies with wear and storage temperature. That wording is retained as vendor support interpretation rather than substituted for the normative standard.
 
+The HGST 2015 datasheet contributes a named commercial-product statement — `3-month retention at 40 °C at EOL` — while the Hitachi guide separately contributes the stored-device power-on cadence. Their shared number is not treated as identity of evidence type or as a proof that JEDEC mandated that runbook.
+
 ### Case 37
 
-Case 37 grounds a Samsung 840 EVO product-specific periodic-refresh statement and the fact that the described background feature does not operate while powered off. That is a useful earlier product-level witness for `unpowered persistence != powered maintenance availability`, but it is not evidence for IBM/Dell/NetApp implementation identity.
+Case 37 grounds a Samsung 840 EVO product-specific periodic-refresh statement and the fact that the described background feature does not operate while powered off. That is a useful earlier product-level witness for `unpowered persistence != powered maintenance availability`, but it is not evidence for IBM/Dell/NetApp/FlashMAX implementation identity.
 
 ### Case 44
 
@@ -184,7 +214,7 @@ NetApp's public phrase `remove all data` is a long-storage preparation instructi
 
 ### computing-archaeology reuse check
 
-Repository search for `SSD data retention extended shutdown power-off refresh`, `SU490`, and `SSD power off retention` in `tmzncty/computing-archaeology` returned no dedicated case to reuse in this slice. Generic SSD/controller history remains out of scope here.
+Repository search for `SSD data retention extended shutdown power-off refresh`, `SU490`, `SSD power off retention`, and `FlashMAX` in `tmzncty/computing-archaeology` returned no dedicated case to reuse in these slices. Generic SSD/controller and Virident/HGST product history remains out of scope here.
 
 ## Claim-type ledger
 
@@ -203,11 +233,16 @@ Repository search for `SSD data retention extended shutdown power-off refresh`, 
 | NetApp publicly says to remove all data before planned >2-month enterprise-SSD power-off | H/P | strong for the accessible ONTAP preparation page |
 | NetApp supplies a genuinely separate system-vendor long-offline policy witness | H/E | strong at runbook/provenance level; not a component-supply-chain independence claim |
 | the NetApp preparation path is another IBM/Dell-style periodic powered-maintenance cadence | X | rejected; accessible guidance changes the intervention topology instead |
+| Hitachi FlashMAX guide says to turn on the server once every 3 months while stored | H/P | strong; vendor product guide |
+| Hitachi FlashMAX wear-dependent retention table ranges down to 3 months at 0% remaining write capacity | H/P | strong; table is not deterministic individual failure time |
+| HGST 2015 FlashMAX datasheet states 3-month retention at 40 °C at EOL | H/P | strong; commercial product statement |
+| Hitachi/HGST supplies an independent periodic-power-up witness outside IBM/Dell/Lenovo support lineage | H/E | strong at vendor/product-document level; not a component-supply-chain-independence claim |
+| FlashMAX periodic power-on establishes a minimum powered duration or completion event | X | rejected; inspected source states neither |
 | NetApp `remove all data` proves sanitization assurance | X | rejected |
 | named NetApp post-storage `Failed-Unsupported` reports prove NAND user-bit charge loss | X | rejected; public issue text does not resolve cause |
 | vendor guidance proves one universal SSD refresh algorithm | X | rejected |
 | three months is deterministic device failure time | X | rejected |
-| Case 37 -> IBM/Dell/NetApp direct genealogy | X | rejected |
+| Case 37 -> IBM/Dell/NetApp/FlashMAX direct genealogy | X | rejected |
 
 ## Evidence gaps deliberately left open
 
@@ -215,10 +250,11 @@ Repository search for `SSD data retention extended shutdown power-off refresh`, 
 2. named-drive/controller mapping for Dell's described hidden retention tasks;
 3. telemetry or service logs proving maintenance completion;
 4. independent post-endurance fault/retention tests of the recommended shutdown schedules;
-5. genuinely independent cross-vendor **periodic-power-up** guidance beyond IBM and Dell: NetApp now closes the broader independent-vendor long-offline-policy gap but exposes a different pre-storage data-removal topology, while Lenovo HT511702 remains a lineage/provenance control rather than an independent sample;
+5. independent cross-vendor **periodic-power-up** guidance is now grounded by FlashMAX, but a separate vendor witness combining periodic power-up with an explicit **minimum powered duration and completion semantics** remains open outside IBM/Dell lineage;
 6. direct firmware or patent evidence for Dell's read-triggered retention path;
 7. capacity-to-maintenance-time scaling;
 8. public engineering rationale for IBM's one-week TS7770 cadence versus the two-week general Storwize/FlashSystem cadence;
 9. full authenticated SU490 text plus publication/revision chronology;
 10. public root-cause/resolution evidence for NetApp's named TPM3/TPM4 post-storage `Failed-Unsupported` cases;
-11. exact SAS/NVMe device-level semantics of NetApp's gated `scsi format` preparation procedure.
+11. exact SAS/NVMe device-level semantics of NetApp's gated `scsi format` preparation procedure;
+12. FlashMAX revision/publication genealogy, a retention-specific minimum powered duration if one exists, and any operator-visible completion evidence tied specifically to long-offline retention rather than unexpected-shutdown recovery.
