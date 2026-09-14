@@ -2,15 +2,19 @@
 
 ## Scope
 
-- **Object / system:** the SCSI `VERIFY (10)` command as evidenced by a September 1990 Toshiba SCSI-2 CD-ROM interface specification, T10's SCSI-2 publication record, a 1997 Seagate SCSI-2/SCSI-3 interface manual, and a September 2005 SBC-3 working draft continuity witness.
-- **Retention question:** what changes when media qualification is explicitly requested by an initiator for a named logical-block range rather than being scheduled autonomously inside a drive (Case 101) or by a RAID controller's patrol policy (Case 102)?
+- **Object / system:** the SCSI `VERIFY (10)` command as evidenced by a September 1990 Toshiba SCSI-2 CD-ROM interface specification, T10's SCSI-2 publication record, a 1997 Seagate SCSI-2/SCSI-3 interface manual, a September 2005 SBC-3 working draft continuity witness, and a June 2022 Seagate command-reference negative control for VERIFY versus reassignment.
+- **Retention question:** what changes when media qualification is explicitly requested by an initiator for a named logical-block range rather than being scheduled autonomously inside a drive (Case 101) or by a RAID controller's patrol policy (Case 102), and what repair authority does that qualification request *not* carry?
 - **Status:** `grounded`.
 
-This is **not** a complete genealogy of SCSI VERIFY, WRITE AND VERIFY, host scrub utilities, T10 Background Medium Scan, RAID Patrol Read, parity checking, filesystem checksums, or media-error recovery. The bounded question is narrower:
+This is **not** a complete genealogy of SCSI VERIFY, WRITE AND VERIFY, host scrub utilities, T10 Background Medium Scan, RAID Patrol Read, parity checking, filesystem checksums, bad-sector reassignment, or media-error recovery. The bounded question is narrower:
 
-> **What does a host-issued VERIFY request qualify, what does it not qualify, and where does scheduling/coverage responsibility remain?**
+> **What does a host-issued VERIFY request qualify, what does it not qualify, where does scheduling/coverage responsibility remain, and how is verification evidence separated from remediation authority?**
 
-The project terms `host-driven verification`, `coverage policy`, `medium-readability qualification`, and `verification-currentness precondition` below are **engineering reconstructions**, not historical SCSI vocabulary.
+The project terms `host-driven verification`, `coverage policy`, `medium-readability qualification`, `verification-currentness precondition`, and `remediation authority` below are **engineering reconstructions**, not historical SCSI vocabulary.
+
+## Evidence navigation
+
+- [SCSI VERIFY vs reassignment authority, 2001–2022](../evidence/103-scsi-2001-2022-verification-vs-remediation-authority-deepening.md) — adds a same-manual 2022 negative control: verify-medium operations do not trigger automatic read reassignment, while read operations may gain automatic-reallocation authority through `ARRE` and `REASSIGN BLOCKS` remains a separate remediation command; also brackets changing `REASSIGN BLOCKS` payload semantics in T10 records from 2001 to 2005.
 
 ---
 
@@ -27,9 +31,14 @@ The inspected/indexed primary sources use terms including:
 - `Logical Block Address`;
 - `Verification Length`;
 - `Verify Error Recovery` / read-recovery parameters;
-- `CRC`, `ECC`, retry, and later protection information.
+- `CRC`, `ECC`, retry, and later protection information;
+- `ARRE` / `Automatic Read Reallocation Enabled`;
+- `REASSIGN BLOCKS`;
+- `GLIST` / `PLIST`.
 
 Do not silently rename one VERIFY request as `scrub`, `Patrol Read`, `Background Medium Scan`, or `Consistency Check`. A host program can build a sweep out of repeated VERIFY commands, but that scheduling layer is not identical to the command semantics.
+
+Likewise, `verification evidence` and `remediation authority` are project terms. They are used to keep historically distinct SCSI operations from being collapsed into one generic notion of `disk checking`.
 
 ---
 
@@ -85,7 +94,7 @@ A host can issue commands over successive ranges, but that is a higher-level pol
 
 ### H/P — the September 2005 SBC-3 draft makes a later cache/currentness precondition explicit
 
-T10 proposal `05-344r0`, carrying the 9 September 2005 SBC-3 Revision 0 text, says VERIFY (10) requests verification of specified logical blocks on the medium. It also requires logical units containing cache to write the referenced cached blocks to the medium before the verification, analogously to a range-scoped SYNCHRONIZE CACHE with `SYNC_NV=0`.
+T10 document `05-344r0`, carrying the 9 September 2005 SBC-3 Revision 0 text, says VERIFY (10) requests verification of specified logical blocks on the medium. It also requires logical units containing cache to write the referenced cached blocks to the medium before the verification, analogously to a range-scoped SYNCHRONIZE CACHE with `SYNC_NV=0`.
 
 The same text states that Verify Error Recovery settings define the verification criteria where implemented, preserves `BYTCHK=0` medium verification without data comparison, and defines `BYTCHK=1` byte-by-byte comparison against data transferred from the application client while also checking protection information.
 
@@ -95,11 +104,61 @@ This later text makes another retention boundary visible:
 
 So in this 2005 bounded interface, the device first closes a currentness/persistence relation for the referenced range and then verifies the medium representation. This does **not** mean every earlier VERIFY implementation had identical cache semantics; the claim is explicitly revision-bounded.
 
+### H/P — Seagate 2022 explicitly separates verify error recovery from automatic read reassignment
+
+Seagate's **_Serial Attached SCSI (SAS) SCSI Commands Reference Manual_, Rev. M**, dated June 2022, defines the `Verify Error Recovery` mode page for verify-medium operations, including `VERIFY` and the verify part of `WRITE AND VERIFY`. The page provides retry/recovery controls, but explicitly states that **verify-medium operations do not trigger automatic read reassignment**.
+
+The same manual separately gives ordinary read operations an `ARRE` (`Automatic Read Reallocation Enabled`) control. With `ARRE=1`, automatic reallocation of defective logical blocks during read operations is enabled; the documented path performs reallocation only after successful data recovery and places the recovered data in the reallocated logical block.
+
+This supplies a same-vendor, same-manual negative control:
+
+```text
+VERIFY error recovery
+    !=
+automatic read reassignment
+
+ordinary READ + ARRE authority
+    may perform automatic reallocation after successful recovery
+```
+
+The difference is not merely foreground versus background scheduling. It is a difference in the **repair authority attached to the operation class**.
+
+### H/P — explicit REASSIGN BLOCKS remains a separate remediation path in the same 2022 manual
+
+The June 2022 Seagate command reference separately documents `REASSIGN BLOCKS`: the application supplies defective LBAs, the device reassigns the medium used for those logical blocks, and recoverable user/protection data are carried to the reassigned block. If recovery fails, the command uses vendor-specific user data rather than pretending the prior value was recovered.
+
+Therefore the current command reference exposes three separable roles:
+
+```text
+VERIFY
+    -> bounded qualification / error evidence
+
+READ with ARRE enabled
+    -> read-path recovery may gain automatic-reallocation authority
+
+REASSIGN BLOCKS
+    -> explicit defect-remediation command
+```
+
+This does not prove undocumented firmware never performs other maintenance. It establishes the public interface contract documented by Seagate.
+
+### H/P — T10 records show that the REASSIGN payload contract itself must be dated
+
+A T10 proposal from **11 July 2001**, `01-210r0`, says data in logical blocks listed for reassignment **may be altered**, while all other blocks are preserved. By the **9 September 2005** SBC-3 Revision 0 draft, the text instead says that if the device can recover user data and protection information from the original logical block, it shall carry that recovered information to the reassigned logical block; if recovery is impossible, vendor-specific user data are used.
+
+The exact accepted proposal or revision at which this wording changed has not yet been identified. The safe conclusion is narrower:
+
+> **same command name across standards-development eras ≠ identical payload-preservation contract.**
+
+This matters to Case 103 because a transition from `verification evidence` to `repair` cannot be analyzed merely by seeing the word `REASSIGN`; the dated command semantics still matter.
+
+Detailed record: [`../evidence/103-scsi-2001-2022-verification-vs-remediation-authority-deepening.md`](../evidence/103-scsi-2001-2022-verification-vs-remediation-authority-deepening.md).
+
 ---
 
 ## Retained state and maintenance relations
 
-Case 103 exposes at least six separate relations.
+Case 103 exposes at least seven separate relations.
 
 ### 1. Current logical payload
 
@@ -125,6 +184,10 @@ LBA plus verification length define which logical blocks this command attempts t
 
 Whether an operator/tool repeats VERIFY across a whole device, how often, with what throttling, and how it persists progress belongs above the command in this case.
 
+### 7. Remediation authority
+
+A verification path can have retry/correction policy without having relocation authority. The 2022 Seagate manual makes that boundary explicit by denying automatic read reassignment to verify-medium operations while separately exposing `ARRE` for reads and `REASSIGN BLOCKS` as an explicit remediation command.
+
 ---
 
 ## Cross-case comparison
@@ -137,7 +200,25 @@ Case 103 is initiator-driven and range-scoped:
 
 > **host-issued VERIFY ≠ drive-internal Background Medium Scan.**
 
+The November 2005 BMS proposal is useful because its `REASSIGN STATUS` distinguishes pending remediation, successful device action, rewrite-in-place, application-client reassignment, and failed paths. That is proposal-bounded standards-development evidence, not proof every final product implemented every status.
+
 Functional overlap in medium exercising does not establish BMS descent from VERIFY or vice versa.
+
+### Case 14 — SCSI defect reassignment
+
+Case 14 owns the logical-identity / physical-replacement problem. Case 103 now supplies the upstream negative control:
+
+```text
+qualify an embodiment
+    !=
+replace an embodiment
+    !=
+preserve the prior value across replacement
+```
+
+The 2022 Seagate manual directly separates VERIFY from automatic read reassignment; the 2001-to-2005 T10 wording change further warns that even `REASSIGN BLOCKS` cannot be treated as one timeless payload-preservation contract.
+
+> **verification evidence ≠ reassignment ≠ guaranteed payload recovery.**
 
 ### Case 102 — PERC / MegaRAID Patrol Read
 
@@ -169,6 +250,8 @@ ZFS/Ceph-style scrub can qualify higher-layer checksums, versions, placement, an
 
 > **device-medium qualification ≠ end-to-end object/current-version integrity authority.**
 
+The shared pattern `check before ordinary demand exposes a fault` is a functional analogy, not a genealogy.
+
 ---
 
 ## Prior-art and genealogy boundary
@@ -182,17 +265,18 @@ This case makes no priority claim for:
 - SCSI WRITE AND VERIFY;
 - T10 Background Medium Scan;
 - RAID Patrol Read / Media Patrol;
-- filesystem/data-integrity scrub.
+- filesystem/data-integrity scrub;
+- bad-sector reassignment or automatic reallocation.
 
-The 1990 Toshiba source is an implementation/documentation floor, not an invention certificate. T10's 1993/1994 publication record is a standards-history node, not a universal origin. The 1997 Seagate and 2005 SBC-3 documents are continuity/semantic-deepening witnesses.
+The 1990 Toshiba source is an implementation/documentation floor, not an invention certificate. T10's 1993/1994 publication record is a standards-history node, not a universal origin. The 1997 Seagate and 2005 SBC-3 documents are continuity/semantic-deepening witnesses. The 2022 Seagate manual is later interface-contract evidence, not evidence of what every earlier drive did.
 
-A fresh repository search found no dedicated SCSI VERIFY history in `tmzncty/computing-archaeology`; a broader command genealogy should be coordinated there rather than expanded opportunistically here.
+A fresh repository search again found no dedicated SCSI VERIFY / REASSIGN BLOCKS / Background Medium Scan history in `tmzncty/computing-archaeology`; a broader command and HDD defect-management genealogy should be coordinated there rather than expanded opportunistically here.
 
 ---
 
 ## Engineering reconstruction
 
-Case 103 adds these bounded relations:
+Case 103 now supports these bounded relations:
 
 1. `host-issued verification ≠ autonomous background scan`;
 2. `verification command ≠ maintenance schedule`;
@@ -206,7 +290,11 @@ Case 103 adds these bounded relations:
 10. `verification capability ≠ Patrol Read implementation genealogy`;
 11. `SCSI-2 final publication ≠ invention of VERIFY`;
 12. `verification target selection ≠ pre-existing medium currentness` in the explicitly bounded 2005 cached-unit rule;
-13. `VERIFY range synchronization ≠ general write-durability closure`.
+13. `VERIFY range synchronization ≠ general write-durability closure`;
+14. `verify error recovery ≠ automatic read reassignment` in the bounded 2022 Seagate contract;
+15. `same LBA + different command path ≠ same remediation authority`;
+16. `successful recovery during VERIFY ≠ evidence of physical relocation`;
+17. `same command name across revisions ≠ identical payload-preservation contract`.
 
 These are project analytical statements, not T10/Toshiba/Seagate historical terminology.
 
@@ -216,7 +304,11 @@ These are project analytical statements, not T10/Toshiba/Seagate historical term
 
 Case 103 is useful because the same material medium can be **present, serviceable, and yet deliberately re-qualified** through a command that does not create a new user value. Verification produces evidence about continuation; it is not identical to continuation itself.
 
-The stronger philosophical claim that verification somehow constitutes memory by observation is not supported. Technically, the narrower point is enough: **retention can depend on periodically or deliberately renewing confidence in an embodiment, while the scheduling authority for that confidence may sit at a different layer from the device that performs the check.**
+The 2022 negative control makes the distinction sharper: the same system can grant one operation error-recovery work without granting it automatic relocation authority. A retained object can therefore be **tested** without the test itself becoming the operation that changes its physical embodiment.
+
+The stronger philosophical claim that verification somehow constitutes memory by observation is not supported. Technically, the narrower point is enough:
+
+> **retention can depend on renewing confidence in an embodiment, while the authority to schedule that test and the authority to replace the embodiment remain separate relations.**
 
 ---
 
@@ -231,7 +323,28 @@ Still open:
 - named host utilities that build persistent whole-device sweeps from VERIFY;
 - cross-vendor disk/controller use of VERIFY internally;
 - empirical fault injection for recovered, medium-error, and MISCOMPARE outcomes;
-- interaction with grown-defect reassignment and URE-aware array policy.
+- the exact T10 proposal / accepted revision that changed `REASSIGN BLOCKS` from the older `data may be altered` wording to the recover-if-possible rule;
+- a named-drive trace that captures VERIFY failure followed by host-selected `REASSIGN BLOCKS`, write-driven relocation, or another remediation path;
+- cross-vendor product evidence on whether verify-medium operations can trigger relocation.
+
+The former broad debt `interaction with grown-defect reassignment` is therefore **partly closed at the public interface-contract level** by the 2022 Seagate negative control. Product traces and revision archaeology remain open.
+
+---
+
+## Source and inspection notes
+
+Primary sources used by the new deepening include:
+
+1. T10 `01-210r0`, **_Reassign Blocks 2 TBytes Support_**, 11 July 2001.  
+   <https://www.t10.org/ftp/t10/document.01/01-210r0.pdf>
+2. T10 `05-344r0`, **_Working Draft SCSI Block Commands - 3 (SBC-3), Revision 0_**, 9 September 2005.  
+   <https://t10.org/ftp/t10/document.05/05-344r0.pdf>
+3. T10 `05-340r2`, **_SBC-3 SPC-4 Background scan additions_**, 11 November 2005.  
+   <https://www.t10.org/ftp/t10/document.05/05-340r2.pdf>
+4. Seagate Technology LLC, **_Serial Attached SCSI (SAS) SCSI Commands Reference Manual_**, Publication 100293068, Rev. M, June 2022.  
+   <https://www.seagate.com/content/dam/seagate/migrated-assets/staticfiles/support/docs/manual/Interface%20manuals/100293068m.pdf>
+
+The T10/Seagate PDF texts were directly inspected through page-preserving indexed extraction. Screenshot rendering succeeded for part of the 2005 SBC-3 working draft but was unavailable for several other remote PDF pages during this pass; no layout-dependent or figure-dependent claim relies on the failed renders.
 
 ---
 
@@ -239,4 +352,6 @@ Still open:
 
 **Grounded.**
 
-The 1990 Toshiba source establishes an early product-level SCSI-2-style host-issued VERIFY implementation; T10 anchors the later final SCSI-2 publication node; Seagate 1997 cleanly separates medium verification from expected-data comparison; and the 2005 SBC-3 draft exposes later cache-to-medium currentness closure before verification. Together they close the bounded **host-command maintenance-locus** slice without converting a command primitive into an autonomous scrub policy or a historical genealogy.
+The 1990 Toshiba source establishes an early product-level SCSI-2-style host-issued VERIFY implementation; T10 anchors the later final SCSI-2 publication node; Seagate 1997 cleanly separates medium verification from expected-data comparison; and the 2005 SBC-3 draft exposes later cache-to-medium currentness closure before verification.
+
+The 2022 Seagate evidence now closes a further boundary at the command-contract level: **verify-medium operations can perform real error-recovery work without gaining automatic read-reassignment authority**. Ordinary reads may receive that authority through `ARRE`, while explicit `REASSIGN BLOCKS` remains a separate remediation command. T10 records from 2001–2005 also show that the remediation command's own payload-preservation semantics must be dated rather than inferred from its stable name.
