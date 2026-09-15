@@ -3,12 +3,14 @@
 ## Scope
 
 - **Object / system:** commodity SDRAM, DDR, and DDR2 modules characterized by Halderman et al. in 2008, with a 2005 reboot-survival observation and a cautiously bounded 1979 low-temperature prior-art floor.
-- **Date range:** 1979–2008 for the evidence chain; the central experimentally grounded mechanism is the 2008 study.
+- **Date range:** 1979–2008 for the central power-off evidence chain, with a bounded 1984–1991 cryogenic-operation deepening used to distinguish refresh suppression from power-off remanence.
 - **Why this case matters for technical retention:** it tests what `volatile` means at the instant ordinary refresh and power support stop. The physical information-bearing state does not necessarily disappear at the same moment that the system ceases to guarantee ordinary DRAM service.
 
 This is **not** a general history of cold-boot attacks, memory forensics, DRAM security, cryogenic electronics, or semiconductor remanence. Case 03 remains the canonical case for ordinary powered DRAM refresh. Case 127 is narrower:
 
 > What survives after the maintenance regime that normally makes DRAM reliable has stopped, and how should residual physical recoverability be distinguished from ordinary volatile-memory service?
+
+Cryogenic refresh-suppression boundary deepening: [`../evidence/127-1984-1991-cryogenic-dram-refresh-suppression-boundary-deepening.md`](../evidence/127-1984-1991-cryogenic-dram-refresh-suppression-boundary-deepening.md).
 
 ---
 
@@ -19,6 +21,8 @@ Halderman et al. use the terms **`memory remanence`**, **`decay`**, **`ground st
 The word `remanence` therefore cannot be treated as one physical mechanism merely because several security papers use it.
 
 The 2008 paper also blocks an origin myth. Its authors describe their work as the first comprehensive security study of the consequences, not the discovery of DRAM remanence itself. They cite earlier knowledge extending into the 1970s, including Link and May's 1979 paper reporting low-temperature behavior. The 1979 article has **not** been directly facsimile-inspected in this slice, so its one-week liquid-nitrogen result is retained only as a later scholarly report, not as a directly verified primary quotation.
+
+The new 1984–1991 deepening does not erase that source debt. It instead supplies independent period-adjacent evidence that low-temperature MOS/DRAM charge retention was an established engineering topic: a Hitachi patent with 1984 priority explicitly cites Link/May and describes a low-temperature RAM embodiment in which special refresh becomes unnecessary, while IBM's 1989 and 1991 cryogenic-DRAM records report greatly increased cell-retention intervals. Those are **powered cryogenic operating regimes**, not evidence that power-off remanence and refresh-free operation are the same thing.
 
 ---
 
@@ -102,6 +106,39 @@ The 2008 paper reports that a 1978 experiment associated with this source found 
 
 This is enough to block a claim that the physical low-temperature retention effect originated with the 2008 cold-boot security work, but not enough to settle detailed 1970s device behavior or priority.
 
+### H/P — 1984–1991 cryogenic-operation evidence separates refresh suppression from power-off remanence
+
+The dedicated deepening adds three independent engineering witnesses without pretending they are cold-boot experiments.
+
+Hitachi's U.S. Patent 4,710,648, from a family with **9 May 1984** priority and issued **1 December 1987**, describes MOS operation below about 200 K as strongly reducing junction leakage. Its one-bit RAM embodiment states that at sufficiently low temperature the charge-storage interval becomes long enough that a special refresh operation is unnecessary. The patent background explicitly cites Link/May 1979 as earlier low-temperature MOS-memory literature.
+
+IBM's 1989 `Experimental low temperature DRAM` publication record reports greatly enhanced retention in a functioning 512-Kbit cryogenic CMOS DRAM. IBM's 1991 `A 4-Mb Low-Temperature DRAM` record reports an LT-optimized trench-capacitor DRAM whose cell retention time exceeded **eight hours at 85 K**.
+
+These records establish a different support relation from cold boot:
+
+```text
+cryogenic powered operation
+    + greatly reduced leakage
+    -> refresh can become extremely infrequent or unnecessary
+
+power-off cold-boot regime
+    + refresh absent
+    + ordinary service support withdrawn
+    -> residual state decays and may remain temporarily recoverable
+```
+
+Therefore:
+
+> **refresh absent != power absent**
+
+and:
+
+> **refresh-free under one cryogenic operating condition != nonvolatile-storage contract**.
+
+The direct Link/May 1979 facsimile remains open; this deepening narrows the historical gap rather than falsely closing it.
+
+Detailed ledger: [`../evidence/127-1984-1991-cryogenic-dram-refresh-suppression-boundary-deepening.md`](../evidence/127-1984-1991-cryogenic-dram-refresh-suppression-boundary-deepening.md).
+
 ---
 
 ## Retained state and substrate
@@ -117,7 +154,6 @@ pre-loss logical value
     -> possibly still distinguishable value
     -> eventual ground-state decay
 ```
-
 The logical state can therefore outlive the **guaranteed service regime** for a time without becoming nonvolatile in the ordinary engineering sense.
 
 ---
@@ -180,6 +216,8 @@ DRAM's ordinary `volatile` behavior depends on infrastructure that is usually in
 
 Case 127 reveals that when this infrastructure stops, the underlying physical state does not necessarily disappear on the same clock edge. `Volatile` is therefore best treated here as an **operational contract and maintenance dependency**, not as a claim of instantaneous material annihilation.
 
+The cryogenic-operation deepening adds another boundary: maintenance cadence can change because the **loss rate** changes. Deliberate cooling can reduce leakage enough that explicit refresh becomes extremely infrequent or unnecessary in a bounded powered regime. Cooling is not a refresh command, and a powered cryogenic memory is not the same system state as an unpowered module retaining residual charge.
+
 That formulation is an engineering reconstruction. It is not a replacement for the historical vocabulary of the cited papers.
 
 ---
@@ -238,6 +276,7 @@ When refresh resumes, it can stabilize the values then present. It does not infe
 
 Cooling alters leakage rate and therefore residual-retention time in the tested devices. It does not turn commodity DRAM into a specified archival or power-independent memory regime.
 
+The cryogenic-operation records make the same point from the opposite side of the support boundary: a colder device can need far less temporal refresh work while it remains powered. Thus `retention obligation`, `physical loss rate`, and `maintenance cadence` must remain separate. A thermal-support regime can reduce temporal maintenance without becoming the same mechanism as refresh.
 ---
 
 ## Functional analogies and limits
@@ -253,7 +292,9 @@ Case 03: deadline-driven preservation before loss
 Case 127: residual decay after preservation work stops
 ```
 
-This is one mechanism viewed on opposite sides of the maintenance boundary, not two unrelated definitions of DRAM.
+The cryogenic deepening adds a third bounded state: an intentionally colder **powered** DRAM can move the maintenance deadline far outward because leakage has changed. That is still not the same thing as power-off residual survival.
+
+This is one mechanism family viewed under different support conditions, not unrelated definitions of DRAM.
 
 ### A — nonvolatile Flash / SSD
 
@@ -266,6 +307,8 @@ DRAM remanence after power loss
     ≠
 nonvolatile-media durability guarantee
 ```
+
+Likewise, a refresh-free cryogenic operating point does not by itself turn DRAM into a nonvolatile medium.
 
 ### A — magnetic core
 
@@ -295,6 +338,8 @@ The technical record instead exposes several times:
 - reconstruction time;
 - deliberate wipe/overwrite time.
 
+The cryogenic-operation boundary adds another conditionality: the refresh-maintenance clock itself changes when the operating environment changes. That strengthens the repository's rule that a retention interval must be tied to its support conditions rather than treated as a property detached from temperature, voltage, device, and operating regime.
+
 This plural-timescale result fits the repository's existing Ernst guardrail: operational analysis should identify **which operation and which timescale** are at issue rather than universalize one microtemporal boundary.
 
 This does not make DRAM remanence identical to human memory, Stieglerian tertiary retention, or an archive.
@@ -314,7 +359,11 @@ This does not make DRAM remanence identical to human memory, Stieglerian tertiar
 | BIOS/reboot activity can overwrite or clear residual memory before later software reads it | H/P | §3.4 |
 | restart-time refresh stabilizes residual values but does not prove they equal the original pre-loss state | H/P + E | §4 plus bounded reconstruction |
 | Chow et al. observed hard-reboot survival on at least one 2005 test machine | H/P | §3 `Effect of Rebooting` |
-| low-temperature DRAM retention was known by 1979 | H/S | later peer-reviewed report; direct 1979 facsimile not inspected |
+| low-temperature DRAM retention was known by 1979 | H/S | later peer-reviewed report plus independent period patent citation; direct 1979 facsimile still not inspected |
+| Hitachi disclosed a sub-200 K RAM embodiment in which special refresh could become unnecessary | H/P | primary patent design disclosure; not shipped-product proof |
+| IBM's 1991 LT-optimized DRAM record reports cell retention exceeding 8 h at 85 K | H/P | first-party institutional record of peer-reviewed paper; not interpreted as power-off shelf retention |
+| refresh absent necessarily means power absent | X | rejected by cryogenic powered-operation evidence |
+| refresh-free under one cryogenic condition makes DRAM nonvolatile storage | X | unsupported category collapse |
 | Halderman 2008 invented DRAM remanence | X | explicitly rejected by authors' own prior-work section |
 | cold-boot capacitance remanence is identical to Gutmann's semiconductor burn-in | X | explicitly rejected by Halderman et al. |
 | commodity DRAM should be classified as nonvolatile storage | X | unsupported; residual remanence ≠ service contract |
@@ -325,7 +374,7 @@ This does not make DRAM remanence identical to human memory, Stieglerian tertiar
 
 ### `tmzncty/computing-archaeology`
 
-A fresh repository search found no dedicated cold-boot / DRAM-remanence case to reuse. Broad DRAM device genealogy, low-temperature semiconductor engineering, platform boot-memory behavior, and security-attack history belong there if later developed. Case 127 retains only the retention-specific relation among maintenance withdrawal, residual charge, decay, temperature, reboot overwrite, and recoverability.
+A fresh repository search found no dedicated cold-boot / DRAM-remanence or cryogenic-DRAM case to reuse. Broad DRAM device genealogy, low-temperature semiconductor engineering, the Link/May 1979 facsimile reconstruction, IBM's low-temperature VLSI program, platform boot-memory behavior, and security-attack history belong there if later developed. Case 127 retains only the retention-specific relation among maintenance withdrawal, residual charge, decay, temperature, reboot overwrite, recoverability, and refresh suppression under changed operating conditions.
 
 ### `tmzncty/problem-history`
 
@@ -348,8 +397,14 @@ Use the anti-anachronism rule. `Volatile` is a useful technical classification, 
    - §3 `Effect of Rebooting`: soft- versus hard-reboot observations, including an IBM ThinkPad T30 retaining many test stamps after 30 seconds without power.
 3. Peter Gutmann, **“Data Remanence in Semiconductor Devices,”** 10th USENIX Security Symposium, 15 August 2001, pp. 39–54. <https://www.usenix.org/legacy/publications/library/proceedings/sec01/full_papers/gutmann/gutmann_html/index.html>
    - used only as terminology/prior-art context; Halderman et al. explicitly distinguish the 2008 capacitance effect from Gutmann-style `burn-in`.
+4. Hitachi, Ltd., **U.S. Patent 4,710,648, “Semiconductor including signal processor and transient detector for low temperature operation.”** Priority family 9 May 1984; U.S. issue 1 December 1987. <https://patents.justia.com/patent/4710648>.
+   - used for the period industrial disclosure that low-temperature MOS leakage can become small enough for a RAM embodiment to dispense with special refresh, and for its explicit citation of Link/May 1979.
+5. W. H. Henkels et al., **“Experimental low temperature DRAM,”** Symposium on VLSI Circuits 1989. IBM Research record: <https://research.ibm.com/publications/experimental-low-temperature-dram>. DOI `10.1109/VLSIC.1989.1037471`.
+6. W. H. Henkels et al., **“A 4-Mb Low-Temperature DRAM,”** *IEEE Journal of Solid-State Circuits* 26(11), 1991, 1519–1529. IBM Research record: <https://research.ibm.com/publications/a-4-mb-low-temperature-dram>. DOI `10.1109/4.98967`.
 
 ### Earlier prior-art lead, not directly inspected here
 
-4. W. Link and H. May, **“Eigenschaften von MOS-Ein-Transistorspeicherzellen bei tiefen Temperaturen,”** *Archiv für Elektronik und Übertragungstechnik* 33 (June 1979), 229–235.
-   - bibliographic identity and the earlier low-temperature-retention result are taken from Halderman et al. 2008 §2/reference [29]; direct facsimile inspection remains open.
+7. W. Link and H. May, **“Eigenschaften von MOS-Ein-Transistorspeicherzellen bei tiefen Temperaturen,”** *Archiv für Elektronik und Übertragungstechnik* 33 (June 1979), 229–235.
+   - bibliographic identity and the earlier low-temperature-retention result are taken from Halderman et al. 2008 §2/reference [29], with independent period citation in the Hitachi patent; direct facsimile inspection remains open.
+8. P. Wyns and R. L. Anderson, **“Low-Temperature Operation of Silicon Dynamic Random-Access Memories,”** *IEEE Transactions on Electron Devices* 36(8), 1989, 1423–1428, DOI `10.1109/16.30954`.
+   - used only at abstract/index strength in the deepening; direct facsimile inspection remains open for exact quantitative conditions.
