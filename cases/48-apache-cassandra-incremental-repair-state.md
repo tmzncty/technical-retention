@@ -543,3 +543,30 @@ A search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computi
 **Grounded.**
 
 The bounded claim is supported by Apache's own feature issue, versioned 3.11 operator documentation, 3.11 implementation state (`repairedAt`, anti-compaction, repaired/unrepaired compaction separation), the defect record that exposes inconsistency in the maintenance-state relation, and the 4.0 source that introduces an explicit pending-repair/session handoff. The case deliberately leaves modern auto-repair scheduling, post-4.0 repair evolution, independent fault injection, and broader anti-entropy genealogy for separate work.
+
+---
+
+## Deepening navigation — 2017–2018 session durability, lifetime, and overlap
+
+See [`evidence/48-cassandra-2017-2018-repair-session-durability-referential-integrity-deepening.md`](../evidence/48-cassandra-2017-2018-repair-session-durability-referential-integrity-deepening.md) for a bounded source-level follow-up using CASSANDRA-13660, CASSANDRA-13758, and CASSANDRA-14763 plus their Apache commits.
+
+That deepening adds three implementation constraints without changing the case maturity:
+
+```text
+coordinator observes successful finalize promise
+    != participant's corresponding local state is necessarily restart-safe
+
+session is old/completed enough for normal cleanup
+    != safe to delete while pending-repair SSTables still reference it
+
+newer incremental repair succeeds
+    != universal high-water mark if excluded older pending data can later return unrepaired
+```
+
+In July 2017, CASSANDRA-13660 fixed a crash window by forcing the local repairs table to stable storage after `FINALIZE_PROMISED` and before sending the successful `FinalizePromise`. In August 2017, CASSANDRA-13758 made cleanup retain a session while SSTables still belonged to it. In September 2018, CASSANDRA-14763 made a new prepare fail when intersecting SSTables belonged to another non-finalized repair session, because that older session could later fail and return data to the unrepaired set.
+
+The resulting retained-state decomposition is therefore stronger than `unrepaired -> pending -> repaired`: the protocol also has to maintain an ordering between **local durability and published authority**, a lifetime relation between **session records and SSTable references**, and an overlap rule between **unresolved maintenance epochs**.
+
+Functional comparisons in the evidence file connect this only at the level of mechanism shape to Case 61's HDFS state-publication ordering, Case 141's PostgreSQL retained-control-state lifetime, and Case 24's representation handoff. No shared genealogy is claimed.
+
+**Case status remains `Grounded`.** The 2017–2018 durability/reference/overlap slice is boundedly deepened; post-4.0 stuck/zombie-session evolution, modern repair automation, and independent crash/fault-injection testing remain open.
