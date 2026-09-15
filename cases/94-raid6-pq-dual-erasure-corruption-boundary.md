@@ -2,6 +2,11 @@
 
 **Status:** `grounded`
 
+## Evidence navigation
+
+- Canonical case: this file.
+- Later implementation deepening: [Linux MD RAID6 scrub mismatch and repair authority](../evidence/94-linux-md-raid6-scrub-mismatch-repair-authority-deepening.md) — current Linux/mdadm witness for the distinction between a known read failure, an all-readable P/Q mismatch, diagnostic mismatch evidence, and the authority chosen by `check` versus `repair`.
+
 ## Scope
 
 This case asks one bounded question:
@@ -14,9 +19,9 @@ The historical/mechanism window is deliberately narrow:
 - H. Peter Anvin's 2004–2011 Linux RAID-6 mathematics note;
 - current Linux `raid6` recovery code as an implementation witness for recovery parameterized by known failed positions;
 - the 1994 EVENODD publication as a prior-art/alternative-code boundary;
-- current Linux MD documentation only as a later operational witness for parity-currentness limits.
+- current Linux MD/mdadm scrub behavior only as a later operational witness for currentness, mismatch evidence, fault-location evidence, and repair authority.
 
-This is **not** a general history of RAID-6, Reed–Solomon coding, EVENODD, RAID-Z, declustering, storage-controller products, rebuild policy, or modern erasure coding. Those broader histories belong in `computing-archaeology`; a repository search found no existing RAID-6/P+Q case there to reuse.
+This is **not** a general history of RAID-6, Reed–Solomon coding, EVENODD, RAID-Z, declustering, storage-controller products, rebuild policy, or modern erasure coding. Those broader histories belong in `computing-archaeology`; a fresh repository search for RAID6 scrub / `mismatch_cnt` found no dedicated module to reuse.
 
 Case 17 already grounds single-missing-member parity reconstruction, degraded operation, parity currentness, and the difference between current service and restored redundancy. Case 94 adds the narrower **two-known-erasure** boundary and asks what extra information P+Q actually retains.
 
@@ -36,7 +41,9 @@ Project engineering vocabulary used here:
 - **known erasure** / **erasure-location knowledge** — a modern compact description for recovery when the missing positions are already known;
 - **dual-erasure margin** — the ability of the bounded P+Q relation to reconstruct two known missing drive contributions;
 - **fault-location prerequisite** — the distinction between knowing which positions are unavailable and diagnosing which apparently present positions are corrupt;
-- **coded-currentness** — whether the retained data and syndromes still belong to one mutually consistent stripe state.
+- **coded-currentness** — whether the retained data and syndromes still belong to one mutually consistent stripe state;
+- **mismatch evidence** — evidence that the retained data/P/Q relation is inconsistent, without assuming that the evidence identifies the bad member;
+- **repair authority** — the rule/evidence that licenses replacing one embodiment rather than another.
 
 These project terms are engineering reconstructions (`E`). They are not attributed retroactively to every period source.
 
@@ -89,6 +96,76 @@ This is the strongest boundary in the case:
 
 The code carries additional algebraic information. It does not automatically carry all the epistemic information required to decide *which* surviving-looking embodiment should be distrusted.
 
+## Later implementation witness: Linux MD scrub authority
+
+### P — a read failure and an all-readable mismatch are different evidence classes
+
+Current mdadm `md(4)` documentation describes two materially different scrub paths.
+
+If a device returns a **read error**, the failed member/address is supplied by the I/O path. MD may reconstruct the missing block from the other members and write it back to the device whose read failed.
+
+If all member reads succeed but the retained values do not satisfy the parity relation, MD has a **mismatch**. That establishes disagreement; it does not by itself establish which readable data contribution is historically wrong.
+
+```text
+known read failure
+    -> failure location supplied
+    -> reconstruct that member
+    -> attempt writeback there
+
+all reads successful + P/Q mismatch
+    -> contradiction detected
+    -> corrupt data location not thereby established
+```
+
+This later implementation witness makes the Case 94 boundary operational:
+
+**detecting inconsistency ≠ locating the corrupt embodiment**.
+
+### P — `check` records disagreement without choosing a data victim
+
+In current Linux `drivers/md/raid5.c`, the RAID6 parity-check path evaluates P and Q separately. When a mismatch exists, the implementation increments `resync_mismatches`.
+
+For `MD_RECOVERY_CHECK`, the source explicitly follows a no-mismatch-repair branch rather than trying to infer a bad readable data disk from the syndrome disagreement.
+
+Linux MD documentation also warns that `mismatch_count` is coarse: it counts sectors rewritten, or sectors that would have been rewritten for `check`, at MD's processing granularity. It is useful maintenance evidence, not a precise forensic list of corrupt sectors.
+
+Therefore:
+
+**mismatch evidence ≠ corruption-location evidence**
+
+and:
+
+**`mismatch_count` ≠ exact corruption cardinality**.
+
+### P/E — `repair` restores the parity relation; it does not prove payload truth
+
+The mdadm manual says that for RAID5/RAID6, a successful-read parity mismatch handled by `repair` is corrected by writing new parity blocks. Current `handle_parity_checks6()` makes the policy concrete: failed P and/or Q checks schedule recomputation of the P device (`pd_idx`) and/or Q device (`qd_idx`).
+
+For this bounded all-readable mismatch path:
+
+```text
+readable data blocks
+    -> used as repair inputs
+    -> recompute failed P and/or Q relation
+    -> write parity target(s)
+```
+
+That is a repair-authority policy. It is not an algebraic proof that every readable data block was the application-intended historical payload.
+
+So:
+
+**post-repair P/Q consistency ≠ proof of historical/application correctness**.
+
+### P — `check` is not a universal no-write guarantee
+
+A useful negative boundary follows from the same mdadm documentation. Although `check` does not repair an all-readable parity mismatch, an actual scrub-time **read error** invokes normal read-error recovery and may cause a reconstructed block to be written back.
+
+Therefore:
+
+**`sync_action=check` ≠ universal no-write guarantee**.
+
+The evidence class encountered during traversal changes what recovery is authorized to do.
+
 ### P — current Linux MD keeps parity currentness separate from coding strength
 
 Linux MD documentation separately refuses normal startup of a RAID5/RAID6 array that is both **dirty and degraded**, because dirty state means parity cannot be trusted while degraded state means some data blocks are missing and therefore cannot be reliably reconstructed from untrusted parity.
@@ -109,9 +186,23 @@ For the bounded P+Q recovery relation, later reconstruction can depend on more t
 4. the stripe/member ordering that gives Q its position-dependent coefficient relation;
 5. the identity/positions of contributions known to be unavailable for the recovery operation;
 6. enough currentness/array state to reject stale or inconsistent redundancy;
-7. repair progress / replacement state if the system is to know whether the full dual-failure margin has been restored.
+7. repair progress / replacement state if the system is to know whether the full dual-failure margin has been restored;
+8. fault-location evidence when recovery is to replace a particular embodiment rather than merely detect disagreement;
+9. mismatch/consistency-test evidence when scrub discovers a contradiction without locating its source;
+10. repair-policy authority specifying which representation may be rewritten under the available evidence.
 
-Items 4–7 are not user payload. They are constitutive control/admissibility relations around the coded payload.
+Items 4–10 are not user payload. They are constitutive control/admissibility/evidence relations around the coded payload.
+
+A useful decomposition is:
+
+```text
+payload state
+    != P/Q redundancy relation
+    != coded-currentness
+    != mismatch evidence
+    != fault-location evidence
+    != repair authority
+```
 
 ## Mechanism reconstruction
 
@@ -126,7 +217,22 @@ If one data contribution is missing and ordinary parity is available, P alone ca
 
 The independence of P and Q is therefore the retained technical resource. The fact that the coefficients are position-dependent is why the code-position relation is also constitutive.
 
-This reconstruction deliberately stops before a general tutorial on Galois-field arithmetic.
+For current Linux MD scrub, the later operational logic can be reconstructed separately:
+
+```text
+P/Q consistency test
+    -> consistent: no parity mismatch evidence
+    -> inconsistent: retain mismatch evidence
+
+independent known failed position
+    -> reconstruct the known erasure
+
+no known failed position; all reads succeeded
+    -> `check`: record disagreement, do not infer a data victim
+    -> `repair`: regenerate failed P and/or Q relation(s) from readable data
+```
+
+This reconstruction deliberately stops before a general tutorial on Galois-field arithmetic or Linux MD state-machine internals.
 
 ## Maintenance and failure boundaries
 
@@ -143,6 +249,12 @@ A missing drive normally supplies its own location as part of the failure condit
 The same two equations face different unknowns in those two regimes.
 
 **number of parity equations ≠ number of arbitrary faults that can always be diagnosed**.
+
+### Mismatch evidence can survive without resolution evidence
+
+A scrub may establish that the retained embodiments contradict the P/Q relation while preserving no independent evidence that identifies which readable member is wrong.
+
+**evidence of contradiction ≠ evidence sufficient to resolve the contradiction**.
 
 ### A first failure consumes margin even when service continues
 
@@ -163,6 +275,12 @@ If P/Q no longer describe the same current stripe state as the surviving data, s
 P+Q increases the number of independent coded constraints. It does not make several member writes atomic across sudden power loss.
 
 That is why Case 88 remains a separate recovery-order/durability case.
+
+### Repair can restore codeword consistency without proving semantic truth
+
+When every member is readable but the relation disagrees, Linux MD's bounded `repair` path can make parity conform to the readable data. That is a coherent maintenance policy, but it must not be upgraded into a claim that the surviving data were independently authenticated.
+
+**restored redundancy consistency ≠ independently verified payload provenance**.
 
 ## Prior art and genealogy boundary
 
@@ -185,21 +303,25 @@ A full coding genealogy belongs in `computing-archaeology`.
 | Comparison | Status | What carries across | What must not be collapsed |
 | --- | --- | --- | --- |
 | Case 17 RAID parity reconstruction | `A/E` | coded reconstruction, degraded service, repair margin, parity currentness | one-known-failure XOR parity is not the two-syndrome P+Q regime |
-| Case 18 ZFS scrub | `A` | integrity evidence can be required before repair authority | proactive corruption detection is not the same operation as solving known erasures |
+| Case 18 ZFS scrub | `A` | proactive traversal can discover integrity debt; independent integrity metadata can change repair authority | ZFS checksum-guided repair is not Linux MD's bare P/Q mismatch policy |
 | Case 19 Facebook f4 | `A` | Reed–Solomon-coded recoverability without full replicas | distributed failure-domain placement and object reconstruction differ from local RAID-6 P+Q |
 | Case 24 Azure LRC | `A` | recovery cost depends on code dependency structure | LRC locality and cloud extent handoff are different code/system semantics |
-| Case 27 Ceph EC scrub | `A` | coded surviving fragments still need integrity/currentness qualification | Ceph's scrub-authority protocol is not Linux/Chen RAID-6 |
-| Case 88 Linux MD PPL | `A` | coded redundancy still depends on crash-safe currentness/order evidence | PPL write-hole closure is not an additional parity equation |
+| Case 27 Ceph EC scrub | `A` | coded surviving fragments still need integrity/currentness qualification | Ceph's object/checksum/PG authority protocol is not Linux/Chen RAID-6 |
+| Case 88 Linux MD PPL | `A` | coded redundancy still depends on crash-safe currentness/order evidence | parity currentness evidence is not corruption-location evidence |
 
 No direct historical genealogy is inferred among these systems.
+
+The new Linux-MD deepening is useful as a **negative-control edge** for future checksummed RAID comparison: it shows concretely what a P+Q implementation can know when it has syndrome disagreement but lacks an independent per-block truth signal. A future positive checksummed RAID/RAIDZ slice should remain separate from the already-grounded ZFS scrub history and should not be collapsed into Linux MD behavior.
 
 ## Philosophical interpretation
 
 `I` — The case is useful because it makes “more retained information” visibly **typed**. A second syndrome expands the class of missing-state relations that can be reconstructed, but only inside a fault model in which missing positions and currentness are sufficiently known.
 
+`I` — The Linux MD scrub witness adds a second bounded interpretation: a technical system may retain evidence that its representations contradict one another without retaining enough evidence to decide which representation deserves authority.
+
 `I` — This supports the repository's target-relative notion of retention: later continuation depends not only on the quantity of surviving material but on which relations remain admissible for the future recovery operation.
 
-These are project interpretations, not claims made by Chen, Anvin, or Linux developers as philosophical theses.
+These are project interpretations, not claims made by Chen, Anvin, Linux, or mdadm developers as philosophical theses.
 
 ## Claim ledger
 
@@ -211,8 +333,13 @@ These are project interpretations, not claims made by Chen, Anvin, or Linux deve
 | Linux dual-data recovery takes explicit failed indexes | `P` | current `lib/raid/raid6/recov.c` | current implementation witness, not 2004 source identity |
 | arbitrary dual-disk corruption is not generally detectable/recoverable by RAID-6 alone | `H/P` | Anvin diagnostic section | does not deny additional checksums/scrub/metadata can help |
 | dirty+degraded RAID5/6 can have untrustworthy parity and unreconstructable missing data | `P/E` | Linux MD admin guide | current Linux operational boundary, not 1993 history |
+| current MD scrub distinguishes known read failure from all-readable parity mismatch | `P` | mdadm `md(4)` | present implementation/project behavior |
+| current RAID6 `check` records syndrome mismatch without repairing that mismatch | `P` | `drivers/md/raid5.c` | actual read errors encountered during check can still trigger recovery/writeback |
+| current RAID6 mismatch `repair` recomputes failed P and/or Q targets | `P` | mdadm `md(4)` + `handle_parity_checks6()` | does not prove readable data are historically correct |
+| `mismatch_count` is coarse maintenance evidence, not an exact corrupt-sector inventory | `P/E` | Linux MD documentation | still useful as operational evidence |
+| restored P/Q consistency proves application-intended historical payload | `X` | not established | requires independent integrity/provenance evidence |
 | P+Q is not two replicas | `E` | source mechanism comparison | project reconstruction |
-| failure-location knowledge can be constitutive recovery state | `E` | positional equations + Linux `faila/failb` | project vocabulary |
+| failure-location knowledge can be constitutive recovery state | `E` | positional equations + Linux `faila/failb` + read-error path | project vocabulary |
 | dual parity does not itself close the write hole | `E/A` | Cases 17/88 + Linux currentness boundary | no claim about every controller implementation |
 | EVENODD is an alternative two-redundant-disk scheme | `H/P` | IBM Research 1994 record | used only to block one-algorithm/invention story |
 
@@ -234,10 +361,16 @@ These are project interpretations, not claims made by Chen, Anvin, or Linux deve
 4. Mario Blaum, Jim Brady, Jehoshua Bruck, and Jai Menon, **“EVENODD: An optimal scheme for tolerating double disk failures in RAID architectures,”** ISCA 1994, 18 April 1994.
    - IBM Research record: <https://research.ibm.com/publications/evenodd-an-optimal-scheme-for-tolerating-double-disk-failures-in-raid-architectures>
 
-### Later institutional / operational witness
+### Later implementation / operational witnesses
 
-5. Linux kernel documentation, **“RAID arrays”**, section “Boot time assembly of degraded/dirty arrays”.
-   - <https://www.kernel.org/doc/html/next/admin-guide/md.html>
+5. Linux kernel documentation, **“RAID arrays”**, including degraded/dirty assembly and `sync_action` / `mismatch_count` semantics.
+   - pinned source inspected for this deepening: <https://github.com/torvalds/linux/blob/587858367581b9c55c3690f4e63382ad622719d4/Documentation/admin-guide/md.rst>
+
+6. Linux kernel, **`drivers/md/raid5.c`**, current RAID5/6 implementation witness; especially `handle_parity_checks6()`.
+   - pinned source inspected for this deepening: <https://github.com/torvalds/linux/blob/587858367581b9c55c3690f4e63382ad622719d4/drivers/md/raid5.c>
+
+7. md-raid-utilities/mdadm, **`md(4)`** project manual, scrub/read-error/mismatch behavior.
+   - <https://github.com/md-raid-utilities/mdadm/blob/main/md.4>
 
 ## Open work kept outside this case
 
@@ -245,8 +378,9 @@ These are project interpretations, not claims made by Chen, Anvin, or Linux deve
 - exact production-controller implementations and crash semantics;
 - RAID-Z, dRAID, declustered parity, and modern array layouts;
 - rebuild throttling and URE-aware rebuild policy;
-- checksummed RAID-6 fault-location/repair protocols;
-- independent hardware fault injection;
+- a **positive** checksummed RAID-6/RAIDZ-style fault-location/repair contrast, kept separate from the Linux-MD negative-control edge now grounded here;
+- historical introduction of Linux MD `check` / `repair` / mismatch accounting if chronology becomes relevant;
+- controlled fault injection distinguishing unreadable sectors, parity-only corruption, readable data corruption, and multiple readable corruptions;
 - performance comparison among modern RAID-6 implementations;
 - secure deletion / forensic behavior of reconstructed or retired members.
 
