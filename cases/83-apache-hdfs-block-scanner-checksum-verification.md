@@ -2,7 +2,7 @@
 
 ## Scope
 
-- **Object / system:** Apache Hadoop HDFS DataNode background block scanning, bounded primarily to the `rel/release-2.7.3` `BlockScanner` / `VolumeScanner` implementation and the HDFS architecture documentation for Hadoop 2.7.3.
+- **Object / system:** Apache Hadoop HDFS DataNode background block scanning, bounded primarily to the `rel/release-2.7.3` `BlockScanner` / `VolumeScanner` implementation and HDFS architecture documentation, with later 2016–2018 source-level deepening for concurrent append/checksum currentness and the HDFS-11187 reconstructible last-partial-checksum cache.
 - **Historical boundary:** Hadoop issue history shows `DataBlockScanner` already in use in the 0.17/0.18 period in 2008; this case does not claim that the 2.7.x rewrite invented background integrity scanning.
 - **Retention question:** what must be retained or repeatedly re-established when a replica can remain present on disk yet cease to be trustworthy because its contents or checksum relation have become corrupt?
 - **Status:** `grounded`.
@@ -11,7 +11,7 @@ This is **not** a general history of HDFS checksums, Hadoop replication, storage
 
 > **A replica can be known to exist at a DataNode while its continued qualification as a usable replica still depends on later verification work.**
 
-The project terms `integrity qualification`, `verification age`, `coverage state`, and `maintenance-progress retention` below are **engineering reconstructions**, not Apache historical vocabulary.
+The project terms `integrity qualification`, `verification age`, `coverage state`, `maintenance-progress retention`, and `reconstructible integrity-currentness cache` below are **engineering reconstructions**, not Apache historical vocabulary.
 
 ---
 
@@ -19,6 +19,7 @@ The project terms `integrity qualification`, `verification age`, `coverage state
 
 The inspected Apache sources use these terms directly:
 
+- `DataBlockScanner`;
 - `BlockScanner`;
 - `VolumeScanner`;
 - `block scanner`;
@@ -32,6 +33,9 @@ The inspected Apache sources use these terms directly:
 - `reportBadBlocks`;
 - `Blockreport`;
 - `checksum`;
+- `last partial chunk checksum`;
+- `FinalizedReplica`;
+- `visible length`;
 - `corrupted` / `corrupt replica` in HDFS documentation and issue history;
 - `re-replication`.
 
@@ -41,15 +45,27 @@ Do not silently replace these with stronger historical claims such as `proof of 
 
 ## Retained state
 
-The bounded scanner path exposes several distinct state classes.
+The bounded scanner and later checksum-currentness path expose several distinct state classes.
 
 ### 1. DataNode-resident block payload
 
 A physical/logical HDFS block replica stored in the DataNode's local storage remains the user-data embodiment being checked.
 
-### 2. Checksum / replica metadata needed to verify the block
+### 2. Durable checksum / replica metadata needed to verify the block
 
 The scanner uses the ordinary block-sending path with checksum verification enabled. The relevant integrity metadata is not another user-data replica; it is evidence used to decide whether the bytes read from this embodiment remain acceptable.
+
+### 2a. Volatile, reconstructible last-partial-checksum state
+
+HDFS-11187 adds `FinalizedReplica.lastPartialChunkChecksum` as an in-memory copy of the checksum relation for the final partial chunk. The released 2.7.6 path deliberately allows this field to begin absent and lazily reconstructs it from the ordinary metadata file when first needed, rather than eagerly loading it for every finalized replica at DataNode initialization.
+
+This state is therefore distinct from the durable checksum metadata itself:
+
+> **durable checksum metadata ≠ volatile checksum cache.**
+
+Its loss is not automatically payload or checksum-file loss, because the implementation can reconstruct it. Its **currentness while present** still matters because concurrent verification must use a checksum corresponding to the visible payload boundary being judged.
+
+Detailed record: [`../evidence/83-hdfs-2018-finalized-partial-checksum-cache-deepening.md`](../evidence/83-hdfs-2018-finalized-partial-checksum-cache-deepening.md).
 
 ### 3. NameNode-side replica qualification / corruption relation
 
@@ -68,9 +84,11 @@ This relation is distinct from whether the underlying local block file has alrea
 - recent throughput accounting;
 - suspect-block queues;
 - scanner statistics;
-- an iterator/cursor that is periodically saved.
+- an iterator/cursor that is periodically saved by some code paths and intentionally survives restart boundaries.
 
 This state does not contain the user payload. It exists so that integrity maintenance can cover a large volume over time instead of repeatedly checking only whichever block happens to be convenient.
+
+The cursor and the HDFS-11187 checksum cache are both auxiliary state, but they have different intended persistence horizons: the cursor is restart-oriented maintenance-progress state, while the last-partial checksum is deliberately reconstructible runtime state.
 
 ---
 
@@ -134,6 +152,30 @@ This yields three stricter boundaries:
 The 2017 follow-up HDFS-12136 reports that this lock-based coherence strategy could serialize `BlockSender` construction under load, so the historical fix also supplies a cost boundary: **coherent verification != free verification**. This is a product/code-path tradeoff, not a claim that every correct verifier must take a global exclusive lock.
 
 The detailed source/claim map is in [`../evidence/83-hdfs-2016-volume-scanner-concurrent-append-coherence-deepening.md`](../evidence/83-hdfs-2016-volume-scanner-concurrent-append-coherence-deepening.md).
+
+### H/P — 2018 HDFS-11187 turns the last partial checksum into reconstructible in-memory state
+
+HDFS-11187 was opened in November 2016 specifically because the HDFS-11160 strategy repeatedly read the last partial chunk checksum from disk while holding the `FsDatasetImpl` lock. The issue proposes keeping an **up-to-date** last partial checksum in memory instead.
+
+Apache Hadoop commit `2021f4bdce3b27c46edaad198f0007a26a8a1391` on 3 February 2018 implements that direction. It adds `lastPartialChunkChecksum` to `FinalizedReplica`, propagates the value through selected finalized/RBW transitions, and changes `BlockSender` so the finalized checksum is no longer loaded from disk inside the dataset-lock critical section.
+
+The new `getPartialChunkChecksumForFinalized()` path is explicit about another retention boundary: eagerly loading this value whenever a finalized replica object is created would increase DataNode initialization latency, so the cache is loaded **lazily**. If a finalized replica ends in a partial checksum chunk and the cache is absent, the method reconstructs it from the ordinary metadata file on first relevant use.
+
+The same mechanism appears in tag-matched Hadoop `rel/release-2.7.6`, and the 2.7.6 release notes list HDFS-11187 as a DataNode improvement. Thus this is not merely an unmerged HDFS-12136 proposal.
+
+This yields several additional boundaries:
+
+> **durable checksum metadata ≠ volatile checksum cache.**
+
+> **cache loss ≠ checksum-file loss ≠ payload loss.**
+
+> **reconstructible state ≠ semantically irrelevant state.**
+
+> **state needed eventually ≠ state that must be eagerly reconstructed at startup.**
+
+> **retaining derived state ≠ eliminating the need to maintain its currentness.**
+
+The source-level deepening is in [`../evidence/83-hdfs-2018-finalized-partial-checksum-cache-deepening.md`](../evidence/83-hdfs-2018-finalized-partial-checksum-cache-deepening.md).
 
 ### H/P — suspect blocks can be pulled forward without replacing periodic coverage
 
@@ -242,7 +284,9 @@ These paths can share checksum semantics without being the same event:
 
 > **periodic verification ≠ demand read verification.**
 
-Case 83 does not claim that every code path or Hadoop release uses exactly the same checksum implementation internals.
+HDFS-11160/HDFS-11187 are especially useful here because `BlockSender` is shared infrastructure: a coherence/currentness fix motivated by scanner behavior can affect ordinary serving cost, while the later cache optimization addresses that shared path rather than creating a scanner-only checksum universe.
+
+Case 83 still does not claim that every code path or Hadoop release uses exactly the same checksum implementation internals.
 
 ---
 
@@ -256,7 +300,9 @@ The case introduces several different temporal relations:
 4. **delay before a newly suspect block is prioritized**;
 5. **time between physical corruption and discovery**;
 6. **time between discovery/reporting and restoration of desired replication**;
-7. **lifetime and freshness of the saved scanner cursor across restart**.
+7. **lifetime and freshness of the saved scanner cursor across restart**;
+8. **lifetime/currentness of a volatile last-partial-checksum cache relative to replica-state transitions**;
+9. **delay until an absent reconstructible checksum cache is rebuilt on first relevant use**.
 
 `verification age` is a project comparison term for (1); the inspected implementation does not expose a durable per-block certificate whose mere existence permanently guarantees future correctness.
 
@@ -266,6 +312,10 @@ A successful scan only establishes a bounded observation at a time:
 
 The medium, software, metadata, or device can fail later. Periodic rescanning exists precisely because trust must be renewed under an ongoing failure model.
 
+Likewise, HDFS-11187 shows that a useful auxiliary relation need not share the full lifetime of the replica if it can be safely reconstructed:
+
+> **replica lifetime ≠ cache lifetime.**
+
 ---
 
 ## Failure and forgetting modes
@@ -273,7 +323,9 @@ The medium, software, metadata, or device can fail later. Periodic rescanning ex
 Keep these distinct:
 
 - **payload corruption** — local data bytes no longer match the expected integrity relation;
-- **checksum/metadata corruption** — integrity evidence itself can become unusable or inconsistent;
+- **checksum/metadata corruption** — durable integrity evidence itself can become unusable or inconsistent;
+- **volatile checksum-cache absence** — HDFS-11187 can lazily rebuild the last partial checksum from durable metadata; this is not itself payload loss;
+- **stale/mis-propagated checksum-currentness state** — a conceptually different risk from cache absence because a verifier may act on integrity evidence for the wrong payload boundary;
 - **replica missing from the local dataset** — absence is not the same diagnosis as checksum corruption;
 - **transient/racy lookup failure** — the 2.7.3 handler explicitly avoids turning every `FileNotFoundException` into a corrupt-replica report;
 - **scanner disabled or starved** — surviving replicas can go longer without proactive verification;
@@ -284,7 +336,7 @@ Keep these distinct:
 - **physical deletion of the corrupt local file** — a later cleanup action, not synonymous with the integrity verdict;
 - **secure sanitization** — not established by reporting, invalidation, replication, or local file removal.
 
-Calling all of these `bit rot` would hide the operative distinctions among defect creation, discovery, qualification, reporting, repair, and physical forgetting.
+Calling all of these `bit rot` or `metadata loss` would hide the operative distinctions among defect creation, evidence loss, cache reconstruction, discovery, qualification, reporting, repair, and physical forgetting.
 
 ---
 
@@ -299,6 +351,8 @@ Therefore:
 > **inventory re-observation ≠ integrity qualification.**
 
 A Blockreport can re-establish `block B is present on DataNode D` without proving that a later full read of that replica will verify successfully.
+
+HDFS-11187 adds a smaller functional analogy inside the same system: some operational relations can be reconstructed after they are absent rather than being independently persisted. That analogy does **not** make NameNode location reconstruction and DataNode checksum-cache reconstruction the same mechanism or authority layer.
 
 ### Case 18 — ZFS scrub
 
@@ -325,6 +379,19 @@ Data General's bounded DRAM design can use ECC to correct and write back a damag
 
 Both are integrity-maintenance cases, but the repair substrate, authority, scale, and chronology differ.
 
+### Intra-case comparison — persisted cursor versus reconstructible checksum cache
+
+Case 83 now contains two different policies for auxiliary state:
+
+- scanner cursor: preserve enough maintenance-progress state across restart to avoid unnecessary traversal replay;
+- last-partial checksum cache: permit absence across initialization and reconstruct on first relevant use to avoid eager startup I/O.
+
+Thus:
+
+> **auxiliary state ≠ one universal persistence horizon.**
+
+Whether to persist, replay, or reconstruct depends on what survives underneath, how expensive reconstruction is, and what currentness relation must hold when the state is used.
+
 ---
 
 ## Prior-art boundary
@@ -335,17 +402,22 @@ This case makes **no invention-priority claim** for:
 - background media scanning;
 - disk scrubbing;
 - replicated repair;
-- HDFS-style DataNode scanning as the first distributed implementation of such ideas.
+- HDFS-style DataNode scanning as the first distributed implementation of such ideas;
+- in-memory checksum caching;
+- lazy loading;
+- propagation of derived integrity state across runtime object transitions.
 
-Two boundaries are especially important.
+Three boundaries are especially important.
 
 First, the Hadoop 2008 issue history proves the mechanism existed before the bounded 2.7.3 rewrite; therefore the case uses 2.7.3 for inspectable semantics, not as an origin date.
 
 Second, Ghemawat, Gobioff, and Leung's 2003 Google File System paper already describes chunkservers checking checksums on reads and, during idle periods, scanning inactive chunks so corruption in rarely read data can be detected; after detection the master can create an uncorrupted replica and retire the corrupt one. That is direct prior art for the broad distributed-storage function `proactive local integrity verification + replica replacement` before HDFS's 2008 `DataBlockScanner` witness.
 
+Third, HDFS-11187 is a documented Apache implementation transition, not evidence that HDFS invented the broader pattern `durable source metadata + reconstructible volatile cache`.
+
 The defensible historical claim is narrower:
 
-> **By 2008 HDFS had a DataNode `DataBlockScanner` used to verify local blocks, and the Hadoop 2.7.3 implementation gives an inspectable later regime in which per-volume scanners rate-limit periodic coverage, prioritize suspect blocks, use a persisted iterator/cursor mechanism whose 2.7.3 periodic checkpoint branch has a documented clock-domain defect, distinguish some transient races from bad-block verdicts, and report qualifying failures into the distributed replica-management path.**
+> **By 2008 HDFS had a DataNode `DataBlockScanner` used to verify local blocks; Hadoop 2.7.3 gives an inspectable later regime in which per-volume scanners rate-limit periodic coverage, prioritize suspect blocks, use a persisted iterator/cursor mechanism whose 2.7.3 periodic checkpoint branch has a documented clock-domain defect, distinguish some transient races from bad-block verdicts, and report qualifying failures into distributed replica management; the 2016–2018 HDFS-11160/HDFS-11187 sequence then exposes how checksum/data observation coherence and the cost of retaining/reconstructing last-partial-checksum state were revised in the shared read/scan path.**
 
 A full GFS→Nutch/HDFS scanner genealogy would require dedicated historical work and belongs primarily in `computing-archaeology` if pursued.
 
@@ -380,7 +452,14 @@ Case 83 adds these controlled relations:
 23. `ATOMIC_MOVE request ≠ demonstrated power-loss durability`;
 24. `cursor load failure ≠ scanner disablement`;
 25. `checkpoint rollback/replay ≠ payload rollback`;
-26. `restart continuity ≠ exactly-once maintenance traversal`.
+26. `restart continuity ≠ exactly-once maintenance traversal`;
+27. `durable checksum metadata ≠ volatile last-partial-checksum cache`;
+28. `cache loss ≠ checksum-file loss ≠ payload loss`;
+29. `reconstructible state ≠ semantically irrelevant state`;
+30. `replica lifetime ≠ cache lifetime`;
+31. `state needed eventually ≠ state that must be eagerly reconstructed at startup`;
+32. `retained derived state ≠ automatically current derived state`;
+33. `persisted maintenance progress ≠ reconstructible integrity-currentness cache`.
 
 These are project engineering terms. They are not claims that Apache developers used this exact ontology.
 
@@ -392,11 +471,15 @@ Case 83 sharpens a recurring project problem: **persistence includes epistemic m
 
 The block can remain exactly where the system thinks it is and still cease to deserve the status `good replica`. A background scan does not normally preserve the block by rewriting it in place; its first contribution is to renew or withdraw a relation of trust between a surviving embodiment and the logical object it is supposed to realize.
 
-This supports a bounded interpretation:
+HDFS-11187 adds another bounded layer. Not every relation used by the running verifier has to be persisted for as long as the block itself. Some auxiliary state can be intentionally forgotten at process/startup boundaries and reconstructed from surviving lower-layer evidence when needed again.
+
+This supports two bounded interpretations:
 
 > **Some retention work preserves not the payload directly but the system's justified ability to count a surviving embodiment as admissible.**
 
-The interpretation stops there. It does not imply that all truth, memory, or archives are checksum relations, nor that `trust` is Apache's historical term for checksum success.
+> **What must remain durable is not necessarily identical to everything the running system currently knows; reconstructibility can substitute for long-lived persistence for some auxiliary relations.**
+
+The interpretation stops there. It does not imply that all truth, memory, caches, or archives are checksum relations, nor that `trust`, `epistemic maintenance`, or `reconstructible state` are Apache's historical terms.
 
 ---
 
@@ -408,10 +491,12 @@ Still open:
 - a full GFS→HDFS or other distributed-scrubbing genealogy;
 - exact checksum-file / metadata-format evolution across Hadoop releases;
 - fault-injection measurements on named HDFS releases;
-- later `BlockScanner` / `VolumeScanner` evolution beyond the bounded HDFS-11160 fix, including later alternatives to its locking tradeoff;
+- later `BlockScanner` / `VolumeScanner` evolution after the bounded HDFS-11160 → HDFS-11187 sequence; the specific later alternative to lock-held last-partial-checksum disk I/O is now boundedly grounded through the 2018 shipped cache/lazy-load design, but post-2018 scanner/read-path evolution remains open;
+- independent measurement of cache warm/cold behavior, startup cost, lock contention, and concurrent append/scan behavior across released branches;
 - interaction with storage-device internal ECC, RAID, filesystems, and controller scrubbing;
 - quantified detection-latency distributions in production clusters;
 - filesystem-specific / power-loss durability of the saved block-iterator cursor and independent crash fault injection; the source-level temp-file / `ATOMIC_MOVE` / load-fallback path and the periodic-save clock-domain defect are now grounded;
+- crash/restart behavior of all HDFS-11187 checksum-cache propagation paths beyond the source-level fact that the in-memory cache is lazily reconstructible from ordinary metadata;
 - cases where all replicas share correlated corruption;
 - Byzantine/adversarial integrity, which checksum scanning does not solve.
 
@@ -423,11 +508,11 @@ These limits do not block the bounded result.
 
 ### `tmzncty/computing-archaeology`
 
-Repository search found no dedicated HDFS BlockScanner / checksum-scanning case at the time of this slice. This case therefore keeps only the retention-specific mechanism and prior-art boundary. If a full history of HDFS data-integrity scanning or GFS→HDFS genealogy is built later, it should live there and be linked back rather than duplicated here.
+Fresh repository searches for `HDFS-11187` and `BlockSender` found no dedicated HDFS checksum/scanner history to reuse during this slice. This case therefore keeps only the retention-specific mechanism and prior-art boundary. If a full history of HDFS data-integrity scanning, checksum-file evolution, `BlockSender` locking, append semantics, or GFS→HDFS genealogy is built later, it should live there and be linked back rather than duplicated here.
 
 ### `tmzncty/problem-history`
 
-Useful methodological guardrail: `integrity qualification`, `verification age`, and `maintenance-progress retention` are our reconstruction terms. The historical actors' vocabulary remains `DataBlockScanner` / `BlockScanner`, `VolumeScanner`, checksum verification, suspect blocks, bad-block reporting, and re-replication.
+Useful methodological guardrail: `integrity qualification`, `verification age`, `maintenance-progress retention`, and `reconstructible integrity-currentness cache` are our reconstruction terms. The historical actors' vocabulary remains `DataBlockScanner` / `BlockScanner`, `VolumeScanner`, checksum verification, `last partial chunk checksum`, suspect blocks, bad-block reporting, and re-replication.
 
 ---
 
@@ -444,14 +529,23 @@ Useful methodological guardrail: `integrity qualification`, `verification age`, 
 - Apache JIRA, `HDFS-11160`, **VolumeScanner reports write-in-progress replicas as corrupt incorrectly** (2016): <https://issues.apache.org/jira/browse/HDFS-11160>
 - Apache Hadoop commit `aebb9127bae872835d057e1c6a6e6b3c6a8be6cd`, **HDFS-11160. VolumeScanner reports write-in-progress replicas as corrupt incorrectly** (2016-12-16 UTC): <https://github.com/apache/hadoop/commit/aebb9127bae872835d057e1c6a6e6b3c6a8be6cd>
 - Apache JIRA, `HDFS-12136`, **BlockSender performance regression due to volume scanner edge case** (2017): <https://issues.apache.org/jira/browse/HDFS-12136>
+- Apache JIRA, `HDFS-11187`, **Optimize disk access for last partial chunk checksum of Finalized replica** (2016–2018): <https://issues.apache.org/jira/browse/HDFS-11187>
+- Apache Hadoop commit `2021f4bdce3b27c46edaad198f0007a26a8a1391`, **HDFS-11187. Optimize disk access for last partial chunk checksum of Finalized replica** (2018-02-03 UTC): <https://github.com/apache/hadoop/commit/2021f4bdce3b27c46edaad198f0007a26a8a1391>
+- Apache Hadoop source, tag `rel/release-2.7.6`, `BlockSender.java`: <https://github.com/apache/hadoop/blob/rel/release-2.7.6/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/BlockSender.java>
+- Apache Hadoop source, tag `rel/release-2.7.6`, `FinalizedReplica.java`: <https://github.com/apache/hadoop/blob/rel/release-2.7.6/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/FinalizedReplica.java>
+- Apache Hadoop 2.7.6 release notes, including HDFS-11187: <https://hadoop.apache.org/docs/r2.7.6/hadoop-project-dist/hadoop-common/releasenotes.html>
 - Sanjay Ghemawat, Howard Gobioff, Shun-Tak Leung, **“The Google File System,”** SOSP 2003, especially §5.2 `Data Integrity`: <https://research.google/pubs/the-google-file-system/>
 
-### Internal comparisons
+### Internal evidence and comparisons
 
-- [`cases/18-zfs-scrub-latent-error-detection.md`](18-zfs-scrub-latent-error-detection.md)
-- [`cases/05-rados-replicated-object-repair.md`](05-rados-replicated-object-repair.md)
-- [`cases/77-data-general-dram-sniff-refresh-ecc-scrub.md`](77-data-general-dram-sniff-refresh-ecc-scrub.md)
-- [`cases/79-apache-hdfs-startup-safemode-block-report-reobservation.md`](79-apache-hdfs-startup-safemode-block-report-reobservation.md)
+- [`../evidence/83-hadoop-2003-2016-block-scanner-grounding.md`](../evidence/83-hadoop-2003-2016-block-scanner-grounding.md)
+- [`../evidence/83-hdfs-2016-volume-scanner-concurrent-append-coherence-deepening.md`](../evidence/83-hdfs-2016-volume-scanner-concurrent-append-coherence-deepening.md)
+- [`../evidence/83-hdfs-blockscanner-cursor-checkpoint-clock-domain-deepening.md`](../evidence/83-hdfs-blockscanner-cursor-checkpoint-clock-domain-deepening.md)
+- [`../evidence/83-hdfs-2018-finalized-partial-checksum-cache-deepening.md`](../evidence/83-hdfs-2018-finalized-partial-checksum-cache-deepening.md)
+- [`18-zfs-scrub-latent-error-detection.md`](18-zfs-scrub-latent-error-detection.md)
+- [`05-rados-replicated-object-repair.md`](05-rados-replicated-object-repair.md)
+- [`77-data-general-dram-sniff-refresh-ecc-scrub.md`](77-data-general-dram-sniff-refresh-ecc-scrub.md)
+- [`79-apache-hdfs-startup-safemode-block-report-reobservation.md`](79-apache-hdfs-startup-safemode-block-report-reobservation.md)
 
 ---
 
@@ -459,4 +553,4 @@ Useful methodological guardrail: `integrity qualification`, `verification age`, 
 
 **Grounded bounded case.**
 
-The central claims are directly supported by Apache documentation, tag-matched Hadoop 2.7.3 source, earlier Apache issue history, and the 2016 HDFS-11160 issue/commit deepening; GFS 2003 supplies a conservative prior-art boundary. The case does not generalize from HDFS to all scrubbing systems and does not equate detection, reporting, repair, deletion, or sanitization.
+The central claims are directly supported by Apache documentation, tag-matched Hadoop 2.7.3 source, earlier Apache issue history, the 2016 HDFS-11160 issue/commit deepening, and the 2018 HDFS-11187 mainline + Hadoop 2.7.6 released implementation of a lazily reconstructible last-partial-checksum cache. GFS 2003 supplies a conservative prior-art boundary. The case does not generalize from HDFS to all scrubbing systems and does not equate detection, reporting, repair, deletion, sanitization, durable checksum metadata, or reconstructible runtime cache state.
