@@ -2,9 +2,11 @@
 
 ## Status
 
-**`grounded`** — bounded to the 2012 RAIDR research design and its 2013 experimental retention-profiling stress test. The case uses the original ISCA 2012 RAIDR paper as the mechanism record and the original ISCA 2013 study of 248 commodity DDR3 chips as later empirical evidence that complicates a static retention-profile assumption.
+**`grounded`** — bounded to the 2012 RAIDR research design and its 2013 experimental retention-profiling stress test, now with a bounded pre-RAIDR prior-art deepening that distinguishes Smart Refresh (2007) access-recency refresh elision from Flikker (2011) semantic criticality / accepted-error refresh reduction. The case uses the original ISCA 2012 RAIDR paper as the mechanism record and the original ISCA 2013 study of 248 commodity DDR3 chips as later empirical evidence that complicates a static retention-profile assumption.
 
 Grounding record: [`../evidence/40-raidr-2012-2013-retention-profile-grounding.md`](../evidence/40-raidr-2012-2013-retention-profile-grounding.md).
+
+Prior-art deepening: [`../evidence/40-smart-refresh-2007-flikker-2011-prior-art-deepening.md`](../evidence/40-smart-refresh-2007-flikker-2011-prior-art-deepening.md).
 
 ## Scope
 
@@ -290,19 +292,32 @@ The important methodological result is that **retention failure can come from a 
 
 ## Prior art and anti-anachronism
 
-The RAIDR paper itself reviews multiple earlier refresh-reduction proposals. In particular, it discusses Ghosh and Lee's **Smart Refresh** (MICRO-40, 2007), which keeps per-row timeout state and skips refreshes when recent accesses have already restored a row. It also cites earlier DRAM-device modifications and ECC/software approaches.
+The pre-RAIDR landscape contains at least two refresh-reduction relations that must not be collapsed into RAIDR's retention-profile mechanism. Ghosh and Lee's **Smart Refresh** (MICRO 2007) keeps per-row timeout/access-recency state and skips a periodic refresh when a recent read or write has already restored the row. Liu et al.'s **Flikker** (ASPLOS 2011) instead lets software distinguish critical from non-critical data, maps those classes to different memory regions, and deliberately lowers refresh for the non-critical region while accepting some corruption. The bounded evidence and source-role analysis are in [`../evidence/40-smart-refresh-2007-flikker-2011-prior-art-deepening.md`](../evidence/40-smart-refresh-2007-flikker-2011-prior-art-deepening.md).
 
-RAIDR's own conclusion makes a narrower novelty claim: to the authors' knowledge, it was the first low-cost **memory-controller modification** to reduce refreshes by exploiting variability in DRAM cell retention times.
+That yields three distinct reasons for reducing refresh work:
 
-This repository preserves that scope instead of rewriting it as:
+```text
+Smart Refresh:
+    recent restoration makes one scheduled refresh redundant
 
-> `RAIDR invented retention-aware refresh.`
+Flikker:
+    application policy accepts weaker retention for selected data
+
+RAIDR:
+    measured substrate margin permits a longer cadence while intending preservation
+```
+
+The RAIDR paper itself reviews Smart Refresh and other earlier proposals, and its conclusion makes a narrower novelty claim: to the authors' knowledge, it was the first low-cost **memory-controller modification** to reduce refreshes by exploiting variability in DRAM cell retention times. This repository preserves that scope instead of rewriting it as `RAIDR invented selective refresh` or `RAIDR was the first design to skip refreshes`.
+
+Flikker is likewise not evidence that semantic criticality and physical retention profiling are the same mechanism. Its reduced-refresh class intentionally accepts increased corruption; RAIDR's stated purpose is to preserve data while avoiding refreshes believed unnecessary under its physical profile. Similar actuator, different retention contract.
 
 The 2013 DPD/VRT study likewise did not invent the phenomena it names; it cites earlier physical/device literature and contributes a broad quantitative study on commodity DDR3 chips. Historical priority and retention-specific methodological use remain distinct.
 
 ## Functional analogy and philosophical limit
 
 A bounded functional analogy can compare RAIDR's retained profile to predictive-maintenance state in other systems: the system stores knowledge about a component's expected degradation so that future maintenance can be scheduled selectively.
+
+The Smart Refresh/Flikker comparison adds an anti-flattening limit: controller state can encode **recent maintenance history**, software can encode **semantic willingness to tolerate forgetting**, and RAIDR can encode **measured substrate behavior**. All may change refresh traffic, but none is interchangeable with the others.
 
 The analogy stops there. A DRAM row bin is not an SSD wear table, a filesystem scrub schedule, a medical risk score, or an archival appraisal policy.
 
@@ -322,6 +337,10 @@ The DRAM decomposition can now distinguish:
 
 ```text
 dynamic-cell payload / leakage
+    !=
+recent-access / restoration history
+    !=
+application criticality / accepted-error policy
     !=
 row-local retention heterogeneity
     !=
@@ -344,7 +363,7 @@ refresh target/interference geometry
 restoration execution
 ```
 
-Case 40's central addition is the middle of that chain: **measurement and retained policy metadata mediate the relation between physical degradation and later maintenance**.
+Case 40's central addition remains the middle of that chain: **measurement and retained policy metadata mediate the relation between physical degradation and later maintenance**. The prior-art deepening shows that not all earlier selective-refresh control state was a physical profile: it could instead encode access recency or application semantics.
 
 ## Claim ledger
 
@@ -360,6 +379,11 @@ Case 40's central addition is the middle of that chain: **measurement and retain
 | The 2013 study tested 248 commodity DDR3 chips from five vendors | H/P | direct peer-reviewed experimental report |
 | DPD can make simple all-1/all-0 profiles miss most weak cells in some tested devices | H/P | direct 2013 empirical result |
 | VRT can move a cell to a much shorter retention state after measurement; a 2x margin may be insufficient | H/P | direct 2013 empirical conclusion |
+| Smart Refresh used per-row timeout/access-recency state to skip refresh after a recent read/write | H/P | direct IEEE MICRO 2007 mechanism description |
+| Flikker used application criticality and allocation to give non-critical data a lower refresh rate while accepting some corruption | H/P | direct ASPLOS 2011 paper |
+| Smart Refresh's timeout state is the same thing as RAIDR's retention profile | X | different historical inputs and safety arguments |
+| Flikker's semantic class is a measurement of physical row retention time | X | contradicted by the Flikker mechanism |
+| RAIDR was the first design to selectively reduce DRAM refresh | X | pre-2012 Smart Refresh and Flikker records block this broad claim |
 | A Bloom filter's representation guarantee solves DPD/VRT profiling accuracy | X | unsupported; these are different layers |
 | RAIDR was a shipped commercial controller feature | X | not established by this source set |
 | RAIDR is identical to Mobile-DDR TCSR/self refresh | X | mechanism/authority boundary contradicts the equation |
@@ -367,14 +391,16 @@ Case 40's central addition is the middle of that chain: **measurement and retain
 
 ## Related repositories
 
-Current searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `RAIDR`, `retention-aware refresh`, `DRAM refresh retention time`, and `Variable Retention Time` returned no dedicated case to reuse.
+Fresh searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `RAIDR`, `retention-aware refresh`, `DRAM refresh retention time`, `Variable Retention Time`, `Smart Refresh`, and `Flikker` returned no dedicated case to reuse.
 
-A comprehensive DRAM-controller/history treatment should be routed there if developed. This repository keeps the retention-specific distinction among **physical margin, measurement, retained profile, scheduling policy, and profile validity**.
+A comprehensive DRAM-controller/history treatment should be routed there if developed. This repository keeps the retention-specific distinction among **recent restoration history, application-semantic policy, physical margin, measurement, retained profile, scheduling policy, and profile validity**.
 
-[`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) remains the anti-anachronism guardrail: `retention time bin`, `Bloom filter`, DPD, and VRT are sourced historical/technical vocabulary, while `second-order retention state` and `remembering how the substrate forgets` are later reconstructions.
+[`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) remains the anti-anachronism guardrail: `time-out counter`, `critical/non-critical data`, `retention time bin`, `Bloom filter`, DPD, and VRT are sourced historical/technical vocabulary, while `second-order retention state`, `history metadata`, `semantic policy metadata`, and `remembering how the substrate forgets` are later reconstructions.
 
 ## Sources
 
 1. Jamie Liu, Ben Jaiyen, Richard Veras, Onur Mutlu, **“RAIDR: Retention-Aware Intelligent DRAM Refresh,”** *Proceedings of the 39th International Symposium on Computer Architecture (ISCA)*, Portland, Oregon, 9–13 June 2012. Relevant locations: abstract and Introduction pp. 1–2; retention distribution and RAIDR overview pp. 3–4; profiling/Bloom filters pp. 4–5; temperature scaling and controller state pp. 5–6; prior work pp. 6–7; evaluation pp. 8–10; conclusion p. 11. Author-hosted PDF: <https://people.inf.ethz.ch/omutlu/pub/raidr-dram-refresh_isca12.pdf>. CMU PDL record: <https://pdl.cmu.edu/PDL-FTP/NVM/raidr-isca12_abs.shtml>.
 2. Jamie Liu, Ben Jaiyen, Yoongu Kim, Chris Wilkerson, Onur Mutlu, **“An Experimental Study of Data Retention Behavior in Modern DRAM Devices: Implications for Retention Time Profiling Mechanisms,”** *Proceedings of the 40th International Symposium on Computer Architecture (ISCA)*, Tel Aviv, Israel, 23–27 June 2013. Relevant locations: abstract/Introduction pp. 1–2; retention profiling and DPD/VRT pp. 2–3; methodology pp. 3–5; empirical analysis and profiling implications later in the paper. CMU PDL PDF: <https://www.pdl.cmu.edu/PDL-FTP/NVM/dram-retention_isca13.pdf>. PDL record: <https://www.pdl.cmu.edu/PDL-FTP/NVM/dram-retention_isca13_abs.shtml>.
-3. Internal comparison only: [`03-dram-refresh-as-scheduled-restoration.md`](03-dram-refresh-as-scheduled-restoration.md), [`21-micron-sdram-refresh-mode-handoff.md`](21-micron-sdram-refresh-mode-handoff.md), [`34-micron-temperature-dependent-dram-refresh.md`](34-micron-temperature-dependent-dram-refresh.md), and [`35-micron-mobile-ddr-automatic-tcsr.md`](35-micron-mobile-ddr-automatic-tcsr.md).
+3. Mrinmoy Ghosh, Hsien-Hsin S. Lee, **“Smart Refresh: An Enhanced Memory Controller Design for Reducing Energy in Conventional and 3D Die-Stacked DRAMs,”** *MICRO 2007*, Chicago, 1–5 December 2007. DOI: <https://doi.org/10.1109/MICRO.2007.13>. Inspected publisher record/abstract for the per-row timeout and recent-read/write refresh-elision mechanism.
+4. Song Liu, Karthik Pattabiraman, Thomas Moscibroda, Benjamin G. Zorn, **“Flikker: Saving DRAM Refresh-power through Critical Data Partitioning,”** *ASPLOS XVI*, 5–11 March 2011, pp. 213–224. DOI: <https://doi.org/10.1145/1950365.1950391>. Microsoft Research full paper: <https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/ASPLOS_2011.pdf>. Inspected abstract, Introduction, and Design Overview for critical/non-critical classification, deliberate error exposure, allocation, PASR relation, and differing refresh rates.
+5. Internal comparison only: [`03-dram-refresh-as-scheduled-restoration.md`](03-dram-refresh-as-scheduled-restoration.md), [`21-micron-sdram-refresh-mode-handoff.md`](21-micron-sdram-refresh-mode-handoff.md), [`34-micron-temperature-dependent-dram-refresh.md`](34-micron-temperature-dependent-dram-refresh.md), and [`35-micron-mobile-ddr-automatic-tcsr.md`](35-micron-mobile-ddr-automatic-tcsr.md).
