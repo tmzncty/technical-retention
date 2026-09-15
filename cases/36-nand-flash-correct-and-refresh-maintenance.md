@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to Yu Cai et al.'s peer-reviewed 2012 ICCD proposal and evaluation of **Flash Correct-and-Refresh (FCR)** for 3x-nm MLC NAND Flash, with later 2015 retention-characterization work used only as a boundary check on retention-age/read-recovery semantics. The historical novelty boundary is additionally deepened by pre-2012 nonvolatile-memory refresh patent records from 1978–2009; those records narrow what can safely be attributed to FCR without changing the case's bounded 2012 object.
+**`grounded`** — bounded to Yu Cai et al.'s peer-reviewed 2012 ICCD proposal and evaluation of **Flash Correct-and-Refresh (FCR)** for 3x-nm MLC NAND Flash, with later 2015 retention-characterization work used only as a boundary check on retention-age/read-recovery semantics. The historical novelty boundary is additionally deepened by pre-2012 nonvolatile-memory refresh patent records from 1978–2009; those records narrow what can safely be attributed to FCR without changing the case's bounded 2012 object. Named commercial evidence now includes IBM FlashSystem retention maintenance and a separate Swissbit first-party witness that exposes `Adaptive Read Refresh` and `Background Media Scan` as distinct product maintenance categories without revealing their firmware algorithm.
 
 Grounding record: [`../evidence/36-cai-2012-flash-correct-refresh-grounding.md`](../evidence/36-cai-2012-flash-correct-refresh-grounding.md).
 
@@ -11,6 +11,8 @@ Earlier prior-art deepening: [`../evidence/36-1978-1994-nonvolatile-flash-refres
 Prior-art deepening: [`../evidence/36-flash-refresh-1997-2009-prior-art-deepening.md`](../evidence/36-flash-refresh-1997-2009-prior-art-deepening.md).
 
 Commercial-product deepening: [`../evidence/36-ibm-flashsystem840-2014-2015-commercial-refresh-deepening.md`](../evidence/36-ibm-flashsystem840-2014-2015-commercial-refresh-deepening.md).
+
+Swissbit commercial control-mode deepening: [`../evidence/36-swissbit-2020-2024-data-care-active-passive-refresh-deepening.md`](../evidence/36-swissbit-2020-2024-data-care-active-passive-refresh-deepening.md).
 
 ## Scope
 
@@ -253,6 +255,32 @@ Chronology is source-controlled. IBM's current support landing page shows an `Or
 
 Finally, IBM's historical phrase `deep scrub and refresh` is not normalized into Ceph/HDFS/ZFS `scrub` semantics. The comparison is functional only: background inspection/maintenance can occur outside immediate host demand. The object models, integrity evidence, repair authority, physical mechanisms, and genealogies differ.
 
+## Named commercial control-mode deepening — Swissbit EN-20 / N3202
+
+The Swissbit addendum, [`../evidence/36-swissbit-2020-2024-data-care-active-passive-refresh-deepening.md`](../evidence/36-swissbit-2020-2024-data-care-active-passive-refresh-deepening.md), supplies a second manufacturer family outside IBM/TMS and closes part of the earlier `broader commercial-controller refresh comparison` debt.
+
+Swissbit's dated 6 August 2020 EN-20 launch release identifies a managed industrial 3D-NAND PCIe/NVMe SSD containing controller firmware and says its `Data care management` adds extra protection for stored data at high operating temperatures. A later first-party N3202 fact sheet, dated 28 October 2024 (Rev. 1.01), exposes a more differentiated product vocabulary:
+
+```text
+Data Care Management
+    -> Active: Adaptive Read Refresh
+    -> Passive: Background Media Scan
+```
+
+The N3202 sheet separately publishes a product-specific retention target of `3 Years @ Life Begin; 4 Months @ Life End, @40 °C`, with a footnote referring to NAND-supplier JESD47/JESD22 information. It also separately lists S.M.A.R.T./Telemetry.
+
+This produces several useful boundaries without reconstructing hidden firmware:
+
+- **retention target != maintenance trigger/action/completion state**;
+- **`Adaptive Read Refresh` != proof that every host read rewrites NAND**;
+- **`Background Media Scan` != proof that every scanned block is rewritten**;
+- **S.M.A.R.T./Telemetry exists != Data Care completion telemetry is exposed**;
+- **commercial feature vocabulary != Cai et al.'s FCR algorithm**.
+
+The active/passive split nevertheless matters. It is direct vendor evidence that one managed-Flash product family can distinguish more than one maintenance category rather than presenting `refresh` as one universal clock or one physical operation. That distinction is functional/control-level only: the inspected Swissbit documents do not publish the ECC thresholds, read-count/age inputs, scan cadence, low-power-state eligibility, remap-versus-in-place choice, or crash/restart behavior.
+
+The fact sheet's JESD47/JESD22 footnote is also kept separate from Case 76's JESD218 enterprise-SSD relation. Similar-looking life-begin/life-end retention values are not silently converted into one standards genealogy.
+
 ## Functional analogy and philosophical limit
 
 A bounded analogy to DRAM is useful only at this level:
@@ -293,6 +321,20 @@ restored future correction margin
 
 It also separates proactive retention renewal from integrity scrubbing. ZFS/GFS cases use verification to discover whether retained copies are already inconsistent/corrupt; FCR is triggered by a model/policy aimed at **preventing time/wear-dependent raw error accumulation from outrunning ECC**. The operations can both be background scans, but their failure models and repair semantics are not identical.
 
+The Swissbit evidence adds another control-layer chain that must not be collapsed into FCR's mechanism:
+
+```text
+published retention target
+    !=
+active/read-related data-care category
+    !=
+passive/background scan category
+    !=
+undisclosed physical renewal action
+    !=
+externally observable completion evidence
+```
+
 ## Claim ledger
 
 | Claim | Label | Evidence status |
@@ -319,15 +361,21 @@ It also separates proactive retention renewal from integrity scrubbing. ZFS/GFS 
 | An installed 840 powered off longer than seven days can automatically enter `deep scrub and refresh` after return | H/P | IBM product-era `Flash Data Retention` attachment |
 | The 840 up-to-90-day / up-to-40 °C power-off envelope is a universal raw-NAND retention law | X | the source gives a named-system operating/qualification relation, not a medium-wide cell constant |
 | FlashSystem 840 proves commercial deployment of Cai et al.'s exact FCR algorithm | X | product behavior is documented, but algorithm identity/genealogy is not established |
+| Swissbit launched EN-20 on 6-Aug-2020 as a managed industrial 3D-NAND PCIe/NVMe SSD and described Data Care Management as stored-data protection | H/P | Swissbit first-party launch release |
+| Swissbit N3202 Rev. 1.01 (28-Oct-2024) lists `Active: Adaptive Read Refresh` and `Passive: Background Media Scan` | H/P | Swissbit first-party product fact sheet |
+| N3202 publishes `3 Years @ Life Begin; 4 Months @ Life End, @40 °C` and refers to NAND-supplier JESD47/JESD22 information | H/P | product summary + retention footnote; product-specific |
+| N3202's active/passive labels expose the exact firmware trigger thresholds and rewrite geometry | X | product feature vocabulary does not disclose implementation details |
+| N3202 S.M.A.R.T./Telemetry proves Data Care completion/progress is externally visible | X | inspected product sheet maps no telemetry field to Data Care completion |
+| Swissbit Data Care Management proves deployment of Cai et al.'s exact FCR algorithm | X | no algorithm identity/genealogy evidence |
 | The reported 46× average lifetime improvement proves a production SSD achieved 46× measured field life | X | the paper reports simulation driven by measured characterization/workload data, not a multi-year production deployment |
 | FCR proves all NAND Flash requires periodic refresh | X | outside the bounded 3x-nm MLC proposal/evaluation |
 | NAND FCR refresh is historically or physically identical to DRAM refresh | X | paper itself distinguishes the mechanisms |
 
 ## Related repositories
 
-Current inspection of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) finds broad Flash/controller history still listed as an area to deepen, not a dedicated FCR retention case to reuse. A general NAND-controller reliability history belongs there; this repository keeps the retention-specific comparison among nonvolatility, ECC margin, refresh trigger, remapping, and endurance.
+Current inspection of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology), including a fresh search for `Swissbit`, finds broad Flash/controller history still listed as an area to deepen but no dedicated FCR or Swissbit Data Care case to reuse. A general NAND-controller reliability history and Swissbit product/controller genealogy belong there; this repository keeps the retention-specific comparison among nonvolatility, ECC margin, refresh trigger, active/read-related maintenance, background media scanning, remapping, endurance, and completion observability.
 
-[`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) supplies the anti-anachronism rule: the 2012 authors' `Flash Correct-and-Refresh` vocabulary is historical; `reliability-qualified continuation` and `maintenance metadata` remain modern analytical terms.
+[`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) supplies the anti-anachronism rule: the 2012 authors' `Flash Correct-and-Refresh` vocabulary and Swissbit's `Data Care Management` / `Adaptive Read Refresh` / `Background Media Scan` vocabulary are historical to their own sources; `reliability-qualified continuation` and `maintenance metadata` remain modern analytical terms.
 
 ## Sources
 
@@ -346,3 +394,6 @@ Current inspection of [`tmzncty/computing-archaeology`](https://github.com/tmznc
 13. Yukio Furuta and Tomisaburo Okumura, **“Non-volatile memory refresh control circuit,”** US 4,218,764 A, filed 3 October 1978, published/granted 19 August 1980, Matsushita Electric Industrial Co., Ltd.: <https://patents.google.com/patent/US4218764A/en>.
 14. Albert Fazio, Gregory E. Atwood, and Neal R. Mielke, **“Floating gate non-volatile memory with blocks and memory refresh,”** US 5,239,505 A, filed 28 December 1990, published/granted 24 August 1993, Intel Corporation: <https://patents.google.com/patent/US5239505A/en>.
 15. John F. Schreck, **“Method and circuitry for refreshing a flash electrically erasable, programmable read only memory,”** US 5,365,486 A, filed 16 December 1992, published/granted 15 November 1994, Texas Instruments Incorporated: <https://patents.google.com/patent/US5365486A/en>.
+16. Swissbit AG, **“Miniaturized highly reliable PCIe M.2 BGA SSD for ultra-small industrial applications”**, Press Release, 6 August 2020: <https://www.swissbit.com/files/public/press_news/Press_Releases/2020/2020-08-06_Miniaturized_highly_reliable_PCIe_M.2_BGA_SSD_for_ultra-small_industrial_applications_EN.pdf>.
+17. Swissbit AG, **N3202 Series Product Fact Sheet**, 28 October 2024, Revision 1.01, file `P000000294.2`: <https://www.swissbit.com/data/N3202/N3202_fact_sheet.pdf>.
+18. Swissbit AG, **Product Guide**, current inspected edition; used for current product-family continuity, not exact chronology: <https://www.swissbit.com/files/public/Documents/Swissbit_Product-Guide.pdf>.
