@@ -2,14 +2,16 @@
 
 ## Scope
 
-- **Bounded historical/technical regime:** Linux MTD flash-resident BBT implementation/documentation from 2004, ONFI 1.0 factory-defect mapping (ratified in late 2006), a Micron 8Gb NAND product datasheet dated February 2009, Micron Technical Note TN-29-59 Rev. H (April 2011), a Linux-MTD BBT-carrier relocation change released in Linux v4.9 (2016), and a KIOXIA TH58NYG3S0HBAI6 Rev. 2.00 product witness whose reliability-management wording is conservatively bounded to 2018–2019.
+- **Bounded historical/technical regime:** Linux MTD flash-resident BBT implementation/documentation from 2004; the Linux v3.3→v3.4 (2012) transition that began maintaining grown-bad-block OOB markers alongside flash BBT state with explicit power-cut ordering; ONFI 1.0 factory-defect mapping (ratified in late 2006); a Micron 8Gb NAND product datasheet dated February 2009; Micron Technical Note TN-29-59 Rev. H (April 2011); a Linux-MTD BBT-carrier relocation change released in Linux v4.9 (2016); and a KIOXIA TH58NYG3S0HBAI6 Rev. 2.00 product witness whose reliability-management wording is conservatively bounded to 2018–2019.
 - **Primary question:** what must remain when NAND contains physical blocks that must *not* be treated as usable even though those blocks remain electrically addressable and their defect marker can itself be erased?
-- **Retention-specific focus:** factory bad-block evidence, construction and persistence of a bad-block table (BBT), lifetime-developed bad-block replacement, reserved replacement capacity, BBT-carrier replacement, and the distinction between correctable/maintainable error evidence and block-retirement authority.
+- **Retention-specific focus:** factory bad-block evidence, construction and persistence of a bad-block table (BBT), multiple representations of grown-bad-block exclusion state, lifetime-developed bad-block replacement, reserved replacement capacity, BBT-carrier replacement, and the distinction between correctable/maintainable error evidence and block-retirement authority.
 - **Excluded from this case:** a general history of NAND, all FTL algorithms, garbage collection, wear leveling, read disturb, program interference, SSD sanitization, or invention priority for bad-block management.
 
 This slice is deliberately adjacent to, but not a repetition of, Case 04. Case 04 asks how a logical identity survives ordinary Flash relocation and reclamation. Case 78 asks how **negative media-qualification state** survives long enough to prevent a physically present block from being accepted as an admissible storage target, and how that exclusion relation is renewed when new blocks fail during service.
 
 KIOXIA soft-error / retirement-classification deepening: [`../evidence/78-kioxia-2018-2019-soft-error-vs-bad-block-retirement-deepening.md`](../evidence/78-kioxia-2018-2019-soft-error-vs-bad-block-retirement-deepening.md).
+
+Linux MTD BBM / flash-BBT power-cut ordering deepening: [`../evidence/78-linux-mtd-2012-bbm-bbt-power-cut-ordering-deepening.md`](../evidence/78-linux-mtd-2012-bbm-bbt-power-cut-ordering-deepening.md).
 
 Linux MTD BBT carrier-failure relocation deepening: [`../evidence/78-linux-mtd-2016-bbt-carrier-failure-relocation-deepening.md`](../evidence/78-linux-mtd-2016-bbt-carrier-failure-relocation-deepening.md).
 
@@ -30,7 +32,8 @@ The primary sources use terms including:
 - `user addressable block area`;
 - `reserved block area`;
 - `PROGRAM` / `ERASE` status failure;
-- `Flash Translation Layer (FTL)`.
+- `Flash Translation Layer (FTL)`;
+- Linux `bad block marker`, `flash-based BBT`, and `NAND_BBT_NO_OOB_BBM`.
 
 The following are **project engineering terms**, not historical quotations from those documents:
 
@@ -39,7 +42,9 @@ The following are **project engineering terms**, not historical quotations from 
 - `exclusion authority`;
 - `defect-evidence migration`;
 - `control-metadata carrier`;
-- `continuation reserve`.
+- `continuation reserve`;
+- `cross-representation convergence`;
+- `representation-divergence debt`.
 
 They are used only to compare the documented mechanism with other retention regimes.
 
@@ -146,6 +151,33 @@ Therefore the bounded relations are:
 
 See [`evidence/78-linux-mtd-2004-mirrored-versioned-bbt-deepening.md`](../evidence/78-linux-mtd-2004-mirrored-versioned-bbt-deepening.md).
 
+### H/P — Linux v3.4 publishes grown-bad-block OOB evidence before the flash BBT, while accepting temporary divergence
+
+Released Linux v3.3's default `nand_default_block_markbad()` path updated the RAM BBT and then chose **either** `nand_update_bbt()` for `NAND_BBT_USE_FLASH` or an OOB bad-block-marker write. Brian Norris's January 2012 linux-mtd patch identifies the consequence explicitly: as grown bad blocks accumulated, OOB markers could become stale and the flash BBT could become the only current source of bad-block information.
+
+The patch changes the default so a grown bad block can be represented in both places. Its v4 ordering is:
+
+```text
+erase affected block
+    -> update RAM BBT
+    -> write per-block OOB bad-block marker
+    -> update flash-resident BBT
+```
+
+The revision note says the OOB BBM was deliberately moved before the BBT update because this should help with power cuts. Released Linux v3.4 contains that sequence and the `NAND_BBT_NO_OOB_BBM` opt-out.
+
+The patch does **not** claim atomicity. It explicitly says a power cut between the OOB write and flash-BBT update can leave the two representations “out of sync” and expects later I/O to rediscover the bad block and restore agreement. Contemporaneous review then identifies a further boundary: after such a partial update, a later retry begins with erase-before-OOB-rewrite, creating another possible interruption interval. Brian Norris acknowledges power loss after that erase but before rewriting OOB, and OOB rewrite failure, as relevant cases.
+
+Therefore the bounded relations are:
+
+- `one bad-block exclusion relation != one persistent representation`;
+- `ordered BBM -> BBT publication != atomic bad-block-state commit`;
+- `temporary BBM/BBT disagreement != automatically loss of all exclusion evidence`;
+- `reconstructable exclusion state != exact checkpointed update state`;
+- `BBM-first ordering != universal power-cut proof`.
+
+See [`evidence/78-linux-mtd-2012-bbm-bbt-power-cut-ordering-deepening.md`](../evidence/78-linux-mtd-2012-bbm-bbt-power-cut-ordering-deepening.md).
+
 ### H/P — BBT currentness depends on ordering and candidate admissibility, not version magnitude alone
 
 A second Linux-MTD deepening makes the earlier `higher readable version` shorthand more precise. The 28-May-2004 CVS change used an ordinary numeric `>` comparison between differing primary/mirror versions and stored the then-version field as a little-endian integer. By the final Linux 2.6.12 source (17 June 2005), the persisted BBT version occupies one byte and currentness is chosen with a signed 8-bit difference, `((int8_t)(td->version[i] - md->version[i])) > 0`, allowing nearby versions to be ordered across numeric wrap such as `0xff -> 0x00`.
@@ -213,7 +245,7 @@ See [`evidence/78-kioxia-2018-2019-soft-error-vs-bad-block-retirement-deepening.
 
 ## Retained state
 
-At least five different retained states must remain separate.
+At least six different retained states must remain separate.
 
 ### 1. User payload
 
@@ -235,6 +267,10 @@ The BBT and, for lifetime-developed failures, the retained correspondence from b
 
 The exclusion relation itself is materialized in one or more NAND blocks. Linux's 2016 carrier-failure path shows that the current BBT carrier is not identical to the BBT relation: a failed carrier can be retired and the table attempted on another eligible block.
 
+### 6. Cross-representation agreement / convergence state
+
+The Linux v3.4 deepening adds another distinction. A per-block OOB BBM and a flash-resident BBT can encode the same grown-bad-block exclusion relation yet temporarily disagree after interruption. Their agreement is therefore a maintained property, not a timeless identity. A surviving marker may support later reconstruction of a stale table, but that does not amount to a separately persisted transaction log or exact update checkpoint.
+
 A surviving payload bitstream is therefore not by itself a complete storage service. The system also requires enough retained qualification and mapping state to reject embodiments that no longer count as safe storage targets.
 
 ---
@@ -255,9 +291,11 @@ A durable copy of the BBT in a good NAND block permits a RAM working copy to be 
 
 PROGRAM/ERASE status can create new bad-block state. The current payload is moved when necessary, a replacement is allocated, and the table/correspondence is updated.
 
+For Linux v3.4's default flash-BBT marking path, the newly created exclusion relation can be published first to the block's OOB marker and then to the flash BBT. A power cut between those writes can leave representation-convergence work for a later boot/operation. The contemporaneous review shows that this is **reconstructive maintenance under an interruption window**, not an atomic transaction guarantee.
+
 For the Linux v4.9 BBT path, failure of the physical block carrying a BBT update can itself create new bad-block state: the BBT carrier is retired, its recorded page is invalidated, and another eligible carrier is sought. The rule of non-use therefore has a maintenance path for replacing one of its own embodiments.
 
-Thus the object being preserved is not only a payload. The system also preserves and updates a **rule of non-use** and, in the bounded Linux implementation, can relocate the material embodiment that carries that rule.
+Thus the object being preserved is not only a payload. The system also preserves and updates a **rule of non-use**, can reconcile multiple persistent representations of that rule, and, in the bounded Linux implementation, can relocate the material embodiment that carries the centralized table.
 
 ---
 
@@ -271,7 +309,7 @@ Reading the marker is an evidence-gathering operation used to construct the excl
 
 A successful write to a logical address need not imply use of the originally calculated physical block. Bad-block management can redirect the target to a known-good replacement while keeping the higher-level designation stable.
 
-The Linux-MTD deepening adds a second level: writing the BBT itself need not remain bound to the previously selected BBT block. A carrier erase/write failure can retire that block and cause the same BBT update to be attempted elsewhere.
+The Linux-MTD deepening adds two control-state levels. First, marking a grown bad block can write a distributed OOB witness and a centralized flash-BBT entry in separate steps. Second, writing the BBT itself need not remain bound to the previously selected BBT block: a carrier erase/write failure can retire that block and cause the same BBT update to be attempted elsewhere.
 
 ### Erase
 
@@ -281,6 +319,8 @@ Erase has two very different consequences depending on the target:
 - erasing the original factory marker can destroy defect evidence while leaving the underlying reason for exclusion unresolved.
 
 KIOXIA's product-level negative control now sharpens that distinction further: erase/reprogram can be a recovery action for a retention/read-disturb-degraded but still maintenance-eligible block, while erase remains prohibited for a block already classified bad because the action may destroy its exclusion evidence.
+
+The Linux v3.4 grown-bad-block path introduces a separate implementation-specific caution: it may deliberately erase the affected block before writing a new OOB BBM. The January 2012 review points out that, after an earlier interruption left only the OOB marker current, another power cut between this erase and marker rewrite is a distinct failure window. That source-level path must not be confused with permission to erase a manufacturer-marked factory-bad block under Micron/KIOXIA product rules.
 
 Therefore:
 
@@ -314,7 +354,23 @@ The BBT does not contain the user's intended payload, but preserving it helps pr
 
 The original factory mark can be erasable or drift; the operational system therefore materializes the same exclusion relation as a table in a good block and later as a RAM working structure.
 
+The Linux 2012 change adds a second representation relation for grown bad blocks: per-block OOB evidence and the centralized flash BBT can both carry the same exclusion rule for different recovery/interpreter paths.
+
 The Linux 2016 change adds another migration boundary: even the good NAND block chosen to carry the BBT can later fail, so the persisted table can require re-embodiment on another BBT-eligible block.
+
+### E — ordered cross-representation publication is not transaction atomicity
+
+Linux v3.4 writes the grown-bad-block OOB marker before updating the flash BBT and the patch author explicitly connects that ordering to power-cut behavior. But the same source accepts an interval in which the OOB BBM and flash BBT disagree, and review identifies an additional erase-before-rewrite interruption seam.
+
+Therefore:
+
+- `OOB BBM current != flash BBT current`;
+- `flash BBT current != OOB BBM current` in configurations/history that do not maintain both;
+- `BBM-first publication != atomic commit`;
+- `temporary disagreement != necessarily loss of exclusion authority` if a surviving witness can be rediscovered;
+- `reconstructable control state != exact checkpointed control state`.
+
+This is a bounded engineering reconstruction. It does not prove that the OOB write itself is media-atomic or durable across every power-failure model.
 
 ### E — replacement capacity is a continuation resource
 
@@ -334,7 +390,7 @@ Therefore:
 
 ### E — current exclusion state is not a complete failure history
 
-A BBT can answer `which blocks must not be used now?` without retaining every test condition, timestamp, raw error count, or sequence by which each entry became bad. It is current operational control state, not automatically an audit log.
+A BBT can answer `which blocks must not be used now?` without retaining every test condition, timestamp, raw error count, or sequence by which each entry became bad. A per-block BBM likewise preserves a negative qualification without preserving the complete chronology. These are current operational control states, not automatically audit logs.
 
 ### E — error evidence and retirement authority must remain separate
 
@@ -381,6 +437,8 @@ Thus:
 
 A tombstone, delete marker, journal revoke, and bad-block entry all can make a still-physically-present positive candidate inadmissible. The similarity stops at that abstract control relation. Their objects, propagation rules, persistence windows, and failure semantics are different.
 
+The Linux 2012 BBM/BBT path adds a further bounded comparison point: one negative relation can have more than one persistent representation, and representation agreement may itself require later maintenance. This does not make a NAND BBM a distributed-database tombstone.
+
 ### A — Case 55, health telemetry
 
 SMART/health counters summarize device condition and history. A BBT instead directly participates in choosing which physical blocks may receive payload. `health evidence ≠ allocation authority`.
@@ -393,7 +451,7 @@ SMART/health counters summarize device condition and history. A BBT instead dire
 
 This case is useful because the retained technical state is not only a positive `what is stored where?` relation. The system also has to preserve `this material location must not count as usable`.
 
-The Linux carrier-relocation deepening adds a restrained second point: the prohibition itself has a material carrier, and preserving the relation may require abandoning that carrier when it becomes inadmissible. This is an engineering fact about re-embodiment, not a claim that the machine literally `remembers how to remember`.
+The Linux 2012 deepening adds a restrained point: one prohibition may be carried by several inscriptions with different persistence and interpreter properties, and their agreement can itself become maintenance work after interruption. The 2016 carrier-relocation deepening adds a second point: the prohibition itself has a material carrier, and preserving the relation may require abandoning that carrier when it becomes inadmissible. These are engineering facts about representation and re-embodiment, not claims that the machine literally `remembers how to remember`.
 
 The KIOXIA classification control adds another restrained point: **retention can depend on preserving distinctions among kinds of failure evidence, because correction, rewrite, replacement, and exclusion do not authorize the same future actions.**
 
@@ -414,6 +472,8 @@ The philosophical point should remain modest: **technical availability is partly
 - The 2% reserve statement is limited to the Micron devices covered by TN-29-59 and is not a universal NAND requirement.
 - The sources specify operational exclusion/replacement, not secure sanitization of retired blocks.
 - A saved BBT is necessary in the documented software design. Linux MTD 2004 adds mirrored/versioned Flash-BBT recovery, but this narrows rather than eliminates update-loss risk and does not prove transactional crash atomicity, dual-copy survival, or universal power-cut safety.
+- Linux v3.4's BBM-before-flash-BBT order was explicitly chosen with power cuts in mind, but the patch itself accepts BBM/BBT divergence and contemporaneous review identifies an erase-before-marker-rewrite window. The ordering therefore does not prove atomic update, OOB-program atomicity, or universal reboot recovery.
+- `NAND_BBT_NO_OOB_BBM` means the dual-representation scheme is not universal even within Linux raw-NAND configurations.
 - Linux v4.9's BBT-carrier retry deepens media-failure tolerance but still does not prove crash atomicity: the failed carrier can be retired before a replacement table is durably materialized, and the bounded candidate reserve can be exhausted.
 - The generic Linux v4.9 `NAND_BBT_SCAN_MAXBLOCKS = 4` setting is an implementation default, not a universal NAND requirement and not a statement about every custom descriptor.
 - Modern managed SSD controllers may hide this machinery from the host and may use different internal representations.
@@ -422,15 +482,15 @@ The philosophical point should remain modest: **technical availability is partly
 
 ## Prior-art boundary
 
-This case makes **no invention-priority claim** for factory bad-block marking, bad-block tables, block replacement, ECC rewrite, read-disturb/retention maintenance, or BBT-carrier relocation.
+This case makes **no invention-priority claim** for factory bad-block marking, bad-block tables, block replacement, ECC rewrite, read-disturb/retention maintenance, cross-representation bad-block publication, or BBT-carrier relocation.
 
 The defensible historical statement is narrower:
 
 > By ONFI 1.0 (late 2006), factory-defect mapping and a host-created initial bad-block table were standardized chip-interface obligations; Micron's 2009 product documentation and 2011 technical note make the retention consequence explicit by requiring pre-erase capture of erasable factory defect evidence, durable BBT storage, reboot reconstruction, and runtime replacement of newly bad blocks. KIOXIA's surviving 2018–2019 reliability-management wording later makes a complementary classification boundary explicit: a random/read bit error is not automatically a bad-block verdict, while program/erase status failure can move the carrier onto a replacement/exclusion path.
 
-A separate bounded pre-ONFI witness reaches back to Linux MTD in May 2004: its flash-resident BBT code/documentation already exposes mirrored tables, version-based currentness selection, missing/stale-peer rewrite, and protected BBT regions. A later bounded implementation change, upstream commit `10ffd570` and released Linux v4.9 in 2016, makes the BBT's **own failed carrier** replaceable during an update by retiring it and searching another eligible BBT block. These are historical floors for the inspected implementation, **not** invention-priority claims.
+A separate bounded pre-ONFI witness reaches back to Linux MTD in May 2004: its flash-resident BBT code/documentation already exposes mirrored tables, version-based currentness selection, missing/stale-peer rewrite, and protected BBT regions. Between released Linux v3.3 and v3.4, the default flash-BBT marking path then changed so a grown bad block could also receive a per-block OOB marker, with the BBM deliberately published before the flash-BBT update for bounded power-cut reasons while temporary divergence remained acknowledged. A later bounded implementation change, upstream commit `10ffd570` and released Linux v4.9 in 2016, makes the BBT's **own failed carrier** replaceable during an update by retiring it and searching another eligible BBT block. These are historical floors for the inspected implementations, **not** invention-priority claims.
 
-The `computing-archaeology` repository was searched again for `NAND bad block table`, `BBT`, and `nand_bbt`; no directly reusable case was found. Broader NAND/MTD/bootloader/SSD engineering genealogy still belongs there rather than being recreated here.
+The `computing-archaeology` repository was searched again for `NAND BBT bad block marker`; no directly reusable case was found. Broader NAND/MTD/bootloader/SSD engineering genealogy still belongs there rather than being recreated here.
 
 ---
 
@@ -457,6 +517,10 @@ The `computing-archaeology` repository was searched again for `NAND bad block ta
 | bad-block mark ≈ tombstone/revoke as negative evidence | A | abstract analogy only |
 | Linux MTD flash BBT can retain primary/mirror copies with version currentness | H/P | grounded by 2004 MTD documentation/source |
 | higher readable BBT version can seed stale/missing-peer rewrite | H/P | grounded by 28-May-2004 archived source |
+| released Linux v3.3 flash-BBT path could leave grown-bad-block OOB markers stale | H/P | grounded by v3.3 source + January 2012 patch rationale |
+| Linux v3.4 writes grown-bad-block OOB evidence before flash-BBT update by default unless OOB BBM writing is disabled | H/P | grounded by January 2012 patch + released v3.4 source |
+| power cut between OOB BBM and flash-BBT update can leave the representations out of sync | H/P | explicit January 2012 source statement |
+| BBM-before-BBT ordering = atomic crash-safe transaction | X | explicitly rejected; divergence and further interruption windows remain |
 | Linux v4.9 can retire a BBT carrier that fails erase/write and retry another eligible carrier | H/P | grounded by upstream `10ffd570` and released v4.9 source |
 | BBT exclusion relation != one physical BBT carrier | E | bounded reconstruction from 2016 implementation |
 | BBT carrier retry != crash-atomic BBT update | E/X | bounded by source ordering and contemporaneous review discussion |
@@ -477,9 +541,13 @@ The `computing-archaeology` repository was searched again for `NAND bad block ta
 3. Micron Technology, TN-29-59, *Bad Block Management in NAND Flash Memory*, Rev. H, April 2011: <https://e2e.ti.com/cfs-file/__key/communityserver-discussions-components-files/791/tn2959_5F00_bbm_5F00_in_5F00_nand_5F00_flash.pdf>.
 4. Linux MTD, Thomas Gleixner, *MTD NAND Driver Programming Interface*, `Bad block table support`, copyright 2004: <https://www.kernel.org/doc./htmldocs/mtdnand/Bad_Block_table_support.html>.
 5. Linux MTD CVS archive, 28 May 2004, `nand_bbt.c` 1.9→1.10 and related NAND changes: <https://lists.infradead.org/pipermail/linux-mtd-cvs/2004-May/003683.html>.
-6. Linux upstream commit `10ffd570f11701972aff2a6f91f3d253d6f0e7ee`, `mtd: nand_bbt: scan for next free bbt block if writing bbt fails`, 23 September 2016: <https://github.com/torvalds/linux/commit/10ffd570f11701972aff2a6f91f3d253d6f0e7ee>.
-7. Linux v4.9, `drivers/mtd/nand/nand_bbt.c` and `include/linux/mtd/bbm.h`: <https://github.com/torvalds/linux/blob/v4.9/drivers/mtd/nand/nand_bbt.c>.
-8. KIOXIA Corporation, *TH58NYG3S0HBAI6, 8 Gbit (1G × 8 bit) CMOS NAND E2PROM*, Rev. 2.00, `2019-10-01C`, especially pp. 4 and 61–64 plus revision history p. 66: <https://americas.kioxia.com/content/dam/kioxia/newidr/productinfo/datasheet/201910/DST_TH58NYG3S0HBAI6-TDE_EN_31567.pdf>.
+6. Linux `v3.3`, `drivers/mtd/nand/nand_base.c`, old flash-BBT-vs-OOB marking branch: <https://github.com/torvalds/linux/blob/v3.3/drivers/mtd/nand/nand_base.c>.
+7. Brian Norris, `[PATCH v4 2/2] mtd: nand: write BBM to OOB even with flash-based BBT`, 20 January 2012: <https://lists.infradead.org/pipermail/linux-mtd/2012-January/039391.html>.
+8. Shmulik Ladkani / Brian Norris, contemporaneous review of BBM/BBT divergence and erase-before-rewrite interruption windows, 21–23 January 2012: <https://lists.infradead.org/pipermail/linux-mtd/2012-January/039393.html> and <https://lists.infradead.org/pipermail/linux-mtd/2012-January/039406.html>.
+9. Linux `v3.4`, `drivers/mtd/nand/nand_base.c`, released BBM-before-flash-BBT path: <https://github.com/torvalds/linux/blob/v3.4/drivers/mtd/nand/nand_base.c>.
+10. Linux upstream commit `10ffd570f11701972aff2a6f91f3d253d6f0e7ee`, `mtd: nand_bbt: scan for next free bbt block if writing bbt fails`, 23 September 2016: <https://github.com/torvalds/linux/commit/10ffd570f11701972aff2a6f91f3d253d6f0e7ee>.
+11. Linux v4.9, `drivers/mtd/nand/nand_bbt.c` and `include/linux/mtd/bbm.h`: <https://github.com/torvalds/linux/blob/v4.9/drivers/mtd/nand/nand_bbt.c>.
+12. KIOXIA Corporation, *TH58NYG3S0HBAI6, 8 Gbit (1G × 8 bit) CMOS NAND E2PROM*, Rev. 2.00, `2019-10-01C`, especially pp. 4 and 61–64 plus revision history p. 66: <https://americas.kioxia.com/content/dam/kioxia/newidr/productinfo/datasheet/201910/DST_TH58NYG3S0HBAI6-TDE_EN_31567.pdf>.
 
 ### Related cases
 
@@ -492,4 +560,12 @@ The `computing-archaeology` repository was searched again for `NAND bad block ta
 
 ### Related repository
 
-- [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) — broad NAND/SSD technical history belongs there; this case keeps only the retention-specific negative-metadata/replacement/error-classification/carrier-relocation argument.
+- [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) — broad NAND/SSD technical history belongs there; this case keeps only the retention-specific negative-metadata/replacement/error-classification/cross-representation-publication/carrier-relocation argument.
+
+---
+
+## Status
+
+**Grounded bounded case.**
+
+The 2012 deepening closes one bounded power-cut/representation-ordering seam without upgrading the Linux raw-NAND BBT design into a transactionally crash-atomic system. Case 78 now distinguishes the physical defect, RAM exclusion state, per-block OOB exclusion witness, centralized flash-BBT state, version/candidate currentness, and BBT-carrier placement. Remaining work is empirical power-cut fault injection and broader bootloader/controller genealogy, not another generic bad-block-management overview.
