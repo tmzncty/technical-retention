@@ -25,6 +25,7 @@ A repository search found no dedicated DTL/resilver case in `tmzncty/computing-a
 ### Evidence deepening
 
 - [`evidence/100-openzfs-211-dtl-persistence-reload-deepening.md`](../evidence/100-openzfs-211-dtl-persistence-reload-deepening.md) — source-level OpenZFS 2.1.11 deepening of the leaf `DTL_MISSING` persistence cycle: space-map serialization, config object reference, load-time reconstruction, derived aggregate DTL state, and the `CANT_OPEN` boundary when DTL metadata cannot be loaded.
+- [`evidence/100-openzfs-211-dtl-retirement-excision-deepening.md`](../evidence/100-openzfs-211-dtl-retirement-excision-deepening.md) — source-level OpenZFS 2.1.11 deepening of DTL retirement: completion vs cancellation, per-leaf excision eligibility, txg-frontier-bounded removal, `DTL_SCRUB` exception preservation, and delayed reset of attach/rebuild markers until missing/outage debt is empty.
 
 ## Historical vocabulary
 
@@ -101,7 +102,9 @@ The same source says that leaf `DTL_MISSING` maps are sufficient to derive the a
 
 The implementation path is now grounded more narrowly in the linked evidence packet: `vdev_dtl_sync()` writes the leaf missing ranges into a DTL space map, vdev configuration carries the space-map object id as `ZPOOL_CONFIG_DTL`, load-time construction restores that id as `vdev_dtl_object`, and `vdev_dtl_load()` rebuilds the runtime leaf range tree from the retained object.
 
-This is **later source-level continuity only**. It must not be projected backward as proof that every 2005–2007 Solaris/ZFS implementation had precisely these four classes, the same object format, or identical persistence rules.
+A second source-level deepening now grounds the opposite end of that lifecycle. OpenZFS 2.1.11 does not retire `DTL_MISSING` merely because a maintenance activity ended: `vdev_dtl_reassess()` first qualifies completion/error state and leaf coverage, subtracts only the eligible prefix below the maintenance txg frontier, overlays `DTL_SCRUB` exceptions back into the resulting missing map, and resets attach/rebuild markers only after missing/outage debt becomes empty.
+
+This is **later source-level continuity only**. It must not be projected backward as proof that every 2005–2007 Solaris/ZFS implementation had precisely these four classes, the same object format, or identical persistence and retirement rules.
 
 ## Retained state
 
@@ -114,15 +117,18 @@ In the bounded DTL-directed repair model, later selective catch-up requires at l
 5. traversal/recovery logic that compares block birth state with the retained DTL;
 6. enough surviving redundancy to source the missing contribution.
 
-For the OpenZFS 2.1.11 persistence slice, one more decomposition matters:
+For the OpenZFS 2.1.11 persistence/retirement slices, one more decomposition matters:
 
 ```text
 leaf in-memory DTL_MISSING
     != DTL space-map object
     != vdev configuration reference to that object
     != reconstructed runtime DTL_MISSING
+    != DTL_SCRUB unrepaired-scan exception state
     != derived parent / aggregate DTL views
+    != scan / rebuild completion and txg frontier
     != actual resilver I/O
+    != attach/rebuild marker state
 ```
 
 The DTL is not user payload. It is also not a complete write history. It is a compressed witness to a **repair-relevant interval**.
@@ -241,6 +247,30 @@ and:
 
 The first relation is implementation-specific. The second prevents a category error: reloading a non-empty DTL means the system has recovered evidence that repair is still owed; it does not mean the resilver itself survived as completed work.
 
+### Qualified retirement is the inverse lifecycle, not an unconditional clear
+
+The linked retirement deepening shows that OpenZFS 2.1.11 also distinguishes maintenance completion from authority to forget repair history. A canceled/restarting scan does not pass the same retirement frontier as a completed scan. For eligible leaves, `vdev_dtl_should_excise()` relates the leaf's missing history to the relevant resilver/rebuild txg coverage; deferred or insufficiently covered leaves are not treated as though the pass discharged their debt.
+
+When excision is allowed, `vdev_dtl_reassess()` subtracts only the prefix `[0, scrub_txg)` and folds `DTL_SCRUB` exceptions into the new `DTL_MISSING` map. After this reassessment, transient `DTL_SCRUB` state can be cleared because still-unrepaired intervals remain represented by `DTL_MISSING`. Attach/rebuild markers are reset only when both missing and outage maps are empty, and the configuration is dirtied to persist that reset.
+
+Engineering reconstruction:
+
+```text
+maintenance completed
+    != repair debt retired
+
+covered + qualified old debt
+    -> may be excised
+
+scan-discovered unrepaired exception
+    -> remains represented
+
+missing/outage debt empty
+    -> attach/rebuild marker may be retired
+```
+
+This is **qualified repair-debt retirement**, a project term rather than OpenZFS historical vocabulary.
+
 ## Failure boundaries
 
 ### Losing DTL / repair-scope evidence
@@ -267,6 +297,14 @@ A transaction group can be in a missing/partial replication interval without pro
 
 Conversely, absence from this repair log is not a proof against latent media corruption, controller bugs, or every other failure class. Scrub/checksum verification remains a separate relation.
 
+### Completion mistaken for retirement authority
+
+A maintenance activity reaching a completion path is not by itself authority to erase all DTL evidence. OpenZFS 2.1.11 separately checks leaf eligibility/coverage and preserves `DTL_SCRUB` exceptions when reconstructing `DTL_MISSING`.
+
+Thus:
+
+> **scan/rebuild completion ≠ unconditional repair-debt clearance.**
+
 ### Patent embodiment mistaken for release guarantee
 
 The patent family establishes described methods and chronology. Oracle operational docs establish user-visible selective-resilver behavior. Neither source alone licenses projection of every algorithmic detail onto every Solaris/OpenZFS release.
@@ -292,13 +330,13 @@ Chronology and functional resemblance do not establish direct descent, and this 
 ### Case 18 — ZFS scrub
 
 - Case 18: proactively read/verify current storage and use checksum-qualified redundancy for healing.
-- Case 100: retain exposure history so a later resilver can avoid treating unaffected state as repair work.
+- Case 100: retain exposure history so a later resilver can avoid treating unaffected state as repair work, while the later source deepening shows that scrub-discovered unrepaired intervals can remain as DTL debt even after the traversal itself completes.
 
-`verification scope ≠ catch-up scope`.
+`verification scope ≠ catch-up scope`, and `scan completion ≠ repaired-everything evidence`.
 
 ### Case 48 — Cassandra incremental repair state
 
-Both cases retain maintenance history that can reduce future repair work. Cassandra retains repaired/unrepaired classification over SSTable populations; ZFS DTL retains txg exposure intervals for a redundancy target. This is a functional comparison only, not genealogy.
+Both cases retain maintenance history that can reduce future repair work. Cassandra retains repaired/unrepaired classification over SSTable populations; ZFS DTL retains txg exposure intervals for a redundancy target. The later Case 100 deepening adds a sharper functional boundary shared at a high level with Cassandra session cleanup: **workflow completion/age is not by itself control-state retirement authority**. Cassandra checks whether SSTables still reference a session; OpenZFS checks repair coverage/status and preserves DTL exceptions. This is a functional comparison only, not genealogy.
 
 ### Case 85 — NAND read-retry parameter state
 
@@ -310,7 +348,7 @@ Write-hole avoidance governs admissible update construction. DTL governs later r
 
 ### Case 96 — dRAID
 
-DTL/pruned resilver reduces the **set** of blocks that require catch-up. dRAID sequential reconstruction changes **reconstruction geometry/bandwidth** and restores coded redundancy before later checksum scrub. `less work selected ≠ same work scheduled faster`.
+DTL/pruned resilver reduces the **set** of blocks that require catch-up. dRAID sequential reconstruction changes **reconstruction geometry/bandwidth** and restores coded redundancy before later checksum scrub. The 2.1.11 retirement deepening also prevents `sequential rebuild complete = checksum-qualified integrity`: `vdev_rebuild.c` explicitly treats the checksum-verification scrub as a later phase. `less work selected ≠ same work scheduled faster`, and `redundancy restored ≠ later verification complete`.
 
 ### Case 116 — HDFS maintenance state
 
@@ -319,6 +357,8 @@ Case 116 separates persistence of administrative maintenance intent from correct
 ## Functional analogy
 
 A bounded analogy is a maintenance exception journal: instead of remembering all successful events, the system retains only intervals where a required relation was not satisfied and later uses that summary to focus repair.
+
+The retirement deepening extends the analogy cautiously: an exception record may be forgotten only after the system has evidence that its represented obligation has been discharged, while surviving exceptions are carried forward into the next authoritative repair-debt representation.
 
 The analogy is functional. It must not replace the historical terms `DTL`, `birth time`, `transaction group`, and `resilver`.
 
@@ -329,6 +369,8 @@ The analogy is functional. It must not replace the historical terms `DTL`, `birt
 `I` — It also shows a form of selective forgetting. Complete write history can disappear while a small temporal summary survives because that summary is sufficient for a future maintenance decision.
 
 `I` — The OpenZFS persistence slice adds a second selective layer: even some higher-level maintenance views may disappear as volatile state while a smaller durable basis survives and later regenerates them.
+
+`I` — The retirement slice makes forgetting conditional in the opposite direction: a covered portion of repair history can be excised once it no longer constrains future repair, while scan-discovered unrepaired exceptions survive because they still have operational force.
 
 `I` — The past matters operationally only to the degree that it can still constrain present repair. Once redundancy is restored and the relevant evidence can safely be retired, the system need not become a permanent archive of the outage.
 
@@ -346,16 +388,19 @@ This case does not establish:
 - that selective resilver is always fast;
 - that every short outage has a small repair set;
 - that pruned tree traversal and modern dRAID sequential rebuild are interchangeable;
-- that modern OpenZFS DTL class/persistence semantics can be backdated unchanged to 2005;
+- that modern OpenZFS DTL class/persistence/retirement semantics can be backdated unchanged to 2005;
 - that every aggregate/runtime DTL view is independently stored on disk;
 - that a successfully reloaded DTL means repair execution completed across the restart;
 - that DTL-load corruption proves payload corruption;
-- that OpenZFS 2.1.11's DTL error path is universal across all ZFS versions;
+- that a completed scan or rebuild automatically clears every DTL interval;
+- that an empty DTL proves absence of latent corruption;
+- that resetting an attach/rebuild marker securely erases payload or every historical trace;
+- that OpenZFS 2.1.11's DTL error and retirement paths are universal across all ZFS versions;
 - that clearing repair-state metadata securely erases payload.
 
 ## Related repositories
 
-- [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) — search found no dedicated DTL/resilver case in this slice. Broad dirty-log, mirror-recovery, ZFS source-history, and controller genealogy should live there if developed.
+- [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) — search again found no dedicated DTL/resilver case in this slice. Broad dirty-log, mirror-recovery, ZFS source-history, and controller genealogy should live there if developed.
 - [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) — useful for a future question about when `dirty`, `resync`, `resilver`, and transaction-time repair became actors' own problem vocabulary.
 
 ## Claim ledger
@@ -368,12 +413,17 @@ This case does not establish:
 | pruned resilver can use parent/child birth-time relations to skip unaffected tree branches | `H/P` | US8635190 / US20070106677 | patent/design witness; not universal release guarantee |
 | ZFS product docs say short-outage repair can resilver only minimum necessary data | `H/P` | Oracle Solaris ZFS Administration Guide | qualitative product behavior; no universal performance factor |
 | later OpenZFS source defines DTL as txgs with less-than-perfect replication | `H/P` | OpenZFS 2.1.11 `vdev.c` | later continuity only |
-| later OpenZFS persists leaf `DTL_MISSING` in a DTL space map and carries its object id in vdev configuration | `P` | OpenZFS 2.1.11 `vdev.c`, `vdev_label.c`; Evidence 100 deepening | implementation/version-specific |
-| later OpenZFS reloads leaf `DTL_MISSING` and derives other DTL state from that sufficient basis | `P/E` | OpenZFS 2.1.11 `vdev.c`; Evidence 100 deepening | implementation/version-specific |
-| OpenZFS 2.1.11 DTL-load failure can make a leaf vdev `CANT_OPEN` with `VDEV_AUX_CORRUPT_DATA` | `P` | OpenZFS 2.1.11 `vdev.c`; Evidence 100 deepening | does not prove payload corruption or universal policy |
+| later OpenZFS persists leaf `DTL_MISSING` in a DTL space map and carries its object id in vdev configuration | `P` | OpenZFS 2.1.11 `vdev.c`, `vdev_label.c`; Evidence 100 persistence deepening | implementation/version-specific |
+| later OpenZFS reloads leaf `DTL_MISSING` and derives other DTL state from that sufficient basis | `P/E` | OpenZFS 2.1.11 `vdev.c`; Evidence 100 persistence deepening | implementation/version-specific |
+| OpenZFS 2.1.11 DTL-load failure can make a leaf vdev `CANT_OPEN` with `VDEV_AUX_CORRUPT_DATA` | `P` | OpenZFS 2.1.11 `vdev.c`; Evidence 100 persistence deepening | does not prove payload corruption or universal policy |
+| OpenZFS 2.1.11 distinguishes completed vs incomplete scan input to DTL reassessment | `P` | `dsl_scan.c`; Evidence 100 retirement deepening | implementation/version-specific |
+| DTL excision is qualified by per-leaf state/coverage rather than generic completion alone | `P` | `vdev_dtl_should_excise()`, `vdev_dtl_reassess()` | exact predicates are version-specific |
+| eligible retirement subtracts only the covered prefix and preserves `DTL_SCRUB` exceptions in the regenerated missing map | `P` | OpenZFS 2.1.11 `vdev.c`; Evidence 100 retirement deepening | does not prove all errors are detected |
+| attach/rebuild marker reset waits for empty missing/outage debt and dirties config | `P` | OpenZFS 2.1.11 `vdev.c` | not equivalent to erasing all history |
 | DTL is a complete write-history archive | `X` | mechanism/source comparison | rejected |
 | DTL membership proves payload corruption | `X` | mechanism/source comparison | rejected |
 | surviving DTL repair debt proves repair execution survived/completed | `X` | persistence lifecycle | rejected |
+| maintenance completion automatically authorizes forgetting all repair debt | `X` | excision predicates + `DTL_SCRUB` overlay | rejected |
 | ZFS invented selective mirror recovery | `X` | earlier DRL + patent's own prior-art discussion | rejected |
 | DRL chronology proves direct genealogy into DTL | `X` | none | unsupported |
 
@@ -387,15 +437,19 @@ This case does not establish:
 - Oracle Solaris ZFS resilvering status: <https://docs.oracle.com/cd/E26505_01/html/E37384/gbbba.html>
 - OpenZFS 2.1.11 `module/zfs/vdev.c`: <https://github.com/openzfs/zfs/blob/zfs-2.1.11/module/zfs/vdev.c>
 - OpenZFS 2.1.11 `module/zfs/vdev_label.c`: <https://github.com/openzfs/zfs/blob/zfs-2.1.11/module/zfs/vdev_label.c>
+- OpenZFS 2.1.11 `module/zfs/dsl_scan.c`: <https://github.com/openzfs/zfs/blob/zfs-2.1.11/module/zfs/dsl_scan.c>
+- OpenZFS 2.1.11 `module/zfs/vdev_rebuild.c`: <https://github.com/openzfs/zfs/blob/zfs-2.1.11/module/zfs/vdev_rebuild.c>
 - OpenZFS 2.1.11 source as packaged by Debian, `module/zfs/vdev.c`: <https://sources.debian.org/src/zfs-linux/2.1.11-1%2Bdeb12u1/module/zfs/vdev.c>
-- Repository deepening: [`evidence/100-openzfs-211-dtl-persistence-reload-deepening.md`](../evidence/100-openzfs-211-dtl-persistence-reload-deepening.md)
+- Repository persistence deepening: [`evidence/100-openzfs-211-dtl-persistence-reload-deepening.md`](../evidence/100-openzfs-211-dtl-persistence-reload-deepening.md)
+- Repository retirement deepening: [`evidence/100-openzfs-211-dtl-retirement-excision-deepening.md`](../evidence/100-openzfs-211-dtl-retirement-excision-deepening.md)
 
 ## Remaining work
 
-The source-level persistence cycle for OpenZFS 2.1.11 is now bounded. Remaining evidence debt is narrower:
+The source-level persistence cycle and the OpenZFS 2.1.11 retirement predicate are now bounded. Remaining evidence debt is narrower:
 
 - identify the exact historical commit/release where the current-style DTL space-map persistence/load path entered the ZFS lineage;
-- compare Solaris/illumos/OpenZFS revisions without projecting current object semantics backward;
+- identify the commit/release where the current-style excision predicates and `DTL_SCRUB` overlay entered the lineage, and compare Solaris/illumos/OpenZFS revisions without projecting current semantics backward;
 - add a controlled export/import or reboot trace with a non-empty leaf DTL before and after reload;
 - add a fault-injection trace for an unreadable/corrupt DTL object and record actual import/open behavior;
-- trace the exact retirement conditions for DTL ranges after successful repair across versions.
+- run interrupted/erroring resilver experiments to verify that uncovered or unrepaired ranges remain represented across restart;
+- trace sequential rebuild → later checksum scrub on a real pool and keep redundancy restoration distinct from integrity revalidation.
