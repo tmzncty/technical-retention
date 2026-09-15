@@ -2,10 +2,11 @@
 
 **Status:** grounded  
 **Claim layer:** historical record + engineering reconstruction + bounded functional analogy + bounded philosophical interpretation  
-**Primary regime:** PostgreSQL 9.4 replication-slot introduction/release (2014), PostgreSQL 13 resource-bound evolution (2020), and PostgreSQL 17 logical failover-slot synchronization (2024)
+**Primary regime:** PostgreSQL public logical-slot / replication-slot development (2012–2014), PostgreSQL 9.4 replication-slot introduction/release (2014), PostgreSQL 13 resource-bound evolution (2020), and PostgreSQL 17 logical failover-slot synchronization (2024)
 **Evidence records:**
 
 - [`../evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md`](../evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md)
+- [`../evidence/141-postgresql-2012-2014-replication-slot-public-genealogy-deepening.md`](../evidence/141-postgresql-2012-2014-replication-slot-public-genealogy-deepening.md)
 - [`../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md`](../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md)
 - [`../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md`](../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md)
 - [`../evidence/141-postgresql-2018-2020-physical-slot-advance-persistence-deepening.md`](../evidence/141-postgresql-2018-2020-physical-slot-advance-persistence-deepening.md)
@@ -58,6 +59,10 @@ The 2020 policy is later history and must not be projected back into 2014 vocabu
 
 | Evidence | Date | Strength | Use here |
 |---|---:|---|---|
+| PostgreSQL pgsql-hackers, `logical changeset generation v3` | 2012-11-15 | `H/P` | public `max_logical_slots` / logical-slot floor |
+| PostgreSQL pgsql-hackers v3 review reply | 2012-12-13 | `H/P` | slot-id reused across separate walsender sessions; explicit restart-persistence gap |
+| PostgreSQL pgsql-hackers, `logical changeset generation v4` | 2013-01-15 | `H/P` | crash/restart persistence work and permanent slot lifecycle |
+| PostgreSQL pgsql-hackers, `logical changeset generation v5` | 2013-06-14 | `H/P` | explicit plan to generalize `logical slot` into replication slots usable by streaming replication |
 | PostgreSQL `858ec118...`, “Introduce replication slots” | 2014-02-01 | `H/P` | crash-safe slot purpose and initial WAL-retention relation |
 | PostgreSQL 9.4 release notes | 2014-12-18 | `H/P` | released-feature chronology |
 | PostgreSQL 9.4 `REL9_4_0` `slot.c` / `slot.h` | 2014 | `H/P` | persistent slot fields, save/checkpoint/startup reconstitution, minimum required LSN |
@@ -66,9 +71,47 @@ The 2020 policy is later history and must not be projected back into 2014 vocabu
 | PostgreSQL `b8fd4e02...` | 2020-06-24 | `H/P` | `reserved` / `extended` / `unreserved` / `lost` state refinement |
 | PostgreSQL 13 release/docs | 2020-09-24 release | `H/P` | released resource-bound contract |
 
-The complete source ledger and claim ledger are in the evidence file.
+The complete source ledger and claim ledger are in the evidence files.
 
 ## Historical record
+
+### 0. 2012–2014 public genealogy: a logical-decoding slot is made persistent and then generalized
+
+The bounded pre-2014 genealogy is now source-controlled in [`../evidence/141-postgresql-2012-2014-replication-slot-public-genealogy-deepening.md`](../evidence/141-postgresql-2012-2014-replication-slot-public-genealogy-deepening.md).
+
+The public sequence matters because the February-2014 mainline commit was not the first public appearance of slot vocabulary or of the problem that a replication consumer's continuation state must outlive one connection:
+
+- **15 November 2012:** the `logical changeset generation v3` patch series already exposes `max_logical_slots`.
+- **13 December 2012:** the author describes `INIT_LOGICAL_REPLICATION` as a one-time setup followed by later `START_LOGICAL_REPLICATION 'slot-id' ...` use, potentially in another walsender and after restart, while explicitly admitting that the then-current patch **did not yet persist enough between restarts**.
+- **15 January 2013:** v4 explicitly lists crash/restart persistence of in-memory structures and exposes a `permanent replication slot` create/start/free lifecycle.
+- **14 June 2013:** v5 explicitly lists as TODO the move from a `logical slot` interface to generic `replication slots` that can also be used by streaming replication.
+- **1 February 2014:** mainline `858ec118...` introduces crash-safe replication slots, calls the initially landed form `physical`, and anticipates logical slots with somewhat different properties.
+
+That gives a bounded chronology without turning it into a priority claim:
+
+```text
+public logical-slot prototype/design
+    != genericization proposal
+    != mainline physical-slot integration
+    != released PostgreSQL 9.4 contract
+    != invention date
+```
+
+The December-2012 persistence admission is especially useful for this repository:
+
+```text
+object is intended to survive restart
+    != implementation already persists enough state to do so
+```
+
+Likewise, the shared noun `slot` must not erase type differences:
+
+```text
+generic slot identity/lifecycle machinery
+    != identical physical-slot and logical-slot retained state
+```
+
+The public-development debt is therefore narrowed rather than erased. Earlier/private precursors, exact patch-by-patch ancestry into mainline, and the subsequent logical-slot landing sequence remain open.
 
 ### 1. Replication slots enter PostgreSQL as crash-safe continuation state
 
@@ -78,7 +121,7 @@ The final PostgreSQL 9.4 release followed on **18 December 2014**. The distincti
 
 `mainline implementation date != release date != first proposal/invention date`
 
-This case claims the first two only. It does not establish the complete pre-commit proposal genealogy.
+The newly grounded public genealogy reaches back to November 2012, but does not establish private origins, invention priority, or exact line-by-line descent from every logical-decoding patch into the 2014 mainline implementation.
 
 ### 2. Slot state is not the WAL corpus
 
@@ -414,6 +457,18 @@ The analogy stops at **future participant need constraining reclamation**. A WAL
 
 ## Terminology and anti-anachronism
 
+### PostgreSQL 2012–2013 public development vocabulary
+
+The bounded pre-mainline terms include:
+
+- `logical slot`;
+- `max_logical_slots`;
+- `slot-id` / `slotname`;
+- `permanent replication slot`;
+- `INIT_LOGICAL_REPLICATION` / `START_LOGICAL_REPLICATION` / `FREE_LOGICAL_REPLICATION` in the evolving patch interface.
+
+These terms document an evolving development series. They must not be silently rewritten as if every one were already the final PostgreSQL 9.4 API or contract.
+
 ### PostgreSQL 9.4 vocabulary
 
 The bounded historical terms include:
@@ -466,6 +521,10 @@ That is enough for the conceptual comparison. It does not justify equating a rep
 
 ## Counterexamples and stop conditions
 
+- **Public prototype != released contract.** The 2012–2013 logical-decoding patch series is historical development evidence, not a silent substitute for PostgreSQL 9.4 documentation.
+- **Persistence intent != implemented crash safety.** The December-2012 author reply explicitly says the patch did not yet persist enough across restart.
+- **Generic slot abstraction != identical slot types.** The 2014 mainline message explicitly anticipates physical and logical slots with different properties.
+- **Public chronology != invention priority.** November 2012 is only the bounded public floor located in this slice.
 - **Replication slot != replica.** The slot is control state about a replication stream, not another full database copy.
 - **Replication slot != WAL corpus.** It governs retention of WAL stored elsewhere.
 - **`restart_lsn` != full replay history.** It is a frontier, not the retained records themselves.
@@ -486,7 +545,9 @@ That is enough for the conceptual comparison. It does not justify equating a rep
 
 This case does not claim PostgreSQL invented log retention, replication progress, replay positions, or keeping history for lagging replicas. Consensus systems, database logs, replication protocols, and archival logs provide extensive earlier history.
 
-The contribution is narrower and source-controlled:
+The newly grounded 2012–2014 public genealogy narrows a local historical gap without changing that broader novelty boundary. It shows an evolving logical-slot mechanism, an explicit persistence shortfall, explicit crash/restart-persistence work, an explicit plan to generalize the abstraction, and then the mainline physical-slot landing. It does **not** establish first invention, private origins, or non-PostgreSQL ancestry.
+
+The contribution remains narrower and source-controlled:
 
 > **PostgreSQL 9.4 gives a particularly explicit crash-safe implementation in which a retained consumer-need frontier directly constrains WAL reclamation even across disconnection; PostgreSQL 13 then gives an equally explicit later counterexample in which primary resource protection can withdraw that history-retention guarantee, and the software distinguishes “no longer protected but still present” from “actually lost and no longer usable.”**
 
@@ -496,7 +557,7 @@ A complete genealogy belongs in `tmzncty/computing-archaeology`, not here. A fre
 
 The bounded case is grounded, while these remain open:
 
-1. exact pre-2014 proposal/review lineage and precursor implementations;
+1. pre-November-2012 private/public precursors plus exact patch-by-patch ancestry from the 2012–2013 logical-slot work into the February-2014 generic/physical mainline implementation and the later 9.4 logical-slot landing;
 2. physical-slot advancement and release-by-release semantics beyond the now-grounded logical `confirmed_flush` / `restart_lsn` split;
 3. the interaction with WAL archiving, base backup, and reinitialization when required slot WAL is lost;
 4. post-17 failover-slot fixes, multi-standby/cascading evolution, promotion fault injection, and production failover traces;
@@ -518,6 +579,7 @@ If the broad history of PostgreSQL WAL, streaming replication, logical decoding,
 ## Evidence links
 
 - [Evidence 141 — PostgreSQL 2014–2020 replication-slot WAL-retention grounding](../evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md)
+- [Evidence 141 deepening — PostgreSQL 2012–2014 replication-slot public genealogy](../evidence/141-postgresql-2012-2014-replication-slot-public-genealogy-deepening.md)
 - [Evidence 141 deepening — PostgreSQL 17 failover-slot synchronization](../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md)
 - [Evidence 141B — logical-slot `confirmed_flush` vs `restart_lsn` dual frontier](../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md)
 - [Case 58 — Raft snapshot/log compaction](58-raft-snapshot-log-compaction.md)
