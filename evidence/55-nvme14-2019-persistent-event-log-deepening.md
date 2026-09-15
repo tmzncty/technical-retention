@@ -6,6 +6,8 @@
 
 This record establishes a narrow transition from retained health counters and bounded diagnostic logs to a standardized heterogeneous event-history interface. It does **not** establish the invention of persistent device history, a direct ATA→NVMe genealogy, a particular SSD-controller implementation, or independent proof that a recorded sanitize completion physically erased every prior embodiment.
 
+Proposal-layering follow-up: [`55-nvme-2019-2020-pel-proposal-layering-deepening.md`](55-nvme-2019-2020-pel-proposal-layering-deepening.md) now partially closes the earlier TP `4007a` / `4042a` debt using first-party NVM Express retrospective material. It grounds a `TP 4007` first-version event set and a later `TP 4042` event-family expansion, while leaving direct inspection of the individual ratified TP texts and exact ballot/revision chronology open.
+
 ## Research question
 
 Case 55 already separates current warning state, cumulative/lifetime counters, model-derived endurance estimates, and the bounded 1999 ATA/ATAPI-5 SMART self-test log. This pass asks:
@@ -43,7 +45,9 @@ NVM Express, **Changes in NVMe Revision 1.4**:
 
 <https://nvmexpress.org/changes-in-nvme-revision-1-4/>
 
-This first-party change ledger labels Persistent Event Log a **new optional feature** in Revision 1.4 and lists the standardized event categories. It references Technical Proposals `4007a` and `4042a`, but those proposals are **not independently inspected in this pass**. The page therefore supports the bounded revision boundary `PEL is new in NVMe 1.4`, not proposal-level drafting chronology, priority, or invention claims.
+This first-party change ledger labels Persistent Event Log a **new optional feature** in Revision 1.4 and lists the standardized event categories. It references Technical Proposals `4007a` and `4042a`.
+
+The separate proposal-layering follow-up now adds first-party NVM Express-sponsored June 2020 slides that call TP 4007 the **first version** and explicitly group later event families under TP 4042. That evidence is enough for a bounded proposal-layer mapping, but the individual TP documents remain **not directly inspected**. The present record therefore continues to use the change ledger for the ratified revision boundary and delegates proposal-layer chronology to [`55-nvme-2019-2020-pel-proposal-layering-deepening.md`](55-nvme-2019-2020-pel-proposal-layering-deepening.md).
 
 ### Earlier prior-art floor already grounded in Case 55
 
@@ -70,6 +74,8 @@ Thus chronological recency is not the only retention authority. Importance/categ
 ### PEL retains heterogeneous episodes rather than one scalar
 
 Revision 1.4 defines event types spanning SMART/Health snapshots, firmware commit, timestamp change, power-on/reset, subsystem hardware error, namespace change, Format NVM start/completion, Sanitize start/completion, Set Features, telemetry-log creation, thermal excursion, and vendor/TCG events. The distinction between start and completion is especially important: `operation started != operation completed`. A trace that an operation began is not itself a completion certificate.
+
+The proposal-layering follow-up adds a standards-history boundary to this normative fact: NVM Express's 2020 material assigns SMART/Health snapshot, firmware commit, timestamp change, power/reset, and vendor-defined events to the TP 4007 first-version group, while hardware-reset, namespace, Format/Sanitize, Set Feature, Thermal, and Telemetry families are grouped as TP 4042 events. This shows that the final ratified taxonomy should not be treated as one undifferentiated proposal layer. It does not establish exact TP revision dates or invention priority.
 
 ### SMART/Health gains periodic historical snapshots
 
@@ -105,6 +111,18 @@ event occurs
 
 Therefore **`persistent event history != complete event history`**. PEL preserves more event structure than a scalar counter but remains a selected operational history.
 
+### Event-log machinery and event taxonomy are separable
+
+The first-party TP grouping adds one bounded engineering distinction. A persistent-log framework can survive while the standardized set of events admitted to it expands:
+
+```text
+PEL persistence / retrieval framework
+    !=
+event taxonomy represented by that framework
+```
+
+Therefore an event-set expansion does not, by itself, imply a stronger persistence guarantee, a different physical logging medium, or a new underlying Format/Sanitize/namespace mechanism.
+
 ### Persistence contract and failure-time materialization are separate
 
 The `shall retain across power cycles/resets` and `should minimize loss upon power failure` statements should not be collapsed. Therefore **`power-cycle/reset persistence != guaranteed lossless abrupt-power-failure capture`**.
@@ -139,7 +157,9 @@ Project-level interpretation only:
 
 > Retaining history is itself an act of selection. A technical object may preserve traces of its past while suppressing repetition, discarding some newer events in favor of older important ones, and later allowing a sanitization policy to erase or transform parts of the historical record.
 
-The point is not that an SSD `remembers like a person`. It is that history retention has its own **admission, persistence, read-consistency, capacity, priority, and forgetting rules**. This interpretation remains downstream of the interface evidence.
+The proposal-layering evidence adds a second, narrower point: what later software can retrieve as standardized history depends partly on which event categories the interface makes **nameable and retainable**. Expanding the event vocabulary expands representable history without implying that the underlying physical episodes were newly created by the standard.
+
+The point is not that an SSD `remembers like a person`. It is that history retention has its own **admission, persistence, read-consistency, capacity, priority, vocabulary, and forgetting rules**. This interpretation remains downstream of the interface evidence.
 
 ## Claim ledger
 
@@ -155,12 +175,14 @@ The point is not that an SSD `remembers like a person`. It is that history reten
 | PEL-supported subsystems create SMART/Health snapshots at least once every 24 power-on hours under specified scope rules | `H/P` | explicit normative semantics |
 | new events continue to be logged while an existing reporting context excludes them | `H/P/E` | explicit interface semantics + bounded reconstruction |
 | sanitize may remove/modify PEL events to prevent user-data derivation | `H/P` | explicit normative semantics |
+| NVM Express later describes TP 4007 as the PEL first version and groups additional event families as TP 4042 events | `H/P` | strong first-party retrospective proposal-layer mapping; direct TP text still open |
+| PEL event-taxonomy expansion proves a stronger persistence guarantee or a new physical mechanism | `X` | rejected; taxonomy, durability contract, and underlying operations are separate relations |
 | ATA/ATAPI-5 1999 is earlier bounded prior art for retained diagnostic history | `H/P/A` | previously grounded; analogy only |
 | PEL proves complete/lossless history, hidden NAND/FTL algorithm, direct ATA→NVMe genealogy, or verified physical sanitization | `X` | rejected |
 
 ## Open evidence debt
 
-- inspect TP `4007a` and `4042a` directly before proposal-level chronology claims;
+- **partially closed:** [`55-nvme-2019-2020-pel-proposal-layering-deepening.md`](55-nvme-2019-2020-pel-proposal-layering-deepening.md) recovers first-party TP 4007/TP 4042 event grouping; still directly inspect individual ratified TP `4007a` and `4042a` texts before exact submission/revision/ballot chronology or line-by-line proposal-diff claims;
 - named-product adoption floor is now supplied by [`55-solidigm-d5-p5316-pel-product-adoption-deepening.md`](55-solidigm-d5-p5316-pel-product-adoption-deepening.md); exact first-support firmware, event-type coverage, reset/sanitize behavior, and independent compliance/fault testing remain open;
 - independently test abrupt power failure, log-capacity pressure, suppression, reset, and sanitize behavior before compliance claims;
 - do not infer the physical medium, update atomicity, wear-management strategy, or firmware journaling used to retain PEL state;
@@ -171,7 +193,8 @@ The point is not that an SSD `remembers like a person`. It is that history reten
 1. NVM Express, **NVM Express Base Specification, Revision 1.4**, 10 June 2019, especially §5.14.1.13 and §5.14.1.13.1: <https://nvmexpress.org/wp-content/uploads/NVM-Express-1_4-2019.06.10-Ratified.pdf>
 2. NVM Express, **Changes in NVMe Revision 1.4**, first-party revision summary: <https://nvmexpress.org/changes-in-nvme-revision-1-4/>
 3. T13, **AT Attachment with Packet Interface - 5 (ATA/ATAPI-5), Working Draft T13/1321D Revision 2**, 13 December 1999, already grounded in Case 55; period draft mirror: <https://studylib.net/doc/25730948/ata-atapi-5>
+4. NVM Express-sponsored, **_NVMe SSD Management, Error Reporting and Logging Capabilities_**, 30 June 2020, especially the `First version (TP 4007)` and `TP 4007 events / TP 4042 events` PEL slides: <https://nvmexpress.org/wp-content/uploads/June-2020-NVMe%E2%84%A2-SSD-Management-Error-Reporting-and-Logging-Capabilities.pdf>
 
 ## Related repositories
 
-A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated Persistent Event Log history. If proposal genealogy, product adoption, controller implementation, or broader drive-event-logging lineage is developed, it should primarily be built there and linked back here. This record keeps only the retention-specific distinctions.
+A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated Persistent Event Log or TP4007/TP4042 history. If proposal genealogy, product adoption, controller implementation, or broader drive-event-logging lineage is developed, it should primarily be built there and linked back here. This record keeps only the retention-specific distinctions.
