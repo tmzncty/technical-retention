@@ -2,9 +2,9 @@
 
 ## Scope
 
-- **Object / system:** Apache HDFS Observer NameNode and the client/server state-alignment mechanism developed under HDFS-12943;
-- **Bounded implementation witness:** Apache Hadoop 3.3.0 release source for `ObserverReadProxyProvider`, `ClientGSIContext`, `GlobalStateIdContext`, and `ReadOnly`;
-- **Historical window:** 2017–2020 for the design, implementation, bug-fix, and release evidence used here;
+- **Object / system:** Apache HDFS Observer NameNode and the client/server state-alignment mechanism developed under HDFS-12943, with a bounded 2022–2024 Router-Based Federation deepening;
+- **Bounded implementation witness:** Apache Hadoop 3.3.0 release source for `ObserverReadProxyProvider`, `ClientGSIContext`, `GlobalStateIdContext`, and `ReadOnly`; Hadoop 3.4.0 RBF `RouterStateIdContext` / `ClientGSIContext`; and exact Apache fix commits for HDFS-17156 and HDFS-17514;
+- **Historical window:** 2017–2024 for the design, implementation, RBF extension, and bounded later consistency fixes used here;
 - **Why this case matters for technical retention:** an HDFS namespace replica may be physically present, internally coherent, and permitted to serve reads while still being too far behind the state a particular client is entitled to observe. HDFS therefore retains and transports a **state-ID lower bound** in addition to retaining the namespace itself.
 
 This is not a general history of HDFS HA, replicated state machines, read replicas, or consistency models. It isolates a narrower retention problem:
@@ -20,6 +20,8 @@ It complements rather than repeats three existing HDFS cases:
 Case 61 instead asks when a NameNode that **does not have mutation authority** may nevertheless answer a read without violating the bounded client-consistency contract.
 
 A repository-tree check of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated HDFS Observer/`stateId` case at the time of this slice. No parallel Hadoop history is reproduced here.
+
+Later RBF state-propagation and invalidation evidence is grounded separately in [`evidence/61-hdfs-rbf-2022-2024-federated-stateid-publication-invalidation-deepening.md`](../evidence/61-hdfs-rbf-2022-2024-federated-stateid-publication-invalidation-deepening.md).
 
 ---
 
@@ -38,6 +40,8 @@ The HDFS-12943 release note and later Apache user guide use the following actor 
 - edit-log `tailing` and `Edit Tailing Fast-Path`.
 
 The 3.3.0 source adds implementation vocabulary including `AlignmentContext`, `ClientGSIContext`, `GlobalStateIdContext`, `lastSeenStateId`, `isCoordinated`, `activeOnly`, and `ObserverRetryOnActiveException`.[^orpp][^client-gsi][^global-gsi][^readonly]
+
+The later RBF slice adds Apache vocabulary including `RouterFederatedStateProto`, `RouterStateIdContext`, `PoolAlignmentContext`, namespace state IDs, and Router Observer reads.[^rbf-deepening]
 
 The phrases **client freshness frontier**, **read-admissibility lower bound**, and **retained observation frontier** below are engineering reconstructions. They are not presented as Apache's historical terminology.
 
@@ -262,6 +266,9 @@ The case can be summarized as a chain of distinct retained or reconstructed stat
 | Observer server state ID | last applied/written transaction progress | mutation authority |
 | client `lastSeenStateId` | monotonic lower bound from prior responses / `msync` | complete client history or complete namespace snapshot |
 | RPC state-ID field | transports that lower bound to a candidate server | durable persistence across arbitrary new client processes |
+| RBF namespace-state map | nameservice ID → retained lower bound | one scalar globally orders independent nameservices |
+| Router/client federated-state publication | carries scoped lower bounds across the Router boundary | application response completion automatically implies the metadata was published first |
+| state-context validity | whether the current path is still producing meaningful state IDs | a formerly valid maximum remains valid forever |
 | `msync()` result | refreshes a client's lower bound against the Active | forces all Observers instantly current |
 | Observer HA state | allows a distinct read-serving role | permission to accept writes or participate as Active without transition |
 | edit-tail fast path | reduces replica lag | replaces the state-alignment check |
@@ -269,6 +276,8 @@ The case can be summarized as a chain of distinct retained or reconstructed stat
 The strongest retention-specific conclusion is:
 
 > A distributed system may need to retain **how much of the authoritative past a client is already entitled to assume** in order to decide whether a surviving replica is admissible for future reads.
+
+The RBF deepening adds that this evidence must remain attached to the right namespace, be published before dependent operations proceed, and be invalidated when the mechanism that gives the evidence meaning is disabled.[^rbf-deepening]
 
 That retained relation can be tiny compared with the namespace itself, but still constitutive of correct service.
 
@@ -284,7 +293,10 @@ Supported directly here:
 - HDFS 3.3.0 source retains the client's maximum seen state ID and sends it on later requests;
 - Observer server code compares client/server state IDs and rejects unsafe/unbounded cases;
 - `ObserverReadProxyProvider` performs startup/optional `msync`, routes eligible reads to Observers, and falls back to Active;
-- HDFS-14272 documents a real cross-client/startup freshness hole and the need for initial synchronization.
+- HDFS-14272 documents a real cross-client/startup freshness hole and the need for initial synchronization;
+- HADOOP-18345/HDFS-13522 extend the state relation to multiple nameservices through RBF;
+- HDFS-17156 documents a stale-read hole caused by caller notification preceding response-state processing;
+- HDFS-17514 documents stale Router state surviving after the NameNode state-context producer is disabled.[^rbf-deepening]
 
 ### Engineering reconstruction
 
@@ -293,6 +305,8 @@ The following are this repository's abstractions:
 - `client freshness frontier`;
 - `read-admissibility lower bound`;
 - `retained observation frontier`;
+- `freshness-scope state`;
+- `validity-regime boundary`;
 - the separation `writer authority ≠ command authority ≠ read freshness`.
 
 ### Functional analogy
@@ -302,6 +316,8 @@ It is legitimate to compare this case with Kafka high-watermark/currentness, Dyn
 ### Philosophy
 
 No philosophical claim is required to establish this case. Any later synthesis about retention of “the already-seen past” must remain downstream of the concrete HDFS mechanism rather than being inserted as historical explanation.
+
+The RBF invalidation slice adds only a bounded interpretive point: a historically real control value can cease to be a valid present admission rule when the relation that gave it meaning has changed.[^rbf-deepening]
 
 ---
 
@@ -316,11 +332,12 @@ This case does **not** claim that Apache HDFS invented:
 - causal consistency;
 - monotonic reads;
 - client session state;
+- per-replica or per-partition progress frontiers;
 - or replicated-state-machine catch-up.
 
 HDFS-12943 itself frames stale reads as a generic replicated-system problem, and the same JIRA links earlier HDFS work on allowing stale reads from Standby nodes. The bounded historical claim is narrower:
 
-> By the HDFS-12943 / Hadoop 3.3.0 implementation, Apache composed NameNode transaction progress, RPC-carried client state IDs, Observer catch-up gating, `msync()`, Observer-aware proxy routing, and edit-log tailing into a concrete HDFS read-freshness mechanism.
+> By the HDFS-12943 / Hadoop 3.3.0 implementation, Apache composed NameNode transaction progress, RPC-carried client state IDs, Observer catch-up gating, `msync()`, Observer-aware proxy routing, and edit-log tailing into a concrete HDFS read-freshness mechanism; the 2022–2024 RBF work then made nameservice scope, publication ordering, and stale-frontier invalidation explicit implementation obligations.
 
 That composition is the object of this case.
 
@@ -348,7 +365,7 @@ Case 61 concerns namespace-read admissibility for a client, not DataNode command
 - the broker protocol derives a committed prefix from replica progress and ISR membership;
 - ordinary consumer visibility is capped at that global-ish partition frontier in the bounded Kafka case.
 
-HDFS Observer state ID instead records a **client-specific lower bound** that a candidate read replica must have reached. The mechanisms must not be collapsed.
+HDFS Observer state ID instead records a **client-specific lower bound** that a candidate read replica must have reached. RBF additionally scopes those lower bounds by nameservice. The mechanisms must not be collapsed.
 
 ### Case 23 — Dynamo divergent versions
 
@@ -359,24 +376,104 @@ HDFS Observer is not reconciling concurrent namespace versions in this case; it 
 
 ---
 
+## Historical deepening — RBF scoped frontiers, publication ordering, and invalidation
+
+Full evidence: [`../evidence/61-hdfs-rbf-2022-2024-federated-stateid-publication-invalidation-deepening.md`](../evidence/61-hdfs-rbf-2022-2024-federated-stateid-publication-invalidation-deepening.md).
+
+### H/P — federation requires namespace-scoped freshness state
+
+HADOOP-18345 directly records why one scalar `stateId` is insufficient once a Router spans multiple HDFS nameservices. HDFS-13522 and its 2022 implementation commit add a federated namespace-state map that the Router propagates to clients. Hadoop 3.4.0 `RouterStateIdContext` retains `nameservice -> max stateId`, while `ClientGSIContext` merges returned federated state by namespace.
+
+So:
+
+```text
+stateId value
+    != complete freshness relation
+
+stateId + nameservice identity
+    -> bounded freshness relation
+```
+
+This is historical/implementation evidence, not a claim that the map is a general vector clock or that independent HDFS nameservices become causally ordered.
+
+### H/P — HDFS-17156 exposes a publication-ordering dependency
+
+The 2023 issue documents RBF + Observer reads returning an older namespace state after a write because the RPC caller could be notified before the latest response state ID had been processed. Commit `42b4525...` reverses that order:
+
+```text
+receiveResponseState(header)
+    -> setRpcResponse(value) / notify caller
+```
+
+rather than making the result visible first.
+
+The bounded engineering lesson is:
+
+```text
+RPC result exists
+    != currentness metadata already published
+```
+
+For this protocol, later Observer-read correctness depends on processing the sideband currentness state before the application is allowed to proceed from the prior RPC.
+
+### H/P — HDFS-17514 shows that monotonic currentness state sometimes has to be forgotten
+
+The normal state-ID rule is monotonic: retain the maximum frontier. But HDFS-17514 considers a NameNode that previously produced state IDs and is restarted with `dfs.namenode.state.context.enabled=false`. A Router retaining the earlier positive value could keep exporting a stale frontier to **new clients**.
+
+The May 2024 fix treats a zero response after a previously positive cached value as a reset condition for the Router's shared/local accumulators.
+
+That establishes:
+
+```text
+monotonic inside one valid state-ID regime
+    != monotonic across regime invalidation
+```
+
+and:
+
+```text
+retaining more currentness evidence
+    != always safer
+```
+
+The fix is not universal revocation: the accompanying test deliberately distinguishes newly created clients from an older filesystem object that may still retain previously distributed state. Router-side invalidation stops re-publication; it does not retroactively erase every client embodiment.
+
+### E — currentness evidence has scope, publication, and validity state of its own
+
+The combined 2022–2024 evidence therefore expands the retained-state decomposition:
+
+```text
+namespace payload
+    != namespace progress number
+    != nameservice scope
+    != Router/client propagated frontier
+    != publication-order state
+    != validity of the frontier-producing mechanism
+```
+
+The control metadata is small, but its currentness is itself a retention obligation.
+
+---
+
 ## Open work intentionally left outside this slice
 
 - exact HDFS-12943 design-PDF page archaeology and proposal-version evolution;
-- Router-Based Federation Observer-read state propagation;
-- post-3.3 Observer consistency regressions and fixes;
+- broader post-3.3 Observer consistency regressions beyond HDFS-17156 and HDFS-17514;
+- exact release/backport history for the 2024 HDFS-17514 fix;
+- RBF federated-state size-limit behavior and mixed old/new-client invalidation fault injection;
 - WebHDFS and delegation-token-specific behavior;
 - end-to-end file-data visibility versus NameNode metadata freshness;
 - interaction with snapshots, encryption zones, access-time configuration, and other operation classes;
 - independent fault injection measuring stale-read/fallback behavior;
 - broader comparison with follower reads in ZooKeeper, Raft-based databases, Spanner-like systems, or object stores.
 
-These are follow-on slices, not blockers for the bounded mechanism established here.
+The previously open **Router-Based Federation Observer-read state propagation** item is now boundedly grounded by the linked 2022–2024 evidence slice. These remaining items are follow-on slices, not blockers for the mechanism established here.
 
 ---
 
 ## Status
 
-**grounded** — Apache JIRA/release records, Apache user documentation, and release-3.3.0 source directly establish the Observer role, RPC state-ID mechanism, client monotonic state retention, server alignment checks, `msync`, routing/fallback, and the 2019 startup/cross-client freshness failure. No invention-priority claim is made.
+**grounded** — Apache JIRA/release records, Apache user documentation, release-3.3.0 source, Hadoop 3.4.0 RBF source, and exact 2023/2024 fix commits establish the Observer role, RPC state-ID mechanism, client monotonic state retention, server alignment checks, `msync`, Router nameservice-scoped frontier propagation, publication-before-notification requirement, routing/fallback, startup/cross-client freshness failure, and bounded stale-frontier invalidation. No invention-priority claim is made.
 
 [^hdfs12943]: Apache Hadoop JIRA, [HDFS-12943 — Consistent Reads from Standby Node](https://issues.apache.org/jira/browse/HDFS-12943), created 19 December 2017, resolved 1 November 2019; release note and subtasks inspected.
 [^observer-guide]: Apache Hadoop, [Consistent Reads from HDFS Observer NameNode](https://hadoop.apache.org/docs/r3.2.3/hadoop-project-dist/hadoop-hdfs/ObserverNameNode.html), Hadoop 3.2.3 documentation; architecture, client consistency, tailing, deployment, and client configuration sections inspected.
@@ -386,3 +483,4 @@ These are follow-on slices, not blockers for the bounded mechanism established h
 [^client-gsi]: Apache Hadoop 3.3.0 source, [`ClientGSIContext.java`](https://github.com/apache/hadoop/blob/rel/release-3.3.0/hadoop-hdfs-project/hadoop-hdfs-client/src/main/java/org/apache/hadoop/hdfs/ClientGSIContext.java).
 [^global-gsi]: Apache Hadoop 3.3.0 source, [`GlobalStateIdContext.java`](https://github.com/apache/hadoop/blob/rel/release-3.3.0/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/GlobalStateIdContext.java).
 [^readonly]: Apache Hadoop 3.3.0 source, [`ReadOnly.java`](https://github.com/apache/hadoop/blob/rel/release-3.3.0/hadoop-hdfs-project/hadoop-hdfs-client/src/main/java/org/apache/hadoop/hdfs/server/namenode/ha/ReadOnly.java).
+[^rbf-deepening]: [`evidence/61-hdfs-rbf-2022-2024-federated-stateid-publication-invalidation-deepening.md`](../evidence/61-hdfs-rbf-2022-2024-federated-stateid-publication-invalidation-deepening.md), grounded in HADOOP-18345, HDFS-13522, HDFS-16767, HDFS-17156, HDFS-17514, Hadoop 3.4.0 source, and exact Apache fix commits.
