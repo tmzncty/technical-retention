@@ -22,6 +22,7 @@ The case is useful because the same product family exposes `Active Garbage Colle
 
 - [Powered idle, sleep states, and maintenance opportunity deepening](../evidence/150-crucial-powered-idle-sleep-maintenance-opportunity-deepening.md) — separates host-visible idleness, device/interface sleep, controller maintenance eligibility, and actual GC execution; also records the M550's co-listed Device Sleep support and a firmware-version boundary around power-state transitions.
 - [2013–2015 AGC provenance and m4 experiment deepening](../evidence/150-crucial-2013-2015-agc-provenance-experiment-deepening.md) — narrows the public-circulation floor of Crucial's `6–8 hours` powered-idle support wording to contemporaneous 2013–2014 preservation witnesses and uses a peer-reviewed named Crucial m4 experiment to separate GC presence, deallocation/reclaim eligibility, execution, physical erase, and observed stale-data recoverability.
+- [IBM 2009–2012 SSD GC validity/map/erase prior-art deepening](../evidence/150-ibm-2009-2012-ssd-gc-validity-map-erase-prior-art-deepening.md) — adds a manufacturer-authored controller design that separates PI invalidity evidence, victim selection, live-data recovery/re-storage, address-map update, erase eligibility, and actual old-block erase. It is used as prior-art/control-architecture evidence, **not** as M550 implementation evidence or genealogy.
 
 ---
 
@@ -61,7 +62,7 @@ These two first-party records support a conservative productization statement:
 
 They do **not** establish invention priority for garbage collection, the date the mechanism was first implemented inside Micron/Crucial firmware, or the exact internal algorithm used by M550 firmware.
 
-Earlier industry and academic records already make a first-invention reading untenable. SNIA discussed TRIM and drive-internal garbage collection in 2011, and earlier flash-management literature had long treated erase-before-rewrite, out-of-place updates, and erase-unit reclamation as established design problems.
+Earlier industry and academic records already make a first-invention reading untenable. SNIA discussed TRIM and drive-internal garbage collection in 2011, earlier flash-management literature had long treated erase-before-rewrite, out-of-place updates, and erase-unit reclamation as established design problems, and the new IBM 2009-priority control-architecture witness already exposes a detailed managed-SSD GC sequence before the M550 product anchor.
 
 ---
 
@@ -165,6 +166,43 @@ This yields:
 
 This is the core reason to include managed SSD garbage collection in a repository about technical retention: **reclamation is not simply deletion; it is a state transition whose correctness depends on distinguishing what may be forgotten from what must survive the transition.**
 
+### Manufacturer-controller prior art: IBM 2009-priority validity → map → erase sequence
+
+The [IBM prior-art/control-architecture deepening](../evidence/150-ibm-2009-2012-ssd-gc-validity-map-erase-prior-art-deepening.md) adds a manufacturer-primary implementation design without turning it into an M550 claim. IBM's `US20120266050A1 / US8904261B2`, priority **17 December 2009**, describes an SSD controller that maintains an `LBA/PBA address map`, sets per-page `PI` invalidity flags for overwritten/deleted pages, and maintains aggregate PI counts used in internal management.
+
+Its Figure 6 GC path makes the sequencing unusually explicit:
+
+```text
+invalidity evidence / PI counts
+    -> select recycle target
+    -> recover still-valid data
+    -> re-store valid data in new physical locations
+    -> update LBA/PBA address map
+    -> old blocks become erasable
+    -> erase now or at a later time
+```
+
+This sharpens the case in three ways.
+
+First, **invalidity is controller authority, not physical destruction**: setting a PI flag changes whether an old page counts as valid; it does not itself erase the cell state.
+
+Second, **new embodiment creation and currentness publication are distinct**: valid data are re-stored before the address map is updated to the new locations.
+
+Third, **map/currentness transition and capacity reclamation are distinct**: after the map update the old blocks can be erased, but the patent expressly permits that erase to occur immediately **or later**. Therefore a controller can have remaining physical reclamation work after the logical resolution relation has already moved.
+
+This is strong prior-art/control-architecture evidence for:
+
+```text
+invalid page known
+    != victim selected
+    != live data copied
+    != mapping updated
+    != old block erased
+    != capacity reusable
+```
+
+It is **not** evidence that M550 firmware used IBM's PI flags, stride/C2 design, victim heuristic, map-publication order, or crash protocol. Chronology is not genealogy.
+
 ---
 
 ## Free space is an operational resource, not only a namespace count
@@ -213,18 +251,24 @@ The power-state deepening further separates:
 
 The M550's co-listed Device Sleep support therefore cannot be used as shorthand for either “GC runs during sleep” or “GC cannot run during sleep.” Product-specific evidence for that arbitration remains missing. Crucial's M550 MU02 release notes also later mention improved behavior during power-state transitions, which is enough to make firmware-version sensitivity explicit but not enough to infer a GC scheduler change.
 
-But the inspected sources still do not reveal:
+The IBM prior-art/control-architecture witness adds one adjacent historical fact but does **not** close the M550 crash seam. Its specific embodiment says that after a controller detects a power-supply interruption, transient parity together with controller metadata including the current address map can be copied to Flash before shutdown. That demonstrates that **preserving controller metadata across a detected shutdown** was already an explicit manufacturer design concern by the 2009-priority family.
+
+But the inspected sources still do not reveal for the M550:
 
 - whether a particular GC move is transactionally checkpointed;
 - exactly when old/new mapping metadata become authoritative;
 - what survives sudden power loss during an M550 GC cycle;
 - whether an interrupted victim block is retried from a durable journal, reconstructed by scan, or handled another way.
 
-M550 documentation separately advertises power-loss protection, but feature co-presence is not enough to reconstruct the GC crash protocol.
+Nor does IBM's bounded pre-shutdown copy prove arbitrary-power-cut GC atomicity, PI-state durability, torn-map handling, or an M550 implementation. M550 documentation separately advertises power-loss protection, but feature co-presence is not enough to reconstruct the GC crash protocol.
 
 Therefore:
 
-> **powered-idle requirement != evidence for a specific durable GC checkpoint format**.
+> **powered-idle requirement != evidence for a specific durable GC checkpoint format**;
+
+and:
+
+> **pre-shutdown metadata preservation path != arbitrary-power-cut GC transaction proof**.
 
 Case 39 remains the stronger repository example for explicitly studied FTL power-failure metadata recovery.
 
@@ -260,7 +304,9 @@ Cases 44 and 47 remain the stronger sanitize/remanence boundary.
 
 Case 04 shows that logical designation can survive physical relocation. Case 150 adds the reclamation motive: live data may be relocated specifically so that a mixed old erase block can be erased and returned to the free pool. Same broad abstraction layer, different bounded question.
 
-The new m4 experiment deepening adds the reverse-side control question: if device-level retirement/deallocation evidence is absent or not acted on, upper-layer deletion need not make a physical embodiment reclaimable. That is a functional reconstruction, not a claim that the m4 implements Case 04's historical patent structures.
+The new IBM prior-art/control-architecture witness gives that relation a later manufacturer-defined state sequence: physical re-storage, address-map update, and old-block erase are distinct transitions. It is a functional/historical control witness, not a claim that the early Case-04 systems or M550 implemented the IBM stride/C2 architecture.
+
+The m4 experiment deepening adds the reverse-side control question: if device-level retirement/deallocation evidence is absent or not acted on, upper-layer deletion need not make a physical embodiment reclaimable. That is a functional reconstruction, not a claim that the m4 implements Case 04's historical patent structures.
 
 ### Case 145 — JFFS2 raw-Flash garbage collection
 
@@ -272,7 +318,7 @@ ZNS deliberately changes the host/device division of flash-management responsibi
 
 ### Case 39 — GeckoFTL crash recovery
 
-Case 39 explicitly studies metadata needed to recover FTL state after power failure. Case 150 has no source basis for reconstructing the M550 GC crash protocol, so it stops at the observed maintenance/reclamation boundary.
+Case 39 explicitly studies metadata needed to recover FTL state after power failure. Case 150 has no source basis for reconstructing the M550 GC crash protocol, so it stops at the observed maintenance/reclamation boundary. IBM's detected-interruption metadata-copy path is an adjacent prior-art witness, not a substitute for Case 39's explicit restart/reconstitution problem.
 
 ### Case 111 — long-offline SSD operational retention
 
@@ -292,12 +338,14 @@ This case does **not** claim that the 2014 M550 introduced SSD garbage collectio
 
 Guardrails:
 
+- Gal and Toledo's 2005 flash-management survey already records erase-unit constraints, not-in-place update, reclamation/erase management, and wear-management problem families;
+- IBM's manufacturer-authored `US20120266050A1 / US8904261B2`, with **2009-12-17 priority**, exposes a concrete managed-SSD controller sequence separating invalidity state, victim selection, live-data re-storage, map update, and later block erase;
 - SNIA publicly discussed drive-internal garbage collection and TRIM by 2011;
-- 2005 flash-management literature already surveyed out-of-place updates, large erase units, reclaim/erase-management problems, and wear management;
 - the M550 evidence therefore serves as a **named-product embodiment floor**, not an invention date;
+- the IBM patent is a prior-art/control-architecture witness, not evidence that IBM invented GC or that Crucial/Micron implemented that design;
 - chronology does not prove a Micron/Crucial genealogy from any particular earlier paper, patent, controller family, or SSD vendor.
 
-A fresh search of `tmzncty/computing-archaeology` found no dedicated SSD garbage-collection, Crucial m4/M550, or M550/DEVSLP study to reuse. Broader FTL genealogy, early commercial SSD GC, controller architecture, SATA low-power/TRIM transport genealogy, and product-by-product scheduler history belong primarily there if pursued; Case 150 keeps only the retention/reclamation relation.
+A fresh search of `tmzncty/computing-archaeology` for combinations of `garbage collection`, `SSD`, `FTL`, `IBM`, and `Cideciyan` found no dedicated matching study to reuse. Broader FTL genealogy, early commercial SSD GC, controller architecture, SATA low-power/TRIM transport genealogy, and product-by-product scheduler history belong primarily there if pursued; Case 150 keeps only the retention/reclamation relation.
 
 ---
 
@@ -306,6 +354,8 @@ A fresh search of `tmzncty/computing-archaeology` found no dedicated SSD garbage
 The engineering evidence supports one restrained observation: **technical forgetting may require active preservation.**
 
 A mixed erase block cannot be forgotten wholesale. The controller must discriminate current from stale embodiments, carry current data forward, and only then erase the old container. “Garbage collection” is therefore not pure destruction; it is a selective transition that preserves one continuity while ending another.
+
+The IBM deepening sharpens this without changing the philosophical boundary: negative validity evidence, positive mapping/currentness state, and later physical erase can be different retained relations. Forgetting at one layer can therefore depend on preserving enough state to know what must **not** be forgotten during the same transition.
 
 A second observation is that **inactivity at one layer can be maintenance activity at another**. Host idleness can provide the interval in which a controller reorganizes physical state while leaving the logical namespace apparently unchanged.
 
@@ -390,6 +440,23 @@ Crucial Support, **M550 SSD firmware and support**:
 
 The published release note includes improved stability/efficiency/performance during power-state transitions and corrected NCQ TRIM error handling. It does not say that garbage-collection scheduling changed.
 
+### P9 — IBM 2009-priority SSD data-management patent — `H/P`, prior-art/control-architecture witness
+
+Roy D. Cideciyan, Evangelos S. Eleftheriou, Robert Haas, Xiao-Yu Hu, Ilias Iliadis, **“Data management in solid state storage devices,”** US20120266050A1 / US8904261B2, IBM; priority 17 December 2009; U.S. application publication 18 October 2012:
+<https://patents.google.com/patent/US8904261B2/en>
+
+Directly supports for its described embodiment:
+
+- LBA/PBA mapping metadata;
+- PI invalidity flags and aggregate PI counts;
+- victim selection informed by invalid-page counts;
+- recovery and re-storage of still-valid data;
+- address-map update after new data placement;
+- old-block erase after the map update, with erase allowed immediately or later;
+- a bounded detected-power-interruption path that copies transient parity and current-map metadata to Flash before shutdown.
+
+It is **not** used as evidence of M550 firmware internals, commercial deployment, invention priority, or arbitrary-power-cut transaction atomicity.
+
 ### F1 — powered-idle follow-on bounded deepening
 
 [Evidence 150 — Crucial SSD Active Garbage Collection: Powered Idle, Sleep States, and Maintenance Opportunity](../evidence/150-crucial-powered-idle-sleep-maintenance-opportunity-deepening.md)
@@ -402,6 +469,12 @@ This follow-on is the authoritative location for the power-state/maintenance-opp
 
 This follow-on records the source-class limits of the 2013/2014 contemporaneous support-text reproductions and the SecureComm m4 experiments. It is the authoritative location for the distinction `recoverable stale data != proved absence of a garbage-collection engine`.
 
+### F3 — IBM manufacturer-controller prior-art deepening
+
+[Evidence 150 — IBM 2009–2012 SSD GC Validity / Mapping / Erase Prior-Art Deepening](../evidence/150-ibm-2009-2012-ssd-gc-validity-map-erase-prior-art-deepening.md)
+
+This follow-on is the authoritative location for the decomposition `invalidity evidence -> victim selection -> live-data re-storage -> map/currentness update -> erase eligibility -> actual erase`, and for the explicit boundary `detected-interruption metadata preservation != arbitrary-power-cut GC atomicity`.
+
 ---
 
 ## Evidence-strength summary
@@ -410,9 +483,10 @@ This follow-on records the source-class limits of the 2013/2014 contemporaneous 
 - **Strong for current vendor behavior:** Crucial's maintained support material explicitly describes controller-local Active Garbage Collection, powered idle opportunity, free-space dependence, and power-setting changes that preserve a long idle maintenance window.
 - **Moderate period-provenance evidence:** contemporaneous 2013 support-email reproduction and March-2014 website quotation show the AGC / powered-idle vocabulary circulating near the M550 period, but neither is an authenticated Crucial-origin archive.
 - **Strong named-device experimental evidence for the tested setups:** SecureComm identifies a Crucial m4 CT064M4SSD2 and reports USB/secondary-SATA stale-data survival versus primary-SATA/Windows-7/TRIM non-recovery; the internal causal interpretation remains more limited than the observable outcome.
+- **Strong manufacturer-primary prior-art/control-architecture evidence:** IBM's 2009-priority patent explicitly separates PI invalidity state, victim selection, live-data recovery/re-storage, address-map update, and immediate-or-later old-block erase. This is not M550 implementation evidence.
 - **Strong generic mechanism:** SNIA describes relocation of valid data before erase-block reclamation and its write-amplification/performance cost.
 - **Strong protocol boundary:** SATA-IO distinguishes DevSleep from active/other reduced-power interface states, but does not specify M550's internal GC eligibility.
-- **Moderate historical guardrail:** 2011 SNIA and 2005 academic flash-management literature establish that the relevant problem family predates M550.
+- **Strong anti-priority guardrail:** 2005 academic flash-management literature plus IBM's 2009-priority manufacturer record and 2011 SNIA terminology all predate M550 productization; none establishes a direct Micron/Crucial genealogy.
 - **Moderate product revision guardrail:** M550 MU02 explicitly changed power-state-transition handling, but no inspected source ties that change to GC.
 - **Not established:** exact M550 GC algorithm, victim policy, internal metadata, free-space threshold, power-fail transaction, per-power-state GC eligibility, firmware-version scheduler differences, command-level trace for the m4 experiments, or complete physical sanitization effect.
 
@@ -420,8 +494,8 @@ This follow-on records the source-class limits of the 2013/2014 contemporaneous 
 
 ## Open debt
 
-1. Recover an authenticated origin-hosted or archived **2010–2014 Crucial** support page containing the powered-idle / `6–8 hours` Active Garbage Collection instructions. The new deepening narrows public circulation to August 2013 but does not close origin provenance.
-2. Find a first-party controller/firmware document exposing an actual managed-SSD GC state machine, victim selection, crash protocol, or explicit power-state eligibility table.
-3. Extend the new named-device evidence with controlled traces that separately correlate deallocation delivery, active idle, low-power states, internal writes, and reclaimed space; the SecureComm m4 results establish path-dependent recoverability but do not instrument internal GC or exact ATA command delivery.
+1. Recover an authenticated origin-hosted or archived **2010–2014 Crucial** support page containing the powered-idle / `6–8 hours` Active Garbage Collection instructions. The existing deepening narrows public circulation to August 2013 but does not close origin provenance.
+2. The generic first-party controller-state-machine gap is now **partly closed** by IBM's 2009-priority manufacturer patent. The remaining high-value debt is **M550-specific**: find Micron/Crucial or Marvell evidence for its victim selection, map-publication/currentness transition, arbitrary-power-cut recovery, and explicit per-power-state GC eligibility.
+3. Extend the named-device evidence with controlled traces that separately correlate deallocation delivery, active idle, low-power states, internal writes, mapping/currentness changes, and reclaimed space; the SecureComm m4 results establish path-dependent recoverability but do not instrument internal GC or exact ATA command delivery.
 4. Trace early commercial SSD GC / FTL and SATA low-power/TRIM transport genealogy in `computing-archaeology` rather than expanding this case into a general SSD history.
 5. Keep ordinary reclamation erase and quick-format forensic recovery separate from sanitize/remanence testing unless lower-layer security-command evidence is obtained.
