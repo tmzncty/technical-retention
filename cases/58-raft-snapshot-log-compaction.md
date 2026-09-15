@@ -2,9 +2,14 @@
 
 ## Status
 
-**`grounded`** — bounded to the snapshot/log-compaction mechanism described by Diego Ongaro and John Ousterhout in the May 20, 2014 extended Raft paper.
+**`grounded`** — historically bounded to the snapshot/log-compaction mechanism described by Diego Ongaro and John Ousterhout in the May 20, 2014 extended Raft paper, with a later exact-version implementation deepening for etcd v3.5.15.
 
-Grounding record: [`../evidence/58-raft-2014-snapshot-log-compaction-grounding.md`](../evidence/58-raft-2014-snapshot-log-compaction-grounding.md).
+Evidence navigation:
+
+- grounding: [`../evidence/58-raft-2014-snapshot-log-compaction-grounding.md`](../evidence/58-raft-2014-snapshot-log-compaction-grounding.md)
+- later implementation deepening: [`../evidence/58-etcd-3515-ready-snapshot-persistence-publication-deepening.md`](../evidence/58-etcd-3515-ready-snapshot-persistence-publication-deepening.md)
+
+The etcd material does **not** replace the 2014 historical record or raise the case maturity beyond `grounded`; it is a bounded witness for local persistence/publication ordering that the Raft paper intentionally leaves below the protocol level.
 
 ## Scope
 
@@ -35,17 +40,21 @@ follower later falls behind retained history
 
 This is not a general history of consensus, Paxos, ZooKeeper, Chubby, etcd, Consul, databases, or checkpointing. It does not claim that Raft invented snapshots, log compaction, state-machine replication, or state transfer. The paper itself names Chubby and ZooKeeper as systems using snapshotting and discusses log cleaning and log-structured merge trees as alternatives.
 
-The retention-specific claim is narrower:
+The retention-specific historical claim is narrower:
 
 > **In the 2014 Raft design, a committed decision need not remain forever as its original replicated log entry. Once a server has materialized the committed state into a stable snapshot and retained the protocol boundary needed to reconnect that state to the remaining log, the covered prefix becomes dispensable. If a follower later needs history the leader has compacted away, repair changes from entry replay to snapshot state transfer.**
 
-`history-retention obligation`, `state-equivalence handoff`, and `recovery-representation substitution` below are project engineering terms, not period Raft vocabulary.
+The later etcd v3.5.15 deepening asks a separate question: how one production implementation stages stable snapshot bytes, a WAL-side snapshot record, in-memory Raft storage, application/server publication, and release of older recovery resources. It is not projected backward into 2014.
+
+`history-retention obligation`, `state-equivalence handoff`, `recovery-representation substitution`, and `publication seam` below are project engineering terms, not period Raft vocabulary.
 
 ## Historical vocabulary
 
 The paper directly uses `replicated log`, `committed`, `state machine`, `stable storage`, `snapshot`, `snapshotting`, `log compaction`, `last included index`, `last included term`, `configuration`, `InstallSnapshot RPC`, `AppendEntries`, `log cleaning`, and `log-structured merge trees`.
 
-Do not silently normalize these into unrelated monotonically changing metadata such as HDFS generation stamps, QJM epochs, Kafka high watermarks, database LSNs, or generic `checkpoint IDs`.
+The later etcd source directly uses `Ready`, `HardState`, `Entries`, `Snapshot`, `SaveSnap`, `ApplySnapshot`, `publishSnapshot`, `Release`, `WAL`, `Snapshotter`, and `Advance`.
+
+Do not silently normalize either vocabulary into unrelated monotonically changing metadata such as HDFS generation stamps, QJM epochs, Kafka high watermarks, database LSNs, or generic `checkpoint IDs`.
 
 ## Historical record
 
@@ -120,9 +129,85 @@ The paper says snapshotting too often wastes disk bandwidth and energy, while sn
 
 **Primary anchor:** §7.
 
+## Later implementation witness — etcd v3.5.15
+
+This section is **not** historical evidence for the 2014 paper. It is an exact-version production implementation witness showing how one Raft system decomposes the local handoff that the paper calls “stable storage.”
+
+### H/P — `Ready` separates work that has not yet crossed the same boundary
+
+etcd v3.5.15 uses `go.etcd.io/etcd/raft/v3 v3.5.15`. In that library, `Ready` separately carries `HardState`, `Entries`, `Snapshot`, `CommittedEntries`, and outbound `Messages`; `Advance` later tells the node that application progress has been saved/processed.
+
+So:
+
+```text
+snapshot appears in Ready
+    != stable local snapshot path completed
+    != application publication completed
+    != Ready acknowledged
+```
+
+### H/P — the production Ready loop has an explicit publication order
+
+For a non-empty snapshot, `server/etcdserver/raft.go` orders:
+
+```text
+Save HardState + Entries
+    -> SaveSnap
+    -> raftStorage.ApplySnapshot
+    -> publishSnapshot
+    -> Release older recovery resources
+    -> send outbound messages
+    -> later advance Ready progress
+```
+
+The ordering is directly visible in source. It is not evidence that the sequence is one atomic transaction.
+
+### H/P — snapshot file precedes WAL snapshot record by design
+
+`server/etcdserver/storage.go` deliberately calls `Snapshotter.SaveSnap` before `WAL.SaveSnapshot`. Its source comment states the intended failure asymmetry: this may leave an **orphaned snapshot file**, but avoids a **WAL snapshot entry with no corresponding snapshot file**.
+
+That gives a direct implementation-level distinction:
+
+```text
+ordered publication
+    != atomic publication
+
+orphan snapshot file can exist
+    != orphan file is automatically restart authority
+```
+
+### H/P — snapshot bytes are checksummed and file-synced in this path
+
+`Snapshotter.save` wraps serialized snapshot data with a Castagnoli CRC32 and writes it through `WriteAndSyncFile`; that helper writes, calls `fileutil.Fsync`, then closes the file.
+
+This supports the narrow claim that the exact code path performs a file sync before successful return. It does **not** prove every filesystem, directory-entry, controller, drive-cache, or sudden-power-loss behavior.
+
+### H/P — restart admission can require file/WAL agreement
+
+`Snapshotter.LoadNewestAvailable` accepts a snapshot only when its metadata `(term,index)` matches one of the supplied WAL snapshot records. The loader also checks non-empty data, decoding, and CRC.
+
+Thus in this implementation:
+
+```text
+newest-looking snapshot pathname
+    != decodable/checksummed snapshot
+    != WAL-matched snapshot
+    != admissible restart boundary
+```
+
+This makes the admitted orphan-file state meaningful: physical survival of a file is not by itself sufficient currentness evidence.
+
+### H/P — old recovery material is released only after the newer boundary crosses earlier steps
+
+`Storage.Release` releases older WAL locks and removes older `.snap.db` files. The Ready loop invokes it after `SaveSnap`, `raftStorage.ApplySnapshot`, and `publishSnapshot`.
+
+This is a local implementation example of replacement-before-retirement. It is not secure erasure, and it is not a universal Raft protocol ordering.
+
+**Deepening record:** [`../evidence/58-etcd-3515-ready-snapshot-persistence-publication-deepening.md`](../evidence/58-etcd-3515-ready-snapshot-persistence-publication-deepening.md).
+
 ## Retained state and mechanism
 
-The bounded system retains several different state classes:
+The historical Raft mechanism retains several different state classes:
 
 1. **state-machine state** — the applied current result of committed commands;
 2. **remaining replicated-log suffix** — commands after the snapshot boundary;
@@ -131,7 +216,17 @@ The bounded system retains several different state classes:
 5. **per-replica progress** — leader knowledge that determines whether ordinary replay or snapshot transfer remains possible;
 6. **term/vote/log persistence outside the snapshot relation** — ordinary Raft consensus state not to be collapsed into application payload.
 
-The representation change is:
+The etcd v3.5.15 implementation deepening adds local representation classes that are **not** claimed as universal Raft state:
+
+7. **Ready snapshot candidate** — work handed from the Raft library to the embedding application;
+8. **checksummed snapshot file** — a stable-file embodiment written and synced by the snapshotter path;
+9. **WAL snapshot record** — a separate durable relation identifying the snapshot boundary;
+10. **in-memory Raft snapshot boundary** — live `MemoryStorage` state after `ApplySnapshot`;
+11. **server/application publication state** — the later `publishSnapshot` boundary;
+12. **old-recovery-resource retention state** — WAL locks and older snapshot DB material not yet released;
+13. **snapshot admission evidence** — decoding/CRC and WAL `(term,index)` matching used when selecting a usable snapshot.
+
+The historical representation change is:
 
 ```text
 committed command prefix + current state
@@ -140,7 +235,18 @@ committed command prefix + current state
     -> retain later log suffix
 ```
 
-A lagging-replica repair becomes:
+The named etcd implementation exposes a finer local sequence:
+
+```text
+Ready snapshot candidate
+    -> synced snapshot file
+    -> WAL snapshot record
+    -> in-memory Raft ApplySnapshot
+    -> server/application publication
+    -> older recovery resources become releasable
+```
+
+A lagging-replica repair remains a different protocol relation:
 
 ```text
 needed next entry still retained
@@ -153,6 +259,8 @@ needed next entry already compacted
     -> otherwise discard superseded local history
     -> resume AppendEntries after boundary
 ```
+
+Local etcd `SaveSnap` publication and network `InstallSnapshot` must not be merged merely because both involve snapshots.
 
 ## Engineering reconstruction
 
@@ -188,6 +296,22 @@ Compacting the log entry that established a configuration cannot mean forgetting
 
 Snapshot construction consumes bandwidth/energy and bounds later replay/storage cost, but it occurs after commands have already crossed the consensus commitment relation. It should not be retroactively called the original commit event.
 
+### E — file existence ≠ local restart authority
+
+The etcd v3.5.15 file-before-WAL ordering explicitly admits an orphan snapshot file. Its matching-load rule then demonstrates that a physically present file need not be accepted as the restart boundary unless the separate WAL-side relation also exists.
+
+### E — stable file save ≠ in-memory apply ≠ server publication
+
+The v3.5.15 Ready loop makes these separate calls in order. Treating `SaveSnap`, `raftStorage.ApplySnapshot`, and `publishSnapshot` as synonyms would erase real crash seams.
+
+### E — ordered publication ≠ atomic transaction
+
+The source explicitly prefers one possible partial state—an orphan snapshot file—over the inverse partial state of a WAL marker without its corresponding file. That is a failure-policy choice, not evidence of transaction atomicity.
+
+### E — replacement handoff ≠ physical deletion
+
+`Release` makes older local recovery resources releasable/removable only after the newer snapshot has crossed earlier steps. Releasing locks or deleting older files is not proof of secure media sanitization.
+
 ## Functional analogies and boundaries
 
 ### A — Raft snapshotting and GFS checkpointing
@@ -206,6 +330,12 @@ But Bigtable redo points, memtables, and SSTables are not a consensus log and do
 
 Case 56 can truncate a nonauthoritative divergent Kafka suffix after failover. Case 58 normally retires an **authoritative committed prefix** after its result has been materialized. Both deliberately forget log records, but for opposite currentness reasons.
 
+### A — etcd v3.5.15 snapshot admission and ZooKeeper Case 71
+
+Case 71's ZooKeeper deepening likewise shows that snapshot artifact existence does not alone establish recovery authority. Both systems combine a materialized snapshot with separate continuation/admission evidence and later history.
+
+The mechanisms differ: ZooKeeper 3.4.14 uses its own completion/checksum and transaction-log replay rules; etcd v3.5.15 uses a checksummed synced snapshot file, a WAL snapshot record, and Raft-specific metadata/Ready handling. This is a functional comparison only, not a shared implementation or genealogy claim.
+
 ## Failure and forgetting
 
 - **Snapshot creation fails before completion:** the paper's deletion permission is after completion; the old prefix remains the safe source representation.
@@ -214,9 +344,12 @@ Case 56 can truncate a nonauthoritative divergent Kafka suffix after failover. C
 - **Follower retains conflicting uncommitted suffix:** physical survival does not grant authority; the installed snapshot may supersede it.
 - **Snapshot too frequent:** extra materialization work consumes bandwidth/energy.
 - **Snapshot too infrequent:** log space and replay time grow.
-- **Lower-layer failure:** `stable storage` is an assumption of the bounded algorithm description, not proof of filesystem, controller, SSD, or power-loss behavior.
+- **etcd v3.5.15 fails after synced snapshot file but before WAL snapshot record:** an orphan snapshot file is an explicitly admitted representation state.
+- **etcd v3.5.15 stable representations advance before live process-memory/publication state:** the Ready-loop ordering exposes separate seams rather than one atomic transition.
+- **Older recovery resources survive after newer publication:** this is expected until `Release`; coexistence does not mean equal currentness.
+- **Lower-layer failure:** `stable storage` in the Raft paper and a successful file `fsync` in etcd are not proofs of every filesystem, directory-entry, controller, SSD, or power-loss behavior.
 
-Raft log deletion is therefore **logical/protocol forgetting**, not raw-media sanitization or forensic erasure.
+Raft log deletion and etcd local file release are therefore **logical/protocol/storage-lifecycle forgetting**, not raw-media sanitization or forensic erasure.
 
 ## Prior art and novelty boundary
 
@@ -255,13 +388,17 @@ The historically safe relation is:
     + lastIncludedIndex / lastIncludedTerm / configuration
     + explicit InstallSnapshot recovery path
         -> a later, explicitly specified consensus-continuation contract
+
+2024 release line witness: etcd v3.5.15
+    exact local snapshot-file/WAL/publication/release ordering
+        -> later implementation deepening, not historical origin evidence
 ```
 
-The arrows above mean **chronological/mechanism comparison only**. They do not assert source-code descent, exclusive influence, invention priority, or an uninterrupted Birrell → Chubby → Raft implementation lineage.
+The arrows above mean **chronological/mechanism comparison only**. They do not assert source-code descent, exclusive influence, invention priority, or an uninterrupted Birrell → Chubby → Raft → etcd implementation lineage.
 
 The defensible project contribution is therefore:
 
-> **Raft 2014 supplies a particularly explicit primary-source case in which consensus-ordered committed history is replaceable by stable current state plus boundary/membership metadata, and in which that representation change alters the repair path for lagging replicas. Earlier checkpoint/log-replay and Chubby WAL/snapshot evidence constrain novelty claims without erasing Raft's distinct protocol contract.**
+> **Raft 2014 supplies a particularly explicit primary-source case in which consensus-ordered committed history is replaceable by stable current state plus boundary/membership metadata, and in which that representation change alters the repair path for lagging replicas. Earlier checkpoint/log-replay and Chubby WAL/snapshot evidence constrain novelty claims without erasing Raft's distinct protocol contract; etcd v3.5.15 later shows that an actual local implementation can further decompose “stable snapshot” into multiple ordered, non-atomic embodiments and publication relations.**
 
 ## Source ledger
 
@@ -276,24 +413,42 @@ The defensible project contribution is therefore:
 4. Mike Burrows, **“The Chubby lock service for loosely-coupled distributed systems”**, OSDI 2006, USENIX: <https://static.usenix.org/events/osdi06/tech/full_papers/burrows/burrows_html/>.
    - §2.10: Chubby database rewrite using write-ahead logging and snapshotting similar to Birrell et al.; database log distributed among replicas using consensus.
    - §2.11: periodic backup snapshots to GFS for disaster recovery/replacement-replica initialization, kept separate here from the ordinary database snapshot/log mechanism.
+5. etcd v3.5.15 exact release source, `server/go.mod`: <https://github.com/etcd-io/etcd/blob/v3.5.15/server/go.mod>.
+   - Pins `go.etcd.io/etcd/raft/v3 v3.5.15`.
+6. etcd v3.5.15 Raft `Ready` contract, `raft/node.go`: <https://github.com/etcd-io/etcd/blob/v3.5.15/raft/node.go>.
+7. etcd v3.5.15 production Ready loop, `server/etcdserver/raft.go`: <https://github.com/etcd-io/etcd/blob/v3.5.15/server/etcdserver/raft.go>.
+8. etcd v3.5.15 storage wrapper, `server/etcdserver/storage.go`: <https://github.com/etcd-io/etcd/blob/v3.5.15/server/etcdserver/storage.go>.
+   - Directly documents snapshot-file-before-WAL-marker ordering and admitted orphan snapshot files.
+9. etcd v3.5.15 snapshotter, `server/etcdserver/api/snap/snapshotter.go`: <https://github.com/etcd-io/etcd/blob/v3.5.15/server/etcdserver/api/snap/snapshotter.go>.
+   - CRC, synced file write path, WAL-matched loading, and old `.snap.db` release.
+10. etcd v3.5.15 file helper, `pkg/ioutil/util.go`: <https://github.com/etcd-io/etcd/blob/v3.5.15/pkg/ioutil/util.go>.
+   - Write + file fsync + close behavior.
 
-A search of `tmzncty/computing-archaeology` for Raft/snapshot/InstallSnapshot and, in this deepening pass, Birrell/Chubby checkpoint terms found no dedicated case to reuse. Broader consensus/checkpoint genealogy should still be routed there if later needed; this repository keeps only the retention-specific mechanism and novelty boundary.
+A search of `tmzncty/computing-archaeology` for Raft/snapshot/InstallSnapshot and etcd found no dedicated case to reuse. Broader consensus/checkpoint or etcd implementation genealogy should still be routed there if later needed; this repository keeps only the retention-specific mechanism, implementation boundary, and novelty constraint.
 
 ## Claim ledger
 
 | Claim | Type | Evidence | Status |
 | --- | --- | --- | --- |
-| persistent term/vote/log state is distinct from volatile commit/application progress | H/P | Fig. 2 | supported |
-| servers snapshot only committed entries | H/P | §7 | supported |
-| snapshot carries current state plus last included index/term and configuration | H/P | §7 | supported |
-| complete snapshot permits covered-prefix deletion | H/P | §7 | supported |
-| follower behind retained history is repaired with InstallSnapshot | H/P | §7, Fig. 13 | supported |
-| installed snapshot can supersede follower-local log history | H/P | §7, Fig. 13 | supported |
-| committed state need not retain original command bytes forever | E | §§5.3–5.4 + §7 | supported |
-| snapshot metadata is retention infrastructure rather than payload | E | §7 | supported |
+| persistent term/vote/log state is distinct from volatile commit/application progress | H/P | Raft Fig. 2 | supported |
+| servers snapshot only committed entries | H/P | Raft §7 | supported |
+| snapshot carries current state plus last included index/term and configuration | H/P | Raft §7 | supported |
+| complete snapshot permits covered-prefix deletion | H/P | Raft §7 | supported |
+| follower behind retained history is repaired with InstallSnapshot | H/P | Raft §7, Fig. 13 | supported |
+| installed snapshot can supersede follower-local log history | H/P | Raft §7, Fig. 13 | supported |
+| committed state need not retain original command bytes forever | E | Raft §§5.3–5.4 + §7 | supported |
+| snapshot metadata is retention infrastructure rather than payload | E | Raft §7 | supported |
+| etcd v3.5.15 orders snapshot file before WAL snapshot record | H/P | `storage.go` | supported |
+| that ordering explicitly permits orphan snapshot files | H/P | `storage.go` comment | supported |
+| v3.5.15 snapshot file path uses CRC + file fsync | H/P | `snapshotter.go`, `util.go` | supported |
+| a snapshot can be admitted only when `(term,index)` matches WAL snapshot history in `LoadNewestAvailable` | H/P | `snapshotter.go` | supported |
+| Ready-loop stable save, in-memory apply, publication, and release are distinct stages | H/P/E | `raft.go`, `storage.go` | supported |
+| ordered file/WAL writes are an atomic transaction | X | explicit orphan allowance | rejected |
+| successful file fsync proves every physical power-loss outcome | X | lower-layer evidence absent | rejected |
+| local etcd `SaveSnap` is identical to network `InstallSnapshot` | X | distinct code/roles | rejected |
 | Raft snapshotting is identical to GFS checkpointing or Bigtable compaction | X | comparison above | rejected |
 | Raft invented snapshotting/log compaction | X | §7 prior-art discussion | rejected |
-| deleting a Raft prefix proves secure media erasure | X | no lower-layer evidence | rejected |
+| deleting a Raft prefix or old etcd file proves secure media erasure | X | no lower-layer sanitization evidence | rejected |
 
 ## Case findings
 
@@ -318,7 +473,16 @@ A search of `tmzncty/computing-archaeology` for Raft/snapshot/InstallSnapshot an
 19. **Chubby 2006 WAL + snapshotting + consensus-distributed log ≠ Raft `InstallSnapshot` contract.**
 20. **Chubby database snapshotting ≠ Chubby off-cell backup snapshot role.**
 21. **Earlier mechanism floor ≠ proven direct Birrell → Chubby → Raft implementation genealogy.**
+22. **Raft `Ready` snapshot candidate ≠ completed stable local snapshot publication.**
+23. **etcd snapshot file existence ≠ restart authority.**
+24. **synced snapshot file ≠ matching WAL snapshot record.**
+25. **stable snapshot save ≠ in-memory Raft apply ≠ server/application publication.**
+26. **ordered publication ≠ atomic snapshot transaction.**
+27. **orphan snapshot file ≠ automatically selected recovery boundary.**
+28. **replacement publication ≠ immediate release of older recovery material.**
+29. **release of old WAL/snapshot resources ≠ physical secure erasure.**
+30. **local etcd snapshot publication ≠ Raft `InstallSnapshot` network state transfer.**
 
 ## Next evidence
 
-Future work should remain separate rather than silently expanding this bounded case: implementation crash windows and atomic snapshot installation; named production Raft snapshot formats; later membership variants; independent fault injection; application-level snapshot consistency; and composition with filesystem/device persistence semantics.
+The broad protocol mechanism is already grounded. The next useful work should be implementation fault injection rather than another generic Raft summary: inject failure after snapshot-file sync, after the WAL snapshot record, after in-memory `ApplySnapshot`, after `publishSnapshot`, and before/after `Release`; then observe restart snapshot admission and old-resource retention. A separate storage-layer pass should inspect exact directory-entry durability and WAL `SaveSnapshot` sync semantics on the tested platform. Later membership variants, named snapshot formats, and cross-version etcd changes should remain separate slices rather than being silently folded into the 2014 historical case.
