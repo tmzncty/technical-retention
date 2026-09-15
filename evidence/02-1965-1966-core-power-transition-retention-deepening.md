@@ -20,6 +20,18 @@ whole-machine execution continuity
 
 Claim layers follow repository policy: **Historical record**, **Engineering reconstruction**, **Functional analogy**, and **Philosophical interpretation** remain distinct.
 
+### Earlier named-machine counterexample now split out
+
+A new bounded record, [`02-ibm-7090-1960-1962-power-on-clear-retention-policy-deepening.md`](02-ibm-7090-1960-1962-power-on-clear-retention-policy-deepening.md), moves the named-machine startup-policy evidence earlier than this 1965–1966 pair. IBM 7090 documentation distinguishes `Reset`, which leaves core storage unchanged, from `Clear`, which zeros core storage, and requires a clear operation during ordinary Power On. The result is deliberately treated as a **policy counterexample**, not as the same circuit or a direct genealogy:
+
+```text
+remanent core capability
+    !=
+a machine policy to preserve the old core image at restart
+```
+
+The 7090 witness therefore complements this record's IBM 1401 / DEC PDP-7 preservation examples rather than replacing them.
+
 ## Sources inspected
 
 ### IBM 1401 Data Processing System — Operator's Guide, Form A24-3144-2
@@ -166,6 +178,8 @@ In particular:
 
 This is why `nonvolatile` is a property of the retained substrate relation, not a complete crash-consistency or restart contract.
 
+The new IBM 7090 record adds an orthogonal counterexample: even where the substrate is physically capable of remanent retention, ordinary startup policy may intentionally clear the payload before service. Therefore restart continuity also depends on **whether the startup operation elects to preserve the old image at all**.
+
 ## Functional analogy — persistence-domain boundaries, without shared mechanism
 
 At a functional level only, the PDP-7 case resembles later systems in which a durable payload survives while volatile control state must be reconstructed or reinitialized before service resumes.
@@ -181,6 +195,8 @@ A bounded interpretation is therefore:
 > persistence is not exhausted by surviving absence of power; availability again depends on a controlled re-entry into an operational apparatus.
 
 This is a project interpretation of the engineering evidence, not language attributed to IBM or DEC engineers.
+
+The earlier 7090 counterexample narrows the point further: re-entry may be designed not merely to protect or reconstruct a prior state, but to **replace it deliberately**. Material endurance and institutional/service continuation are therefore separable technical relations.
 
 ## Prior-art and anti-anachronism boundaries
 
@@ -226,13 +242,17 @@ crash consistency
 named IBM / DEC behavior
     !=
 universal magnetic-core contract
+
+remanent medium capability
+    !=
+a machine policy to preserve the old payload at restart
 ```
 
 ## Open work deliberately left outside this slice
 
-- earlier 1950s machine-specific power-transition circuits and operating procedures;
+- **pre-1960 / 1950s** machine-specific power-transition circuits and operating procedures; the 1960–1962 IBM 7090 startup-policy gap is now separately deepened in [`02-ibm-7090-1960-1962-power-on-clear-retention-policy-deepening.md`](02-ibm-7090-1960-1962-power-on-clear-retention-policy-deepening.md);
 - Whirlwind / Memory Test Computer startup-shutdown primary evidence;
-- exact circuit-level comparison between IBM 1401 and DEC PDP-7 power sequencing;
+- exact circuit-level comparison between IBM 7090, IBM 1401, and DEC PDP-7 power sequencing;
 - behavior under uncontrolled brownouts and partial-rail failures;
 - diagnostic or restoration experiments on surviving historical machines;
 - genealogy from core-memory power protection into later semiconductor-memory power-fail designs.
