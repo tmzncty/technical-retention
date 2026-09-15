@@ -505,3 +505,32 @@ same obligation relation != same software representation
 It does not identify the invention of snap trimming, equate commit dates with production deployment, prove exact cursor resume or universal idempotence, or make lower-layer physical reclamation/sanitization claims.
 
 Evidence: [`evidence/153-ceph-2017-2019-removed-snaps-representation-transition-deepening.md`](../evidence/153-ceph-2017-2019-removed-snaps-representation-transition-deepening.md).
+
+## 2017 operator-visible phase and error-stop deepening
+
+Evidence 153D closes a narrower chronology/semantics gap around the PG states that the canonical case previously used only as maintained documentation vocabulary.
+
+On **2017-02-13**, upstream Ceph commit `c2eac34c86517e410eb4842d8b8085da7d8d7973` added `PG_STATE_SNAPTRIM` and `PG_STATE_SNAPTRIM_WAIT` specifically to **expose snap trim state to the user**. The patch places `snaptrim_wait` around reservation waiting and `snaptrim` around the asynchronous trimming phase, and explicitly publishes PG stats when those bits are set or cleared.
+
+On **2017-06-22**, commit `658a2f63b98bab9f23ae31c23b22866e5c92d55d` added `PG_STATE_SNAPTRIM_ERROR` with the stated purpose that errors should stop snaptrim so the PG can be repaired. The implementation distinguishes transient `-ENOLCK` write-lock contention, which waits without becoming `snaptrim_error`, from missing/inconsistent object or snapset state that stops further trimming. If replicated trim operations are already in flight, the state machine lets them finish before resetting/leaving the trimmer.
+
+This strengthens the Case 153 decomposition:
+
+```text
+snapshot retired
+    != trim obligation retained
+    != waiting for reservation/service
+    != active trim execution
+    != error-stopped execution
+    != successful reclamation completion
+```
+
+The later 2018 QA path treats `snaptrim_error` as a terminal condition for deliberately corrupted test attempts, but that must not be read as successful cleanup: maintained Ceph documentation describes it as **error stopped trimming snapshots**.
+
+The bounded engineering result is:
+
+> **remaining cleanup obligation can survive while execution authority is withdrawn; operator-visible maintenance state is evidence about the condition of the forgetting process, not proof that forgetting has completed.**
+
+Status remains **`grounded`**. The new evidence does not prove persistence of the PG-state bits across crash/restart, instantaneous cluster-wide observability, exact-once trim execution, or restoration of retired snapshot authority after an error.
+
+Evidence: [`evidence/153-ceph-2017-snaptrim-observability-error-stop-deepening.md`](../evidence/153-ceph-2017-snaptrim-observability-error-stop-deepening.md).
