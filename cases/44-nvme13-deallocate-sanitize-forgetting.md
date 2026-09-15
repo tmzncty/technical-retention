@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to the NVM Express 1.3 interface semantics for Dataset Management `Deallocate` and `Sanitize`, with NVM Express 1.2.1 `Format NVM` secure-erase semantics used as the immediate prior-version boundary. The T13 D96156 proposal trail and the ATA/ATAPI-4 revision-18 record (1996–1998) are now used as an earlier device-internal overwrite/reallocated-sector prior-art boundary; TCG Opal 1.0 Revision 1.0 (January 2009) remains the earlier bounded storage-security witness for media-encryption-key eradication and for the explicit `KeepGlobalRangeKey` non-erasure counterexample. The case asks what the interface means when a host says that a logical range is no longer needed, versus when it requests that prior user data be made unavailable across the NVM subsystem.
+**`grounded`** — bounded to the NVM Express 1.3 interface semantics for Dataset Management `Deallocate` and `Sanitize`, with NVM Express 1.2.1 `Format NVM` secure-erase semantics used as the immediate prior-version boundary. The T13 D96156 proposal trail and the ATA/ATAPI-4 revision-18 record (1996–1998) are used as an earlier device-internal overwrite/reallocated-sector prior-art boundary; the T13 2007–2010 `DATA SET MANAGEMENT` / `Trim` / DRAT / RZAT proposal trail now supplies the earlier logical-deallocation and post-deallocation-read-semantics boundary; TCG Opal 1.0 Revision 1.0 (January 2009) remains the earlier bounded storage-security witness for media-encryption-key eradication and for the explicit `KeepGlobalRangeKey` non-erasure counterexample. The case asks what the interface means when a host says that a logical range is no longer needed, versus when it requests that prior user data be made unavailable across the NVM subsystem.
 
 Grounding record: [`../evidence/44-nvme12-13-deallocate-sanitize-grounding.md`](../evidence/44-nvme12-13-deallocate-sanitize-grounding.md).
 
@@ -10,6 +10,7 @@ Deepening records:
 
 - [`../evidence/44-nvme-2011-2017-write-zeroes-value-semantics-deepening.md`](../evidence/44-nvme-2011-2017-write-zeroes-value-semantics-deepening.md)
 - [`../evidence/44-nvme10-2011-write-uncorrectable-logical-unreadability-deepening.md`](../evidence/44-nvme10-2011-write-uncorrectable-logical-unreadability-deepening.md)
+- [`../evidence/44-ata-2007-2010-trim-drat-rzat-prior-art-deepening.md`](../evidence/44-ata-2007-2010-trim-drat-rzat-prior-art-deepening.md)
 
 ## Scope
 
@@ -71,6 +72,38 @@ Those clauses are enough to establish a sharp historical distinction inside the 
 
 The section also states that NVMe Deallocate is similar to ATA DATA SET MANAGEMENT with Trim and SCSI UNMAP. That is an interface comparison made by the standard; it is not evidence that the three mechanisms are historically identical or that one invented the others.
 
+## Earlier logical-deallocation prior art — ATA Trim, DRAT, and RZAT (2007–2010)
+
+Detailed record: [`../evidence/44-ata-2007-2010-trim-drat-rzat-prior-art-deepening.md`](../evidence/44-ata-2007-2010-trim-drat-rzat-prior-art-deepening.md).
+
+The official T13 archive records `e07154r0`, **Notification for Deleted Data Proposal for ATA-ACS2**, submitted in April 2007. Its preserved text describes a host notification that lets an SSD mark specified LBAs invalid so the device can disregard those data during merge/wear-leveling work and, when appropriate, pre-erase eligible blocks. The proposal is therefore an earlier host/device currentness/reclamation signal, not a media-sanitization contract.
+
+By `e07154r6`, the proposal had broadened into **Data Set Management**. Its revision history records the November 2007 decision to call the attribute `Trim` rather than `Deallocated`, and its text says trimmed logical-block data become **indeterminate** until a later successful write makes the LBA determinate again.
+
+That is already enough to block two retrospective shortcuts:
+
+```text
+Trim
+    != guaranteed zero fill
+    != proof of physical erase
+```
+
+T13 `e08137r4` (**Deterministic TRIM Proposal**, December 2008) then makes post-Trim read determinism an advertised capability distinct from Trim itself. It distinguishes deterministic from non-deterministic reads and additionally prohibits satisfying a read of one trimmed LBA with data previously received for another LBA.
+
+T13 `e09117r1` (**Read zero after TRIM**, 2009) adds a still stronger, separately advertised read-value relation. The 2009–2010 `e09158` clarification series then explicitly coordinates Trim, DRAT, and RZAT.
+
+The bounded historical decomposition is therefore:
+
+```text
+Trim / deallocation state
+    != deterministic-read-after-Trim capability
+    != deterministic-zero-after-Trim capability
+    != physical-media erasure
+    != sanitization assurance
+```
+
+This is useful prior art for Case 44 because NVMe 1.3 itself points to ATA Trim as a similar interface function. It does **not** establish direct ATA→NVMe implementation genealogy, identical read semantics, stable intermediate bit assignments across every draft, or invention priority for discard/deallocation as a general storage idea.
+
 ## Mechanism 1 — Deallocation changes allocation/currentness semantics without proving media erasure
 
 A deallocated logical block is no longer deallocated when it is written again. Merely reading it does not change that status.
@@ -119,7 +152,7 @@ sanitization state
 
 So **zero-valued future reads do not prove physical erase or sanitization**. Conversely, deallocation does not, by itself, promise the zero-valued result that `Write Zeroes` does. Revision 1.3 can couple the two relations in one command without making them conceptually identical.
 
-This addendum makes no invention claim for zero-fill operations or deallocation and no device-internal claim about how a particular SSD realizes zeroes. Exact proposal chronology, ATA/SCSI genealogy, named-product implementation, and physical-NAND validation remain separate work, primarily for `computing-archaeology` or a future validation case.
+This addendum makes no invention claim for zero-fill operations or deallocation and no device-internal claim about how a particular SSD realizes zeroes. Exact final-standard ATA/SCSI clause tracing, named-product implementation, and physical-NAND validation remain separate work, primarily for `computing-archaeology` or a future validation case; the 2007–2010 ATA proposal chronology is now bounded in the deepening linked above.
 
 ## Intervening semantic branch — NVMe 1.0 Write Uncorrectable separates unreadability from deallocation
 
@@ -479,11 +512,11 @@ Only the first two are NVMe-1.3 interface semantics. The latter two are later NI
 
 ## Broader prior art boundary
 
-Whole-device secure-erasure mechanisms predate NVMe 1.3 by much more than the existing 2009 cryptographic-erasure witness. T13 D96156r0 (October 1996) and the ATA/ATAPI-4 Revision-18 history/command text establish an earlier device-internal overwrite path whose enhanced mode reaches reallocated user-data sectors. That is an overwrite/reachability prior-art floor, not a cryptographic-erasure floor. The TCG Opal 1.0 witness separately pushes explicit storage-interface key-eradication / cryptographic-erase semantics back to 2009. NIST SP 800-88 Rev. 1 was finalized in December 2014 and defines media sanitization as rendering access to target data infeasible for a stated level of effort; its keyword set includes `crypto erase` and `secure erase`.
+Whole-device secure-erasure mechanisms predate NVMe 1.3 by much more than the existing 2009 cryptographic-erasure witness. T13 D96156r0 (October 1996) and the ATA/ATAPI-4 Revision-18 history/command text establish an earlier device-internal overwrite path whose enhanced mode reaches reallocated user-data sectors. That is an overwrite/reachability prior-art floor, not a cryptographic-erasure floor. Separately, T13's 2007–2010 `Notification for Deleted Data` → `Data Set Management` / `Trim` → DRAT / RZAT proposal trail establishes an earlier logical-deallocation/read-semantics floor without turning Trim into a sanitize operation. The TCG Opal 1.0 witness separately pushes explicit storage-interface key-eradication / cryptographic-erase semantics back to 2009. NIST SP 800-88 Rev. 1 was finalized in December 2014 and defines media sanitization as rendering access to target data infeasible for a stated level of effort; its keyword set includes `crypto erase` and `secure erase`.
 
-These sources are used to block invention-priority shortcuts and to separate engineering layers. They do **not** imply that NVMe 1.3 simply copied TCG or NIST taxonomy, that TCG originated cryptographic erasure, or that later NVMe interface semantics are reducible to either earlier document.
+These sources are used to block invention-priority shortcuts and to separate engineering layers. They do **not** imply that NVMe 1.3 simply copied ATA, TCG, or NIST taxonomy, that TCG originated cryptographic erasure, or that later NVMe interface semantics are reducible to any earlier document.
 
-Similarly, Revision 1.3 itself points from Deallocate to earlier ATA Trim and SCSI UNMAP interfaces. The case therefore makes no `NVMe invented deallocation` claim.
+Revision 1.3 itself points from Deallocate to earlier ATA Trim and SCSI UNMAP interfaces. The ATA proposal deepening now grounds one part of that prior-art boundary directly, while a full SCSI UNMAP genealogy remains outside this case.
 
 ## Failure and forgetting boundaries
 
@@ -497,6 +530,8 @@ The case now separates at least seven meanings that can otherwise be collapsed i
 6. **sanitize operation has successfully finished** — separately reported status/event;
 7. **pre-sanitize user data is no longer admissibly accessible** — the stronger sanitization result.
 
+The ATA prior-art record further shows that even inside an earlier deallocation family, Trim state, read determinism, and read-zero behavior were separately negotiated interface properties.
+
 A single verb such as `erase` or `delete` is therefore too weak for cross-case work unless the layer and evidence are specified.
 
 ## Cross-case comparison
@@ -507,7 +542,7 @@ Case 04 gives the lower-level relation:
 
 > logical invalidation can precede physical reclamation.
 
-Case 44 adds a standardized host/controller boundary in which Deallocate can leave the last-written value among legal read results, while Sanitize has a broader user-data-removal scope.
+Case 44 adds standardized host/controller boundaries. The 2007 ATA proposal trail shows the host beginning to communicate negative/currentness information so the device can alter later merge/reclamation behavior; NVMe 1.3 gives a later Deallocate contract in which the last-written value can still be one legal returned value, while Sanitize has a broader user-data-removal scope.
 
 The cases are complementary, not a genealogy claim.
 
@@ -559,6 +594,11 @@ These are project interpretations, not claims about the intentions of the NVMe a
 | Sanitize progress/result is separately represented in Sanitize Status / Global Data Erased state | H/P | Revision 1.3 §8.15 |
 | Multi-pass overwrite may adversely affect NAND endurance | H/P | Revision 1.3 §8.15 |
 | NVMe 1.2.1 already provided User Data Erase / Cryptographic Erase through Format NVM | H/P | Revision 1.2.1 §5.16 |
+| T13 records `e07154r0` as `Notification for Deleted Data Proposal for ATA-ACS2` in April 2007 and the proposal family later becomes Data Set Management / Trim | H/P | official T13 archive + preserved proposal text |
+| `e07154r6` permits indeterminate read behavior for trimmed LBAs until a later write makes them determinate | H/P | preserved `e07154r6` proposal text |
+| `e08137r4` makes deterministic-read-after-Trim a separately advertised capability | H/P | T13 proposal identity + preserved facsimile |
+| `e09117r1` / `e09158r2` separate deterministic-zero-after-Trim from generic DRAT | H/P | T13 proposal identity + preserved proposal text |
+| `Trim state != DRAT != RZAT != physical erasure` | E | reconstruction from the 2007–2010 proposal trail |
 | TCG Opal 1.0 Rev. 1.0 (Jan. 27, 2009) states that Locking-SP Revert eradicates media encryption keys, with secure erasure of User-LBA data as the described side effect | H/P | Opal 1.0 Rev. 1.0 §5.2.2, printed p. 76; secure-erasure note is informative |
 | T13 records D96156r0 `Enhanced security erase unit proposal` on October 14, 1996, with r1/r2 in January 1997 | H/P | official T13 document archive |
 | ATA/ATAPI-4 Revision 18 records that Revision 9 added D96156R2 and defines optional Enhanced Erase over user-data areas including sectors no longer used due to reallocation | H/P | T13/1153D Revision 18 revision history + §8.31.8; inspected facsimile is a working draft, not silently promoted to final ANSI text |
@@ -572,13 +612,14 @@ These are project interpretations, not claims about the intentions of the NVMe a
 | `one local MEK sanitized != every decryptability path retired` | E | reconstruction from NIST all-copies, wrapping-key, escrow/backup, and lifecycle conditions |
 | `logical deallocation != physical/media erasure` | E | reconstruction from permitted deallocated-read semantics and sanitize scope |
 | `forgetting user data can require retaining sanitization state` | E/I | reconstruction from background operation + status contract |
-| NVMe 1.3 invented secure erase, sanitization, crypto erase, or deallocation | X | contradicted by 1.2.1, NIST prior vocabulary, and NVMe's own ATA/SCSI comparison |
+| NVMe 1.3 invented secure erase, sanitization, crypto erase, or deallocation | X | contradicted by 1.2.1, ATA proposal prior art, NIST prior vocabulary, and NVMe's own ATA/SCSI comparison |
 | Every NVMe 1.3 product implements every sanitize action and perfectly purges all hidden media | X | not established by an optional standard interface; requires implementation/compliance evidence |
 
 ## Sources
 
 ### Primary
 
+- T13 document archive, **e07154r0/r1/r2/r6** (`Notification for Deleted Data` → `Data Set Management`), **e08137r0-r4** (`DRAT - Deterministic Read After Trim`), **e09117r0/r1** (`Read Zero after Trim`), and **e09158r0-r2** (`Trim Clarifications`), 2007–2010: <https://www.t13.org/docsearch>. The archive establishes document identity, author, and submission sequence; preserved facsimiles/text renderings are used in the linked deepening for proposal wording.
 - T13 document archive, **D96156r0/r1/r2, “Enhanced security erase unit proposal”** (October 14, 1996; January 14 and January 28, 1997): <https://www.t13.org/docsearch>. The archive establishes document identity/dates.
 - T13, **1153D Revision 18, ATA/ATAPI-4**, August 19, 1998, revision history and §8.31.8 `SECURITY ERASE UNIT`; publicly preserved facsimile used for exact late-draft text: <https://ptacts.uspto.gov/ptacts/public-informations/petitions/1554771/download-documents?artifactId=0EWigRzVKg7sPjzD0givwKpcihsaStqqZz6WGAMqZ789VgCRCY9LVrg>.
 - T13, **Expired Standards** index, listing INCITS 317-1998 (1153D), ATA/ATAPI-4: <https://www.t13.org/standards-expired>.
@@ -592,4 +633,4 @@ These are project interpretations, not claims about the intentions of the NVMe a
 
 ## Related repository check
 
-`tmzncty/computing-archaeology` was searched before writing for `NVMe sanitize`, `secure erase`, `deallocate`, `TRIM`, SSD sanitization, and during the later deepenings for `cryptographic erase`, `Opal`, `key destruction`, `wrapping key`, `key escrow`, `ATA secure erase`, and `security erase ATA/ATAPI`. No dedicated retention/sanitization, ATA Secure Erase, or key-hierarchy case was found. Generic SSD/Flash/SED and cryptographic-storage implementation history therefore remains routed there, while this case keeps the retention-specific distinction among logical deallocation, material embodiments, key-mediated recoverability, sanitization mechanisms, and sanitization-completion evidence.
+`tmzncty/computing-archaeology` was searched before writing for `NVMe sanitize`, `secure erase`, `deallocate`, `TRIM`, SSD sanitization, and during later deepenings for `cryptographic erase`, `Opal`, `key destruction`, `wrapping key`, `key escrow`, `ATA secure erase`, `security erase ATA/ATAPI`, and again for `TRIM` / `DATA SET MANAGEMENT` before the 2007–2010 proposal deepening. No dedicated retention/sanitization, ATA Trim/Data Set Management, ATA Secure Erase, or key-hierarchy case was returned. Generic SSD/Flash/SED implementation history and a full ATA/SCSI discard genealogy therefore remain routed there, while this case keeps the retention-specific distinction among logical deallocation, read-value contracts, reclamation eligibility, material embodiments, key-mediated recoverability, sanitization mechanisms, and sanitization-completion evidence.
