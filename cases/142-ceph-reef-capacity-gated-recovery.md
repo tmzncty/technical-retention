@@ -516,3 +516,35 @@ Do not duplicate the general 2006 RADOS history already grounded in Case 05.
 - Related evidence ledger: [`../evidence/142-ceph-reef-capacity-gated-recovery-grounding.md`](../evidence/142-ceph-reef-capacity-gated-recovery-grounding.md).
 - Source-level retry-state deepening: [`../evidence/142-ceph-reef-source-retry-state-horizon-deepening.md`](../evidence/142-ceph-reef-source-retry-state-horizon-deepening.md).
 - Projected-backfill admission accounting: [`../evidence/142-ceph-reef-projected-backfill-admission-accounting-deepening.md`](../evidence/142-ceph-reef-projected-backfill-admission-accounting-deepening.md).
+
+---
+
+## Pre-Reef semantics deepening (2012–2019)
+
+A bounded upstream-source chronology now closes part of the historical debt that the Reef baseline intentionally left open: [`../evidence/142-ceph-2012-2019-backfill-toofull-semantics-evolution-deepening.md`](../evidence/142-ceph-2012-2019-backfill-toofull-semantics-evolution-deepening.md).
+
+The key historical anchors are:
+
+- **26 Sep 2012:** upstream Ceph already combines a configurable backfill-full threshold, `PG_STATE_BACKFILL_TOOFULL`, reservation rejection, and delayed retry. This is a conservative public implementation floor, not an invention-priority claim.
+- **21 Jan 2014:** upstream documentation explicitly describes `backfill_toofull` as waiting because the destination OSD is too full; the documentation date is not treated as the implementation origin.
+- **23 Oct 2017:** a newer `TOOFULL` message/event makes one capacity-cancellation cause explicit while compatibility encoding can still collapse that distinction to the older `REJECT` value for old peers.
+- **18 Dec 2018:** replicated-pool reservation admission begins carrying byte-count state and can reject work because the **expected** backfill would exceed the threshold, establishing a pre-Reef floor for projected-capacity admission.
+- **20 Jun 2019:** monitor health semantics split `PG_BACKFILL_FULL` from `PG_RECOVERY_FULL`, with the former documented as potentially transient.
+- **23 Aug 2019:** a defect fix stops generic reservation revocation/retry from incorrectly setting `backfill_toofull`; a companion rename makes `REJECT_TOOFULL` / `RemoteReservationRejectedTooFull` explicit in source vocabulary.
+
+This adds a further engineering boundary to the Reef case:
+
+```text
+repair / reservation retry
+    != evidence that capacity caused the retry
+
+retained PG state flag
+    != automatically correct causal diagnosis
+
+same state name across releases
+    != unchanged trigger / transport / health semantics
+```
+
+Accordingly, the bounded `first-introduction / pre-Reef evolution` debt is now **partially closed for 2012–2019 `backfill_toofull` semantics**. It remains open for earlier precursors, exact release/backport matrices, mixed-version behavior, the complete fullness-threshold genealogy, mClock/work-class evolution, named production traces, and restart/fault experiments.
+
+The broader Ceph implementation genealogy still belongs primarily in `computing-archaeology`; the companion repository currently has no dedicated `backfill_toofull` history to reuse. Case 142 remains **`grounded`** rather than being promoted on the basis of this historical deepening alone.
