@@ -10,6 +10,8 @@ NetApp rated-life/offline-retention telemetry deepening: [`../evidence/111-netap
 
 IBM ESS post-offline scrub-completion deepening: [`../evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md`](../evidence/111-ibm-ess-post-offline-scrub-completion-deepening.md).
 
+IBM / Lenovo shutdown-cadence and documentation-lineage deepening: [`../evidence/111-ibm-lenovo-2020-2022-shutdown-cadence-lineage-deepening.md`](../evidence/111-ibm-lenovo-2020-2022-shutdown-cadence-lineage-deepening.md).
+
 ## Scope
 
 - **Object / system:** enterprise SSD/NVMe storage kept powered off for extended periods, as addressed by IBM storage-system support guidance and Dell PowerEdge support guidance.
@@ -118,7 +120,6 @@ The historical record therefore gives a useful negative result:
 
 The support policies are vendor/system guidance layered above the standards-level qualification relation.
 
-
 ### H/P — NetApp adds a wear-state gate for future long-offline retention
 
 NetApp's May 2021 _ONTAP 9.9.1 EMS Event Catalog_ documents `shm.threshold.ratedLife`, `ratedLife2`, and `ratedLifeMax` events at >90%, >95%, and >100% rated life used. The event descriptions say that at 100% rated life an SSD **might not be able to retain data while powered off for long periods of time**. At 90/95% ONTAP tells the operator to plan replacement as the estimate approaches 100%; above 100% it tells the operator to replace the SSD.
@@ -160,6 +161,23 @@ calendar intervention point
 
 The evidence remains system-layer evidence. A Spectrum Scale RAID scrub completion message does **not** prove that every NAND cell was read or rewritten, does not expose drive-firmware refresh thresholds, and does not establish that every hidden device-local retention task is complete. The same IBM passage separately prescribes **Sanitize with Block Erase** when drives are to be cleared for later reuse, so `scrub complete != sanitize complete` is directly preserved in the vendor record.
 
+## IBM / Lenovo follow-up — cadence variance, automatic scrub admission, and documentation lineage
+
+A second bounded follow-up is now grounded in [`evidence/111-ibm-lenovo-2020-2022-shutdown-cadence-lineage-deepening.md`](../evidence/111-ibm-lenovo-2020-2022-shutdown-cadence-lineage-deepening.md).
+
+The December 2020–May 2022 first-party record shows that even **inside IBM** the same three-month / 40 °C background did not yield one operator cadence. The generic IBM flash says two months off followed by at least two weeks powered; the TS7770 notice says two months off followed by at least one week powered; the December 2020 ESS 5000 Redbook says at least one week powered every six weeks off. A later ESS alert returns to the two-month / two-week guidance but also says that, after more than seven days powered off following installation, ESS automatically starts a background scrub that reads data and rewrites only when it finds a problem.
+
+Thus the maintenance clocks themselves must be kept distinct:
+
+```text
+standards qualification horizon
+    != product/system intervention schedule
+    != automatic scrub-admission threshold
+    != scrub completion
+```
+
+The same deepening also cautions against treating Lenovo's January 2021 HT511702 page as an automatically independent third-vendor engineering witness. It closely tracks the IBM generic flash in title, wording, `chdrive` command vocabulary, and cadence, and it covers a Storwize-for-Lenovo product family for which Lenovo's own product documentation explicitly uses the name **IBM Storwize V7000 for Lenovo**. The bounded historical conclusion is documentation / platform-lineage continuity, not proof of independent engineering discovery or one shared firmware implementation.
+
 ## Engineering reconstruction
 
 ### E — qualification interval and maintenance schedule are different relations
@@ -175,6 +193,8 @@ operator maintenance schedule
 ```
 
 The schedule can be earlier than the qualification boundary without contradicting it. A maintenance recommendation includes safety margin, fleet uncertainty, environmental uncertainty, time needed for background work, and backup/recommissioning concerns not encoded by one headline retention interval.
+
+The IBM / Lenovo cadence deepening makes the same distinction stronger: even one vendor's surviving 2020 documentation maps the same standards-level background onto different schedules for different system contexts. `operator cadence` is therefore a system-policy relation, not a universal NAND physical constant.
 
 ### E — passive offline survival and active powered maintenance must be separated
 
@@ -228,8 +248,9 @@ Therefore:
 
 The practical policy is conservative precisely because actual wear, active-use temperature, power-off temperature, controller state, NAND variation, and maintenance history can differ.
 
-## Cross-case comparison
+The ESS `>7 days off -> automatic scrub` rule sharpens this further: a maintenance-admission threshold is not a failure threshold. It can cause proactive re-observation and selective repair well before the longer offline-risk window.
 
+## Cross-case comparison
 
 ### Case 55 — NVMe SMART / Health endurance telemetry
 
@@ -255,7 +276,7 @@ standards qualification
 field maintenance policy
 ```
 
-The field policy can cite the standard while adding earlier intervention, backup, environment, powered-run duration, and recommissioning rules.
+The field policy can cite the standard while adding earlier intervention, backup, environment, powered-run duration, and recommissioning rules. The IBM-internal cadence variance now shows that one standards background can support multiple product/system runbooks without implying multiple underlying retention standards.
 
 ### Case 37 — Samsung 840 EVO periodic refresh
 
@@ -265,22 +286,26 @@ Case 111 is not another 840 EVO refresh case. It moves the comparison one level 
 
 ### Case 36 — Flash Correct-and-Refresh
 
-Case 36 is a research algorithm/evaluation for maintaining NAND recoverability within ECC margin. Case 111 contains no evidence that IBM or Dell implemented that algorithm. `background retention task`, `read-triggered task`, and academic `FCR` are not synonyms and no genealogy is asserted.
+Case 36 is a research algorithm/evaluation for maintaining NAND recoverability within ECC margin. Case 111 contains no evidence that IBM or Dell implemented that algorithm. `background retention task`, `read-triggered task`, `background scrub`, and academic `FCR` are not synonyms and no genealogy is asserted.
 
 ## Prior art and anti-anachronism
 
-No invention-priority claim is made for either support article. The standards relation predates them, and Case 37 already grounds a 2014–2015 commercial SSD maintenance episode in which powered time mattered. The 2020–2026 sources are valuable because they expose **operator-facing policy**: how a storage vendor tells administrators to manage an extended shutdown once nonvolatile media cannot simply be treated as indefinitely passive shelf storage.
+No invention-priority claim is made for any of these support documents. The standards relation predates them, and Case 37 already grounds a 2014–2015 commercial SSD maintenance episode in which powered time mattered. The 2020–2026 sources are valuable because they expose **operator-facing policy**: how storage vendors tell administrators to manage an extended shutdown once nonvolatile media cannot simply be treated as indefinitely passive shelf storage.
 
-A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated enterprise-SSD extended-shutdown / powered-maintenance case to reuse. A generic history of SSD retention-management firmware belongs there; this case keeps only the retention-specific distinction among qualification, offline survival, powered maintenance opportunity, operator scheduling, and recommissioning.
+The Lenovo deepening adds a source-critical caution: a second corporate masthead is not automatically a second independent technical witness. Lenovo HT511702 closely follows the IBM generic support wording and sits inside an explicit IBM Storwize-for-Lenovo product/document lineage. It is useful historical evidence of policy propagation, but should not be double-counted as independent validation unless a separate engineering basis is recovered.
+
+A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated enterprise-SSD extended-shutdown / powered-maintenance case to reuse. A generic history of SSD retention-management firmware or the IBM Storwize / ESS / TS7700 platform genealogy belongs there; this case keeps only the retention-specific distinctions among qualification, offline survival, powered maintenance opportunity, maintenance admission, operator scheduling, and recommissioning.
 
 ## Failure and forgetting boundaries
 
 For this bounded case, distinguish:
 
 - **extended power-off:** controller background work is unavailable;
+- **short offline-history trigger:** in the named ESS alert, more than seven days off after installation admits an automatic background scrub on return;
 - **approaching a vendor risk window:** policy calls for backup/environment checks and a powered maintenance interval;
 - **power restored:** maintenance becomes possible but is not thereby proved complete;
 - **sufficient powered interval or read sweep:** a vendor-prescribed opportunity/trigger is supplied for hidden retention tasks;
+- **named scrub completion:** in the separate ESS FAQ evidence, per-vdisk completion can be observed at the system layer;
 - **post-maintenance service:** ordinary operation resumes, without the support article proving a new universal shelf-life guarantee;
 - **drive at end of life:** IBM warns against extended power-off, further separating endurance state from calendar time alone.
 
@@ -290,19 +315,26 @@ None of these states proves physical sanitization, permanent archival safety, or
 
 A limited functional analogy is useful: a supposedly “passive” nonvolatile storage system can impose **periodic human scheduling work** because the device's own maintenance machinery cannot operate while unpowered. Retention work can therefore cross an organizational boundary: from cell physics and controller firmware into power planning, backup policy, rack/system availability, and operator time.
 
-This is a project interpretation, not IBM or Dell's historical vocabulary. It must not be generalized into the claim that every act of powering a system is “memory maintenance,” or that operational runbooks are the same mechanism as NAND refresh.
+The new cadence evidence also shows that institutions can place several clocks around one material risk: qualification horizon, scrub-admission threshold, operator intervention point, powered dwell, and completion evidence. This is a project interpretation, not IBM, Lenovo, or Dell's philosophical vocabulary. It must not be generalized into the claim that every act of powering a system is “memory maintenance,” or that operational runbooks are the same mechanism as NAND refresh.
 
 ## Claim ledger
 
 | Claim | Type | Evidence strength | Boundary |
 | --- | --- | --- | --- |
 | IBM support guidance recommends at least two weeks powered after two months off | H/P | strong | IBM affected-system operational guidance, not universal SSD law |
+| IBM TS7770 notice recommends at least one week powered after two months off | H/P | strong | TS7770 / FC 8081 context |
+| IBM ESS 5000 Redbook recommends at least one week powered every six weeks off | H/P | strong | December 2020 ESS 5000 first-edition guidance |
+| IBM ESS alert automatically starts a background scrub after >7 days off after installation | H/P | strong | named ESS behavior; trigger threshold != failure threshold |
+| IBM ESS alert says the scrub reads data and rewrites only if it finds a problem | H/P | strong | system-layer statement, not proof of NAND-page geometry |
+| Lenovo HT511702 recommends at least two weeks powered after two months off | H/P | strong | Lenovo V-series / Storwize-for-Lenovo support context |
+| Lenovo HT511702 is automatically an independent third-vendor engineering validation | X | rejected | wording, command, date, and Storwize-for-Lenovo lineage argue against automatic double-counting |
 | Dell current guidance recommends every 2.5 months, minimum three weeks powered | H/P | strong | Dell PowerEdge affected-product context; version 3, 14 May 2026 |
 | Dell says powered SSD/NVMe performs retention background tasks while extended power-off prevents them | H/P | strong | vendor support description; firmware internals not disclosed |
 | Dell says a read over all used NAND cells triggers retention tasks | H/P | strong | bounded Dell claim; does not prove universal read-refresh semantics |
 | qualification interval ≠ operator maintenance schedule | E | strong | cross-source decomposition, not source vocabulary |
-| power restored ≠ maintenance completion | E | strong | Dell minimum-duration wording supports the distinction |
-| same standards background ≠ same vendor cadence | H/E | strong | IBM and Dell prescriptions differ |
+| same standards background ≠ one IBM field cadence | H/E | strong | 2020 IBM generic, TS7770, and ESS 5000 schedules differ |
+| automatic maintenance trigger ≠ operator intervention schedule ≠ completion | E | strong | coexisting ESS rules plus separate completion evidence |
+| power restored ≠ maintenance completion | E | strong | Dell minimum-duration wording and IBM scrub-completion evidence support the distinction |
 | powered maintenance opportunity can become fleet-level retention infrastructure | E/A | medium | useful cross-layer interpretation, not vendor terminology |
 | NetApp warns at 90/95% rated life and requires replacement above 100% | H/P | strong | wear-state operator policy; not a deterministic failure threshold |
 | NetApp `Rated Life Used >99` means endurance estimate consumed but not necessarily device failure | H/P | strong | directly documented CLI semantic boundary |
@@ -314,9 +346,11 @@ This is a project interpretation, not IBM or Dell's historical vocabulary. It mu
 
 - What was the first publication date of Dell article 000198930 before the surviving version-3 modification date?
 - Which named SSD controller/firmware families under Dell's affected systems implement the described read-triggered retention behavior, and how?
-- What telemetry, if any, proves that the prescribed background work has completed?
+- What telemetry, if any, proves that the prescribed background work has completed outside the now-grounded ESS system-level scrub witness?
 - How does required powered duration scale with capacity and amount of used NAND in the vendor implementation?
 - Can independent fault/retention testing validate the IBM/Dell operational windows after rated endurance?
+- What engineering rationale produced the one-week / two-week / six-week cadence differences across the 2020 IBM documents?
+- Was Lenovo HT511702 mechanically syndicated, contractually inherited, or separately reissued from a shared Storwize support corpus?
 - How do other enterprise vendors beyond the now-grounded NetApp wear-state relation operationalize long powered-off intervals?
 - How do these runbooks change across later NAND generations and controller ECC/refresh policies?
 
@@ -324,6 +358,11 @@ This is a project interpretation, not IBM or Dell's historical vocabulary. It mu
 
 - IBM Support, **“Potential for SSD data loss after extended shutdown,”** current page modified 28 March 2023: <https://www.ibm.com/support/pages/potential-ssd-data-loss-after-extended-shutdown>.
 - IBM support-content mirror of the same guidance, showing creation on 16 December 2020: <https://supportcontent.ibm.com/support/pages/potential-ssd-data-loss-after-extended-shutdown>.
+- IBM Support, **“TS7770 with FC 8081 may experience issues when being powered off for more than three months,”** first published 17 December 2020: <https://www.ibm.com/support/pages/node/6382550>.
+- IBM Redbooks, **_Implementation Guide for IBM Elastic Storage System 5000_**, SG24-8498-00, First Edition, December 2020: <https://www.redbooks.ibm.com/redbooks/pdfs/sg248498.pdf>.
+- Lenovo Support, **HT511702 — “Potential for SSD data loss after extended shutdown,”** original publication 24 January 2021: <https://support.lenovo.com/za/en/solutions/ht511702>.
+- Lenovo Press, **TIPS1302 — “IBM Storwize V7000 for Lenovo”**: <https://lenovopress.lenovo.com/tips1302-ibm-storwize-v7000-for-lenovo>.
+- IBM Support, **“IBM ESS Alert : Potential for SSD data loss after extended shutdown,”** modified 23 May 2022: <https://www.ibm.com/support/pages/ibm-ess-alert-potential-ssd-data-loss-after-extended-shutdown>.
 - Dell Technologies Support, **“PowerEdge: Data Retention Occur with SSD or Nvme Drives Due to Prolonged Power off,”** article 000198930, version 3, last modified 14 May 2026: <https://www.dell.com/support/kbdoc/en-us/000198930/ssd-data-retention-considerations-when-powering-off-systems-for-a-prolonged-duration>.
 - NetApp, **ONTAP 9.9.1 EMS Event Catalog**, May 2021, doc `215-15259_A0`: <https://docs.netapp.com/p/ontap/9x/9.9.1/EMS-Event-Catalog.pdf>.
 - NetApp, **`shm.threshold events`**: <https://docs.netapp.com/us-en/ontap-ems/shm-threshold-events.html>.
