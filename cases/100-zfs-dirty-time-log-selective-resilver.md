@@ -8,7 +8,7 @@ This case asks one bounded retention question:
 
 > How can a storage system retain enough evidence about *when* one redundant device failed to receive state so that later repair can select only blocks exposed during that interval, rather than treating the whole device as equally suspect?
 
-The historical core is bounded to the Sun ZFS dirty-time-log / resilver patent family with a **2005-11-04 priority floor** and **2007-05-10 publication witnesses**. Oracle Solaris operational documentation is used as a product-level witness that ZFS can resilver only the minimum necessary data after a short outage. OpenZFS 2.1.11 source is used only as a later implementation-continuity witness for DTL classes and persistence/derivation boundaries.
+The historical core is bounded to the Sun ZFS dirty-time-log / resilver patent family with a **2005-11-04 priority floor** and **2007-05-10 publication witnesses**. Oracle Solaris operational documentation is used as a product-level witness that ZFS can resilver only the minimum necessary data after a short outage. OpenZFS 2.1.11 source is used only as a later implementation-continuity witness for DTL classes and persistence/derivation boundaries. A September 2026 upstream OpenZFS bug fix is used separately as a current implementation witness for the boundary between in-memory scan completion, final transaction-group sync, and user-visible `zpool wait` completion.
 
 This case is not:
 
@@ -26,6 +26,7 @@ A repository search found no dedicated DTL/resilver case in `tmzncty/computing-a
 
 - [`evidence/100-openzfs-211-dtl-persistence-reload-deepening.md`](../evidence/100-openzfs-211-dtl-persistence-reload-deepening.md) — source-level OpenZFS 2.1.11 deepening of the leaf `DTL_MISSING` persistence cycle: space-map serialization, config object reference, load-time reconstruction, derived aggregate DTL state, and the `CANT_OPEN` boundary when DTL metadata cannot be loaded.
 - [`evidence/100-openzfs-211-dtl-retirement-excision-deepening.md`](../evidence/100-openzfs-211-dtl-retirement-excision-deepening.md) — source-level OpenZFS 2.1.11 deepening of DTL retirement: completion vs cancellation, per-leaf excision eligibility, txg-frontier-bounded removal, `DTL_SCRUB` exception preservation, and delayed reset of attach/rebuild markers until missing/outage debt is empty.
+- [`evidence/100-openzfs-2026-scan-finish-txg-sync-wait-boundary-deepening.md`](../evidence/100-openzfs-2026-scan-finish-txg-sync-wait-boundary-deepening.md) — September 2026 upstream bug-fix deepening of a later completion-publication seam: `dsl_scan_done()` can reach `DSS_FINISHED` after DTL reassessment but before the finishing txg's config/label writes complete; commit `92a3904a` adds `scn_finished_txg` and keeps `zpool wait -t scrub/resilver` blocked until the finishing txg has synced. This is a current implementation witness, not a backdated Solaris/ZFS claim and not a hardware-wide durability guarantee.
 - [`evidence/100-sun-vxvm-cvm-1998-1999-drl-admissibility-fallback-prior-art-deepening.md`](../evidence/100-sun-vxvm-cvm-1998-1999-drl-admissibility-fallback-prior-art-deepening.md) — primary-manual deepening of the pre-ZFS DRL floor: July 1998 spatial dirty-region write-before-data logging and `resilvering` vocabulary, plus July 1999 CVM recovery/active-map handoff, invalid-log fallback to full recovery, and the boundary `same recovery word != same repair geometry or genealogy`.
 
 ## Historical vocabulary
@@ -44,9 +45,10 @@ Project engineering vocabulary:
 
 - **failure-exposure history** — retained evidence of intervals during which a redundant target had less than the required replication relation;
 - **repair-scope witness** — metadata sufficient to decide that a block or subtree can be excluded from a later catch-up pass;
-- **repair debt** — a still-retained obligation to restore redundancy after the device becomes available again.
+- **repair debt** — a still-retained obligation to restore redundancy after the device becomes available again;
+- **completion-publication barrier** — runtime state that prevents a completion observer from being released before the transaction carrying final persistent control-plane consequences reaches the required publication frontier.
 
-The project terms are analytical reconstructions, not Sun/Oracle historical terminology.
+The project terms are analytical reconstructions, not Sun/Oracle/OpenZFS historical terminology.
 
 ## Historical record
 
@@ -111,6 +113,16 @@ A second source-level deepening now grounds the opposite end of that lifecycle. 
 
 This is **later source-level continuity only**. It must not be projected backward as proof that every 2005–2007 Solaris/ZFS implementation had precisely these four classes, the same object format, or identical persistence and retirement rules.
 
+### P — September 2026 OpenZFS separates in-memory scan finish from final txg-sync / wait completion
+
+Upstream OpenZFS commit `92a3904afc93c3a70584f13db8f26816dc79328d`, merged **2026-09-09**, fixes a completion-ordering race in `zpool wait -t scrub/resilver`.
+
+The developer-authored commit/PR explains that `dsl_scan_done()` can call `vdev_dtl_reassess()`, dirty configuration/label state, and then mark the scan `DSS_FINISHED` while the same transaction group is still being synced. The previous wait predicate largely treated `scn_state != DSS_SCANNING` as cessation, so a waiter could return before the final txg reached the on-disk publication frontier.
+
+The fix records `scn_finished_txg = tx->tx_txg`, keeps the activity in a `finishing` state while `spa_last_synced_txg(spa) < scn_finished_txg`, and wakes waiters again after `spa_sync()` advances the synced frontier. PR #19066 reports an instrumented FreeBSD run where the old wait returned about 10 ms after `dsl_scan_done()` but seconds before the final `spa_sync()` ended; a following `zdb -PC` could encounter labels mid-rewrite and fail to open the pool.
+
+This is a current implementation witness. It establishes neither early-Solaris behavior nor a bottom-of-stack hardware persistence guarantee, and the commit explicitly leaves sequential-rebuild wait semantics outside this scan-specific finishing predicate.
+
 ## Retained state
 
 In the bounded DTL-directed repair model, later selective catch-up requires at least:
@@ -122,7 +134,7 @@ In the bounded DTL-directed repair model, later selective catch-up requires at l
 5. traversal/recovery logic that compares block birth state with the retained DTL;
 6. enough surviving redundancy to source the missing contribution.
 
-For the OpenZFS 2.1.11 persistence/retirement slices, one more decomposition matters:
+For the OpenZFS persistence/retirement/completion-publication slices, a more detailed decomposition matters:
 
 ```text
 leaf in-memory DTL_MISSING
@@ -131,12 +143,17 @@ leaf in-memory DTL_MISSING
     != reconstructed runtime DTL_MISSING
     != DTL_SCRUB unrepaired-scan exception state
     != derived parent / aggregate DTL views
-    != scan / rebuild completion and txg frontier
+    != scan / rebuild traversal state
+    != in-memory scan completion state
+    != final DTL/config mutation in syncing context
+    != finishing transaction-group identity (`scn_finished_txg`)
+    != last-synced transaction-group frontier
+    != user-visible wait completion
     != actual resilver I/O
     != attach/rebuild marker state
 ```
 
-The DTL is not user payload. It is also not a complete write history. It is a compressed witness to a **repair-relevant interval**.
+The DTL is not user payload. It is also not a complete write history. It is a compressed witness to a **repair-relevant interval**. `scn_finished_txg`, by contrast, is a short-lived runtime barrier token: it need only bridge the interval between in-memory finish and final txg sync, rather than survive restart as repair history.
 
 The earlier DRL packet adds a separate pre-ZFS decomposition that must not be back-projected into DTL: mirrored payload/plex state, per-region dirty bits, per-node active maps, a consolidated recovery map, cluster membership/crash state, volatile coordination of recovery-map updates, and actual resynchronization I/O are distinct states with different persistence horizons.
 
@@ -284,6 +301,28 @@ missing/outage debt empty
 
 This is **qualified repair-debt retirement**, a project term rather than OpenZFS historical vocabulary.
 
+### Completion-publication is another boundary after DTL reassessment
+
+The September 2026 scan-wait fix shows a distinct persistence horizon after the DTL retirement/reassessment decision itself. In the scan completion path, `vdev_dtl_reassess()` can update repair-debt state, the scan can become `DSS_FINISHED`, and yet the transaction group containing those control-plane consequences can still be in flight.
+
+The fix therefore adds a short-lived runtime bridge:
+
+```text
+DTL reassessed in syncing context
+    -> scan state becomes DSS_FINISHED
+    -> remember scn_finished_txg
+    -> keep wait-interface state "finishing"
+    -> spa_sync() advances last-synced frontier
+    -> notify waiters
+    -> zpool wait may return
+```
+
+Thus:
+
+> **in-memory completion ≠ final control-state txg synced ≠ completion safely reportable to a waiting reader.**
+
+`scn_finished_txg` is not a restart checkpoint. Its retention horizon ends when the finishing txg has synced; after a crash, recovery relies on the pool state that actually crossed the committed on-disk boundary rather than on preserving this temporary barrier variable.
+
 ## Failure boundaries
 
 ### Losing DTL / repair-scope evidence
@@ -336,9 +375,19 @@ Thus:
 
 > **scan/rebuild completion ≠ unconditional repair-debt clearance.**
 
+### In-memory finish mistaken for final wait-interface completion
+
+The September 2026 OpenZFS bug demonstrates another failure of an overloaded `finished` notion. Before commit `92a3904a`, `zpool wait` could return after the scan state changed but before the finishing txg completed its config/label writes. The recorded test window allowed a subsequent `zdb -PC` to encounter labels mid-rewrite.
+
+Therefore:
+
+> **`DSS_FINISHED` ≠ final txg already on disk ≠ every completion observer may already be released.**
+
+This is a control-plane ordering bug, not evidence that repaired user payload was necessarily corrupt.
+
 ### Patent embodiment mistaken for release guarantee
 
-The patent family establishes described methods and chronology. Oracle operational docs establish user-visible selective-resilver behavior. Neither source alone licenses projection of every algorithmic detail onto every Solaris/OpenZFS release.
+The patent family establishes described methods and chronology. Oracle operational docs establish user-visible selective-resilver behavior. Neither source alone licenses projection of every algorithmic detail onto every Solaris/OpenZFS release. Likewise, the September 2026 upstream commit is not evidence that every downstream distribution already contains the fix.
 
 ## Prior art and genealogy boundary
 
@@ -363,9 +412,9 @@ Chronology, shared vocabulary, and functional resemblance do not establish direc
 ### Case 18 — ZFS scrub
 
 - Case 18: proactively read/verify current storage and use checksum-qualified redundancy for healing.
-- Case 100: retain exposure history so a later resilver can avoid treating unaffected state as repair work, while the later source deepening shows that scrub-discovered unrepaired intervals can remain as DTL debt even after the traversal itself completes.
+- Case 100: retain exposure history so a later resilver can avoid treating unaffected state as repair work, while the later source deepening shows that scrub-discovered unrepaired intervals can remain as DTL debt even after the traversal itself completes. The September 2026 wait fix adds that even an in-memory finished scan can still be in a short `finishing` interval before its final txg publication reaches the wait interface.
 
-`verification scope ≠ catch-up scope`, and `scan completion ≠ repaired-everything evidence`.
+`verification scope ≠ catch-up scope`, `scan completion ≠ repaired-everything evidence`, and `in-memory finished state ≠ final wait-publication boundary`.
 
 ### Case 48 — Cassandra incremental repair state
 
@@ -381,11 +430,11 @@ Write-hole avoidance governs admissible update construction. DTL governs later r
 
 ### Case 96 — dRAID
 
-DTL/pruned resilver reduces the **set** of blocks that require catch-up. dRAID sequential reconstruction changes **reconstruction geometry/bandwidth** and restores coded redundancy before later checksum scrub. The 2.1.11 retirement deepening also prevents `sequential rebuild complete = checksum-qualified integrity`: `vdev_rebuild.c` explicitly treats the checksum-verification scrub as a later phase. `less work selected ≠ same work scheduled faster`, and `redundancy restored ≠ later verification complete`.
+DTL/pruned resilver reduces the **set** of blocks that require catch-up. dRAID sequential reconstruction changes **reconstruction geometry/bandwidth** and restores coded redundancy before later checksum scrub. The 2.1.11 retirement deepening also prevents `sequential rebuild complete = checksum-qualified integrity`: `vdev_rebuild.c` explicitly treats the checksum-verification scrub as a later phase. The September 2026 `scn_finished_txg` change is explicitly scan-path specific and must not be projected onto the sequential-rebuild wait predicate. `less work selected ≠ same work scheduled faster`, `redundancy restored ≠ later verification complete`, and `scan wait barrier ≠ rebuild wait barrier`.
 
 ### Case 116 — HDFS maintenance state
 
-Case 116 separates persistence of administrative maintenance intent from correctness of the runtime sufficiency predicate. Case 100 adds a different persistence boundary: a repair obligation can survive restart even though the actual repair action has not completed. This is a functional comparison only.
+Case 116 separates persistence of administrative maintenance intent from correctness of the runtime sufficiency predicate. Case 100 adds two different persistence boundaries: a repair obligation can survive restart even though the actual repair action has not completed, while a short-lived `scn_finished_txg` barrier only needs to survive until one final txg publication completes. This is a functional comparison only.
 
 ## Functional analogy
 
@@ -393,9 +442,11 @@ A bounded analogy is a maintenance exception journal: instead of remembering all
 
 The retirement deepening extends the analogy cautiously: an exception record may be forgotten only after the system has evidence that its represented obligation has been discharged, while surviving exceptions are carried forward into the next authoritative repair-debt representation.
 
-The earlier DRL packet adds a negative control to that analogy: if the exception summary is no longer admissible, a system may have to abandon selectivity and perform broader recovery rather than infer that no exception exists.
+The September 2026 completion-publication packet adds a different bounded analogy to a commit callback: computation may have reached a finished state, while a client-facing completion signal still waits for the transaction that publishes the final control state to cross its required persistence frontier. This is a functional relation only, not a claim that ZFS txgs are database WAL records.
 
-The analogy is functional. It must not replace the historical terms `DRL`, `DTL`, `birth time`, `transaction group`, and `resilver`.
+The earlier DRL packet adds a negative control to the exception-journal analogy: if the exception summary is no longer admissible, a system may have to abandon selectivity and perform broader recovery rather than infer that no exception exists.
+
+The analogies are functional. They must not replace the historical terms `DRL`, `DTL`, `birth time`, `transaction group`, and `resilver`.
 
 ## Philosophical / media-theoretical interpretation
 
@@ -408,6 +459,8 @@ The analogy is functional. It must not replace the historical terms `DRL`, `DTL`
 `I` — The OpenZFS persistence slice adds a second selective layer: even some higher-level maintenance views may disappear as volatile state while a smaller durable basis survives and later regenerates them.
 
 `I` — The retirement slice makes forgetting conditional in the opposite direction: a covered portion of repair history can be excised once it no longer constrains future repair, while scan-discovered unrepaired exceptions survive because they still have operational force.
+
+`I` — The 2026 completion-publication slice shows that technical retention also includes very short-lived state. `scn_finished_txg` is valuable not because it is archived, but because it preserves the ordering relation between “scan logic finished” and “final txg published” long enough to prevent the outside observer from being released between those moments.
 
 `I` — The past matters operationally only to the degree that it can still constrain present repair. Once redundancy is restored and the relevant evidence can safely be retired, the system need not become a permanent archive of the outage.
 
@@ -438,11 +491,17 @@ This case does not establish:
 - that an empty DTL proves absence of latent corruption;
 - that resetting an attach/rebuild marker securely erases payload or every historical trace;
 - that OpenZFS 2.1.11's DTL error and retirement paths are universal across all ZFS versions;
+- that `DSS_FINISHED` alone proves the finishing transaction group has completed sync;
+- that `spa_sync()` is an unconditional hardware-level power-loss durability guarantee across all lower storage layers;
+- that `scn_finished_txg` is a durable restart checkpoint;
+- that the September 2026 scan finishing barrier automatically applies to sequential rebuild;
+- that a successful `zpool wait` return is an integrity certificate proving absence of latent corruption;
+- that the September 2026 upstream fix is already present in every downstream release;
 - that clearing repair-state metadata securely erases payload.
 
 ## Related repositories
 
-- [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) — searches for `DTL`, `resilver`, `VxVM`, and `Dirty Region Logging` found no dedicated case in this slice. Broad dirty-log, mirror-recovery, VxVM/CVM/ZFS source-history, and controller genealogy should live there if developed.
+- [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) — searches for `DTL`, `resilver`, `VxVM`, `Dirty Region Logging`, and `vdev_dtl` found no dedicated case in this slice. Broad dirty-log, mirror-recovery, VxVM/CVM/ZFS source-history, transaction-group implementation history, and controller genealogy should live there if developed.
 - [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) — useful for a future question about when `dirty`, `resync`, `resilver`, and transaction-time repair became actors' own problem vocabulary.
 
 ## Claim ledger
@@ -465,12 +524,17 @@ This case does not establish:
 | DTL excision is qualified by per-leaf state/coverage rather than generic completion alone | `P` | `vdev_dtl_should_excise()`, `vdev_dtl_reassess()` | exact predicates are version-specific |
 | eligible retirement subtracts only the covered prefix and preserves `DTL_SCRUB` exceptions in the regenerated missing map | `P` | OpenZFS 2.1.11 `vdev.c`; Evidence 100 retirement deepening | does not prove all errors are detected |
 | attach/rebuild marker reset waits for empty missing/outage debt and dirties config | `P` | OpenZFS 2.1.11 `vdev.c` | not equivalent to erasing all history |
+| September 2026 upstream OpenZFS had a window where `DSS_FINISHED` / waiter wake could precede completion of the finishing txg's config/label sync | `P` | commit `92a3904a`, PR #19066; Evidence 100 scan-finish deepening | current upstream implementation witness; not early-ZFS history |
+| commit `92a3904a` records `scn_finished_txg` and keeps scrub/healing-resilver wait state finishing until `spa_last_synced_txg` reaches that txg | `P` | `dsl_scan.c`, `spa.c` at `92a3904a` | scan-path specific; sequential rebuild excluded |
+| a short-lived completion barrier can be necessary even though it is not a restart-persistent checkpoint | `E` | `scn_finished_txg` lifecycle + txg wait predicate | engineering reconstruction, not source vocabulary |
 | invalid repair-scope metadata proves payload corruption | `X` | 1999 CVM invalid-log fallback | rejected |
 | all systems react to repair-scope metadata loss with the same admission/fallback policy | `X` | CVM vs OpenZFS 2.1.11 comparison | rejected |
 | DTL is a complete write-history archive | `X` | mechanism/source comparison | rejected |
 | DTL membership proves payload corruption | `X` | mechanism/source comparison | rejected |
 | surviving DTL repair debt proves repair execution survived/completed | `X` | persistence lifecycle | rejected |
 | maintenance completion automatically authorizes forgetting all repair debt | `X` | excision predicates + `DTL_SCRUB` overlay | rejected |
+| `DSS_FINISHED` alone proves the final txg is already synced and all waiters may return | `X` | September 2026 bug/fix | rejected |
+| txg sync here is a universal lower-hardware durability guarantee | `X` | source scope | rejected |
 | ZFS invented selective mirror recovery | `X` | earlier DRL + patent's own prior-art discussion | rejected |
 | DRL chronology or shared `resilvering` vocabulary proves direct genealogy into DTL | `X` | none | unsupported |
 
@@ -489,17 +553,23 @@ This case does not establish:
 - OpenZFS 2.1.11 `module/zfs/dsl_scan.c`: <https://github.com/openzfs/zfs/blob/zfs-2.1.11/module/zfs/dsl_scan.c>
 - OpenZFS 2.1.11 `module/zfs/vdev_rebuild.c`: <https://github.com/openzfs/zfs/blob/zfs-2.1.11/module/zfs/vdev_rebuild.c>
 - OpenZFS 2.1.11 source as packaged by Debian, `module/zfs/vdev.c`: <https://sources.debian.org/src/zfs-linux/2.1.11-1%2Bdeb12u1/module/zfs/vdev.c>
+- OpenZFS commit `92a3904afc93c3a70584f13db8f26816dc79328d`, `Wait for the txg that finished a scan to sync`, merged 2026-09-09: <https://github.com/openzfs/zfs/commit/92a3904afc93c3a70584f13db8f26816dc79328d>
+- OpenZFS PR #19066, opened 2026-09-06 and merged 2026-09-09: <https://github.com/openzfs/zfs/pull/19066>
+- OpenZFS `zpool-wait(8)` at commit `92a3904a`: <https://github.com/openzfs/zfs/blob/92a3904afc93c3a70584f13db8f26816dc79328d/man/man8/zpool-wait.8>
 - Repository DRL prior-art deepening: [`evidence/100-sun-vxvm-cvm-1998-1999-drl-admissibility-fallback-prior-art-deepening.md`](../evidence/100-sun-vxvm-cvm-1998-1999-drl-admissibility-fallback-prior-art-deepening.md)
 - Repository persistence deepening: [`evidence/100-openzfs-211-dtl-persistence-reload-deepening.md`](../evidence/100-openzfs-211-dtl-persistence-reload-deepening.md)
 - Repository retirement deepening: [`evidence/100-openzfs-211-dtl-retirement-excision-deepening.md`](../evidence/100-openzfs-211-dtl-retirement-excision-deepening.md)
+- Repository scan-finish / txg-sync wait-boundary deepening: [`evidence/100-openzfs-2026-scan-finish-txg-sync-wait-boundary-deepening.md`](../evidence/100-openzfs-2026-scan-finish-txg-sync-wait-boundary-deepening.md)
 
 ## Remaining work
 
-The 1998–1999 DRL product-document prior-art slice, the OpenZFS 2.1.11 persistence cycle, and the OpenZFS 2.1.11 retirement predicate are now bounded. Remaining evidence debt is narrower:
+The 1998–1999 DRL product-document prior-art slice, the OpenZFS 2.1.11 persistence cycle, the OpenZFS 2.1.11 retirement predicate, and the September 2026 scan-finish vs final-txg-sync wait boundary are now bounded. Remaining evidence debt is narrower:
 
 - trace earlier Veritas/Sun Volume Manager documentation if a future slice needs the DRL or `resilvering` vocabulary floor before July 1998; do not infer first coinage from the current floor;
 - identify the exact historical commit/release where the current-style DTL space-map persistence/load path entered the ZFS lineage;
 - identify the commit/release where the current-style excision predicates and `DTL_SCRUB` overlay entered the lineage, and compare Solaris/illumos/OpenZFS revisions without projecting current semantics backward;
+- identify the first release/tag containing upstream commit `92a3904a` and keep upstream merge date distinct from downstream adoption;
+- inspect sequential-rebuild `zpool wait` completion separately rather than projecting the new scan-specific finishing barrier onto that path;
 - add a controlled export/import or reboot trace with a non-empty leaf DTL before and after reload;
 - add a fault-injection trace for an unreadable/corrupt DTL object and record actual import/open behavior;
 - run interrupted/erroring resilver experiments to verify that uncovered or unrepaired ranges remain represented across restart;
