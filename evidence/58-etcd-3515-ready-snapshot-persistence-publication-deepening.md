@@ -398,3 +398,11 @@ The next useful work is no longer another prose explanation of Raft snapshotting
 - compare exact ordering across later etcd versions only if version drift becomes relevant.
 
 Those experiments would turn the current source-level crash-window reconstruction into fault-injection evidence without conflating Raft protocol rules with filesystem/device behavior.
+
+## 2026 follow-up navigation
+
+A later bounded packet now closes the **received `.snap.db` directory-entry durability sub-question for current upstream in source-level form**: [`58-etcd-2026-received-snapshot-db-directory-fsync-deepening.md`](58-etcd-2026-received-snapshot-db-directory-fsync-deepening.md).
+
+That follow-up compares v3.5.15's `file fsync -> rename -> success` path with upstream commit `cf31e1f6033f0752f0c55d2456a0771be0c5ba80` / PR #22314, which adds a containing-directory fsync after rename and on the existing-file retry path before `SaveDBFrom` may report success and before the snapshot receiver proceeds to Raft message processing. It also preserves the upstream test boundary that SIGKILL/fault-injection control flow is **not** direct proof of unsynced-directory-entry loss.
+
+This does not change the v3.5.15 historical record above, does not establish a released/backported version for the 2026 fix, and does not close the separate WAL `SaveSnapshot` sync-semantics debt.
