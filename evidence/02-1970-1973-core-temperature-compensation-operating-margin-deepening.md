@@ -6,6 +6,8 @@
 
 Related named-machine margin work: [`70-dec-pdp8e-1973-operating-margin-deepening.md`](70-dec-pdp8e-1973-operating-margin-deepening.md), including its later IBM 1800 cross-machine follow-on.
 
+Earlier prior-art / access-control follow-on: [`02-1963-1972-core-thermal-control-prior-art-access-throttling-deepening.md`](02-1963-1972-core-thermal-control-prior-art-access-throttling-deepening.md). That record moves the inspected bibliographic floor back to the Kuhlmann / Olympia patent family and adds a separate Siemens activity-history / access-throttling architecture; it does not retroactively assign those mechanisms to the named machines here.
+
 ## Status
 
 **`bounded deepening complete`**
@@ -357,9 +359,11 @@ A repository search did not surface a dedicated temperature-compensation history
 
 ## Remaining evidence debt
 
-This slice narrows, but does not close, the temperature/material genealogy debt. Useful next work would be:
+The earlier Kuhlmann debt is now split instead of left as one vague task. [`02-1963-1972-core-thermal-control-prior-art-access-throttling-deepening.md`](02-1963-1972-core-thermal-control-prior-art-access-throttling-deepening.md) closes the **bibliographic chronology / later-citation** part: the Olympia family has a 1963 priority, a 1966 German publication, and the 1967 U.S. Kuhlmann record is cited by multiple later magnetic-memory patents. What remains is implementation-level evidence.
 
-1. trace the earlier Kuhlmann temperature-compensation patent cited by both later records and determine what, if anything, can be said about its implementation history;
+Useful next work would be:
+
+1. recover and directly inspect a full Kuhlmann / Olympia specification or national-family facsimile, then determine whether a named Olympia machine can be tied to that mechanism without inferring deployment from assignment alone;
 2. inspect period core-manufacturer material data with quantitative switching-current / temperature curves;
 3. compare compensation architectures against named machine manuals without turning chronological compatibility into genealogy;
 4. leave vendor/material genealogy in `computing-archaeology` unless it changes a retention claim;
