@@ -26,6 +26,7 @@ A repository search found no dedicated DTL/resilver case in `tmzncty/computing-a
 
 - [`evidence/100-openzfs-211-dtl-persistence-reload-deepening.md`](../evidence/100-openzfs-211-dtl-persistence-reload-deepening.md) — source-level OpenZFS 2.1.11 deepening of the leaf `DTL_MISSING` persistence cycle: space-map serialization, config object reference, load-time reconstruction, derived aggregate DTL state, and the `CANT_OPEN` boundary when DTL metadata cannot be loaded.
 - [`evidence/100-openzfs-211-dtl-retirement-excision-deepening.md`](../evidence/100-openzfs-211-dtl-retirement-excision-deepening.md) — source-level OpenZFS 2.1.11 deepening of DTL retirement: completion vs cancellation, per-leaf excision eligibility, txg-frontier-bounded removal, `DTL_SCRUB` exception preservation, and delayed reset of attach/rebuild markers until missing/outage debt is empty.
+- [`evidence/100-sun-vxvm-cvm-1998-1999-drl-admissibility-fallback-prior-art-deepening.md`](../evidence/100-sun-vxvm-cvm-1998-1999-drl-admissibility-fallback-prior-art-deepening.md) — primary-manual deepening of the pre-ZFS DRL floor: July 1998 spatial dirty-region write-before-data logging and `resilvering` vocabulary, plus July 1999 CVM recovery/active-map handoff, invalid-log fallback to full recovery, and the boundary `same recovery word != same repair geometry or genealogy`.
 
 ## Historical vocabulary
 
@@ -51,11 +52,15 @@ The project terms are analytical reconstructions, not Sun/Oracle historical term
 
 ### H/P — dirty-region logging already provided selective recovery before ZFS DTL
 
-Sun Cluster 2.2 documentation describes `Dirty Region Logging (DRL)` as tracking regions changed by writes to a mirrored volume. A status bit represents each logical region; a newly dirty region is synchronously logged before the data write, and after restart only regions marked dirty need recovery.
+The earlier prior-art floor is now bounded more tightly by direct primary documentation. The **July 1998 Sun StorEdge Volume Manager 2.6 System Administrator's Guide** describes `Dirty Region Logging (DRL)` as dividing a mirrored volume into consecutive regions, retaining a status bit per region, synchronously writing a clean-to-dirty transition before the associated data write, and after restart recovering only regions marked dirty. The same manual states that without DRL after a system failure the mirrors may require full-content recovery.
 
-That is an explicit pre-ZFS functional prior-art floor for **bounded recovery instead of full-copy recovery**.
+The **July 14 1999 Sun Cluster 2.2 Cluster Volume Manager Guide** then adds cluster-specific retained state: one recovery map plus one active map per node. On startup active maps are incorporated into the recovery map; a crashed node is not allowed to rejoin until its active maps have been incorporated into all affected recovery maps. If imported DRL metadata is considered invalid or is too small for the cluster geometry, the documented fallback is full-volume recovery rather than trusting a selective scope.
+
+That is an explicit pre-ZFS functional prior-art floor for **bounded recovery instead of full-copy recovery**, while also showing that selective recovery depends on an admissible repair-scope witness.
 
 It does not make DRL and ZFS DTL identical. DRL is region-oriented and incurs logging work when regions transition dirty. The later ZFS DTL family instead exploits block birth time / transaction-group relations to record intervals of unsuccessful storage and decide whether specific blocks need resilvering.
+
+The July 1998 manual also calls the mirror/database `resynchronization process` **"also known as resilvering"**. That establishes a pre-ZFS public documentation floor for the word, not first coinage and not a genealogy claim into ZFS. `Same word resilvering != same mechanism != proved historical descent`.
 
 ### H/P — the ZFS patent family has a 2005-11-04 priority floor
 
@@ -133,6 +138,8 @@ leaf in-memory DTL_MISSING
 
 The DTL is not user payload. It is also not a complete write history. It is a compressed witness to a **repair-relevant interval**.
 
+The earlier DRL packet adds a separate pre-ZFS decomposition that must not be back-projected into DTL: mirrored payload/plex state, per-region dirty bits, per-node active maps, a consolidated recovery map, cluster membership/crash state, volatile coordination of recovery-map updates, and actual resynchronization I/O are distinct states with different persistence horizons.
+
 ## Retention mechanism
 
 ### A failure event can end while its repair obligation remains
@@ -159,6 +166,8 @@ Therefore:
 
 > **failure over ≠ repair debt over.**
 
+The 1999 CVM DRL documentation supplies an earlier functional counterexample to any assumption that a node's failure event and the repair-scope state created by that event end together: a crashed node's active map must be incorporated into the continuing recovery map before the node may rejoin and resume I/O that can overwrite the active map.
+
 ### DTL is failure-exposure history, not mutation history
 
 A DTL does not need to enumerate every application write, file operation, or historical block value. It preserves the subset of temporal information needed to decide whether a block could have missed required replication on a particular target.
@@ -166,6 +175,8 @@ A DTL does not need to enumerate every application write, file operation, or his
 Thus:
 
 > **repair-scope history ≠ complete mutation history.**
+
+The same broad distinction already appears in the earlier DRL manuals: a dirty bit conservatively identifies a region that may require recovery; it is not an ordered record of every write performed in that region.
 
 ### Time/txg selection is different from a dirty-region bitmap
 
@@ -200,6 +211,8 @@ Case 18 remains the checksum/scrub comparison. In modern OpenZFS source, `DTL_SC
 Therefore:
 
 > **repair membership ≠ corruption diagnosis.**
+
+The earlier DRL fallback reinforces this separation from another direction: a DRL can be considered invalid or structurally inadequate and cause full-volume recovery without the manual thereby asserting that every payload region is corrupt.
 
 ## Repair semantics
 
@@ -289,6 +302,24 @@ It does **not** establish that DTL metadata failure proves user payload corrupti
 
 > **payload survival ≠ preservation of the evidence needed for efficient and admissible repair.**
 
+### Earlier DRL shows that repair-witness failure policy is not universal
+
+The 1999 Sun Cluster 2.2 CVM manual documents a different response to unusable repair-scope metadata. Imported DRLs that are considered invalid, or logs that are too small for the current cluster node geometry, can cause **full-volume recovery**. In that lineage, loss of trusted selectivity broadens work rather than proving the payload corrupt or necessarily blocking the volume outright.
+
+The bounded contrast is:
+
+```text
+Sun Cluster 2.2 CVM, 1999:
+invalid / undersized DRL
+    -> full-volume recovery
+
+OpenZFS 2.1.11 inspected load path:
+required leaf DTL load failure
+    -> CANT_OPEN + CORRUPT_DATA auxiliary state
+```
+
+This is a functional comparison only. It establishes `repair-control metadata unavailable != one universal fallback policy`; it does not identify DRL and DTL or assert a direct implementation lineage.
+
 ### DTL presence mistaken for corruption
 
 A transaction group can be in a missing/partial replication interval without proving that every corresponding source block is corrupt. The DTL bounds where a replica may be incomplete; checksum/integrity evidence answers another question.
@@ -313,17 +344,19 @@ The patent family establishes described methods and chronology. Oracle operation
 
 ### Dirty-region logging is an explicit earlier functional floor
 
-Sun Cluster 2.2 documentation already describes DRL-driven partial recovery of mirrored volumes. The 2007 DTL patent description itself also discusses conventional DRL as an existing recovery scheme.
+The July 1998 Sun StorEdge Volume Manager 2.6 manual directly documents spatial DRL, synchronous recording of a newly dirty region before the corresponding data write, restart recovery limited to dirty regions, and the full-recovery counterfactual when DRL is absent. The July 1999 Sun Cluster 2.2 guide adds recovery/active-map structure and invalid-log conservative fallback. The 2007 DTL patent description itself also discusses conventional DRL as an existing recovery scheme.
 
 Therefore this case explicitly rejects:
 
 > `ZFS DTL invented selective mirror resynchronization`.
 
+The 1998 manual also establishes that `resilvering` was already public mirror/database recovery vocabulary before the ZFS patent/publication window. That rejects using the mere presence of the word as evidence that the mechanism originated with ZFS.
+
 ### Difference retained instead of erased
 
 The prior art matters precisely because the mechanisms are not identical. DRL pays for a spatial dirty map around writes; the ZFS DTL family exploits temporal/transaction-group exposure plus block birth metadata already carried in the tree.
 
-Chronology and functional resemblance do not establish direct descent, and this case makes no universal `first` claim for either technique.
+Chronology, shared vocabulary, and functional resemblance do not establish direct descent, and this case makes no universal `first` claim for either technique or term.
 
 ## Cross-case comparison
 
@@ -360,7 +393,9 @@ A bounded analogy is a maintenance exception journal: instead of remembering all
 
 The retirement deepening extends the analogy cautiously: an exception record may be forgotten only after the system has evidence that its represented obligation has been discharged, while surviving exceptions are carried forward into the next authoritative repair-debt representation.
 
-The analogy is functional. It must not replace the historical terms `DTL`, `birth time`, `transaction group`, and `resilver`.
+The earlier DRL packet adds a negative control to that analogy: if the exception summary is no longer admissible, a system may have to abandon selectivity and perform broader recovery rather than infer that no exception exists.
+
+The analogy is functional. It must not replace the historical terms `DRL`, `DTL`, `birth time`, `transaction group`, and `resilver`.
 
 ## Philosophical / media-theoretical interpretation
 
@@ -368,13 +403,15 @@ The analogy is functional. It must not replace the historical terms `DTL`, `birt
 
 `I` — It also shows a form of selective forgetting. Complete write history can disappear while a small temporal summary survives because that summary is sufficient for a future maintenance decision.
 
+`I` — The pre-ZFS DRL evidence sharpens the inverse case: when a repair-scope witness loses admissibility, the system can deliberately give up fine-grained selectivity and widen recovery rather than pretend to remember a precision it can no longer justify.
+
 `I` — The OpenZFS persistence slice adds a second selective layer: even some higher-level maintenance views may disappear as volatile state while a smaller durable basis survives and later regenerates them.
 
 `I` — The retirement slice makes forgetting conditional in the opposite direction: a covered portion of repair history can be excised once it no longer constrains future repair, while scan-discovered unrepaired exceptions survive because they still have operational force.
 
 `I` — The past matters operationally only to the degree that it can still constrain present repair. Once redundancy is restored and the relevant evidence can safely be retired, the system need not become a permanent archive of the outage.
 
-These are project interpretations, not claims that Sun/Oracle/OpenZFS authors formulated a philosophy of memory.
+These are project interpretations, not claims that Sun/Veritas/Oracle/OpenZFS authors formulated a philosophy of memory.
 
 ## Counterexamples and limits
 
@@ -382,6 +419,11 @@ This case does not establish:
 
 - that DTL is the first dirty-log technique;
 - that DRL and DTL are the same mechanism;
+- that July 1998 is the invention or first-deployment date for DRL;
+- that July 1998 is the first use or coinage of `resilvering`;
+- that the shared word `resilvering` proves a direct VxVM/CVM → ZFS genealogy;
+- that invalid DRL metadata proves mirrored payload corruption;
+- that every system reacts to invalid repair-scope metadata by full recovery;
 - that the 2005 provisional date equals first deployment;
 - that every patent claim shipped unchanged;
 - that DTL membership proves checksum failure or user-visible corruption;
@@ -400,14 +442,17 @@ This case does not establish:
 
 ## Related repositories
 
-- [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) — search again found no dedicated DTL/resilver case in this slice. Broad dirty-log, mirror-recovery, ZFS source-history, and controller genealogy should live there if developed.
+- [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) — searches for `DTL`, `resilver`, `VxVM`, and `Dirty Region Logging` found no dedicated case in this slice. Broad dirty-log, mirror-recovery, VxVM/CVM/ZFS source-history, and controller genealogy should live there if developed.
 - [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) — useful for a future question about when `dirty`, `resync`, `resilver`, and transaction-time repair became actors' own problem vocabulary.
 
 ## Claim ledger
 
 | Claim | Label | Evidence | Limit |
 | --- | --- | --- | --- |
-| Sun Cluster 2.2 DRL tracks changed mirror regions and recovers only dirty regions | `H/P` | Sun Cluster 2.2 Cluster Volume Manager Guide | prior-art floor; not DTL identity |
+| July 1998 Sun StorEdge Volume Manager 2.6 documents DRL as a per-region dirty bitmap used after restart to limit mirror recovery | `H/P` | Sun StorEdge Volume Manager 2.6 System Administrator's Guide §1.1.8 | documentation floor; not invention/first deployment |
+| a clean-to-dirty DRL transition is synchronously recorded before the associated data write | `H/P` | July 1998 manual §1.1.8 | bounded product documentation |
+| July 1998 documentation calls mirror/database resynchronization `also known as resilvering` | `H/P` | July 1998 manual §1.1.9 | vocabulary floor; not first coinage or ZFS genealogy |
+| Sun Cluster 2.2 CVM has one recovery map plus per-node active maps, merges crashed-node state before rejoin, and can use full recovery when DRL metadata is invalid/undersized | `H/P` | Sun Cluster 2.2 Cluster Volume Manager Guide §§2.1.4.1–2.1.4.3 | 1999 product/version-specific semantics |
 | Sun DTL/resilver family claims 2005-11-04 provisional priority | `H/P` | US patent family | documentary chronology, not first deployment |
 | DTL can store failed-write/offline time as transaction-group / birth-time evidence | `H/P` | US7925827 / related family description | bounded to described embodiments |
 | pruned resilver can use parent/child birth-time relations to skip unaffected tree branches | `H/P` | US8635190 / US20070106677 | patent/design witness; not universal release guarantee |
@@ -420,16 +465,20 @@ This case does not establish:
 | DTL excision is qualified by per-leaf state/coverage rather than generic completion alone | `P` | `vdev_dtl_should_excise()`, `vdev_dtl_reassess()` | exact predicates are version-specific |
 | eligible retirement subtracts only the covered prefix and preserves `DTL_SCRUB` exceptions in the regenerated missing map | `P` | OpenZFS 2.1.11 `vdev.c`; Evidence 100 retirement deepening | does not prove all errors are detected |
 | attach/rebuild marker reset waits for empty missing/outage debt and dirties config | `P` | OpenZFS 2.1.11 `vdev.c` | not equivalent to erasing all history |
+| invalid repair-scope metadata proves payload corruption | `X` | 1999 CVM invalid-log fallback | rejected |
+| all systems react to repair-scope metadata loss with the same admission/fallback policy | `X` | CVM vs OpenZFS 2.1.11 comparison | rejected |
 | DTL is a complete write-history archive | `X` | mechanism/source comparison | rejected |
 | DTL membership proves payload corruption | `X` | mechanism/source comparison | rejected |
 | surviving DTL repair debt proves repair execution survived/completed | `X` | persistence lifecycle | rejected |
 | maintenance completion automatically authorizes forgetting all repair debt | `X` | excision predicates + `DTL_SCRUB` overlay | rejected |
 | ZFS invented selective mirror recovery | `X` | earlier DRL + patent's own prior-art discussion | rejected |
-| DRL chronology proves direct genealogy into DTL | `X` | none | unsupported |
+| DRL chronology or shared `resilvering` vocabulary proves direct genealogy into DTL | `X` | none | unsupported |
 
 ## Sources
 
+- Sun StorEdge Volume Manager 2.6 System Administrator's Guide, Revision A, July 1998: <https://imap.filibeto.org/sun/lib/nonsun/veritas/vxvm/sevm-2.6/805-5706-10.pdf>
 - Sun Cluster 2.2, `Dirty Region Logging and CVM`: <https://docs.oracle.com/cd/E19957-01/806-2329/ch2admin-39382/index.html>
+- Sun Cluster 2.2 Cluster Volume Manager Guide facsimile, July 14 1999: <https://docs.oracle.com/cd/E19957-01/806-2329/806-2329.pdf>
 - Sun/Oracle patent family overview, `Method and system for metadata-based resilvering`: <https://patents.google.com/patent/US8938594B2/en>
 - `Method and system for dirty time logging`: <https://patents.google.com/patent/US7925827B2/en>
 - `Method and system for dirty time log directed resilvering`: <https://patents.google.com/patent/US7930495B2/en>
@@ -440,13 +489,15 @@ This case does not establish:
 - OpenZFS 2.1.11 `module/zfs/dsl_scan.c`: <https://github.com/openzfs/zfs/blob/zfs-2.1.11/module/zfs/dsl_scan.c>
 - OpenZFS 2.1.11 `module/zfs/vdev_rebuild.c`: <https://github.com/openzfs/zfs/blob/zfs-2.1.11/module/zfs/vdev_rebuild.c>
 - OpenZFS 2.1.11 source as packaged by Debian, `module/zfs/vdev.c`: <https://sources.debian.org/src/zfs-linux/2.1.11-1%2Bdeb12u1/module/zfs/vdev.c>
+- Repository DRL prior-art deepening: [`evidence/100-sun-vxvm-cvm-1998-1999-drl-admissibility-fallback-prior-art-deepening.md`](../evidence/100-sun-vxvm-cvm-1998-1999-drl-admissibility-fallback-prior-art-deepening.md)
 - Repository persistence deepening: [`evidence/100-openzfs-211-dtl-persistence-reload-deepening.md`](../evidence/100-openzfs-211-dtl-persistence-reload-deepening.md)
 - Repository retirement deepening: [`evidence/100-openzfs-211-dtl-retirement-excision-deepening.md`](../evidence/100-openzfs-211-dtl-retirement-excision-deepening.md)
 
 ## Remaining work
 
-The source-level persistence cycle and the OpenZFS 2.1.11 retirement predicate are now bounded. Remaining evidence debt is narrower:
+The 1998–1999 DRL product-document prior-art slice, the OpenZFS 2.1.11 persistence cycle, and the OpenZFS 2.1.11 retirement predicate are now bounded. Remaining evidence debt is narrower:
 
+- trace earlier Veritas/Sun Volume Manager documentation if a future slice needs the DRL or `resilvering` vocabulary floor before July 1998; do not infer first coinage from the current floor;
 - identify the exact historical commit/release where the current-style DTL space-map persistence/load path entered the ZFS lineage;
 - identify the commit/release where the current-style excision predicates and `DTL_SCRUB` overlay entered the lineage, and compare Solaris/illumos/OpenZFS revisions without projecting current semantics backward;
 - add a controlled export/import or reboot trace with a non-empty leaf DTL before and after reload;
