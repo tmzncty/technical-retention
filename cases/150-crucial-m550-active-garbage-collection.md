@@ -22,6 +22,7 @@ The case is useful because the same product family exposes `Active Garbage Colle
 
 - [Powered idle, sleep states, and maintenance opportunity deepening](../evidence/150-crucial-powered-idle-sleep-maintenance-opportunity-deepening.md) — separates host-visible idleness, device/interface sleep, controller maintenance eligibility, and actual GC execution; also records the M550's co-listed Device Sleep support and a firmware-version boundary around power-state transitions.
 - [2013–2015 AGC provenance and m4 experiment deepening](../evidence/150-crucial-2013-2015-agc-provenance-experiment-deepening.md) — narrows the public-circulation floor of Crucial's `6–8 hours` powered-idle support wording to contemporaneous 2013–2014 preservation witnesses and uses a peer-reviewed named Crucial m4 experiment to separate GC presence, deallocation/reclaim eligibility, execution, physical erase, and observed stale-data recoverability.
+- [2013 support-page version provenance deepening](../evidence/150-crucial-2013-support-page-version-provenance-deepening.md) — moves the independently witnessed named-resource existence floor to 12 June 2013, records later-preserved page metadata reporting 17 January 2013 creation and 23 October 2013 edit timestamps, and separates page identity from content-version identity rather than back-dating the later `6–8 hours` body wholesale.
 - [IBM 2009–2012 SSD GC validity/map/erase prior-art deepening](../evidence/150-ibm-2009-2012-ssd-gc-validity-map-erase-prior-art-deepening.md) — adds a manufacturer-authored controller design that separates PI invalidity evidence, victim selection, live-data recovery/re-storage, address-map update, erase eligibility, and actual old-block erase. It is used as prior-art/control-architecture evidence, **not** as M550 implementation evidence or genealogy.
 
 ---
@@ -86,7 +87,17 @@ The follow-on power-state deepening adds an important qualification. Crucial's m
 
 The [2013–2015 provenance/experiment deepening](../evidence/150-crucial-2013-2015-agc-provenance-experiment-deepening.md) narrows two remaining seams.
 
-First, a public **18 August 2013** reproduction of a Crucial-support email concerning a V4 SSD already contains the `Active Garbage Collection` + `6–8 hours` powered-idle procedure, and a **22 March 2014** forum post reproduces a passage attributed to Crucial's website under the heading `Crucial SSDs and TRIM/Garbage Collection`. These are contemporaneous preservation witnesses, not authenticated Crucial-origin archives, so they narrow chronology without being promoted into primary web captures.
+A public **18 August 2013** reproduction of a Crucial-support email concerning a V4 SSD contains the `Active Garbage Collection` + `6–8 hours` powered-idle procedure, and a **22 March 2014** forum post reproduces a passage attributed to Crucial's website under the heading `Crucial SSDs and TRIM/Garbage Collection`. These are contemporaneous preservation witnesses, not authenticated Crucial-origin archives.
+
+The [2013 support-page version-provenance deepening](../evidence/150-crucial-2013-support-page-version-provenance-deepening.md) now moves a different chronology floor earlier. Mac Geek Gab's **12 June 2013** complete show notes already list the distinctive resource title `My SSD used to be so much faster… What happened?`, while a September 2014 forum quotation preserves reported Crucial page metadata of **17 January 2013** creation and **23 October 2013** edit timestamps. The January date remains a later-preserved metadata claim rather than an authenticated origin capture, and the quoted 2014 body cannot be assigned wholesale to the January version because the same preserved header reports an intervening edit. The safer floor for the detailed `6–8 hours` wording therefore remains the August 2013 support-correspondence reproduction.
+
+This yields a documentation boundary that matters to the historical method:
+
+```text
+same support-page identity
+    != same content version
+    != authenticated origin capture
+```
 
 Second, Shah, Mahmood, and Slay's SecureComm 2014 experiment names a **Crucial m4 CT064M4SSD2 64 GB** and reports sharply different stale-data recovery outcomes across USB/secondary-SATA and primary-SATA-with-Windows-7/TRIM setups. The paper itself infers from the survivor cases that the m4 lacked background garbage collection. This repository records that inference but does not adopt it as established device fact: recoverability can show that physical embodiments survived the tested path, but cannot by itself distinguish `GC engine absent` from `pages not made discard-eligible`, `GC not scheduled`, or `erase not completed`.
 
@@ -345,7 +356,7 @@ Guardrails:
 - the IBM patent is a prior-art/control-architecture witness, not evidence that IBM invented GC or that Crucial/Micron implemented that design;
 - chronology does not prove a Micron/Crucial genealogy from any particular earlier paper, patent, controller family, or SSD vendor.
 
-A fresh search of `tmzncty/computing-archaeology` for combinations of `garbage collection`, `SSD`, `FTL`, `IBM`, and `Cideciyan` found no dedicated matching study to reuse. Broader FTL genealogy, early commercial SSD GC, controller architecture, SATA low-power/TRIM transport genealogy, and product-by-product scheduler history belong primarily there if pursued; Case 150 keeps only the retention/reclamation relation.
+A fresh search of `tmzncty/computing-archaeology` for combinations of `garbage collection`, `SSD`, `FTL`, `IBM`, and `Cideciyan` found no dedicated matching study to reuse. A new search for `Crucial Active Garbage Collection powered idle` likewise found no dedicated support-page/product-history module to reuse. Broader FTL genealogy, early commercial SSD GC, controller architecture, SATA low-power/TRIM transport genealogy, support-site migration, and product-by-product scheduler history belong primarily there if pursued; Case 150 keeps only the retention/reclamation relation.
 
 ---
 
@@ -362,6 +373,8 @@ A second observation is that **inactivity at one layer can be maintenance activi
 The power-state deepening adds a further limit to that observation: apparent inactivity does not itself guarantee that lower-layer maintenance machinery remains eligible. Energy-saving policy can consume the same idle interval in a different way.
 
 The m4 experiment deepening adds one more bounded condition: forgetting safely can require retained authority that an old embodiment is no longer current. A forensic trace can survive after upper-layer retirement without thereby remaining authoritative current state.
+
+The new support-page provenance slice adds a methodological analogue: a **named page identity can persist while its body version changes**. This is useful only as a state-separation warning for historical evidence; it does not identify documentation revision with NAND remapping or claim any technical genealogy between them.
 
 These are mechanism-level observations. They do not make SSD garbage collection a theory of human forgetting, archival memory, or ontology.
 
@@ -475,26 +488,32 @@ This follow-on records the source-class limits of the 2013/2014 contemporaneous 
 
 This follow-on is the authoritative location for the decomposition `invalidity evidence -> victim selection -> live-data re-storage -> map/currentness update -> erase eligibility -> actual erase`, and for the explicit boundary `detected-interruption metadata preservation != arbitrary-power-cut GC atomicity`.
 
+### F4 — 2013 support-page version-provenance deepening
+
+[Evidence 150 — Crucial 2013 Support-Page Version Provenance: Page Identity, Link Existence, and Content-Version Boundaries](../evidence/150-crucial-2013-support-page-version-provenance-deepening.md)
+
+This follow-on is the authoritative location for the chronology distinction among reported page creation metadata, independently witnessed public resource existence, specific detailed text preservation, and later page-body quotation. It explicitly rejects `same page identity = same historical body version`.
+
 ---
 
 ## Evidence-strength summary
 
 - **Strong:** named M550 product documentation explicitly lists Active Garbage Collection and TRIM as separate features; Micron gives a dated 2014 availability anchor.
 - **Strong for current vendor behavior:** Crucial's maintained support material explicitly describes controller-local Active Garbage Collection, powered idle opportunity, free-space dependence, and power-setting changes that preserve a long idle maintenance window.
-- **Moderate period-provenance evidence:** contemporaneous 2013 support-email reproduction and March-2014 website quotation show the AGC / powered-idle vocabulary circulating near the M550 period, but neither is an authenticated Crucial-origin archive.
+- **Moderate period-provenance evidence:** a 12 June 2013 independent contemporaneous resource listing establishes the named support-page identity in public circulation by that date; a later 2014 quotation preserves reported 17 January 2013 creation / 23 October 2013 edit metadata; the detailed `6–8 hours` procedure remains safely bounded by the 18 August 2013 support-email reproduction. None is an authenticated January 2013 Crucial-origin capture.
 - **Strong named-device experimental evidence for the tested setups:** SecureComm identifies a Crucial m4 CT064M4SSD2 and reports USB/secondary-SATA stale-data survival versus primary-SATA/Windows-7/TRIM non-recovery; the internal causal interpretation remains more limited than the observable outcome.
 - **Strong manufacturer-primary prior-art/control-architecture evidence:** IBM's 2009-priority patent explicitly separates PI invalidity state, victim selection, live-data recovery/re-storage, address-map update, and immediate-or-later old-block erase. This is not M550 implementation evidence.
 - **Strong generic mechanism:** SNIA describes relocation of valid data before erase-block reclamation and its write-amplification/performance cost.
 - **Strong protocol boundary:** SATA-IO distinguishes DevSleep from active/other reduced-power interface states, but does not specify M550's internal GC eligibility.
 - **Strong anti-priority guardrail:** 2005 academic flash-management literature plus IBM's 2009-priority manufacturer record and 2011 SNIA terminology all predate M550 productization; none establishes a direct Micron/Crucial genealogy.
 - **Moderate product revision guardrail:** M550 MU02 explicitly changed power-state-transition handling, but no inspected source ties that change to GC.
-- **Not established:** exact M550 GC algorithm, victim policy, internal metadata, free-space threshold, power-fail transaction, per-power-state GC eligibility, firmware-version scheduler differences, command-level trace for the m4 experiments, or complete physical sanitization effect.
+- **Not established:** exact M550 GC algorithm, victim policy, internal metadata, free-space threshold, power-fail transaction, per-power-state GC eligibility, firmware-version scheduler differences, authenticated January–October 2013 Crucial support-page body revisions, command-level trace for the m4 experiments, or complete physical sanitization effect.
 
 ---
 
 ## Open debt
 
-1. Recover an authenticated origin-hosted or archived **2010–2014 Crucial** support page containing the powered-idle / `6–8 hours` Active Garbage Collection instructions. The existing deepening narrows public circulation to August 2013 but does not close origin provenance.
+1. Recover an authenticated origin-hosted or archived **January–October 2013 Crucial** support-page capture. The named resource is independently visible by 12 June 2013 and later-preserved metadata reports a 17 January creation / 23 October edit, but the exact January body and revision delta remain unverified; the detailed `6–8 hours` wording is safely preserved by 18 August 2013.
 2. The generic first-party controller-state-machine gap is now **partly closed** by IBM's 2009-priority manufacturer patent. The remaining high-value debt is **M550-specific**: find Micron/Crucial or Marvell evidence for its victim selection, map-publication/currentness transition, arbitrary-power-cut recovery, and explicit per-power-state GC eligibility.
 3. Extend the named-device evidence with controlled traces that separately correlate deallocation delivery, active idle, low-power states, internal writes, mapping/currentness changes, and reclaimed space; the SecureComm m4 results establish path-dependent recoverability but do not instrument internal GC or exact ATA command delivery.
 4. Trace early commercial SSD GC / FTL and SATA low-power/TRIM transport genealogy in `computing-archaeology` rather than expanding this case into a general SSD history.
