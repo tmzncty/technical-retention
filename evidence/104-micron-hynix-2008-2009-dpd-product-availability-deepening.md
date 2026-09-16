@@ -1,17 +1,29 @@
 # Evidence 104B — Mobile DDR Deep-Power-Down Product Availability and Optionality (2008–2009)
 
+## Status / chronology note
+
+**`bounded deepening complete`** for the 2008–2009 Mobile-DDR continuity / optionality slice.
+
+This record originally supplied Case 104's earliest named-product DPD documentation at June 2008. That chronology has now been superseded by [`104-micron-2002-mobile-sdram-dpd-command-repurposing-deepening.md`](104-micron-2002-mobile-sdram-dpd-command-repurposing-deepening.md), which directly documents a May-2002 Micron `ADVANCE` Mobile SDRAM product document with DPD semantics.
+
+Accordingly, the purpose of this note is now narrower:
+
+> What do the 2008 Micron and 2009 Hynix product documents add beyond the earlier 2002 witness, especially about later Mobile-DDR continuity, optional feature availability, and explicit configuration-state loss?
+
+Case: [`../cases/104-micron-lpddr-selective-adaptive-self-refresh.md`](../cases/104-micron-lpddr-selective-adaptive-self-refresh.md)
+
+---
+
 ## Scope
 
-This note deepens [`../cases/104-micron-lpddr-selective-adaptive-self-refresh.md`](../cases/104-micron-lpddr-selective-adaptive-self-refresh.md) around one narrow chronology/contract question left open by the 2014 Micron low-power-state deepening:
-
-> How early can this repository directly document Deep Power-Down (DPD) in named Mobile DDR product documentation, and does the existence of DPD vocabulary in a product document imply that every listed ordering/configuration necessarily implements it?
-
-Two vendor-authored product documents preserved by distributors/archives give a bounded answer:
+Two vendor-authored product documents preserved by distributors/archives provide the bounded comparison:
 
 1. Micron's `MT46H16M16LF` / `MT46H8M32LF/LG` Mobile DDR datasheet, Rev. H, June 2008, lists Deep Power-Down and describes it as eliminating memory-array power, not retaining data, and requiring a full initialization sequence after exit.
 2. Hynix's `H5MS2G22MFR` / `H5MS2G32MFR` 2-Gbit Mobile DDR datasheet, Rev. 1.2, May 2009, describes Deep Power Down as an **optional feature**, says internal voltage generators stop, states that array data plus Mode Register and Extended Mode Register information are lost, and requires complete reinitialization after exit.
 
-This closes only a bounded **named-product public-document floor**. It does not establish when JEDEC first standardized DPD, when either vendor first shipped DPD-capable silicon, whether every ordering code listed in either document implemented the feature, or who invented the mechanism.
+These documents no longer define Case 104's earliest public-document floor. They remain valuable because they show later vendor continuity and, in Hynix's case, make the optional-capability and configuration-loss boundaries unusually explicit.
+
+They do **not** establish when JEDEC first standardized DPD, when either vendor first shipped DPD-capable silicon, whether every ordering code listed in either document implemented the feature, or who invented the mechanism.
 
 Because both surviving copies are vendor-authored documents hosted by third parties rather than current vendor origin pages, historical claims are tagged `H/P*` under repository policy.
 
@@ -54,21 +66,23 @@ The optionality language is part of the product contract and is important eviden
 
 ## Historical record
 
-### H/P* — Micron publicly documented DPD in a named Mobile DDR product family by June 2008
+### H/P* — Micron shows DPD continuity in a named Mobile DDR family by June 2008
 
 Micron's June-2008 Rev. H datasheet lists `Deep Power-Down` and describes the command/state behavior for a named Mobile DDR family. The DPD section says that the mode reduces power by eliminating power to the memory array and that data are not retained.
 
 The exit path is not described as resuming old array state. After leaving DPD, Micron requires a 200 µs interval with valid clocks, then PRECHARGE ALL and the complete initialization sequence.
 
-The bounded historical floor is therefore:
+The correct historical use is now:
 
 ```text
-by June 2008
-named Micron Mobile DDR product documentation
-    exposes DPD as a non-retentive low-power mode
+May 2002 Micron ADVANCE Mobile SDRAM
+    -> earlier development-document witness
+
+June 2008 Micron Mobile DDR Rev. H
+    -> later product-family continuity witness
 ```
 
-This is earlier than the January/February-2014 Micron documents previously used by Case 104, but it is not a claim that DPD first appeared in 2008.
+The 2008 document therefore should not be described as the earliest currently known Case-104 DPD witness.
 
 ### H/P* — Hynix documented the same broad mode class in May 2009, but marked it optional
 
@@ -76,7 +90,7 @@ Hynix's May-2009 product document describes Deep Power Down as an optional featu
 
 On exit, the host must wait 200 µs and completely reinitialize the device. The illustrated sequence includes PRECHARGE ALL, two AUTO REFRESH commands, and loading the mode register.
 
-This adds a second product-level boundary:
+This adds a product-level boundary not supplied by the 2002 Micron witness:
 
 ```text
 feature appears in a product-family document
@@ -88,7 +102,7 @@ The document itself makes availability conditional.
 
 ### H/P* — DPD may discard both payload and configuration/control state
 
-The Hynix source is more explicit than the Micron source about which non-payload state crosses the DPD boundary: Mode Register and Extended Mode Register information are lost alongside array data.
+The Hynix source is more explicit than the 2008 Micron source about which non-payload state crosses the DPD boundary: Mode Register and Extended Mode Register information are lost alongside array data.
 
 That supports a historical statement about this named Hynix contract, not a universal LPDDR rule:
 
@@ -100,13 +114,15 @@ DPD transition
 
 The later requirement to reload configuration is therefore not merely ceremonial startup work; at least in this documented product it follows from specified loss of those register values.
 
+The May-2002 Micron document independently requires MR/EMR initialization after DPD and says the Extended Mode Register retains its state until reprogrammed or device power is lost, but it does not use the same explicit Hynix sentence enumerating MR/EMR loss. Those evidence strengths remain distinct.
+
 ---
 
 ## Engineering reconstruction
 
 ### E — low-power state names do not define one persistence horizon
 
-Case 104 already separates ordinary Power-Down, SELF REFRESH, and DPD. The 2008–2009 product evidence strengthens the historical floor for that distinction while adding an availability dimension:
+Case 104 separates ordinary Power-Down, SELF REFRESH, and DPD. The 2008–2009 product evidence strengthens continuity while adding an availability dimension:
 
 ```text
 same product family / interface vocabulary
@@ -142,12 +158,13 @@ old payload restored
 
 ### E — product-document chronology is not standards genealogy
 
-The two dated documents establish public product-level lower bounds only. They cannot safely answer:
+The 2002, 2008, and 2009 documents establish public product-document points only. They cannot safely answer:
 
 - when JEDEC first standardized DPD;
 - whether one vendor copied another;
 - whether an earlier vendor product already implemented equivalent behavior;
-- whether the 2008/2009 parts were the first shipping devices with DPD.
+- which revision first shipped commercially;
+- whether the same command assignment persisted unchanged across every standard/product family.
 
 Those are different historical questions requiring standards/revision and product-line archaeology.
 
@@ -172,6 +189,12 @@ What is **not** established:
 - direct vendor-to-vendor genealogy;
 - identical availability across every ordering code.
 
+### Relation to the 2002 Micron witness
+
+The May-2002 ADVANCE document already supplies the earlier low-power-mode and DPD/non-retention boundary. The 2008–2009 documents therefore should be read as continuity/variation evidence, not as the starting point of the mechanism.
+
+The 2002 record additionally exposes command-semantic reassignment: the mobile/BAT-RAM DPD command pattern is identified as Burst Terminate on traditional SDRAM. That interface-history point is treated in Evidence 104C rather than duplicated here.
+
 ### Case 02 magnetic core
 
 Case 02 supplies an intentionally different functional counterexample: a core array may preserve payload magnetization across controlled loss of power even though surrounding control state is reset and power transitions require protection. Mobile-DDR DPD instead withdraws the documented payload-retention condition and then requires initialization.
@@ -184,11 +207,11 @@ This is a functional comparison of **power-boundary retention relations**, not a
 
 ### X — no JEDEC introduction date
 
-Neither vendor datasheet by itself establishes when Deep Power-Down entered a JEDEC Mobile DDR / LPDDR standard or became normative/optional there.
+None of these vendor datasheets by itself establishes when Deep Power-Down entered a JEDEC Mobile SDRAM / Mobile DDR / LPDDR standard or became normative/optional there.
 
 ### X — no invention or first-product claim
 
-June 2008 Micron and May 2009 Hynix are public-document floors for named products. Earlier implementations or publications may exist.
+May 2002 Micron is now an earlier development-document witness, while June 2008 Micron and May 2009 Hynix are later product-document witnesses. Earlier implementations/publications may still exist.
 
 ### X — no universal feature-availability claim
 
@@ -206,21 +229,30 @@ Neither document exposes the analog charge trajectory of every cell after DPD en
 
 ## What this closes and what remains open
 
-This slice closes a bounded part of Case 104's earlier open work:
+This 2008–2009 slice now closes a narrower set of questions:
 
-1. named Mobile DDR product documentation with DPD is directly visible by **June 2008** in Micron's Rev. H family document;
+1. Micron shows continued named-product DPD semantics in **June 2008** beyond the earlier May-2002 ADVANCE witness;
 2. a separate **May 2009** Hynix family document independently describes DPD and makes optionality explicit;
 3. Hynix documents that DPD can lose both user payload and MR/EMR configuration state;
 4. both vendors require reinitialization rather than payload resume after DPD.
 
 Still open:
 
-- pre-2008 DPD product/document genealogy;
+- pre-May-2002 DPD product/patent genealogy;
+- first commercial shipment / production qualification of the 2002 Micron family;
 - JEDEC normative introduction and revision history;
 - exact ordering-code / commercial-option availability for the Hynix optional feature;
 - controller policy deciding when DPD is selected;
 - cross-vendor supply-domain and entry/exit timing differences beyond these documents;
 - hardware decay/remanence measurements after DPD;
-- broader mobile-memory power-management genealogy.
+- broader Mobile SDRAM / BAT-RAM / Mobile DDR / LPDDR nomenclature and standards genealogy.
 
-A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated Deep Power-Down / Mobile-DDR module to reuse. Broader standards, product-line, and circuit genealogy belongs there rather than being rebuilt here.
+A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for the exact 2002 part number and for `Deep Power Down` found no dedicated module to reuse. Broader standards, product-line, and circuit genealogy belongs there rather than being rebuilt here.
+
+---
+
+## Sources
+
+1. Micron Technology, Inc., Mobile DDR SDRAM `MT46H16M16LF` / `MT46H8M32LF/LG`, Rev. H, June 2008; vendor-origin text preserved by AllDatasheet: <https://www.alldatasheet.com/html-pdf/75876/MICRON/MT46H16M16LF/185/1/MT46H16M16LF.html> and <https://www.alldatasheet.com/html-pdf/75876/MICRON/MT46H16M16LF/9123/49/MT46H16M16LF.html>.
+2. Hynix Semiconductor, _2Gbit Mobile DDR SDRAM_, `H5MS2G22MFR` / `H5MS2G32MFR`, Rev. 1.2, May 2009; vendor datasheet preserved by Farnell: <https://www.farnell.com/datasheets/1750885.pdf>.
+3. Micron Technology, Inc., _256Mb: x16 Mobile SDRAM_, `MT48V16M16LFFG` / `MT48H16M16LFFG`, `ADVANCE`, footer `MobileRamY26L_A.p65 – Pub. 5/02`, archival transcription: <https://dtsheet.com/doc/503993/micron-mt48v16m16lffg>. See [`104-micron-2002-mobile-sdram-dpd-command-repurposing-deepening.md`](104-micron-2002-mobile-sdram-dpd-command-repurposing-deepening.md) for source analysis.
