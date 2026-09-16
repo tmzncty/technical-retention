@@ -6,6 +6,8 @@ Grounding record: [`../evidence/86-dec-1960-1970-core-power-restart-grounding.md
 
 GE-PAC restart-admission deepening: [`../evidence/86-gepac-1972-restart-inhibit-admissibility-deepening.md`](../evidence/86-gepac-1972-restart-inhibit-admissibility-deepening.md).
 
+Data General NOVA cross-vendor deepening: [`../evidence/86-data-general-nova-1969-1974-power-fail-save-threshold-deepening.md`](../evidence/86-data-general-nova-1969-1974-power-fail-save-threshold-deepening.md).
+
 ## Scope
 
 This case asks a deliberately narrow question left open by the magnetic-core case:
@@ -599,3 +601,84 @@ The case does **not** establish:
 Those limits are deliberate. The value of Case 86 is the narrower conclusion:
 
 > **nonvolatile main memory can preserve program/data state while whole-computer continuity still depends on detecting interruption, migrating volatile execution state into that memory, resetting selected control state, and later reconstructing a runnable context.**
+
+---
+
+## Data General NOVA cross-vendor deepening (1969–1974)
+
+Dedicated evidence: [`../evidence/86-data-general-nova-1969-1974-power-fail-save-threshold-deepening.md`](../evidence/86-data-general-nova-1969-1974-power-fail-save-threshold-deepening.md).
+
+### Historical record
+
+Data General's archived 1969 NOVA maintenance documentation already describes the optional power monitor as a staged transition: an incipient main-supply failure sets the **Power Failure** flag, approximately **1–2 ms later `RUN` clears**, and after adequate memory and logic power returns a restart one-shot can assert `RESTART` if the console key is locked. The October-1974 *How To Use The Nova Computers* makes the software contract explicit: core memory is unaltered at power-up while PC, accumulator, and flag state is indeterminate; the power-fail interrupt provides a minimum 1–2 ms interval before shutdown; the processor completes the current memory cycle; software is instructed to save accumulators and Carry in memory, preserve the interrupted-PC/location-0 relation, place a restart `JMP` in location 0, and halt.
+
+The NOVA 2 Technical Manual then exposes a more explicit hardware boundary. `PWR FAIL` goes low first and precedes `MEM OK` by about 1–2 ms; `PWR FAIL` produces the power-low interrupt opportunity, while `MEM OK` loss drives halt/reset behavior including I/O reset. Its power-fail module separately documents analog status thresholds, including assertion of `PWR FAIL` when the non-regulated bridge output falls to +24 V and clearing of `PWR OK` when the +5 V line drops below +4.7 V. The currently inspected text does not prove that processor `MEM OK`, power-module `PWR OK`, and `+5V OK` are one signal, so they remain distinct until a schematic mapping is recovered.
+
+The surviving manuals also prevent timing flattening: the broad October-1974 system reference says a LOCK-position machine executes `JMP 0` **50 ms after power comes back on**, whereas the NOVA 2 technical manual starts a **2 ms** delay after `MEM OK` and `PWR FAIL` have both recovered before optional restart. These are preserved as model/document-specific contracts rather than synthesized into one universal NOVA number.
+
+### Engineering reconstruction
+
+The Data General witness strengthens the Case-86 state decomposition without changing its maturity:
+
+```text
+core payload survives
+    !=
+early failure warning exists
+    !=
+software has migrated volatile CPU context
+    !=
+current memory cycle has completed safely
+    !=
+ordinary execution remains admissible
+    !=
+automatic restart is enabled
+    !=
+restart entry has reconstructed the old computation
+```
+
+It also makes one relation unusually explicit:
+
+```text
+PWR FAIL warning frontier
+    precedes
+MEM OK halt/reset frontier
+```
+
+The 1–2 ms interval is therefore a **temporal transfer resource**, not a magnetic-core retention time. Likewise the +24 V / +4.7 V thresholds belong to the machine's transition-control apparatus, not to ferrite remanence physics.
+
+### Functional analogy and genealogy limit
+
+DEC KR01/KP8 and Data General NOVA can be compared functionally as:
+
+```text
+impending power loss
+    -> interrupt
+    -> short save interval
+    -> volatile CPU state moved into core
+    -> stop/reset
+    -> later known restart entry
+    -> software reconstruction
+```
+
+This is **not** evidence that Data General copied DEC, that the two machines used the same hold-up/comparator circuit, that their saved register sets were identical, or that their timing constants are interchangeable. A repository search found no dedicated NOVA power-fail slice in `computing-archaeology`; broader Data General machine and power-supply genealogy remains routed there rather than being recreated in this case.
+
+### Claim additions
+
+| Claim | Type | Evidence / status |
+| --- | --- | --- |
+| 1969 NOVA maintenance documentation places the Power Failure flag about 1–2 ms before RUN clears | H/P* | indexed Data General primary scan; page-image verification pending |
+| October-1974 NOVA system reference says core remains unaltered while processor register/flag initial state is indeterminate | H/P | Data General primary system reference |
+| software is instructed to save accumulators/Carry and the interrupted-PC/location-0 relation during power fail | H/P | Data General primary system reference |
+| NOVA 2 `PWR FAIL` precedes `MEM OK` by about 1–2 ms | H/P* | indexed November-1974 Data General technical manual |
+| NOVA 2 `MEM OK` loss drives halt/reset including I/O reset | H/P* | indexed November-1974 Data General technical manual |
+| power-fail sensing threshold is not a magnetic-retention threshold | E | bounded reconstruction from power-module and core-memory semantics |
+| 50 ms and 2 ms are one universal NOVA restart delay | X | rejected; document/model scope and timing origin differ |
+| Data General NOVA proves direct genealogy from DEC KR01 | X | rejected; functional comparison only |
+
+### Data General primary sources
+
+- Data General Corporation, *NOVA Maintenance Manual* (archived 1969 scan), processor-options discussion, printed p. `2-13`: <https://bitsavers.org/pdf/dg/NovaMaint_1969.pdf>.
+- Data General Corporation, *How To Use The Nova Computers*, Ordering No. `015-000009`, Rev. 09, October 1974, §2.6, printed pp. `2-39`–`2-40`; Computer History Museum access scan: <https://archive.computerhistory.org/resources/access/text/2024/06/102776244-05-0001-acc.pdf>.
+- Data General Corporation, *NOVA 2 Technical Manual*, Ordering No. `015-000026`, Rev. 01, November 1974, processor `C-8` and power-supply `P-7`: <https://www.bitsavers.org/pdf/dg/Nova_2/015-000026-01_Nova2Tech_Nov74.pdf>.
+
+The dedicated evidence record preserves the source-custody caveat: the Bitsavers NOVA 2 PDF could be indexed but page screenshots were rejected by the host during this pass, so the affected clauses remain `H/P*` pending direct facsimile rendering rather than being silently promoted to stronger page-image verification.
