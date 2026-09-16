@@ -2,11 +2,13 @@
 
 ## Status
 
-**`grounded`** — bounded to NAND read disturb from a Fujitsu 2002-priority manufacturer filing through Yu Cai et al.'s 2015 DSN experimental characterization. NASA/JPL's March 2008 qualification study is retained as an independent institutional witness, including its explicit negative result; a 2009-priority Texas Memory Systems patent and a 2013 APSys paper constrain controller/FTL prior-art claims. Micron's 2006 TN-29-17 design guidance now supplies an earlier manufacturer system-policy witness that explicitly separates temporary read-disturb recovery from permanent bad-block retirement. The case separates measured device behavior, engineering reconstruction, and proposed mitigation/recovery, and does not claim commercial deployment of the 2015 mechanisms.
+**`grounded`** — bounded to NAND read disturb from a Fujitsu 2002-priority manufacturer filing through Yu Cai et al.'s 2015 DSN experimental characterization. NASA/JPL's March 2008 qualification study is retained as an independent institutional witness, including its explicit negative result. Micron's 2006 TN-29-17 design guidance supplies an early manufacturer system-policy witness that explicitly separates temporary read-disturb recovery from permanent bad-block retirement. A Denali Software application filed in 2008 and publicly published in July 2009 now adds an explicit controller-state witness: read-count state can be kept in a block table in non-volatile memory, loaded at power-up, updated live in system memory, and checkpointed periodically / at shutdown. A 2009-priority Texas Memory Systems patent and a 2013 APSys paper further constrain controller/FTL prior-art claims. The case separates historical record, engineering reconstruction, functional comparison, and philosophical interpretation, and does not claim commercial deployment of the later research mechanisms.
 
 Grounding record: [`../evidence/52-cai-2009-2015-nand-read-disturb-grounding.md`](../evidence/52-cai-2009-2015-nand-read-disturb-grounding.md).
 
 Micron 2006 failure-taxonomy / maintenance-policy deepening: [`../evidence/52-micron-2006-read-disturb-temporary-failure-maintenance-deepening.md`](../evidence/52-micron-2006-read-disturb-temporary-failure-maintenance-deepening.md).
+
+Denali 2008–2009 persistent read-count / checkpoint deepening: [`../evidence/52-denali-2008-2009-persistent-read-count-checkpoint-deepening.md`](../evidence/52-denali-2008-2009-persistent-read-count-checkpoint-deepening.md).
 
 ## Scope
 
@@ -24,7 +26,8 @@ This is **not**:
 - evidence that the 2015 `Vpass Tuning` or `Read Disturb Recovery (RDR)` proposals were shipped in a named commercial controller;
 - evidence that read disturb and retention loss are the same physical mechanism;
 - evidence that NAND read disturb is historically or physically identical to magnetic-core destructive read;
-- a complete history of modern 3D-NAND read reclaim, read retry, LDPC, or controller firmware.
+- evidence that a patent filing date is automatically a public-document date;
+- a complete history of modern 3D-NAND read reclaim, read retry, LDPC, controller firmware, or power-loss metadata recovery.
 
 ## Historical vocabulary and record
 
@@ -34,13 +37,13 @@ Fujitsu's **US20030137873A1, “Read disturb alleviated flash memory,”** has a
 
 Primary source: <https://patents.google.com/patent/US20030137873A1/en>.
 
-This is an earlier manufacturer-primary witness than the 2009-priority controller patent already used in this case. It is **not** evidence that Fujitsu first discovered read disturb or invented every later mitigation technique.
+This is an early manufacturer-primary witness. It is **not** evidence that Fujitsu first discovered read disturb or invented every later mitigation technique.
 
 ### Manufacturer design-guidance witness — Micron, August 2006
 
 Micron's **TN-29-17, _NAND Flash Design and Use Considerations_**, Rev. A 8/06, adds a different evidence class from the Fujitsu patent. It first separates NAND failures into **permanent** and **temporary** categories. Permanent failures require bad-block-table exclusion; temporary failures can be recoverable and the block need not be added to the bad-block table.
 
-Micron places `Read Disturb` inside the temporary category. The note says repeated reads to individual pages can exacerbate read-disturb errors and prescribes erasing the affected block and reprogramming its data. In that bounded design guidance, therefore:
+Micron places `Read Disturb` inside the temporary category. The note says repeated reads to individual pages can exacerbate read-disturb errors and prescribes erasing the affected block and reprogramming its data. In that bounded design guidance:
 
 ```text
 read-disturb error
@@ -48,7 +51,7 @@ read-disturb error
 automatic permanent bad-block identity
 ```
 
-The same note then treats repeated executable-code reads under demand paging as a system-design problem and gives three mitigation strategies: keep executable code in volatile memory after a power-on load; maintain master/working NAND copies and renew the working copy after a system-designated read count; or use stronger ECC with an intervention threshold below the correctable limit and move data before exhaustion.
+The same note treats repeated executable-code reads under demand paging as a system-design problem and gives multiple mitigation choices: keep executable code in volatile memory after a power-on load; maintain master/working NAND copies and renew the working copy after a system-designated read count; or use stronger ECC with an intervention threshold below the correctable limit and move data before exhaustion.
 
 That establishes an early manufacturer policy relation:
 
@@ -78,13 +81,35 @@ Institutional source: <https://nepp.nasa.gov/files/13582/07-100%20Sheldon_JPL%20
 
 The same report supplies a valuable **negative result**. Program 8 performed 50k, 100k, 500k, and 1M page-read operations on a single page, yet the report states that no program-disturb or read-disturb failures were detected in the tested devices. Therefore the report's read-count figures are historical guidance, not universal physical thresholds.
 
-### Recognized `Read Disturb` before 2015
+### Controller-state witness — Denali, 2008 filing / July 2009 publication
 
-US7818525B1, filed by Texas Memory Systems in 2009 and published in 2010, explicitly uses the term **`Read Disturb` errors**. It describes NAND reads as applying an elevated voltage to unread cells, repeated exposure as allowing charge to accumulate, and sufficiently shifted cells as becoming weakly programmed. The patent also describes then-existing mitigation by maintaining a block read count and moving data after a threshold, while proposing a more incremental page-migration strategy once the threshold is reached.
+Robert Alan Reid's **US20090193174A1, _Read disturbance management in a non-volatile memory system_**, was filed on 29 January 2008 and publicly published on **30 July 2009**. The patent-family record preserves historical assignment to Denali Software, Inc. The filing date is used as priority chronology; the public-document floor used here is the 2009 publication date.
 
-This is important for chronology: Cai et al. 2015 did **not** originate either the phenomenon or the generic idea of read-count-triggered relocation.
+The disclosed controller structure is important for a reason different from the device-physics sources. Its block table includes logical/physical mapping, status, wear information, and **read-count data**. In one embodiment the table is stored in the non-volatile memory itself. At power-up it is loaded into system memory. During operation the live system-memory copy is updated, and the source says the table is written back to non-volatile memory **periodically and at system shutdown**.
+
+That gives an explicit early retention structure:
+
+```text
+past READ activity
+    -> live read-count summary
+    -> periodic non-volatile checkpoint
+    -> power-up reconstitution
+    -> future relocation decision
+```
+
+When the count reaches the chosen threshold, the disclosed path moves data to another physical block and resets the relevant read-count state. The source therefore makes read-exposure history a retained controller input to maintenance, while also exposing that the live and persisted copies need not have identical update horizons.
+
+Deepening record: [`../evidence/52-denali-2008-2009-persistent-read-count-checkpoint-deepening.md`](../evidence/52-denali-2008-2009-persistent-read-count-checkpoint-deepening.md).
+
+### Recognized `Read Disturb` controller work before 2015
+
+US7818525B1, filed by Texas Memory Systems in 2009 and published in 2010, explicitly uses the term **`Read Disturb` errors**. It describes NAND reads as applying an elevated voltage to unread cells, repeated exposure as allowing charge to accumulate, and sufficiently shifted cells as becoming weakly programmed. It also describes thresholded read-count mitigation and proposes a more incremental page-migration strategy.
+
+The Texas Memory Systems patent record cites Denali's `US20090193174A1`. That is a formal prior-art link in the patent record, not proof of direct engineering influence or product genealogy.
 
 A 2013 APSys paper by Keonsoo Ha, Jaeyong Jeong, and Jihong Kim likewise treats read-disturb management as an existing FTL problem. Its abstract describes errors in a page after many reads to neighboring pages in the same block and proposes redistributing hot read traffic to reduce migration overhead.
+
+The chronology therefore supports a narrow anti-anachronism claim: Cai et al. 2015 did **not** originate either the phenomenon or the generic idea of read-count-triggered relocation.
 
 ### 2015 commercial-chip characterization
 
@@ -115,12 +140,13 @@ The bounded regime contains several separable states:
 3. **unselected-neighbor physical state** — cells in other pages that must be electrically passed through during that read;
 4. **raw error population** — errors visible before ECC reconstruction;
 5. **ECC correction margin** — remaining ability to mask/correct raw errors before a page becomes uncorrectable;
-6. **access-stress history** — cumulative reads to a physical block, represented in some prior mitigation schemes by a per-block read counter;
+6. **access-stress history** — cumulative reads to a physical block, represented in some schemes by a per-block read counter;
 7. **wear state** — P/E-cycle history that changes susceptibility to later disturb;
 8. **mapping/currentness state** — logical-to-physical relations when mitigation relocates current data;
-9. **read-voltage policy state** — the selected `Vpass` / error-margin relation in the 2015 tuning proposal.
+9. **read-voltage policy state** — the selected `Vpass` / error-margin relation in the 2015 tuning proposal;
+10. **checkpointed maintenance-control state** — a saved representation of access count / mapping / status that can be reloaded after power-up, as explicitly disclosed in the Denali block-table embodiment.
 
-`access-stress history` and `read-voltage policy state` are project analytical descriptions. The cited sources use more concrete terms such as block read count and `Vpass`.
+`access-stress history`, `read-voltage policy state`, and `checkpointed maintenance-control state` are project analytical descriptions. The cited sources use more concrete terms such as block read count, block table, and `Vpass`.
 
 ## Engineering reconstruction
 
@@ -168,7 +194,7 @@ This is a direct bridge to Case 78. Case 78 studies the retained authority that 
 
 Case 36 uses elapsed retention time and wear as inputs to proactive Flash Correct-and-Refresh. Read disturb exposes a different trigger class. A physically hot block can accumulate disturbance because of **how often it is read**, even if user data is not being rewritten and little wall-clock time has passed.
 
-Micron's 2006 working-copy strategy already uses a system-designated read count to decide when to renew a hot embodiment. The 2009-priority patent explicitly maintains a per-block read count since erase and uses threshold crossing to trigger migration behavior. Cai et al. likewise analyze cumulative read-disturb count and note earlier controller proposals that rewrite or move blocks/pages after read-count thresholds.
+Micron's 2006 working-copy strategy already uses a system-designated read count to decide when to renew a hot embodiment. Denali's July 2009 public application gives the counter an explicit retained controller embodiment. The 2009-priority Texas Memory Systems patent and Cai et al. likewise use cumulative read-disturb count / thresholds in later controller and research contexts.
 
 Therefore:
 
@@ -179,6 +205,50 @@ And:
 > **read hotness ≠ write wear, while read hotness can consume future error margin**.
 
 P/E wear remains a separate axis: the 2015 measurements show more-worn blocks become more susceptible to each read disturb.
+
+### Persistent maintenance memory ≠ complete access history
+
+The Denali disclosure adds a control-state distinction not present in the device-physics story alone. Its block table can retain a read count across power cycles, but one count stands in for many individual reads.
+
+Therefore:
+
+> **retained maintenance summary ≠ retained event log**.
+
+A system can remember enough about the past to govern future maintenance while forgetting the exact order and identity of most past read requests.
+
+This is not an accidental loss in the argument; it is a deliberate compression of history into policy-relevant state.
+
+### Power-up reconstitution ≠ latest live counter crash-durable
+
+Denali's described embodiment updates the live block table in system memory during operation and writes it to non-volatile memory periodically and at shutdown. That supports cross-power continuity of the scheme, but it does not establish synchronous durability after every read.
+
+The bounded engineering reconstruction is:
+
+```text
+latest live read count
+    may be newer than
+latest non-volatile checkpoint
+```
+
+Therefore:
+
+> **counter can survive ordinary reboot / shutdown ≠ every newest increment survives abrupt power loss**.
+
+The patent does not specify checkpoint interval, maximum rollback, atomic table replacement, journal format, capacitor-backed writeout, or recovery from an interrupted metadata write. Those remain open rather than being filled in with modern crash-consistency assumptions.
+
+### Relocation completion can begin a new exposure epoch
+
+In the Denali embodiment, threshold-triggered relocation carries the logical data into a new physical block and resets read-count state. The reset does not mean the logical object has been forgotten. It means the old embodiment's accumulated exposure summary no longer governs the new embodiment in the same way.
+
+Thus:
+
+> **logical identity continuity ≠ exposure-counter continuity**.
+
+and:
+
+> **counter reset after renewal ≠ payload recreation from nothing**.
+
+This is a bounded example of maintenance state being **epochal** rather than lifetime-global.
 
 ### Read disturb is not retention-age leakage
 
@@ -228,7 +298,9 @@ The reported 21% average endurance improvement is an evaluation result from empi
 
 Cai et al.'s proposed `Vpass Tuning` implementation gives one bounded research example: one byte per block for the tuned `Vpass` setting and one byte for the predicted worst-case page. For the paper's assumed 512GB / 65,536-block configuration, that is 128KB total metadata.
 
-This is a proposal/evaluation cost estimate, not a universal commercial SSD format. Its narrower methodological result is:
+Denali gives an earlier, different example of the same broad retention form: a compact block-table entry can preserve read-count state that governs whether a much larger payload should move.
+
+This does not make the metadata formats identical. The narrower methodological result is:
 
 > **small maintenance metadata ≠ small retention significance**.
 
@@ -262,7 +334,7 @@ The historical mechanisms remain distinct. Case 04's bounded mapped-Flash lineag
 
 ### Boundary with Case 67 — later 3-D NAND adaptive read reclaim
 
-Case 52 remains the canonical physical/access-induced read-disturb case and now carries the 2002–2015 historical bridge. Case 67 remains a distinct later controller-policy slice: a 2017-priority / 2019 SK hynix disclosure uses compressed read-count proxies, thresholded ECC qualification, adaptive checking, 3-D neighborhood sampling, and conditional reclaim. The shared trigger family does not make the controller policies historically or technically identical.
+Case 52 remains the canonical physical/access-induced read-disturb case and carries the 2002–2015 historical bridge. Case 67 remains a distinct later controller-policy slice: a 2017-priority / 2019 SK hynix disclosure uses compressed read-count proxies, thresholded ECC qualification, adaptive checking, 3-D neighborhood sampling, and conditional reclaim. The shared trigger family does not make the controller policies historically or technically identical.
 
 > **generic read-disturb mechanism/history ≠ one later 3-D NAND controller policy**.
 
@@ -293,10 +365,12 @@ Within this bounded regime, later loss can arise through distinct paths:
 - the present read can succeed while future margin deteriorates;
 - a too-low `Vpass` can reduce disturb yet introduce pass-through/read errors;
 - a read-count threshold can be set too aggressively or too conservatively, changing relocation overhead versus risk;
+- a live read-count summary can advance beyond its last non-volatile checkpoint;
+- abrupt power loss can therefore raise a metadata-recovery question even while NAND payload remains physically present;
 - relocation/rewrite can restore margin but consumes controller work, free space, program/erase operations, and mapping updates;
 - RDR can improve probabilistic reconstruction without guaranteeing every failed cell is correctly inferred.
 
-Forgetting here is not simply “the cell was read.” It is the eventual loss of a sufficiently distinguishable/recoverable logical state after cumulative physical disturbance and finite correction/recovery resources.
+Forgetting here is not simply “the cell was read.” It is the eventual loss of a sufficiently distinguishable/recoverable logical state after cumulative physical disturbance and finite correction/recovery resources. At the control-state layer, forgetting can also mean losing some knowledge of how much access stress had accumulated, even before payload loss occurs.
 
 ## Prior art and anti-anachronism
 
@@ -307,17 +381,22 @@ It does **not** promote the paper into:
 - invention of read disturb;
 - invention of read-count monitoring;
 - invention of read-triggered relocation;
+- invention of persistent read-count control state;
 - invention of all read-voltage adaptation or recovery.
 
-Fujitsu's 2002-priority filing already uses `read disturb` as manufacturer vocabulary and discusses non-selected-word-line read-voltage stress. Micron's 2006 design guide already classifies `Read Disturb` as a temporary failure and gives read-count renewal / pre-ECC-limit relocation strategies. US7818525B1 has a 2009 priority date and describes per-block read counting, threshold-triggered movement, ECC, and logical-to-physical remapping. The 2013 APSys paper independently places read-disturb management and FTL relocation before the 2015 characterization.
+Fujitsu's 2002-priority filing already uses `read disturb` as manufacturer vocabulary and discusses non-selected-word-line read-voltage stress. Micron's 2006 design guide already classifies `Read Disturb` as a temporary failure and gives read-count renewal / pre-ECC-limit relocation strategies. Denali's application, filed in 2008 and publicly published in July 2009, explicitly stores read-count state in a non-volatile block table, reloads it at power-up, and uses it in threshold-triggered relocation. US7818525B1 has a 2009 priority date and describes later per-block read counting, threshold-triggered movement, ECC, and logical-to-physical remapping. The 2013 APSys paper independently places read-disturb management and FTL relocation before the 2015 characterization.
 
 Accordingly:
 
 > **2015 commercial-chip characterization ≠ invention of read-disturb mitigation**.
 
-Micron's current support FAQ is also kept separate from its 2006 vocabulary. A terse present-day instruction concerning generic `READ errors` does not retroactively redefine the specifically scoped 2006 temporary `Read Disturb` category without product-level evidence connecting those terms.
+The Denali chronology also makes a source-date boundary explicit:
 
-Historical vocabulary belongs to its source. Project phrases such as `access-stress clock`, `future-retention cost`, `carrier-retirement authority`, and `recovery evidence` are engineering reconstructions, not claims about how the engineers historically conceptualized memory or temporality.
+> **filing / priority date ≠ public-document date**.
+
+Micron's current support FAQ is kept separate from its 2006 vocabulary. A terse present-day instruction concerning generic `READ errors` does not retroactively redefine the specifically scoped 2006 temporary `Read Disturb` category without product-level evidence connecting those terms.
+
+Historical vocabulary belongs to its source. Project phrases such as `access-stress clock`, `future-retention cost`, `checkpointed maintenance-control state`, `maintenance epoch`, `carrier-retirement authority`, and `recovery evidence` are engineering reconstructions, not claims about how the engineers historically conceptualized memory or temporality.
 
 ## Philosophical interpretation — bounded
 
@@ -327,11 +406,13 @@ The case adds one narrow conceptual pressure to the repository:
 
 The Micron deepening adds a second bounded relation: continued identity can depend on deciding when a still-recoverable embodiment should be renewed or replaced **before** it becomes permanently defective.
 
-This helps resist a simple opposition in which `storage` passively preserves while `access` merely observes. It does **not** imply that every act of reading consumes its medium, nor that Micron or the 2015 authors were making a philosophical argument.
+The Denali deepening adds a third: preserving a payload can require preserving a compact memory **of prior access to the payload**. A non-volatile object and the controller's retained knowledge of its maintenance-relevant history are distinct states.
+
+This helps resist a simple opposition in which `storage` passively preserves while `access` merely observes. It does **not** imply that every act of reading consumes its medium, nor that Micron, Denali, or the 2015 authors were making a philosophical argument.
 
 ## Cross-case result
 
-Case 52 adds a new maintenance trigger and a new read/retention relation:
+Case 52 now adds both a maintenance trigger and a persistence horizon for the control state that represents that trigger:
 
 ```text
 logical READ request
@@ -348,7 +429,11 @@ ECC-correctable current payload
     !=
 remaining future correction margin
     !=
-read-count / Vpass / relocation policy
+live read-count / policy state
+    !=
+latest non-volatile maintenance checkpoint
+    !=
+relocation / renewal decision
     !=
 optional probabilistic RDR recovery
 ```
@@ -373,7 +458,7 @@ permanent carrier classification
     -> changes future allocation authority
 ```
 
-The common higher-level relation is maintenance before recoverability margin is exhausted. The trigger, physical mechanism, and authority transition are different.
+The common higher-level relation is maintenance before recoverability margin is exhausted. The trigger, physical mechanism, control-state representation, persistence horizon, and authority transition are different.
 
 ## Claim ledger
 
@@ -382,31 +467,37 @@ The common higher-level relation is maintenance before recoverability margin is 
 | NAND `Read Disturb` vocabulary predates 2015 | H/P | Fujitsu 2002-priority filing + Micron 2006 TN-29-17 + later prior art |
 | Micron 2006 classifies Read Disturb as a temporary failure rather than automatic permanent bad-block identity | H/P | TN-29-17 Rev. A 8/06 |
 | Micron 2006 gives multiple mitigation choices: volatile residency, master/working-copy renewal, and stronger-ECC/pre-limit relocation | H/P | TN-29-17 best-practices section |
-| A system-designated read count can act as a maintenance trigger | H/P/E | Micron TN-29-17 + later US7818525B1 |
-| A read to one NAND row can shift threshold voltages of unread cells in other rows of the same block | H/P | DSN 2015 §§1–2 + experimental characterization |
+| A system-designated read count can act as a maintenance trigger | H/P/E | Micron TN-29-17 + Denali application + later sources |
+| By July 2009, a public controller disclosure explicitly stored read-count state in a non-volatile block table and reloaded it at power-up | H/P | US20090193174A1 / US7937521B2 family text |
+| In the Denali embodiment the live table is updated in system memory and written to non-volatile memory periodically / at shutdown | H/P | US20090193174A1 family description |
+| The Denali source proves every read-count increment is crash-durable | X | periodic/shutdown writeback is explicit; per-read synchronous persistence is not |
+| Cross-power availability of a maintenance counter implies zero rollback after abrupt power loss | X/E | source does not specify checkpoint interval or crash-recovery protocol |
+| A read to one NAND row can shift threshold voltages of unread cells in other rows of the same block | H/P | DSN 2015 circuit account + experimental characterization |
 | The selected page may be read while neighboring unread cells receive cumulative pass-through-voltage stress | H/P/E | DSN 2015 circuit account + characterization |
 | Read-disturb effect/RBER increases with cumulative reads and P/E wear in the tested 2Y-nm MLC chips | H/P | DSN 2015 §§3.2–3.3 |
 | Read disturb and retention-age errors are distinct error sources that can coexist | H/P | DSN 2015 error taxonomy/evaluation |
-| Per-block read count can act as a maintenance trigger | H/P/E | Micron TN-29-17 + US7818525B1 + DSN 2015 prior-work section |
 | Lowering Vpass can reduce disturb but can also create other read errors | H/P | DSN 2015 §§3.4–3.7 |
 | Vpass Tuning is proven as a deployed commercial SSD feature | X | DSN 2015 proposes/evaluates the mechanism; it does not identify a shipped controller implementation |
 | RDR intentionally adds controlled read disturbance to infer susceptible cells after an uncorrectable read | H/P | DSN 2015 §5 |
 | RDR physically restores cells to their pre-disturb threshold voltages | X | RDR estimates logical state and retries ECC; physical rewind is not the demonstrated mechanism |
 | NAND read disturb is the same mechanism as magnetic-core destructive read | X/A | only the bounded function `access can create preservation work` is comparable |
 | Every modern NAND generation has the same read-count threshold | X | Micron makes one threshold system-designated; NASA/JPL gives a negative-result boundary; later process dependence is explicit |
+| Denali's 2008 filing date is itself the public-document date | X | inspected family record gives 30 July 2009 publication of US20090193174A1 |
+| Texas Memory Systems citing Denali proves direct product genealogy | X | patent citation is documentary prior art, not implementation lineage |
 
 ## Related repositories
 
-A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for both `TN-29-17` and `read disturb` found no dedicated NAND read-disturb case to reuse. A broader history of NAND scaling, cell architecture, controllers, embedded demand paging, and manufacturer reliability techniques belongs there; this repository keeps the retention-specific relation among access, neighboring physical disturbance, ECC margin, read-count policy, relocation, recovery, and carrier-retirement authority.
+A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `read disturbance`, `NAND`, and `Denali` found no dedicated NAND read-disturb case to reuse. A broader history of NAND scaling, cell architecture, controllers, Denali/Cadence, Texas Memory Systems/IBM, embedded demand paging, and manufacturer reliability techniques belongs there; this repository keeps the retention-specific relation among access, neighboring physical disturbance, ECC margin, read-count policy, control-state checkpointing, relocation, recovery, and carrier-retirement authority.
 
-[`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) supplies the anti-anachronism discipline. `Read Disturb`, `Vpass Tuning`, and `Read Disturb Recovery` are source vocabulary where cited; `access-stress clock`, `future-retention cost`, and `carrier-retirement authority` are modern analytical terms.
+[`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) supplies the anti-anachronism discipline. `Read Disturb`, `Vpass Tuning`, and `Read Disturb Recovery` are source vocabulary where cited; `access-stress clock`, `future-retention cost`, `maintenance epoch`, and `carrier-retirement authority` are modern analytical terms.
 
 ## Sources
 
 1. Yu Cai, Yixin Luo, Saugata Ghose, Erich F. Haratsch, Ken Mai, Onur Mutlu, **“Read Disturb Errors in MLC NAND Flash Memory: Characterization, Mitigation, and Recovery,”** *45th Annual IEEE/IFIP International Conference on Dependable Systems and Networks (DSN)*, Rio de Janeiro, 2015, pp. 438–449, DOI `10.1109/DSN.2015.49`. Author/institution-hosted full paper: <https://istc-cc.cmu.edu/publications/papers/2015/flash-read-disturb-errors_dsn15.pdf>. Institutional abstract: <https://istc-cc.cmu.edu/publications/papers/2015/flash-read-disturb-errors_dsn15_abs.shtml>.
-2. Holloway H. Frost, Charles J. Camp, Timothy J. Fisher, James A. Fuxa, Lance W. Shelton, **“Efficient reduction of read disturb errors in NAND FLASH memory,”** US7818525B1, priority 12 August 2009, filed 24 September 2009, published 19 October 2010, original assignee Texas Memory Systems, Inc.: <https://patents.google.com/patent/US7818525B1/en>.
-3. Keonsoo Ha, Jaeyong Jeong, Jihong Kim, **“A read-disturb management technique for high-density NAND flash memory,”** *4th Asia-Pacific Workshop on Systems (APSys 2013)*, Article 13, DOI `10.1145/2500727.2500743`. Seoul National University publication record: <https://snu.elsevierpure.com/en/publications/a-read-disturb-management-technique-for-high-density-nand-flash-m/>.
-4. Micron Technology, Inc., **TN-29-17: _NAND Flash Design and Use Considerations_**, Rev. A 8/06. Historical Micron URL preserved in contemporary/later references: `http://download.micron.com/pdf/technotes/nand/tn2917.pdf`; surviving Rev. A extracted mirror: <https://www.scribd.com/document/919510643/design-and-use-considerations>. Evidence/provenance details: [`../evidence/52-micron-2006-read-disturb-temporary-failure-maintenance-deepening.md`](../evidence/52-micron-2006-read-disturb-temporary-failure-maintenance-deepening.md).
-5. Fujitsu Ltd., **“Read disturb alleviated flash memory,”** US20030137873A1 / US6707714B2, priority 22 January 2002, U.S. application publication 24 July 2003: <https://patents.google.com/patent/US20030137873A1/en>.
-6. Douglas Sheldon and Michael Freie, **_Disturb Testing in Flash Memories_**, JPL Publication 08-7, March 2008, NASA/JPL NEPP: <https://nepp.nasa.gov/files/13582/07-100%20Sheldon_JPL%20Distrub%20Testing%20in%20Flash%20Mem.pdf>.
-7. Micron Technology, Inc., **FAQs**, current official support page, including `READ DISTURB` / refresh and bad-block guidance: <https://www.micron.com/sales-support/sales/faqs>.
+2. Robert Alan Reid, **_Read disturbance management in a non-volatile memory system_**, U.S. application `US12/022,146`, application publication **US20090193174A1** (30 July 2009), later grant **US7937521B2** (3 May 2011): <https://patents.google.com/patent/US7937521B2/en>. Bounded deepening: [`../evidence/52-denali-2008-2009-persistent-read-count-checkpoint-deepening.md`](../evidence/52-denali-2008-2009-persistent-read-count-checkpoint-deepening.md).
+3. Holloway H. Frost, Charles J. Camp, Timothy J. Fisher, James A. Fuxa, Lance W. Shelton, **“Efficient reduction of read disturb errors in NAND FLASH memory,”** US7818525B1, priority 12 August 2009, filed 24 September 2009, published 19 October 2010, original assignee Texas Memory Systems, Inc.: <https://patents.google.com/patent/US7818525B1/en>.
+4. Keonsoo Ha, Jaeyong Jeong, Jihong Kim, **“A read-disturb management technique for high-density NAND flash memory,”** *4th Asia-Pacific Workshop on Systems (APSys 2013)*, Article 13, DOI `10.1145/2500727.2500743`. Seoul National University publication record: <https://snu.elsevierpure.com/en/publications/a-read-disturb-management-technique-for-high-density-nand-flash-m/>.
+5. Micron Technology, Inc., **TN-29-17: _NAND Flash Design and Use Considerations_**, Rev. A 8/06. Historical Micron URL preserved in contemporary/later references: `http://download.micron.com/pdf/technotes/nand/tn2917.pdf`; surviving Rev. A extracted mirror: <https://www.scribd.com/document/919510643/design-and-use-considerations>. Evidence/provenance details: [`../evidence/52-micron-2006-read-disturb-temporary-failure-maintenance-deepening.md`](../evidence/52-micron-2006-read-disturb-temporary-failure-maintenance-deepening.md).
+6. Fujitsu Ltd., **“Read disturb alleviated flash memory,”** US20030137873A1 / US6707714B2, priority 22 January 2002, U.S. application publication 24 July 2003: <https://patents.google.com/patent/US20030137873A1/en>.
+7. Douglas Sheldon and Michael Freie, **_Disturb Testing in Flash Memories_**, JPL Publication 08-7, March 2008, NASA/JPL NEPP: <https://nepp.nasa.gov/files/13582/07-100%20Sheldon_JPL%20Distrub%20Testing%20in%20Flash%20Mem.pdf>.
+8. Micron Technology, Inc., **FAQs**, current official support page, including `READ DISTURB` / refresh and bad-block guidance: <https://www.micron.com/sales-support/sales/faqs>.
