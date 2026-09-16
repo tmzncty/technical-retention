@@ -157,3 +157,28 @@ BKOPS completion != sanitization
 A later bounded pass supersedes the **lower-bound uncertainty** of this 5.1-only slice without changing its control-semantics findings. Public JESD84-A441 metadata and period e.MMC 4.41 manufacturer documentation now ground generic manual `BKOPS_START` / `BKOPS_EN` by at least **2010**. Accordingly, e.MMC 5.1 remains the inspected witness for the richer manual-versus-`AUTO_EN` scheduling split, but it is **not** treated as the origin of generic manual BKOPS.
 
 See [`135-emmc441-2010-manual-bkops-prior-art-deepening.md`](135-emmc441-2010-manual-bkops-prior-art-deepening.md). Exact A44→A441 clause introduction and the intermediate 4.5/4.51/5.0 sequence remain open and must not be inferred from endpoint titles.
+
+## Direct endpoint follow-up — e.MMC 5.0 vs 5.1 autonomous scheduling control
+
+A further bounded pass now directly inspects the **September-2013 JESD84-B50** endpoint rather than treating the whole pre-5.1 interval as one unknown block.
+
+The result is deliberately two-sided:
+
+- B50 §6.6.28 already makes Background Operations mandatory and defines the generic `BKOPS_START` / `BKOPS_EN bit0` path as a manual host/device handshake;
+- B50 §7.4.76 still marks `BKOPS_EN bit[7:1]` reserved;
+- yet B50's Sleep-notification path separately acknowledges devices capable of **autonomously initiating background operations** before Sleep;
+- B51 §6.6.25 / §7.4.82 then makes the manual/autonomous split explicit and assigns `BKOPS_EN bit1` to `AUTO_EN`, allowing device-started/stopped background work during idle time while enabled.
+
+That closes the endpoint relation:
+
+```text
+internal autonomous capability
+    != generic host-visible autonomous-BKOPS permission
+
+B50 Sleep-transition opportunity
+    != B51 AUTO_EN idle-time scheduling regime
+```
+
+It still does **not** prove that B51 was the first revision containing `AUTO_EN`, because B51's own cover says it revises **JESD84-B50.1 (July 2014)** and that intermediate body remains uninspected here.
+
+See [`135-jesd84-b50-b51-2013-2015-autonomous-bkops-interface-deepening.md`](135-jesd84-b50-b51-2013-2015-autonomous-bkops-interface-deepening.md). The remaining chronology debt is now narrower: direct B50.1 inspection plus any earlier 4.5/4.51 transition work that becomes retention-relevant.
