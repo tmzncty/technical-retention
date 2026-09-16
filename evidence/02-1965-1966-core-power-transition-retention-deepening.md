@@ -32,6 +32,24 @@ a machine policy to preserve the old core image at restart
 
 The 7090 witness therefore complements this record's IBM 1401 / DEC PDP-7 preservation examples rather than replacing them.
 
+### Earlier commercial retention vocabulary now split out
+
+A separate bounded record, [`02-ibm-705-1954-1955-indefinite-retention-vocabulary-deepening.md`](02-ibm-705-1954-1955-indefinite-retention-vocabulary-deepening.md), moves the **public commercial vocabulary** layer earlier without pretending to move the machine-level power-transition evidence. A CHM-preserved IBM 705 EDPM brochure dated 1955 says magnetic cores can remember information `indefinitely` and describes the cores as extremely stable, while an inspected 1954 705 brochure foregrounds speed/capacity/random access and has no searchable `indefinite` / `remember` match.
+
+The new record treats the 1955 wording as a period product-language witness, not as a numerical lifetime specification, a power-cycle guarantee, or restart semantics:
+
+```text
+commercial "indefinite" retention vocabulary
+    !=
+quantified retention lifetime
+    !=
+power-transition qualification
+    !=
+startup preservation policy
+```
+
+It therefore complements rather than replaces the 7090 / 1401 / PDP-7 machine evidence below.
+
 ## Sources inspected
 
 ### IBM 1401 Data Processing System — Operator's Guide, Form A24-3144-2
