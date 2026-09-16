@@ -12,6 +12,8 @@ Independent-vendor intervention-topology follow-on: [`111-netapp-ontap-long-powe
 
 Earlier independent periodic-power-up follow-on: [`111-hitachi-2014-2016-flashmax-periodic-poweron-deepening.md`](111-hitachi-2014-2016-flashmax-periodic-poweron-deepening.md). Surviving Hitachi/HGST FlashMAX product documentation supplies a separate vendor/product-family witness by instructing operators to turn on the server once every three months during storage, alongside a wear-dependent maximum-power-off table. It closes the broad independent periodic-power-up witness gap while preserving a narrower open question: the inspected FlashMAX sources do **not** state a retention-specific minimum powered duration or completion signal.
 
+Named-device all-bit-refresh follow-on: [`111-oracle-2020-2021-nvme-all-bit-refresh-recommissioning-deepening.md`](111-oracle-2020-2021-nvme-all-bit-refresh-recommissioning-deepening.md). Oracle's 6.4 TB NVMe SSD v1 documentation closes that narrower gap for a distinct product/document corpus: the firmware refresh policy runs while powered, approximately fourteen days are required for the policy to reach all bits, and the fixed-issue table says two weeks powered fully resolves Bug 27759886. The same source supplies a destructive secure-erase path for immediate all-bit refresh, making `medium renewal != old-payload preservation` explicit. Oracle's own product guide identifies an Intel controller and Intel proprietary controller firmware, so the Oracle corpus is not double-counted as an independent controller lineage.
+
 ## Source 1 — IBM Support: “Potential for SSD data loss after extended shutdown”
 
 **Current page:** <https://www.ibm.com/support/pages/potential-ssd-data-loss-after-extended-shutdown>
@@ -194,6 +196,31 @@ periodic power-on instruction
 
 The same manual separately scopes an integrity check to **unanticipated shutdown**, so that restart check is not silently promoted into the mechanism behind the periodic-storage instruction.
 
+## Follow-on — Oracle supplies a named-device powered-duration and issue-completion witness
+
+The bounded follow-on in [`111-oracle-2020-2021-nvme-all-bit-refresh-recommissioning-deepening.md`](111-oracle-2020-2021-nvme-all-bit-refresh-recommissioning-deepening.md) closes the narrower FlashMAX gap without turning one product into a universal SSD rule.
+
+Oracle's June 2020 user guide gives the 6.4 TB NVMe SSD a three-month power-off retention specification at rated write endurance and 40 °C. The November 2021 v1 product notes then document Bug ID **27759886**, fixed in RF30, and state that the firmware refresh policy works in the background while the drive remains powered. Applying that policy to **all bits** takes approximately **14 days** and varies by product. The fixed-issues table further says that, absent the immediate erase sequence, the issue is **fully resolved after two weeks of device power-on**.
+
+That gives a new state decomposition:
+
+```text
+power restored
+    != refresh-policy coverage complete
+    != issue-scoped completion
+```
+
+Oracle also offers secure erase when immediate refresh of all bits is desired and warns that erase destroys all device data. This supplies a second retention boundary inside one named issue:
+
+```text
+renewing / refreshing medium state
+    != preserving the old logical payload
+```
+
+The background powered-wait path and the destructive erase path can both close the documented long-offline issue while carrying opposite payload contracts.
+
+The source-lineage boundary is equally important. Oracle's own product guide identifies one Intel Flash Memory NVMe Controller and Intel custom/proprietary PCIe-to-NAND controller firmware. Oracle therefore supplies an independent **operator/product-document corpus** relative to IBM/Dell/Hitachi, but is not counted as proof of an independent controller architecture or controller-firmware lineage from Intel.
+
 ## Cross-case grounding
 
 ### Case 76
@@ -204,17 +231,23 @@ NetApp's public support page paraphrases a JEDEC-derived 2–3 month horizon and
 
 The HGST 2015 datasheet contributes a named commercial-product statement — `3-month retention at 40 °C at EOL` — while the Hitachi guide separately contributes the stored-device power-on cadence. Their shared number is not treated as identity of evidence type or as a proof that JEDEC mandated that runbook.
 
+Oracle independently supplies a named-product three-month / 40 °C retention specification at rated write endurance, while its product notes separately supply the powered all-bit-refresh duration for Bug 27759886. Numerical proximity does not collapse qualification and maintenance into one relation.
+
 ### Case 37
 
-Case 37 grounds a Samsung 840 EVO product-specific periodic-refresh statement and the fact that the described background feature does not operate while powered off. That is a useful earlier product-level witness for `unpowered persistence != powered maintenance availability`, but it is not evidence for IBM/Dell/NetApp/FlashMAX implementation identity.
+Case 37 grounds a Samsung 840 EVO product-specific periodic-refresh statement and the fact that the described background feature does not operate while powered off. That is a useful earlier product-level witness for `unpowered persistence != powered maintenance availability`, but it is not evidence for IBM/Dell/NetApp/FlashMAX/Oracle implementation identity.
+
+Oracle's issue also supplies a useful negative control: its long-offline problem can exceed ECC capability and surface as uncorrectable reads or power-on ASSERT/BAD_CONTEXT, rather than merely as the old-data read-performance degradation at issue in Case 37.
 
 ### Case 44
 
 NetApp's public phrase `remove all data` is a long-storage preparation instruction. It is **not** treated as proof of NVMe Sanitize, cryptographic erase, purge assurance, or physical erasure of every hidden NAND embodiment. Case 44 remains the device-level sanitize-semantics comparison; the relation here is functional contrast only.
 
+Oracle's secure-erase path is likewise retained as the vendor's destructive immediate-refresh operation in this issue context; it is not promoted into an independent sanitization-verification result.
+
 ### computing-archaeology reuse check
 
-Repository search for `SSD data retention extended shutdown power-off refresh`, `SU490`, `SSD power off retention`, and `FlashMAX` in `tmzncty/computing-archaeology` returned no dedicated case to reuse in these slices. Generic SSD/controller and Virident/HGST product history remains out of scope here.
+Repository search for `SSD data retention extended shutdown power-off refresh`, `SU490`, `SSD power off retention`, `FlashMAX`, `Oracle 6.4 TB NVMe SSD`, and `27759886` in `tmzncty/computing-archaeology` returned no dedicated case to reuse in these slices. Generic SSD/controller, Virident/HGST, and Intel/Oracle product history remains out of scope here.
 
 ## Claim-type ledger
 
@@ -238,23 +271,30 @@ Repository search for `SSD data retention extended shutdown power-off refresh`, 
 | HGST 2015 FlashMAX datasheet states 3-month retention at 40 °C at EOL | H/P | strong; commercial product statement |
 | Hitachi/HGST supplies an independent periodic-power-up witness outside IBM/Dell/Lenovo support lineage | H/E | strong at vendor/product-document level; not a component-supply-chain-independence claim |
 | FlashMAX periodic power-on establishes a minimum powered duration or completion event | X | rejected; inspected source states neither |
+| Oracle 6.4 TB NVMe v1 firmware policy refreshes media in the background while powered | H/P | strong; named product notes / Bug 27759886 |
+| Oracle says all-bit refresh-policy coverage takes about 14 days and varies by product | H/P | strong; product-specific duration, not universal constant |
+| Oracle says two weeks powered fully resolves Bug 27759886 | H/P | strong; issue-scoped completion, not universal device-health certificate |
+| Oracle secure erase provides immediate all-bit refresh while destroying device data | H/P | strong; destructive alternative in the same issue context |
+| medium renewal == preservation of old logical payload | X | rejected directly by Oracle's paired background-wait / secure-erase paths |
+| Oracle documentation proves an independent controller lineage from Intel | X | rejected; Oracle identifies Intel controller ASIC and proprietary Intel controller firmware |
 | NetApp `remove all data` proves sanitization assurance | X | rejected |
 | named NetApp post-storage `Failed-Unsupported` reports prove NAND user-bit charge loss | X | rejected; public issue text does not resolve cause |
 | vendor guidance proves one universal SSD refresh algorithm | X | rejected |
 | three months is deterministic device failure time | X | rejected |
-| Case 37 -> IBM/Dell/NetApp/FlashMAX direct genealogy | X | rejected |
+| Case 37 -> IBM/Dell/NetApp/FlashMAX/Oracle direct genealogy | X | rejected |
 
 ## Evidence gaps deliberately left open
 
 1. first-publication archaeology for Dell article 000198930 before the 14 May 2026 version-3 modification;
 2. named-drive/controller mapping for Dell's described hidden retention tasks;
-3. telemetry or service logs proving maintenance completion;
+3. independent host-visible telemetry or service logs proving **device-local** all-bit/background-retention completion outside the ESS system-level scrub witness — Oracle supplies issue-scoped duration/completion semantics but not a progress counter in the inspected pages;
 4. independent post-endurance fault/retention tests of the recommended shutdown schedules;
-5. independent cross-vendor **periodic-power-up** guidance is now grounded by FlashMAX, but a separate vendor witness combining periodic power-up with an explicit **minimum powered duration and completion semantics** remains open outside IBM/Dell lineage;
+5. the prior gap for a separate vendor witness combining periodic/powered maintenance with an explicit minimum powered duration and completion semantics is now **closed in bounded form by Oracle 6.4 TB NVMe v1 / Bug 27759886**; remaining work is cross-generation generality, direct firmware internals, and observable progress telemetry;
 6. direct firmware or patent evidence for Dell's read-triggered retention path;
-7. capacity-to-maintenance-time scaling;
+7. capacity-to-maintenance-time scaling beyond Oracle's explicit `varies by product` and Dell's qualitative larger-capacity statement;
 8. public engineering rationale for IBM's one-week TS7770 cadence versus the two-week general Storwize/FlashSystem cadence;
 9. full authenticated SU490 text plus publication/revision chronology;
 10. public root-cause/resolution evidence for NetApp's named TPM3/TPM4 post-storage `Failed-Unsupported` cases;
 11. exact SAS/NVMe device-level semantics of NetApp's gated `scsi format` preparation procedure;
-12. FlashMAX revision/publication genealogy, a retention-specific minimum powered duration if one exists, and any operator-visible completion evidence tied specifically to long-offline retention rather than unexpected-shutdown recovery.
+12. FlashMAX revision/publication genealogy, a retention-specific minimum powered duration if one exists, and any operator-visible completion evidence tied specifically to long-offline retention rather than unexpected-shutdown recovery;
+13. Oracle RF30 first-release chronology, exact internal refresh/rewrite geometry, and whether later Intel/Oracle product generations preserve the same approximately fourteen-day policy.
