@@ -15,6 +15,7 @@ The project terms `host-driven verification`, `coverage policy`, `medium-readabi
 ## Evidence navigation
 
 - [SCSI VERIFY vs reassignment authority, 2001–2022](../evidence/103-scsi-2001-2022-verification-vs-remediation-authority-deepening.md) — adds a same-manual 2022 negative control: verify-medium operations do not trigger automatic read reassignment, while read operations may gain automatic-reallocation authority through `ARRE` and `REASSIGN BLOCKS` remains a separate remediation command; also brackets changing `REASSIGN BLOCKS` payload semantics in T10 records from 2001 to 2005.
+- [T10 REASSIGN BLOCKS payload-protection transition, 2001–2004](../evidence/103-t10-2001-2004-reassign-payload-protection-transition-deepening.md) — tightens the direct standards-text transition from the older `listed-block data may be altered` rule in SBC-2 Revision 9 (May 2003) to the conditional recover-and-carry-forward rule in the final T10 SBC-2 Revision 16 (13 November 2004), while separately tracing the 03-176 → 03-365 end-to-end-protection proposal lineage and preserving proposal-versus-incorporated-text boundaries.
 
 ---
 
@@ -152,7 +153,7 @@ The exact accepted proposal or revision at which this wording changed has not ye
 
 This matters to Case 103 because a transition from `verification evidence` to `repair` cannot be analyzed merely by seeing the word `REASSIGN`; the dated command semantics still matter.
 
-Detailed record: [`../evidence/103-scsi-2001-2022-verification-vs-remediation-authority-deepening.md`](../evidence/103-scsi-2001-2022-verification-vs-remediation-authority-deepening.md).
+Detailed record: [`../evidence/103-scsi-2001-2022-verification-vs-remediation-authority-deepening.md`](../evidence/103-scsi-2001-2022-verification-vs-remediation-authority-deepening.md). The newer [`../evidence/103-t10-2001-2004-reassign-payload-protection-transition-deepening.md`](../evidence/103-t10-2001-2004-reassign-payload-protection-transition-deepening.md) tightens the directly observed standards-text bracket to **SBC-2 Revision 9 (May 2003) → Revision 16 (13 November 2004)** and separately traces the proposal-stage protection-information work without claiming an exact first incorporated revision.
 
 ---
 
@@ -216,7 +217,7 @@ replace an embodiment
 preserve the prior value across replacement
 ```
 
-The 2022 Seagate manual directly separates VERIFY from automatic read reassignment; the 2001-to-2005 T10 wording change further warns that even `REASSIGN BLOCKS` cannot be treated as one timeless payload-preservation contract.
+The 2022 Seagate manual directly separates VERIFY from automatic read reassignment; the T10 transition is now directly bracketed more tightly by **SBC-2 Revision 9 (May 2003)** and the final committee **Revision 16 (13 November 2004)**, warning that even `REASSIGN BLOCKS` cannot be treated as one timeless payload-preservation contract.
 
 > **verification evidence ≠ reassignment ≠ guaranteed payload recovery.**
 
@@ -294,7 +295,9 @@ Case 103 now supports these bounded relations:
 14. `verify error recovery ≠ automatic read reassignment` in the bounded 2022 Seagate contract;
 15. `same LBA + different command path ≠ same remediation authority`;
 16. `successful recovery during VERIFY ≠ evidence of physical relocation`;
-17. `same command name across revisions ≠ identical payload-preservation contract`.
+17. `same command name across revisions ≠ identical payload-preservation contract`;
+18. `proposal-stage protection intent ≠ incorporated command text`;
+19. `logical-address continuity ≠ unconditional old-payload recovery even after the stronger Revision 16 contract`.
 
 These are project analytical statements, not T10/Toshiba/Seagate historical terminology.
 
@@ -323,28 +326,37 @@ Still open:
 - named host utilities that build persistent whole-device sweeps from VERIFY;
 - cross-vendor disk/controller use of VERIFY internally;
 - empirical fault injection for recovered, medium-error, and MISCOMPARE outcomes;
-- the exact T10 proposal / accepted revision that changed `REASSIGN BLOCKS` from the older `data may be altered` wording to the recover-if-possible rule;
+- direct inspection of SBC-2 Revisions 10–15b to identify the **first exact revision** that changed `REASSIGN BLOCKS` from the older `data may be altered` wording to the conditional recover-and-carry-forward rule; the current direct-text bracket is Revision 9 → Revision 16;
+- identification of the exact T10 motion / incorporated proposal that changed the `REASSIGN BLOCKS` command text, rather than inferring it from the broader 03-176/03-365 protection proposal family;
 - a named-drive trace that captures VERIFY failure followed by host-selected `REASSIGN BLOCKS`, write-driven relocation, or another remediation path;
 - cross-vendor product evidence on whether verify-medium operations can trigger relocation.
 
-The former broad debt `interaction with grown-defect reassignment` is therefore **partly closed at the public interface-contract level** by the 2022 Seagate negative control. Product traces and revision archaeology remain open.
+The former broad debt `interaction with grown-defect reassignment` is therefore **partly closed at the public interface-contract level** by the 2022 Seagate negative control. The standards-transition debt is also narrowed from a 2001→2005 bracket to **SBC-2 Revision 9 (May 2003) → Revision 16 (November 2004)**, with proposal-stage lineage recovered. Product traces and the exact first incorporated revision remain open.
 
 ---
 
 ## Source and inspection notes
 
-Primary sources used by the new deepening include:
+Primary sources used by the reassignment deepening now include:
 
 1. T10 `01-210r0`, **_Reassign Blocks 2 TBytes Support_**, 11 July 2001.  
    <https://www.t10.org/ftp/t10/document.01/01-210r0.pdf>
-2. T10 `05-344r0`, **_Working Draft SCSI Block Commands - 3 (SBC-3), Revision 0_**, 9 September 2005.  
+2. T10 SBC-2 project page, Project 1417-D / INCITS 405.  
+   <https://www.t10.org/members/w_sbc2.htm>
+3. T10 `03-176r0`, **_End-to-End Data Protection_**, 1 May 2003.  
+   <https://www.t10.org/ftp/t10/document.03/03-176r0.pdf>
+4. T10 `03-371r0`, **_SCSI Commands, Architecture, & Protocol Working Group Meeting -- November 4-5, 2003_**, 6 November 2003.  
+   <https://www.t10.org/ftp/t10/document.03/03-371r0.pdf>
+5. T10 `04-114r0`, **_SBC-2 Option to Check Only the Logical Block Guard_**, 18 April 2004.  
+   <https://www.t10.org/ftp/t10/document.04/04-114r0.pdf>
+6. T10 `05-344r0`, **_Working Draft SCSI Block Commands - 3 (SBC-3), Revision 0_**, 9 September 2005.  
    <https://t10.org/ftp/t10/document.05/05-344r0.pdf>
-3. T10 `05-340r2`, **_SBC-3 SPC-4 Background scan additions_**, 11 November 2005.  
+7. T10 `05-340r2`, **_SBC-3 SPC-4 Background scan additions_**, 11 November 2005.  
    <https://www.t10.org/ftp/t10/document.05/05-340r2.pdf>
-4. Seagate Technology LLC, **_Serial Attached SCSI (SAS) SCSI Commands Reference Manual_**, Publication 100293068, Rev. M, June 2022.  
+8. Seagate Technology LLC, **_Serial Attached SCSI (SAS) SCSI Commands Reference Manual_**, Publication 100293068, Rev. M, June 2022.  
    <https://www.seagate.com/content/dam/seagate/migrated-assets/staticfiles/support/docs/manual/Interface%20manuals/100293068m.pdf>
 
-The T10/Seagate PDF texts were directly inspected through page-preserving indexed extraction. Screenshot rendering succeeded for part of the 2005 SBC-3 working draft but was unavailable for several other remote PDF pages during this pass; no layout-dependent or figure-dependent claim relies on the failed renders.
+The 2001, May-2003, November-2003, and April-2004 T10 PDFs were inspected with page-preserving text and rendered page images during the new pass. The Revision 9 and Revision 16 command texts are taken from indexed surviving copies; official T10 project/working-draft pages independently establish the revision sequence, date metadata, final-draft status, and INCITS 405-2005 mapping. Revision 9 preserves a cover-date/project-list-date discrepancy (25 May versus 31 May 2003) rather than silently normalizing it.
 
 ---
 
@@ -354,4 +366,4 @@ The T10/Seagate PDF texts were directly inspected through page-preserving indexe
 
 The 1990 Toshiba source establishes an early product-level SCSI-2-style host-issued VERIFY implementation; T10 anchors the later final SCSI-2 publication node; Seagate 1997 cleanly separates medium verification from expected-data comparison; and the 2005 SBC-3 draft exposes later cache-to-medium currentness closure before verification.
 
-The 2022 Seagate evidence now closes a further boundary at the command-contract level: **verify-medium operations can perform real error-recovery work without gaining automatic read-reassignment authority**. Ordinary reads may receive that authority through `ARRE`, while explicit `REASSIGN BLOCKS` remains a separate remediation command. T10 records from 2001–2005 also show that the remediation command's own payload-preservation semantics must be dated rather than inferred from its stable name.
+The 2022 Seagate evidence closes a further boundary at the command-contract level: **verify-medium operations can perform real error-recovery work without gaining automatic read-reassignment authority**. Ordinary reads may receive that authority through `ARRE`, while explicit `REASSIGN BLOCKS` remains a separate remediation command. The new standards-history deepening further shows that `REASSIGN BLOCKS` itself did not have one timeless payload-preservation contract: the older wording is still present in SBC-2 Revision 9 in May 2003, proposal work in 2003 explicitly brings valid protection information into reassignment semantics, and final T10 SBC-2 Revision 16 of 13 November 2004 requires recoverable user data and protection information to be carried into the reassigned logical block. The exact first incorporated revision remains deliberately open.
