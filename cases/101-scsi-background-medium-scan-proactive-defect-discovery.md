@@ -2,7 +2,7 @@
 
 ## Scope
 
-- **Object / system:** T10 SCSI Background Medium Scan (BMS) and related Background Pre-Scan controls, bounded from the archived 2004 proposal family through the March 2005 T10 approval, January 2006 clarification work, a February 2007 Seagate Cheetah 15K.5 FC product witness, and a bounded 2005–2006 Dell PERC controller-level `Patrol Read` comparison.
+- **Object / system:** T10 SCSI Background Medium Scan (BMS) and related Background Pre-Scan controls, bounded from the archived 2004 proposal family through the March 2005 T10 approval, January 2006 clarification work, an April 2005 Dell PERC controller-level `Patrol Read` witness, February/March 2006 generic LSI MegaRAID documentation, a February 2007 Seagate Cheetah 15K.5 FC product witness, and later bounded vendor/controller comparisons.
 - **Retention question:** what work is required when a disk sector may still physically exist and remain addressable, yet its future readability has become uncertain before any application happens to request it?
 - **Status:** `grounded`.
 
@@ -10,9 +10,12 @@ This is **not** a general history of disk scrubbing, SCSI VERIFY, SMART, RAID-co
 
 > **How can a storage device proactively discover that a still-present block has become difficult or impossible to read, retain evidence of that discovery, and condition later repair without confusing detection with repair?**
 
-The project terms `readability qualification`, `coverage age`, `repair admissibility`, and `maintenance evidence` below are **engineering reconstructions**, not T10, Seagate, or Dell historical vocabulary.
+The project terms `readability qualification`, `coverage age`, `repair admissibility`, and `maintenance evidence` below are **engineering reconstructions**, not T10, Seagate, Dell, or LSI historical vocabulary.
 
-Bounded controller-level deepening: [`../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md`](../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md).
+Bounded controller-level deepenings:
+
+- [`../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md`](../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md) — Dell PERC controller-level maintenance locus, RAID-state-dependent repair, and NVRAM maintenance-state horizons;
+- [`../evidence/101-lsi-dell-2003-2006-patrol-read-documentation-lineage-deepening.md`](../evidence/101-lsi-dell-2003-2006-patrol-read-documentation-lineage-deepening.md) — 2003–2006 documentation chronology, April-2005 public-floor tightening, generic LSI witness, and Dell/LSI source-lineage weighting.
 
 ---
 
@@ -36,9 +39,9 @@ The inspected T10 and Seagate sources directly use terms including:
 - `unreadable` / `medium error`;
 - `P-list` / `G-list` in the Seagate product manual.
 
-The bounded Dell controller witness adds period vendor terms including `Background Patrol Read`, `Patrol Read`, `Auto mode`, `Manual mode`, `Consistency Check`, `SMART alerts`, and the `MegaPR` utility. Later Dell support documentation additionally exposes `PR completed Bitmap`, `Last complete Bitmap`, scheduling state, and NVRAM-held error information for the legacy implementation family.
+The bounded Dell/LSI controller witnesses add period vendor terms including `Background Patrol Read`, `Patrol Read`, `Patrol Read Mode`, `Patrol Read Status`, `Patrol Read Control`, `Auto`, `Manual`, `Manual Halt`, `Disable`, `Consistency Check`, `SMART alerts`, and the `MegaPR` utility. Later Dell support documentation additionally exposes `PR completed Bitmap`, `Last complete Bitmap`, scheduling state, and NVRAM-held error information for the legacy implementation family.
 
-Do not silently normalize T10 `Background Medium Scan` into Dell `Patrol Read`, later vendor-specific patrol terminology, filesystem `scrub`, or distributed `scanner` vocabulary. Those terms can be compared functionally but do not establish one lineage.
+Do not silently normalize T10 `Background Medium Scan` into Dell/LSI `Patrol Read`, later vendor-specific patrol terminology, filesystem `scrub`, or distributed `scanner` vocabulary. Those terms can be compared functionally but do not establish one lineage.
 
 ---
 
@@ -132,11 +135,67 @@ This prevents a false engineering inference from the earlier proposal text:
 
 The retained scan/control relation can specify that coverage is due and report progress without exposing the complete internal physical scheduling algorithm.
 
-### H/P — Dell PERC supplies a named controller-level `Patrol Read` witness by June 2005
+### H/P* — Dell PERC supplies a named controller-level `Patrol Read` witness by April 2005
 
-Dell's still-live record for **MegaPR for Linux v.1.03, A02**, released **7 June 2005**, says the utility can start, stop, and display the status of `Patrol Read` on specified PERC 3, PERC 4, and PERC 4e controllers. This closes one bounded `named RAID controller` evidence gap without establishing invention priority or first firmware availability.
+A surviving copy of Dell's **PowerEdge Expandable RAID Controller 4/Di/Si and 4e/Di/Si User's Guide**, released **April 2005**, exposes `Patrol Read Mode`, `Patrol Read Status`, and `Patrol Read Control`, with `Manual`, `Auto`, `Manual Halt`, and `Disabled` modes. The same manual separately documents `Consistency Check` and identifies `MegaRAID` as an LSI Logic trademark.
 
-A February 2006 *Dell Power Solutions* article by Drew Habas and John Sieber then describes `Background Patrol Read` as a PERC feature that issues commands across configured array drives, detects media defects, and, where redundancy permits, reconstructs data from peer drives before the affected drive writes to a reassigned sector. The same article explicitly separates Background Patrol Read from parity/mirror `Consistency Check` and predictive `SMART alerts`.
+Dell's still-live record for **MegaPR for Linux v.1.03, A02**, released **7 June 2005**, then says the utility can start, stop, and display the status of `Patrol Read` on specified PERC 3, PERC 4, and PERC 4e controllers. The page labels the package `Initial Release of MegaPR for Linux`, but also requires a minimum supporting controller firmware level and pre-existing Auto/Manual Patrol Read mode.
+
+Therefore:
+
+```text
+April 2005 named-controller Patrol Read documentation
+    !=
+7 June 2005 initial Linux utility release
+    !=
+first firmware implementation
+```
+
+The April manual is a surviving mirror rather than a current Dell-hosted artifact, so the tightened date is a strong bounded documentation witness, not an invention/firmware-origin claim.
+
+### H/P — generic LSI MegaRAID documentation exposes Patrol Read by the February/March 2006 Version 2.0 edition
+
+LSI Logic's **MegaRAID Configuration Software User's Guide**, DB15-000269-01, Version 2.0, survives in the current Broadcom archive. Its revision table gives `Version 2.0 — February 2006`, while the title/front matter identifies the surviving Second Edition as **March 2006**. The repository therefore preserves both date signals instead of silently flattening them.
+
+The manual contains a dedicated §2.4.7 `Patrol Read`. It describes preventive review for possible physical-drive errors, exposes Manual/Auto/Manual Halt/Disable modes, and reports completed iterations, active/stopped state, and the schedule for the next execution. Elsewhere it says Auto mode schedules a new Patrol Read within four hours after the last iteration completes.
+
+The same manual separately defines `Consistency Check` as verification of RAID redundancy correctness for supported RAID levels. Hence, generic LSI documentation independently confirms the interface distinction:
+
+> **Patrol Read ≠ Consistency Check.**
+
+This closes the narrow debt `obtain period LSI/MegaRAID material independent of a Dell-authored manual`. It does **not** make Dell and LSI independent engineering lineages.
+
+### H/P* — the inspected February 2003 LSI Version 1.0 manual documents Consistency Check but not Patrol Read
+
+LSI's revision history identifies DB15-000269-00 as Version 1.0 / February 2003. A surviving searchable copy of that First Edition contains explicit `Check Consistency` controls and semantics but returns no full-text match for `Patrol Read`.
+
+That negative evidence is deliberately bounded to documentation:
+
+> **the inspected 2003 Version 1.0 manual does not expose Patrol Read**
+
+is supported; the stronger statement
+
+> **no MegaRAID firmware or product had an equivalent capability in 2003**
+
+is not.
+
+This also blocks a date error: the Version 2.0 manual's repeated `Copyright © 2003–2006` cannot be used to back-date its Patrol Read section to 2003.
+
+### H/P — Dell/LSI Patrol Read evidence is lineage-related rather than two clean independent vendor witnesses
+
+The April 2005 Dell manual identifies `MegaRAID` as an LSI Logic trademark, and Dell's official June 2005 support page titles the supported PERC family as `LSI Logic PERC3/... PERC 4/...`. LSI's own documentation describes MegaRAID controllers integrated into systems by other manufacturers.
+
+The defensible provenance conclusion is therefore:
+
+> **Dell PERC and LSI MegaRAID documents can corroborate Patrol Read semantics, but their corporate mastheads should not be counted mechanically as two independent implementation lineages.**
+
+This does not prove bit-for-bit firmware identity, identical behavior across every PERC/MegaRAID model, or invention priority.
+
+Detailed chronology/source-lineage record: [`../evidence/101-lsi-dell-2003-2006-patrol-read-documentation-lineage-deepening.md`](../evidence/101-lsi-dell-2003-2006-patrol-read-documentation-lineage-deepening.md).
+
+### H/P — Dell's 2006 article places Patrol Read at the RAID-controller maintenance locus
+
+A February 2006 *Dell Power Solutions* article by Drew Habas and John Sieber describes `Background Patrol Read` as a PERC feature that issues commands across configured array drives, detects media defects, and, where redundancy permits, reconstructs data from peer drives before the affected drive writes to a reassigned sector. The same article explicitly separates Background Patrol Read from parity/mirror `Consistency Check` and predictive `SMART alerts`.
 
 This gives a controller-level maintenance locus that must not be silently collapsed into the drive-side T10 BMS relation:
 
@@ -147,7 +206,7 @@ device-side BMS
 
 Chronological proximity in 2005–2006 is not proof that one implementation descended from the other or that PERC invoked the standardized T10 BMS operation internally.
 
-Detailed record: [`../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md`](../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md).
+Detailed controller-state record: [`../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md`](../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md).
 
 ### H/P — a 2007 Seagate product manual documents BMS as shipped drive behavior
 
@@ -203,6 +262,8 @@ The same documentation says an interrupted **Auto** Patrol Read restarts from th
 
 The completion bitmap is also a recent per-drive summary, not a per-LBA timeless certificate.
 
+Generic LSI Version 2.0 adds a period controller-side recurrence witness: completed-iteration count, active/stopped state, and next-execution schedule are exposed, while Auto mode schedules another pass relative to prior completion. Those fields still do not prove a per-LBA persistent verification ledger or power-loss-persistent exact frontier.
+
 ---
 
 ## Trigger and timing structure
@@ -219,7 +280,8 @@ BMS and the bounded controller comparison make several clocks visible:
 8. power-on pre-scan coverage progress;
 9. controller-level recurrence scheduling time;
 10. recent completion-summary window;
-11. one interrupted pass's execution frontier.
+11. one interrupted pass's execution frontier;
+12. controller documentation / utility-release time, which is not the same clock as feature conception or firmware introduction.
 
 These times must not be collapsed.
 
@@ -227,7 +289,7 @@ A medium error discovered at time `t2` may have been created at some unknown ear
 
 > **scan completion ≠ timeless readability certificate.**
 
-Likewise, a retained schedule or recent completion bitmap does not necessarily retain the exact LBA/frontier required to continue an interrupted controller scan without repeating work.
+Likewise, a retained schedule or recent completion bitmap does not necessarily retain the exact LBA/frontier required to continue an interrupted controller scan without repeating work. And a host utility published at one date does not by itself date the underlying controller capability to that same day.
 
 ---
 
@@ -247,9 +309,10 @@ Keep these separate:
 - a logical block is remapped while the old physical sector remains on the medium;
 - a log entry is cleared after handling;
 - a controller retains recurring-maintenance policy but loses the exact in-flight execution frontier;
+- documentation survives while exact first implementation chronology is lost;
 - secure sanitization of old media embodiments.
 
-Calling all of these `disk failure` would lose the relation under study.
+Calling all of these `disk failure` or `feature history` would lose the relation under study.
 
 ---
 
@@ -278,7 +341,7 @@ The Dell PERC witness adds one controller-level branch in which redundancy may s
 Both BMS/PERC Patrol Read and ZFS scrub proactively read state before ordinary demand exposes a fault, but they qualify different relations.
 
 - BMS is device-local medium readability/recovery work under a SCSI drive interface.
-- PERC Patrol Read is controller-orchestrated media verification with RAID-aware repair context.
+- PERC/MegaRAID Patrol Read is controller-orchestrated media verification with RAID-aware repair context.
 - ZFS scrub is filesystem/pool-level checksum and redundancy verification with end-to-end block identity and repair semantics.
 
 A disk sector can be readable while the filesystem block is semantically/checksum wrong; a filesystem checksum can also identify bad content without explaining the physical-sector defect mechanism.
@@ -297,9 +360,19 @@ A warning/counter may indicate risk without proving which particular block is un
 
 ### Case 83 / Synthesis 08 — HDFS and distributed integrity maintenance
 
-HDFS BlockScanner and GFS idle checking show proactive integrity discovery at the distributed replica layer. BMS shows a device-local function; PERC Patrol Read adds a controller-level array function between that layer and a filesystem/distributed checker.
+HDFS BlockScanner and GFS idle checking show proactive integrity discovery at the distributed replica layer. BMS shows a device-local function; PERC/MegaRAID Patrol Read adds a controller-level array function between that layer and a filesystem/distributed checker.
 
-The shared functional pattern is `background verification before demand`. It does not establish a T10→PERC→HDFS/GFS genealogy, identical integrity semantics, or identical repair authority.
+The shared functional pattern is `background verification before demand`. It does not establish a T10→PERC/MegaRAID→HDFS/GFS genealogy, identical integrity semantics, or identical repair authority.
+
+### Case 111 — evidence/source-lineage weighting
+
+Case 111's IBM/Lenovo documentation deepening already showed that a second corporate masthead can represent closely related operational guidance rather than a cleanly independent engineering witness. Case 101 now adds a different hardware-controller example: Dell records themselves expose LSI Logic / MegaRAID provenance around the relevant PERC family.
+
+The comparison is methodological only:
+
+> **source multiplicity ≠ engineering-lineage multiplicity.**
+
+It does not assert a historical relationship between IBM/Lenovo SSD guidance and Dell/LSI controller development.
 
 ### Synthesis 26 — maintenance-control-state persistence horizons
 
@@ -307,7 +380,7 @@ The Dell PERC evidence provides a bounded controller example in which NVRAM-held
 
 > **maintenance-control persistence horizon ≠ maintenance-execution persistence horizon.**
 
-This is a functional comparison, not a claim of shared implementation with DRAM, NAND, SSD, or HDFS maintenance-state cases.
+Generic LSI documentation independently exposes recurrence/status state but does not itself prove exact checkpoint persistence. This is a functional comparison, not a claim of shared implementation with DRAM, NAND, SSD, or HDFS maintenance-state cases.
 
 ---
 
@@ -323,11 +396,18 @@ This case makes **no invention-priority claim** for:
 - filesystem scrub;
 - distributed checksum scanning.
 
-`04-198r5` itself says proprietary drive methods and operating-system scanning already existed. The March 2005 plenary evidence establishes a standards-inclusion decision, not invention. Dell's June 2005 MegaPR record establishes a named PERC controller Patrol Read control surface, not first invention or direct descent from T10 BMS. The 2007 Seagate manual establishes one drive-side product witness, not universal adoption.
+`04-198r5` itself says proprietary drive methods and operating-system scanning already existed. The March 2005 plenary evidence establishes a standards-inclusion decision, not invention. The April 2005 Dell manual now moves the named PERC public-document floor earlier than the June MegaPR utility release, but neither artifact establishes first firmware implementation or invention. The 2007 Seagate manual establishes one drive-side product witness, not universal adoption.
 
-The broader ROADMAP phrase `controller patrol-read history` therefore remains partly open, but one bounded gap is now closed: **Dell PERC 3/4/4e supplies a period named controller-level Patrol Read witness by June 2005.** A full history still needs pre-2005 genealogy, LSI/MegaRAID material independent of Dell branding, IBM ServeRAID and other controller vendors, SCSI VERIFY-based host/controller implementations, cross-vendor parity consistency-check distinctions, and evidence about how `patrol read` terminology moved across vendors.
+The broader ROADMAP phrase `controller patrol-read history` therefore remains partly open, but two bounded gaps are now closed:
 
-A fresh repository search found no dedicated `patrol read` / `background medium scan` history in `tmzncty/computing-archaeology`. If that broader engineering genealogy is built later, it should live there and Case 101 should remain the retention-specific BMS/PERC boundary.
+- **named Dell PERC 4/Di/Si-family Patrol Read documentation exists by April 2005**;
+- **generic LSI MegaRAID Patrol Read documentation exists in the February/March 2006 Version 2.0 manual**, while the inspected February 2003 Version 1.0 manual documents Consistency Check but contains no Patrol Read text match.
+
+The second statement is a documentation chronology, not an implementation chronology. Dell and LSI should also not be counted naively as independent vendor lineages because period Dell records explicitly expose LSI Logic / MegaRAID provenance around the relevant controller family.
+
+A full history still needs earlier firmware/release-note evidence, model-specific OEM/retail controller lineage, IBM ServeRAID and genuinely independent controller vendors, SCSI VERIFY-based host/controller implementations, cross-vendor parity consistency-check distinctions, and evidence about how `patrol read` terminology moved across vendors.
+
+A fresh repository search found no dedicated `patrol read` / `background medium scan` history in `tmzncty/computing-archaeology`. If that broader engineering genealogy is built later, it should live there and Case 101 should remain the retention-specific BMS/controller boundary.
 
 ---
 
@@ -351,9 +431,47 @@ Detailed record: [`../evidence/101-wd-2024-bms-progress-repair-policy-deepening.
 
 ---
 
+## 2003–2006 LSI/Dell documentation chronology and source-lineage deepening
+
+The new bounded chronology adds a layer that the earlier Dell controller deepening did not attempt.
+
+The inspected LSI **Version 1.0 / February 2003** manual documents `Check Consistency` but yields no `Patrol Read` text match. This is treated only as documentation absence. Dell's **April 2005** PERC 4/Di/Si / 4e/Di/Si guide then exposes Patrol Read mode/status/control and Auto/Manual/Manual Halt/Disabled behavior. Dell's **7 June 2005** MegaPR Linux package is explicitly an initial utility release, but it requires a pre-existing supported firmware level and Patrol Read mode. LSI's generic **Version 2.0 / February–March 2006** manual then exposes a dedicated Patrol Read section and the same broad control vocabulary.
+
+This closes the narrow sequence:
+
+```text
+February 2003 inspected LSI manual
+    -> Consistency Check documented
+    -> no Patrol Read text match
+
+April 2005 Dell PERC guide
+    -> named-controller Patrol Read documented
+
+7 June 2005 Dell MegaPR Linux
+    -> host utility release
+    -> requires supporting firmware
+
+February/March 2006 LSI Version 2.0
+    -> generic MegaRAID Patrol Read documented
+```
+
+It does **not** close conception, first firmware, first shipment, or invention dates.
+
+The same evidence also changes how cross-vendor corroboration is counted. Dell's guide names MegaRAID as an LSI Logic trademark; Dell's official MegaPR page titles the supported PERC list with `LSI Logic`; LSI documentation explicitly contemplates MegaRAID controllers installed in systems made by other manufacturers. Therefore:
+
+> **different corporate masthead != independently evolved engineering lineage.**
+
+The Dell and LSI documents still provide useful separate artifacts and chronology, but they should be weighted as an overlapping controller ecosystem until model/firmware genealogy proves more.
+
+The LSI Version 2.0 manual's `Copyright © 2003–2006` also supplies a source-control warning: its revision table and the inspected 2003 First Edition must govern feature dating. A copyright range is not evidence that every later clause existed at the start of the range.
+
+Detailed source/claim ledger: [`../evidence/101-lsi-dell-2003-2006-patrol-read-documentation-lineage-deepening.md`](../evidence/101-lsi-dell-2003-2006-patrol-read-documentation-lineage-deepening.md).
+
+---
+
 ## 2005–2006 Dell PERC controller deepening
 
-The Dell slice closes a different layer than the Western Digital drive witness above. Dell's 7 June 2005 MegaPR release proves a public controller-side `Patrol Read` control/status interface on named PERC families. The February 2006 Dell Power Solutions article then describes controller-orchestrated media testing, redundancy-assisted reconstruction, drive reassignment/rewrite, Auto/Manual recurrence, and workload-sensitive command issue.
+The Dell slice closes a different layer than the Western Digital drive witness and the source-lineage chronology above. Dell's April 2005 user guide now supplies the earliest inspected named-controller documentation; the 7 June 2005 MegaPR release proves a public host-side `Patrol Read` control/status utility on named PERC families. The February 2006 Dell Power Solutions article then describes controller-orchestrated media testing, redundancy-assisted reconstruction, drive reassignment/rewrite, Auto/Manual recurrence, and workload-sensitive command issue.
 
 The same period article explicitly separates three maintenance/health relations:
 
@@ -403,9 +521,14 @@ Case 101 adds these controlled relations:
 17. `defect discovery ≠ payload reconstructability ≠ completed controller repair`;
 18. `persistent maintenance policy/summary/error evidence ≠ persistent exact scan-position checkpoint`;
 19. `recent per-drive completion bitmap ≠ per-LBA verification ledger`;
-20. `restarted maintenance from the beginning ≠ loss of all retained maintenance policy/history`.
+20. `restarted maintenance from the beginning ≠ loss of all retained maintenance policy/history`;
+21. `public documentation date ≠ firmware implementation date ≠ invention date`;
+22. `initial host-utility release ≠ initial controller-feature release`;
+23. `copyright range ≠ clause introduction date`;
+24. `second corporate masthead ≠ independent engineering lineage`;
+25. `completion-relative recurrence schedule ≠ fixed wall-clock period`.
 
-These are project analytical statements unless a distinction is explicitly marked above as Dell/T10 historical vocabulary. They are not assertions that T10 participants or Dell engineers used this ontology.
+These are project analytical statements unless a distinction is explicitly marked above as historical vendor/committee vocabulary. They are not assertions that T10, Dell, LSI, Seagate, or Western Digital engineers used this ontology.
 
 ---
 
@@ -414,6 +537,8 @@ These are project analytical statements unless a distinction is explicitly marke
 Case 101 strengthens a narrow theme already visible in Synthesis 08: some retention work is **epistemic maintenance**. A physical embodiment can remain present while the system's justified confidence in its future readability decays because no recent operation has exercised it. A background scan creates new evidence by deliberately reading before application demand forces the question.
 
 The Dell controller comparison adds another bounded point: a system can retain evidence that maintenance is due, recently completed, or encountered errors without retaining an exact continuation point for the interrupted act itself. The `obligation/history` relation and the `execution frontier` are different retained objects.
+
+The source-lineage deepening adds a historiographic guardrail rather than a new ontology of storage: retained documentation does not become independent evidence merely because it survives under multiple mastheads. Provenance conditions the weight of apparently repeated testimony.
 
 The stronger universal claim must be rejected. Storage does not become persistent merely because it is repeatedly observed, and not every medium needs proactive reading to remain physically stable. Here the scan does not cause magnetic retention in the ordinary sense; it changes what the system knows about the embodiment and can trigger later repair before redundancy or recoverability margin is lost.
 
@@ -426,11 +551,12 @@ Still open:
 - full archival reconstruction of `04-198r0` through `r4` and every CAP change;
 - exact final SBC-3/SPC-4 publication wording and later revision genealogy;
 - host-initiated SCSI VERIFY scrub history before device-side BMS;
-- pre-June-2005 Dell/LSI Patrol Read firmware-development and shipment chronology;
-- LSI/MegaRAID, IBM ServeRAID, and other controller vendors' period `Patrol Read` genealogy and terminology;
-- cross-vendor distinction between patrol read and parity `Consistency Check` beyond the bounded Dell witness;
+- pre-April-2005 Dell/LSI Patrol Read firmware-development, release-note, and shipment chronology;
+- exact model/firmware lineage between individual Dell PERC 3/4 controllers and retail/generic LSI MegaRAID families;
+- IBM ServeRAID and genuinely independent controller vendors' period `Patrol Read` genealogy and terminology;
+- cross-vendor distinction between patrol read and parity `Consistency Check` beyond the related Dell/LSI ecosystem;
 - direct evidence for or against a T10-BMS-to-controller-Patrol-Read genealogy;
-- field fault injection on BMS- or period-PERC-capable hardware;
+- field fault injection on BMS- or period-PERC/MegaRAID-capable hardware;
 - quantitative BMS/controller scheduling, bandwidth, and detection-latency behavior in deployed arrays;
 - interaction with drive-internal ECC, SMART predictive attributes, and error-recovery firmware;
 - correlated/multi-sector defects and URE-aware RAID rebuild policy;
@@ -445,11 +571,11 @@ These limits do not block the bounded result.
 
 ### `tmzncty/computing-archaeology`
 
-Repository search found no dedicated SCSI BMS / patrol-read case at the time of this slice. Case 101 therefore keeps only the retention-specific historical boundary and relation decomposition. A broader history of host scrubbing, SCSI VERIFY, drive firmware, LSI/MegaRAID/ServeRAID patrol read, and consistency checking should be developed there and linked back rather than duplicated here.
+Repository search found no dedicated SCSI BMS / patrol-read case at the time of this slice. Case 101 therefore keeps only the retention-specific historical boundary, maintenance-state decomposition, and source-provenance warning. A broader history of host scrubbing, SCSI VERIFY, drive firmware, LSI/MegaRAID/PERC/ServeRAID genealogy, and consistency checking should be developed there and linked back rather than duplicated here.
 
 ### `tmzncty/problem-history`
 
-Useful anti-anachronism guardrail: `readability qualification`, `coverage age`, `maintenance evidence`, and `maintenance-control persistence horizon` are project reconstructions. Historical actors in the bounded sources spoke of medium scan, pre-scan, Patrol Read, Auto/Manual mode, Consistency Check, SMART, recovered/unreadable errors, ARRE/AWRE, log pages, reassignment status, NVRAM, and completion bitmaps.
+Useful anti-anachronism guardrail: `readability qualification`, `coverage age`, `maintenance evidence`, `maintenance-control persistence horizon`, `documentation floor`, and `source-lineage independence` are project reconstructions. Historical actors in the bounded sources spoke of medium scan, pre-scan, Patrol Read, Patrol Read Mode/Status/Control, Auto/Manual/Manual Halt/Disable, Consistency Check, SMART, recovered/unreadable errors, ARRE/AWRE, log pages, reassignment status, NVRAM, and completion bitmaps.
 
 ---
 
@@ -457,12 +583,15 @@ Useful anti-anachronism guardrail: `readability qualification`, `coverage age`, 
 
 ### Primary / contemporary
 
+- LSI Logic, **_MegaRAID Configuration Software User's Guide_**, DB15-000269-00, Version 1.0 / First Edition, February 2003. Surviving searchable PDF mirror: <https://www.manuallib.com/download/pdf0/LSILOGIC-MEGARAID-CONFIGURATION-SOFTWARE-USER-GUIDE.PDF>
 - T10, Gerry Houlder (Seagate), **`04-198r5 — Background Medium Scan`**, 9 March 2005: <https://www.t10.org/ftp/t10/document.04/04-198r5.pdf>
 - T10, Weber & Lohmeyer, **Minutes of T10 Plenary Meeting #66 — March 10, 2005**, `05-097r0`, especially §10.5 recording approval of `04-198r5`: <https://www.t10.org/ftp/t10/document.05/05-097r0.htm>
+- Dell, **_PowerEdge Expandable RAID Controller 4/Di/Si and 4e/Di/Si User's Guide_**, Release April 2005, Rev. A07. Surviving page-preserving copy: <https://dell.manymanuals.com/computer-hardware/perc-4-si/user-manual-31973>
+- Dell, **MegaPR for Linux, v.1.03, A02**, release date 7 June 2005: <https://www.dell.com/support/home/en-us/drivers/driversdetails?driverid=nfpxp>
 - T10, Rob Elliott (HP), **`05-340r3 — SBC-3 SPC-4 Background scan additions`**, 18 January 2006: <https://www.t10.org/ftp/t10/document.05/05-340r3.pdf>
 - T10, **2005 document register**, identifying CAP minutes `05-096r0`, plenary minutes `05-097r0`, and the `05-340` proposal family: <https://www.t10.org/doc05.htm>
-- Dell, **MegaPR for Linux, v.1.03, A02**, release date 7 June 2005: <https://www.dell.com/support/home/en-us/drivers/driversdetails?driverid=nfpxp>
 - Drew Habas and John Sieber, **“Background Patrol Read for Dell PowerEdge RAID Controllers,”** *Dell Power Solutions*, February 2006, pp. 73–75. Historical Dell URL: <http://www.dell.com/downloads/global/power/ps1q06-20050212-Habas.pdf>. Inspected surviving page-preserving PDF: <https://device.report/m/6f19713c57627fcded037f379ce7f40935f82e64231047790be0b44ae2498823.pdf>
+- LSI Logic, **_MegaRAID Configuration Software User's Guide_**, DB15-000269-01, Version 2.0 / Second Edition, February/March 2006. Current Broadcom archive: <https://docs.broadcom.com/doc/12353347>
 - Seagate, **_Cheetah 15K.5 FC Product Manual_, Publication 100384772 Rev. C**, February 2007, §7.4 `Background Media Scan`: <https://www.seagate.com/staticfiles/support/disc/manuals/fc/100384772c.pdf>
 
 ### Later vendor continuity / implementation detail
@@ -479,6 +608,7 @@ Useful anti-anachronism guardrail: `readability qualification`, `coverage age`, 
 - [`cases/18-zfs-scrub-latent-error-detection.md`](18-zfs-scrub-latent-error-detection.md)
 - [`cases/55-nvme-smart-health-endurance-telemetry.md`](55-nvme-smart-health-endurance-telemetry.md)
 - [`cases/83-apache-hdfs-block-scanner-checksum-verification.md`](83-apache-hdfs-block-scanner-checksum-verification.md)
+- [`cases/111-enterprise-ssd-extended-shutdown-maintenance.md`](111-enterprise-ssd-extended-shutdown-maintenance.md)
 - [`docs/SYNTHESIS_08_PROACTIVE_INTEGRITY_REPAIR_MARGIN.md`](../docs/SYNTHESIS_08_PROACTIVE_INTEGRITY_REPAIR_MARGIN.md)
 - [`docs/SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md`](../docs/SYNTHESIS_26_MAINTENANCE_CONTROL_STATE_PERSISTENCE_HORIZONS.md)
 
@@ -488,4 +618,4 @@ Useful anti-anachronism guardrail: `readability qualification`, `coverage age`, 
 
 **Grounded bounded case.**
 
-The core drive-side mechanism and historical boundary are supported by T10 proposal/committee records plus a named Seagate product manual; the SIGMETRICS field study is used only as independent latent-error context. The Dell deepening now closes one bounded named controller-level Patrol Read gap and adds a documented controller-state counterexample in which maintenance schedule/completion/error evidence can persist while an interrupted Auto pass does not retain an exact restart frontier. The case still does not claim invention of scrubbing, a direct T10→PERC genealogy, complete cross-vendor patrol-read history, or equivalence with higher-layer integrity verification.
+The core drive-side mechanism and historical boundary are supported by T10 proposal/committee records plus a named Seagate product manual; the SIGMETRICS field study is used only as independent latent-error context. The controller branch now has a tighter public-document chronology: the inspected LSI 2003 First Edition documents Consistency Check but not Patrol Read; Dell PERC 4/Di/Si-family documentation exposes Patrol Read by April 2005; Dell's MegaPR Linux utility follows on 7 June 2005 and presupposes supporting firmware; and generic LSI MegaRAID Version 2.0 documentation exposes Patrol Read by its February/March 2006 edition. The Dell deepening still supplies the stronger controller-state counterexample in which maintenance schedule/completion/error evidence can persist while an interrupted Auto pass does not retain an exact restart frontier. Case 101 still does not claim invention of scrubbing, a direct T10→PERC/MegaRAID genealogy, complete cross-vendor patrol-read history, or equivalence with higher-layer integrity verification; and Dell/LSI documents are now explicitly weighted as overlapping source/engineering lineage rather than naively independent vendor witnesses.
