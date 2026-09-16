@@ -182,3 +182,27 @@ B50 Sleep-transition opportunity
 It still does **not** prove that B51 was the first revision containing `AUTO_EN`, because B51's own cover says it revises **JESD84-B50.1 (July 2014)** and that intermediate body remains uninspected here.
 
 See [`135-jesd84-b50-b51-2013-2015-autonomous-bkops-interface-deepening.md`](135-jesd84-b50-b51-2013-2015-autonomous-bkops-interface-deepening.md). The remaining chronology debt is now narrower: direct B50.1 inspection plus any earlier 4.5/4.51 transition work that becomes retention-relevant.
+
+## e.MMC 5.01 chronology follow-up — strong corroboration, direct clause still pending
+
+A subsequent bounded pass now narrows the remaining **B50.1 / e.MMC 5.01** ambiguity without pretending the unavailable B50.1 body was directly inspected.
+
+Three independent source layers point in the same direction:
+
+- B51 Table 139 maps both v5.0 and v5.01 to `EXT_CSD_REV = 7`, then maps v5.1 to revision 8;
+- a **29 January 2015** Linux compatibility patch by Alexey Skidanov (SanDisk) states that eMMC 5.1 changed `BKOPS_EN` to `bit0 = MANUAL_EN` plus `bit1 = AUTO_EN`, while **previous eMMC revisions supported only bit 0**; the merged fix masks byte 163 with `0x01` rather than treating any nonzero value as manual enable;
+- JEDEC's 24-February-2015 publication announcement lists **Background Operation Control** among features added in e.MMC 5.1.
+
+This makes the version boundary much stronger than an unexplored B50→B51 interval:
+
+```text
+direct B50.1 clause inspection missing
+    != chronology completely unconstrained
+
+strong contemporaneous 5.1-boundary corroboration
+    != direct B50.1 standards-text proof
+```
+
+The practical interpretation is also useful beyond dating: once bit 1 acquires a second meaning, `BKOPS_EN != 0` no longer proves `MANUAL_EN = 1`. Thus the same EXT_CSD byte address can require a version-specific field interpretation.
+
+See [`135-jesd84-b501-2014-auto-bkops-chronology-corroboration.md`](135-jesd84-b501-2014-auto-bkops-chronology-corroboration.md). The remaining chronology debt is now specifically **direct inspection of B50.1 `BKOPS_EN[163]` or an official B50.1→B51 redline**, rather than a broad uncertainty about whether 5.01 likely already exposed `AUTO_EN`.
