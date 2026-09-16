@@ -42,7 +42,9 @@ The 2014 f4 paper explicitly uses:
 - `geo-replicated XOR coding`;
 - `buddy block`;
 - `XOR block`;
-- `effective-replication-factor`.
+- `effective-replication-factor`;
+- `Annualized Failure Rate (AFR)`;
+- `Failure Experience`.
 
 The following phrases are **project engineering terms**, not claims about Facebook’s historical vocabulary:
 
@@ -52,7 +54,9 @@ The following phrases are **project engineering terms**, not claims about Facebo
 - `redundancy-margin restoration`;
 - `nested reconstruction`;
 - `coded-state admissibility`;
-- `state-class-specific redundancy`.
+- `state-class-specific redundancy`;
+- `repair window`;
+- `failure episode ≠ embodiment loss`.
 
 ---
 
@@ -115,6 +119,26 @@ background repair
 These are different retention operations with different completion conditions and costs.
 
 **Primary anchor:** Muralidhar et al. 2014, p. 390, `Rebuilder Nodes` and `Coordinator Nodes`.
+
+### H/P — production experience separates temporary component unavailability from stored-data loss
+
+In §6.4 the authors report an approximate disk AFR of `~1%`, with failed disks replaced in less than three business days and typically only a few disks out at a time per cluster. They also say host failures occur less often and **typically do not lose data**: after a faulty component such as DRAM is replaced, a host can return with its data still present on disk.
+
+This is direct period evidence that a host-level failure episode does not necessarily mean destruction of the disk-resident embodiment behind that host.
+
+The source does not claim that host failures never destroy data, and it does not specify the exact threshold at which a temporarily unavailable host’s blocks are rebuilt rather than awaited.
+
+**Primary anchor:** Muralidhar et al. 2014, `Failure Experience`, p. 394.
+
+### H/P — a 240 TB repair drill remained a multi-day background obligation rather than a multi-day total outage
+
+The same `Failure Experience` paragraph calls a self-inflicted drill the system’s worst failure so far. In that drill, f4 rebuilt **two hosts’ worth of data (240 TB) in the background over three days**. The paper states that the observed adverse effect was an increase in p99 latency to **500 ms**.
+
+This is a controlled drill, not a naturally occurring accidental outage. It nevertheless supplies an exercised production-system witness that a large repair obligation can remain open for days while foreground service continues to have a measurable latency distribution.
+
+It does **not** prove that every request succeeded, that every affected stripe was degraded for exactly three days, or that three days is an intrinsic coding limit.
+
+**Primary anchor:** Muralidhar et al. 2014, `Failure Experience`, p. 394.
 
 ### H/P — coding parameters do not by themselves establish rack-failure independence
 
@@ -321,12 +345,15 @@ This case contains several distinct timescales:
 - full-block reconstruction duration;
 - time spent with reduced redundancy after a block/node failure;
 - background rebuild scheduling delay;
+- hardware-replacement time, which is not automatically the same as logical-repair completion;
 - placement-balancer convergence after reconstruction/replacement;
 - datacenter-failure detection and geo-backoff latency;
 - warm-content migration timescale;
 - logical-delete time via removal of the external key relation.
 
-These should not be collapsed into one `repair time`.
+The 2014 production report supplies one concrete scale point: a controlled 240 TB/two-host rebuild ran in the background over three days while the reported foreground effect was a rise in p99 latency to 500 ms.
+
+These times should not be collapsed into one `repair time`.
 
 ---
 
@@ -345,9 +372,10 @@ Persistence in f4 depends on substantial work below the simple BLOB read interfa
 - rack/datacenter capacity sufficient to sustain intended failure-domain separation;
 - network bandwidth for reconstruction;
 - throttling so repair does not destroy foreground service quality;
+- hardware replacement that can return an intact disk embodiment after a non-disk host fault;
 - separate key-store availability for encrypted BLOBs.
 
-The 2014 paper directly identifies the machine/software roles. Broader operator, datacenter, and manufacturing labor should not be invented from this system paper alone.
+The 2014 paper directly identifies the machine/software roles and gives bounded operational evidence for disk replacement and a controlled rebuild drill. Broader operator, datacenter, and manufacturing labor should not be invented from this system paper alone.
 
 ---
 
@@ -356,7 +384,8 @@ The 2014 paper directly identifies the machine/software roles. Broader operator,
 Distinct failures include:
 
 - disk failure removing one encoded block;
-- host failure removing several local resources;
+- host failure making several local resources unavailable, **without necessarily destroying the disk-resident data**;
+- host failure that actually destroys or strands disk-resident embodiments long enough to require coded reconstruction;
 - rack failure simultaneously removing all fragments accidentally colocated there;
 - datacenter failure removing an entire cell-level protection domain;
 - too many unavailable fragments in one Reed–Solomon stripe to decode;
@@ -396,6 +425,48 @@ Therefore:
 > `can answer this read now` ≠ `redundancy has been restored`.
 
 This extends Case 17’s degraded-service distinction into a distributed object-level read path.
+
+### E — component unavailability ≠ embodiment destruction
+
+The production host-failure example gives a direct counterexample to treating every unavailable host as destroyed storage. A non-disk host component can fail, making the host unavailable, while the disks retain their block embodiments and return after repair.
+
+Therefore:
+
+```text
+host unavailable
+    !=
+disk-resident embodiment destroyed
+```
+
+This distinction affects which retention work is needed: routing or reconstructive reads can bridge temporary service loss; durable rebuilding repairs missing redundancy when an embodiment is actually lost or treated as unavailable long enough to replace.
+
+The paper does not expose the exact policy threshold between waiting for a host to return and rebuilding its blocks.
+
+### E — an open repair window ≠ a total service outage
+
+The controlled two-host drill rebuilt 240 TB in the background over three days while the paper still reports foreground p99 latency. This supplies an exercised instance of:
+
+```text
+foreground service continues
+    while
+large background repair remains unfinished
+```
+
+The repair interval is therefore also a period during which some affected redundancy relations can have less remaining fault margin than after repair, but it is not automatically an equal-duration period of service unavailability.
+
+The source does not publish a per-stripe timeline, so it would be too strong to say every affected stripe stayed degraded for the full three days.
+
+### E — foreground telemetry ≠ repair-progress state
+
+The drill’s 500 ms p99 latency is a service-performance observable. It is not a direct ledger of how many blocks had been rebuilt, how many stripes remained degraded, or whether placement balancing had converged.
+
+Thus:
+
+```text
+latency telemetry
+    != repair-progress ledger
+    != redundancy-margin ledger
+```
 
 ### E — reconstructed content ≠ restored placement geometry
 
@@ -442,12 +513,15 @@ The BLOB can remain the same service object while:
 - one missing contribution is reconstructed from other fragments;
 - the reconstruction path changes from direct read to online decoding;
 - the full missing block is restored later;
+- foreground service can continue during a longer unfinished background repair interval;
 - its placement may then move again to recover failure-domain independence;
 - datacenter-level recovery may compose multiple lower-level reconstruction operations.
 
 A cautious philosophical question is therefore:
 
 > If continued availability is secured by relations among fragments, topology, mappings, and repair procedures, which part of that distributed relation is the technical support of the retained object?
+
+The production repair-window evidence adds one constraint: present answerability and future fault margin are not identical properties. A retained object can remain callable while maintenance is still rebuilding the relations that make later failures survivable.
 
 This case does **not** answer that by calling parity `memory`, erasure coding `tertiary retention`, or a datacenter topology `Bestand`. Those are separate interpretive questions and must remain subordinate to the mechanism.
 
@@ -459,7 +533,7 @@ This case does **not** answer that by calling parity `memory`, erasure coding `t
 
 Both cases reconstruct missing content from coded redundancy rather than a full duplicate. The analogy stops there.
 
-Case 17 is bounded around parity/checksum reconstruction, currentness meta state, degraded operation, and background repair in a disk-array lineage. f4 adds explicitly distributed rack/datacenter failure domains, object-subrange online reconstruction, placement balancing, and nested local/geo coding.
+Case 17 is bounded around parity/checksum reconstruction, currentness meta state, degraded operation, and background repair in a disk-array lineage. f4 adds explicitly distributed rack/datacenter failure domains, object-subrange online reconstruction, placement balancing, nested local/geo coding, and a documented multi-day background repair drill.
 
 This is functional continuity, not evidence that f4 is simply `RAID over a datacenter`.
 
@@ -472,6 +546,12 @@ f4’s BLOBs are also immutable in this bounded system, so the case does not sup
 ### A — Case 18 ZFS scrub
 
 ZFS scrub proactively looks for unknown integrity failures before ordinary demand. The f4 slice here instead focuses on known/unavailable blocks, failure reads, background rebuild, and placement repair. It does not establish a distributed scrub protocol.
+
+### A — Case 24 Windows Azure LRC representation handoff
+
+Case 24’s background debt belongs to a **representation transition**: full replicas remain until a newly coded representation passes validation and completion gates. f4’s production repair window belongs to a **degraded coded regime**: the coded representation is already authoritative, but one or more contributions are being restored after failure.
+
+The shared functional relation is only that foreground availability can coexist with unfinished background maintenance. The transition states, admissibility rules, and historical systems are different.
 
 ---
 
@@ -495,6 +575,30 @@ The claim remains deliberately narrow. The paper does not quantify how often its
 
 See `evidence/19-facebook-f4-fragment-placement-failure-domain-margin-deepening.md` for the historical record, engineering reconstruction, explicit non-claims, and the bounded functional comparison with Case 24.
 
+## Deepening: production repair can stay open while service remains available
+
+The production `Failure Experience` paragraph gives Case 19 a different kind of evidence from the analytic placement/failure model. The authors report `~1%` disk AFR, failed-disk replacement in less than three business days, host failures that often return with disk data intact after a non-disk component is repaired, and a controlled drill that rebuilt two hosts / 240 TB in the background over three days.
+
+The drill is especially useful because the reported service consequence is not “three days unavailable”; it is a rise in p99 latency to 500 ms. Together with the documented rebuilder throttling/scheduling path, this grounds:
+
+```text
+component unavailable
+    != embodiment destroyed
+
+foreground service available
+    != intended redundancy margin fully restored
+
+repair started
+    != repair completed
+
+repair completion
+    != placement-balancer completion
+```
+
+This does not convert p99 latency into a repair-progress signal and does not prove zero failed requests. Nor does a three-day drill establish a universal rebuild time. It is a bounded production witness that substantial repair debt and continuing service can coexist on different clocks.
+
+See [`../evidence/19-facebook-f4-2014-production-repair-window-failure-semantics-deepening.md`](../evidence/19-facebook-f4-2014-production-repair-window-failure-semantics-deepening.md).
+
 ## Counterexamples and limits
 
 - Reed–Solomon and erasure coding long predate f4; the paper itself explicitly disclaims coding-theory innovation.
@@ -502,6 +606,9 @@ See `evidence/19-facebook-f4-fragment-placement-failure-domain-margin-deepening.
 - Code parameters alone do not prove rack/datacenter tolerance; the paper’s placement policy and geo layer are separate evidence.
 - A successful online BLOB reconstruction does not prove that the failed full block or redundancy margin has already been restored.
 - A successfully rebuilt block does not prove the placement geometry is already ideal; the source explicitly provides a placement-balancer correction path.
+- A host being unavailable does not prove its disk-resident embodiments were destroyed; the paper gives host-return counterexamples, but this does not mean host failures never lose data.
+- The 240 TB drill was self-inflicted and does not establish a universal rebuild duration, zero failed requests, or a naturally occurring data-loss incident.
+- p99 latency during repair is not a direct measurement of remaining rebuild debt or stripe-level redundancy margin.
 - Triple-replicated f4 index files are a direct counterexample to `all constitutive f4 state is erasure-coded`.
 - The case does not establish mutable-object consistency, consensus, version conflict resolution, or a generic distributed-currentness protocol.
 - The key-delete path establishes service unreadability/logical deletion in this design, not physical sanitization of encoded fragments or a universal cryptographic-erasure guarantee.
@@ -511,9 +618,9 @@ See `evidence/19-facebook-f4-fragment-placement-failure-domain-margin-deepening.
 
 ## Related repositories
 
-A search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `f4`, `Reed-Solomon`, and Facebook erasure-coding material found no existing dedicated case to reuse. This file therefore keeps only the retention-specific system argument rather than attempting a full coding or datacenter-storage history.
+A search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `f4`, `Reed-Solomon`, Facebook erasure-coding, and rebuild material found no existing dedicated case to reuse. This file therefore keeps only the retention-specific system argument rather than attempting a full coding or datacenter-storage history.
 
-[`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) supplies the methodological guardrail: later abstractions such as `repair geometry`, `nested reconstruction`, and `retention relation` are engineering descriptions, not historical Facebook terms.
+[`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) supplies the methodological guardrail: later abstractions such as `repair geometry`, `repair window`, `nested reconstruction`, and `retention relation` are engineering descriptions, not historical Facebook terms.
 
 ---
 
@@ -526,9 +633,20 @@ A search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computi
    - pp. 388–389: cell design; triple-replicated index files; encoded data; stripe/companion vocabulary; index/location mapping; key-based logical delete.
    - pp. 389–390: direct read, online requested-BLOB reconstruction, backoff nodes, offline full-block rebuilding, rebuilder/coordinator roles.
    - pp. 390–391: geo-XOR layer, rack failure domain, fragment placement, placement-balancer correction, nested failure example.
+   - pp. 393–394: production evaluation/failure model boundary, continual placement monitoring/rebalancing, disk AFR/replacement window, host-return behavior, and the controlled 240 TB / three-day rebuild drill.
    - pp. 395–396: related-work boundary; f4 explicitly treats erasure codes as prior tools rather than its coding invention.
 2. Irving S. Reed and Gustave Solomon, **“Polynomial Codes Over Certain Finite Fields,”** *Journal of the Society for Industrial and Applied Mathematics* 8, no. 2 (June 1960): 300–304. DOI: `10.1137/0108018`. Used only to control Reed–Solomon priority/genealogy, not to establish f4 implementation semantics.
 
-### Evidence record
+### Evidence records
 
-See [`../evidence/19-facebook-f4-2014-erasure-coding-grounding.md`](../evidence/19-facebook-f4-2014-erasure-coding-grounding.md).
+- [`../evidence/19-facebook-f4-2014-erasure-coding-grounding.md`](../evidence/19-facebook-f4-2014-erasure-coding-grounding.md)
+- [`../evidence/19-facebook-f4-fragment-placement-failure-domain-margin-deepening.md`](../evidence/19-facebook-f4-fragment-placement-failure-domain-margin-deepening.md)
+- [`../evidence/19-facebook-f4-2014-production-repair-window-failure-semantics-deepening.md`](../evidence/19-facebook-f4-2014-production-repair-window-failure-semantics-deepening.md)
+
+---
+
+## Evidence maturity
+
+**Status: `grounded`.**
+
+The new production repair-window evidence deepens the case without changing maturity. It supplies a period-primary operational witness for temporary component unavailability without embodiment loss and for multi-day background repair coexisting with foreground service. Exact persisted rebuild-progress representation, rebuilder/coordinator restart semantics, and naturally occurring incident telemetry remain open.
