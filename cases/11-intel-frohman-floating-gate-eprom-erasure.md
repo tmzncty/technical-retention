@@ -2,9 +2,12 @@
 
 ## Status
 
-**`grounded`** — bounded to the Intel/Frohman floating-gate storage/transistor and programmable-ROM disclosures filed in 1970–1971, with Kahng's 1967-filed Bell Labs patent used as a prior-art control.
+**`grounded`** — bounded to the Intel/Frohman floating-gate storage/transistor and programmable-ROM disclosures filed in 1970–1971, with Kahng's 1967-filed Bell Labs patent used as a prior-art control and a period Intel MCS-4 manual used to deepen the 1702A product-operation boundary.
 
-Grounding record: [`../evidence/11-intel-1970-1971-floating-gate-eprom-grounding.md`](../evidence/11-intel-1970-1971-floating-gate-eprom-grounding.md).
+Grounding and deepening records:
+
+- [`../evidence/11-intel-1970-1971-floating-gate-eprom-grounding.md`](../evidence/11-intel-1970-1971-floating-gate-eprom-grounding.md)
+- [`../evidence/11-intel-1973-1702a-erase-completion-verification-deepening.md`](../evidence/11-intel-1973-1702a-erase-completion-verification-deepening.md)
 
 ## Scope
 
@@ -16,9 +19,10 @@ The core primary sources are:
 
 1. Dov Frohman-Bentchkowsky / Intel, US3660819A, _Floating gate transistor and method for charging and discharging same_, filed 15 June 1970;
 2. Dov Frohman-Bentchkowsky / Intel, US3744036A, _Electrically programmable read only memory array_, filed 24 May 1971;
-3. Dawon Kahng / Bell Telephone Laboratories, US3500142A, _Field effect semiconductor apparatus with memory involving entrapment of charge carriers_, filed 5 June 1967, used to prevent a false invention-priority claim.
+3. Dawon Kahng / Bell Telephone Laboratories, US3500142A, _Field effect semiconductor apparatus with memory involving entrapment of charge carriers_, filed 5 June 1967, used to prevent a false invention-priority claim;
+4. Intel, _MCS-4 User's Manual_, period manufacturer manual identified in surviving scan catalogues as February 1973 / Revision 4, used only for the bounded 1702/1702A erase, verify, and programmer workflow.
 
-Later Intel and Computer History Museum histories identify the 1971 Intel 1702 with the `EPROM` category and UV erasure. Those institutional histories are product/context evidence, not substitutes for a directly inspected period 1702/1702A datasheet.
+Later Intel and Computer History Museum histories identify the 1971 Intel 1702 with the `EPROM` category and UV erasure. Those institutional histories remain product/context evidence. The 1973 Intel manual now provides a directly inspected period manufacturer workflow, but a dedicated 1702A datasheet/data-book page is still desirable for product qualification claims such as retention duration, endurance, and formal limits.
 
 ## Why this changes the comparison
 
@@ -41,6 +45,16 @@ erase
 ```
 
 The same retained bit therefore participates in several different control geometries. `Nonvolatile` describes the hold condition, not the entire write/read/forgetting regime.
+
+The 1973 product workflow adds another layer:
+
+```text
+erase mechanism
+    !=
+erase procedure
+    !=
+erase-completion evidence
+```
 
 ## Historical vocabulary
 
@@ -104,6 +118,34 @@ Intel's later institutional history and the Computer History Museum identify the
 
 These sources justify using the familiar category label and show the product-level significance of external optical erasure. They are not used to infer exact transistor topology, UV dose, programming algorithm, or production revision from the patents.
 
+### H/P — the period Intel product workflow separates UV exposure from verified erase completion
+
+The period Intel _MCS-4 User's Manual_ gives a short-wave ultraviolet erase procedure for the 1701/1702 family and explicitly describes example conditions for erasing a 1702A: approximately 2537 Å, a recommended integrated dose of about 6 W·s/cm², and example 10–20 minute exposure at about one inch for named lamps.
+
+Immediately before that procedure, the manual says the PROM listing function can verify that a device is **completely erased**: the erased-state symbol must appear in every location.
+
+This is product-operation evidence for a distinction that the patents alone did not establish:
+
+```text
+UV exposure performed
+    !=
+whole-device erased postcondition observed
+```
+
+The programming workflow is similarly checked: the manual states that an erased 1702A inserted into the programming system is automatically programmed and checked for correct content.
+
+### H/P — pin-for-pin replacement does not imply programming-regime equivalence
+
+The same Intel manual describes the 1702A as a **pin-for-pin replacement** for the 1702, but warns that the 1702A-specific A0543 programming control must not be used on a 1702 because its programming duty cycle is too high and may permanently damage the older device.
+
+Thus a stable external package/interface can coexist with a changed acceptable programming regime:
+
+```text
+pin compatibility
+    !=
+programming-stress compatibility
+```
+
 ## Retained state and substrate
 
 The retained state is charge occupancy on an electrically isolated floating gate together with the resulting change in transistor conduction/threshold behavior sufficient for later sensing.
@@ -128,6 +170,8 @@ These are engineering comparisons, not historical claims that Intel engineers or
 
 The array uses electrical selection and a sufficiently large field to produce avalanche injection in the selected storage device.
 
+The product-level MCS-4 workflow further treats programming as an operation followed by a content check. That check does not reveal microscopic floating-gate charge directly; it verifies the resulting readable logical state.
+
 ### Reading
 
 The array uses electrical selection at lower stress, below the avalanche condition, to sense the stored state. The source explicitly calls the read nondestructive.
@@ -136,7 +180,9 @@ The array uses electrical selection at lower stress, below the avalanche conditi
 
 The bounded device patent removes charge with radiation rather than with the ordinary lower-stress read operation or the X/Y-selected avalanche-programming step.
 
-This gives the case its main decomposition:
+The 1973 product workflow adds an operational distinction: a recommended UV exposure is followed by a read/list check of whether every location presents the erased state.
+
+This gives the case its expanded decomposition:
 
 ```text
 retention mechanism
@@ -146,9 +192,11 @@ program mechanism
 read mechanism
     !=
 erase mechanism
+    !=
+erase-completion evidence
 ```
 
-A storage technology should therefore not be classified only by what keeps a bit present. The mechanisms that create, inspect, and deliberately destroy the distinction may be physically different.
+A storage technology should therefore not be classified only by what keeps a bit present. The mechanisms that create, inspect, deliberately destroy, and verify destruction of the distinction may be physically different.
 
 ## Addressability and erase geometry
 
@@ -160,7 +208,7 @@ At the bounded mechanism level this supports:
 
 A bit may be individually selected for ordinary electrical operations while the mechanism available for forgetting is physically coarser or externally applied.
 
-The later 1702 quartz-window product context makes this especially visible, but this case does not yet quantify the exact erase granularity/dose of a production 1702A from a period manufacturer manual. That remains archival deepening.
+The period MCS-4 workflow now makes the product-level relation more concrete: the operator applies UV to the device and then checks the addressable contents across the PROM for the erased state. What remains ungrounded is not the existence of a product erase procedure, but formal 1702A datasheet qualification limits such as named-revision retention duration, endurance, temperature assumptions, and any tighter production-specific margins.
 
 ## Engineering reconstruction
 
@@ -188,6 +236,31 @@ This should not be flattened into the modern slogan `ROM is immutable`.
 
 The insulating barrier is what suppresses ordinary loss of trapped charge. Erasure works by creating a condition under which that retained charge can leave. At the engineering level, forgetting is not simply the absence of retention; it can be a deliberately induced transition across the same physical barrier that made retention possible.
 
+### Erase action is not erase-completion evidence
+
+The MCS-4 manual gives both an erase intervention and an independent observable postcondition. The bounded engineering reconstruction is therefore:
+
+```text
+recommended UV dose/time
+    -> physical erase attempt
+    -> list/read all locations
+    -> verify erased-state result
+```
+
+A nominal exposure duration is procedure guidance under named conditions; it is not, by itself, equivalent to observed completion.
+
+This is not a modern secure-sanitize claim. The manual exposes a logical postcondition over readable locations, not a forensic remanence test or analog threshold characterization.
+
+### Package compatibility does not preserve every hidden control contract
+
+The 1702A can be a pin-for-pin replacement while the safe programming duty cycle changes enough that a generation-mismatched control PROM may damage a 1702.
+
+Project comparison term:
+
+```text
+interface compatibility != programming-regime compatibility
+```
+
 ## Failure and forgetting
 
 Several failure classes must remain separate:
@@ -196,25 +269,31 @@ Several failure classes must remain separate:
 - **program failure:** the intended selected state is not established;
 - **read disturbance:** sensing stress approaches a regime capable of changing state, even though the sourced preferred read stays below avalanche;
 - **erase failure:** the deliberate discharge operation does not sufficiently remove the trapped charge;
+- **verification failure:** after an intended erase/program operation, the readable logical postcondition does not match the expected state;
+- **regime-mismatch damage:** a programming control appropriate to the 1702A is applied to the 1702 even though Intel warns its duty cycle may permanently damage the older part;
 - **device damage:** an erase method such as excessive heat can destroy the device rather than merely reset its memory state.
 
-The patents do not supply a universal commercial reliability model. This case therefore does not invent retention-year distributions, endurance-cycle counts, UV-dose margins, or failure rates.
+The patents and MCS-4 manual do not supply a universal commercial reliability model. This case therefore does not invent retention-year distributions, endurance-cycle counts, UV-dose margins beyond the bounded manual guidance, or failure rates.
 
 ## Functional analogy and anti-anachronism
 
-Useful modern analytical phrases include `erase geometry`, `program/erase asymmetry`, and `control-plane asymmetry`. They are not period Intel terminology.
+Useful modern analytical phrases include `erase geometry`, `program/erase asymmetry`, `completion evidence`, and `control-plane asymmetry`. They are not period Intel terminology.
 
 Likewise, it is reasonable to compare external UV erase with later block erase as two examples in which forgetting has a geometry different from ordinary read addressing, but they are not the same engineering mechanism. Case 04's Flash erase/reclamation semantics must not be projected backward into this EPROM case.
+
+The period workflow's separation of maintenance action from verification can also be compared functionally with later storage systems that verify a maintenance result. That abstract similarity is **not** evidence of genealogy from EPROM erase tools to scrub, consistency-check, sanitize, or repair systems.
 
 ## Philosophical limit
 
 The mechanism makes one conceptual problem concrete: a state can be highly resistant to ordinary disappearance yet intentionally vulnerable to a special erasure environment. Durability and erasability are therefore not simple opposites.
 
-That observation may later matter for a philosophy of technical forgetting, but no patent source is evidence that Frohman or Kahng formulated a philosophical theory of memory, forgetting, or exteriorization.
+The product workflow adds a second bounded observation: an intervention intended to make a device forget is not identical to evidence that the intended readable postcondition has actually been reached.
+
+Those observations may later matter for a philosophy of technical forgetting, but no patent or MCS-4 manual source is evidence that Frohman, Intel, or Kahng formulated a philosophical theory of memory, forgetting, verification, or exteriorization.
 
 ## Cross-case result
 
-Case 11 adds a new comparison axis that Cases 02–10 did not force as sharply:
+Case 11 adds a comparison axis that Cases 02–10 did not force as sharply:
 
 ```text
 what keeps a state
@@ -224,9 +303,27 @@ what creates it
 what senses it
     !=
 what is authorized/able to erase it
+    !=
+what demonstrates erase completion
 ```
 
-It also adds a boundary between **addressable access** and **erasability**. Selection can be fine-grained for programming/read while deletion/reset may require a physically different intervention.
+It also adds two independent boundaries:
+
+```text
+addressable access
+    !=
+erase geometry
+```
+
+and
+
+```text
+stable package/interface
+    !=
+stable programming-control contract
+```
+
+Selection can be fine-grained for programming/read while deletion/reset may require a physically different intervention, and a successor device can preserve pinout while changing the admissible stress/timing regime.
 
 ## Claim ledger
 
@@ -238,17 +335,23 @@ It also adds a boundary between **addressable access** and **erasability**. Sele
 | The bounded array read is nondestructive and below programming avalanche stress | H/P | US3744036A |
 | Radiation can remove charge from the bounded floating-gate transistor | H/P | US3660819A |
 | Intel's 1702 belongs to the 1971 EPROM product context | H/S | Intel institutional history; Computer History Museum |
+| Intel's period MCS-4 manual gives a bounded UV erase procedure and a listing-based complete-erase check for this product family | H/P | Intel _MCS-4 User's Manual_ |
+| The MCS-4 programming workflow checks programmed 1702A contents | H/P | Intel _MCS-4 User's Manual_ |
+| Intel describes 1702A as pin-for-pin replacement for 1702 while warning that the 1702A programming duty cycle may damage a 1702 | H/P | Intel _MCS-4 User's Manual_ |
 | Frohman invented floating-gate memory generally | X | contradicted by Kahng/Sze prior art and Frohman's own citation |
 | electrical programmability implies electrical erasure | X | contradicted by bounded radiation-erasure mechanism |
 | `read-only` means the physical state cannot be changed | X | contradicted by programming and erase regimes |
-| exact 1702/1702A production topology and UV parameters are proven by these patents | X | product-specific evidence gap |
+| recommended UV exposure time alone proves complete erasure | X | too strong; period workflow exposes a separate complete-erase verification step |
+| pin-for-pin compatibility guarantees programming-regime compatibility | X | contradicted by Intel's duty-cycle warning |
+| the sources prove a modern forensic secure-erasure guarantee | X | unsupported category leap |
+| exact 1702A retention duration/endurance/temperature qualification is established here | X | still a datasheet-specific evidence gap |
 | program/read addressability and erase geometry must be identical | X | contradicted by bounded mechanism partition |
 
 ## Related repositories
 
-Searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated EPROM / floating-gate case to reuse. Its current semiconductor-memory gap should eventually carry the broader engineering history.
+Searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `EPROM`, floating-gate terms, and `1702A` found no dedicated case to reuse. Its current semiconductor-memory gap should eventually carry the broader engineering history.
 
-`technical-retention` therefore keeps only the retention-specific distinction among quiescent trapped-charge persistence, addressed programming, nondestructive read, and external erasure.
+`technical-retention` therefore keeps only the retention-specific distinction among quiescent trapped-charge persistence, addressed programming, nondestructive read, external erasure, and product-level erase verification.
 
 [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) supplies the anti-anachronism discipline: a later lineage `ROM → PROM → EPROM → EEPROM → Flash` can organize present research, but it must not be mistaken for the problem vocabulary or teleology of the historical actors.
 
@@ -257,9 +360,13 @@ Searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computi
 1. Dov Frohman-Bentchkowsky, Intel Corp., US3660819A, _Floating gate transistor and method for charging and discharging same_: <https://patents.google.com/patent/US3660819A/en>.
 2. Dov Frohman-Bentchkowsky, Intel Corp., US3744036A, _Electrically programmable read only memory array_: <https://patents.google.com/patent/US3744036A/en>.
 3. Dawon Kahng, Bell Telephone Laboratories, US3500142A, _Field effect semiconductor apparatus with memory involving entrapment of charge carriers_: <https://patents.google.com/patent/US3500142A/en>.
-4. Intel, _A Success…Out of Quality Control Issues_: <https://www.intel.com/content/www/us/en/history/virtual-vault/articles/eprom.html>.
-5. Computer History Museum, _1971: Reusable Programmable ROM Introduces Iterative Design Flexibility_: <https://www.computerhistory.org/siliconengine/reusable-programmable-rom-introduces-iterative-design-flexibility/>.
+4. Intel, _MCS-4 User's Manual_, period manufacturer manual, HTML/OCR mirror: <https://manualzilla.com/doc/7026262/intel-mcs-4-user-s-manual>.
+5. Intel, _MCS-4 User's Manual_, archival scan commonly identified as `MCS-4_UsersManual_Feb73.pdf`: <https://www.bitsavers.org/components/intel/MCS4/MCS-4_UsersManual_Feb73.pdf>.
+6. Intel, _A Success…Out of Quality Control Issues_: <https://www.intel.com/content/www/us/en/history/virtual-vault/articles/eprom.html>.
+7. Computer History Museum, _1971: Reusable Programmable ROM Introduces Iterative Design Flexibility_: <https://www.computerhistory.org/siliconengine/reusable-programmable-rom-introduces-iterative-design-flexibility/>.
 
 ## Next bounded bridge
 
-Do **not** jump directly to generic Flash history. The next source-worthy step is an EEPROM case in which erasure itself becomes electrically controlled, followed only then by a separate Flash case about erase granularity / fast bulk erase if it changes the retention comparison. The key question is whether the locus and geometry of forgetting move back inside ordinary electrical control and what new endurance/maintenance obligations appear.
+Within Case 11, the remaining archival deepening is now narrower: directly inspect a period 1702A datasheet/data-book page for named-revision **retention duration, endurance, temperature assumptions, and formal erase/program qualification limits**, keeping those claims separate from the MCS-4 development-system operating procedure.
+
+Conceptually, do **not** jump directly from this EPROM case to generic Flash history. The next distinct mechanism bridge is an EEPROM case in which erasure itself becomes electrically controlled, followed only then by a separate Flash case about erase granularity / fast bulk erase if it changes the retention comparison. The key question is whether the locus and geometry of forgetting move back inside ordinary electrical control and what new endurance/maintenance obligations appear.
