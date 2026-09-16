@@ -2,12 +2,13 @@
 
 ## Status
 
-**`grounded`** — bounded to the Intel/Frohman floating-gate storage/transistor and programmable-ROM disclosures filed in 1970–1971, with Kahng's 1967-filed Bell Labs patent used as a prior-art control and a period Intel MCS-4 manual used to deepen the 1702A product-operation boundary.
+**`grounded`** — bounded to the Intel/Frohman floating-gate storage/transistor and programmable-ROM disclosures filed in 1970–1971, with Kahng's 1967-filed Bell Labs patent used as a prior-art control, a period Intel MCS-4 manual used to deepen the 1702A product-operation boundary, and Intel's 1976 1702A data-catalog entry used to separate product electrical/environmental qualification from quantified retention/endurance claims.
 
 Grounding and deepening records:
 
 - [`../evidence/11-intel-1970-1971-floating-gate-eprom-grounding.md`](../evidence/11-intel-1970-1971-floating-gate-eprom-grounding.md)
 - [`../evidence/11-intel-1973-1702a-erase-completion-verification-deepening.md`](../evidence/11-intel-1973-1702a-erase-completion-verification-deepening.md)
+- [`../evidence/11-intel-1976-1702a-datasheet-qualification-boundary-deepening.md`](../evidence/11-intel-1976-1702a-datasheet-qualification-boundary-deepening.md)
 
 ## Scope
 
@@ -20,9 +21,11 @@ The core primary sources are:
 1. Dov Frohman-Bentchkowsky / Intel, US3660819A, _Floating gate transistor and method for charging and discharging same_, filed 15 June 1970;
 2. Dov Frohman-Bentchkowsky / Intel, US3744036A, _Electrically programmable read only memory array_, filed 24 May 1971;
 3. Dawon Kahng / Bell Telephone Laboratories, US3500142A, _Field effect semiconductor apparatus with memory involving entrapment of charge carriers_, filed 5 June 1967, used to prevent a false invention-priority claim;
-4. Intel, _MCS-4 User's Manual_, period manufacturer manual identified in surviving scan catalogues as February 1973 / Revision 4, used only for the bounded 1702/1702A erase, verify, and programmer workflow.
+4. Intel, _MCS-4 User's Manual_, period manufacturer manual identified in surviving scan catalogues as February 1973 / Revision 4, used only for the bounded 1702/1702A erase, verify, and programmer workflow;
+5. Intel, _1976 Intel Data Catalog_, 1702A entry, used for product-specific access, programming, temperature, electrical-stress, and factory-programmability qualification;
+6. Intel, _Memory Design Handbook_ (May 1977), used only as a bounded later-EPROM comparison for under-program/under-erase threshold margin and verification scope.
 
-Later Intel and Computer History Museum histories identify the 1971 Intel 1702 with the `EPROM` category and UV erasure. Those institutional histories remain product/context evidence. The 1973 Intel manual now provides a directly inspected period manufacturer workflow, but a dedicated 1702A datasheet/data-book page is still desirable for product qualification claims such as retention duration, endurance, and formal limits.
+Later Intel and Computer History Museum histories identify the 1971 Intel 1702 with the `EPROM` category and UV erasure. Those institutional histories remain product/context evidence. The period Intel sources now provide both a development workflow and a directly inspected 1702A product entry. The checked 1976 entry gives concrete product electrical/environmental limits but does **not** itself provide a quantified retention duration or erase/program endurance count, so any such numeric claim still requires a dedicated reliability/qualification source rather than inference from a storage-temperature row or from `Static MOS` language.
 
 ## Why this changes the comparison
 
@@ -46,7 +49,7 @@ erase
 
 The same retained bit therefore participates in several different control geometries. `Nonvolatile` describes the hold condition, not the entire write/read/forgetting regime.
 
-The 1973 product workflow adds another layer:
+The product sources add two further layers:
 
 ```text
 erase mechanism
@@ -54,6 +57,10 @@ erase mechanism
 erase procedure
     !=
 erase-completion evidence
+
+product electrical/environmental qualification
+    !=
+quantified retention-duration/endurance qualification
 ```
 
 ## Historical vocabulary
@@ -146,6 +153,40 @@ pin compatibility
 programming-stress compatibility
 ```
 
+### H/P — the 1976 Intel product entry qualifies the device without supplying a retention-years number
+
+Intel's _1976 Data Catalog_ labels the 1702A a `2K (256 x 8) UV ERASABLE PROM`, gives 0.65/1.0/1.5 µs access grades, advertises approximately two-minute programming of all 2048 bits, states that all 2048 bits are guaranteed programmable and 100% factory tested, and calls the design `Static MOS: No Clocks Required`.
+
+The entry also gives product-specific environmental/electrical limits, including an absolute-maximum ambient temperature under bias of approximately -10°C to +80°C, storage temperature of -65°C to +125°C, and normal read-operation tables over 0°C to +70°C.
+
+In the checked product entry, however, no quantified data-retention duration or erase/program endurance count is stated. This is bounded negative evidence about that document, not proof that Intel never published such values elsewhere.
+
+Accordingly:
+
+```text
+storage-temperature rating
+    !=
+retention-duration warranty
+
+100% factory-tested programmability
+    !=
+erase/program endurance qualification
+```
+
+### H/P/F — later Intel EPROM literature exposes threshold margin as a separate object
+
+Intel's May 1977 _Memory Design Handbook_ describes a 2716 that can be under-programmed or under-erased so that the cell characteristic lies near the sense threshold. It says small voltage or temperature changes can then alter whether a `1` or `0` is sensed and prescribes adequate erase/programming as the cure.
+
+This is direct historical evidence for the 2716, but only a **bounded later comparison** for Case 11. It is not used to assert identical 1702A cell geometry or to substitute 2716 erase parameters for the 1702A.
+
+Its analytical value is narrower:
+
+```text
+readable logical result
+    !=
+fully characterized analog margin from the sense threshold
+```
+
 ## Retained state and substrate
 
 The retained state is charge occupancy on an electrically isolated floating gate together with the resulting change in transistor conduction/threshold behavior sufficient for later sensing.
@@ -172,9 +213,13 @@ The array uses electrical selection and a sufficiently large field to produce av
 
 The product-level MCS-4 workflow further treats programming as an operation followed by a content check. That check does not reveal microscopic floating-gate charge directly; it verifies the resulting readable logical state.
 
+The 1976 product entry adds a different qualification layer: all 2048 bits are described as guaranteed programmable and 100% factory tested. That shipment-time programmability statement is not an erase/program cycle-count guarantee.
+
 ### Reading
 
 The array uses electrical selection at lower stress, below the avalanche condition, to sense the stored state. The source explicitly calls the read nondestructive.
+
+The later 2716 engineering comparison makes the scope of digital sensing more explicit: a cell characteristic can lie close enough to a sense threshold that voltage or temperature changes alter the sensed logical value. This later evidence should not be projected backward as a measured 1702A distribution, but it prevents the project from treating logical readback as direct measurement of floating-gate charge or universal margin.
 
 ### Erasure
 
@@ -194,9 +239,11 @@ read mechanism
 erase mechanism
     !=
 erase-completion evidence
+    !=
+product qualification envelope
 ```
 
-A storage technology should therefore not be classified only by what keeps a bit present. The mechanisms that create, inspect, deliberately destroy, and verify destruction of the distinction may be physically different.
+A storage technology should therefore not be classified only by what keeps a bit present. The mechanisms that create, inspect, deliberately destroy, verify destruction, and qualify the operating envelope of the distinction may be physically and evidentially different.
 
 ## Addressability and erase geometry
 
@@ -208,7 +255,7 @@ At the bounded mechanism level this supports:
 
 A bit may be individually selected for ordinary electrical operations while the mechanism available for forgetting is physically coarser or externally applied.
 
-The period MCS-4 workflow now makes the product-level relation more concrete: the operator applies UV to the device and then checks the addressable contents across the PROM for the erased state. What remains ungrounded is not the existence of a product erase procedure, but formal 1702A datasheet qualification limits such as named-revision retention duration, endurance, temperature assumptions, and any tighter production-specific margins.
+The period MCS-4 workflow makes the product-level relation concrete: the operator applies UV to the device and then checks the addressable contents across the PROM for the erased state. The 1976 datasheet now closes the earlier generic `find a product datasheet` debt by supplying named product/environment/electrical limits. What remains ungrounded is narrower: a period Intel 1702A reliability/qualification source that explicitly states **retention duration and erase/program endurance with their test/temperature assumptions**.
 
 ## Engineering reconstruction
 
@@ -251,6 +298,44 @@ A nominal exposure duration is procedure guidance under named conditions; it is 
 
 This is not a modern secure-sanitize claim. The manual exposes a logical postcondition over readable locations, not a forensic remanence test or analog threshold characterization.
 
+### Product limits are not one generic retention guarantee
+
+The 1976 datasheet forces another evidence partition:
+
+```text
+storage-temperature range
+    !=
+retention time at that temperature
+
+shipment-time programmability
+    !=
+reprogramming endurance
+
+Static MOS / no clock
+    !=
+infinite physical retention
+```
+
+The product has a defined electrical and environmental operating envelope even though the checked entry does not quantify every lifetime property the project might wish to compare.
+
+This is an important negative-control rule for later semiconductor cases: do not convert a temperature rating, nonvolatility label, or factory functional test into an unsourced lifetime number.
+
+### Logical verification has a bounded scope
+
+The MCS-4 programmer/listing workflow observes digital output states. Intel's later 2716 engineering discussion shows that EPROM cell characteristics can also be reasoned about relative to a sense threshold and can become voltage/temperature-sensitive when under-programmed or under-erased.
+
+Therefore:
+
+```text
+logical verify passed under verification conditions
+    !=
+direct measurement of floating-gate charge
+    !=
+complete voltage/temperature/time margin characterization
+```
+
+This is an engineering scope statement. It does not invalidate the historical verify procedure and does not assert that a particular verified 1702A was marginal.
+
 ### Package compatibility does not preserve every hidden control contract
 
 The 1702A can be a pin-for-pin replacement while the safe programming duty cycle changes enough that a generation-mismatched control PROM may damage a 1702.
@@ -267,21 +352,24 @@ Several failure classes must remain separate:
 
 - **retention failure:** charge leaks or is transported away unintentionally;
 - **program failure:** the intended selected state is not established;
+- **insufficient program/erase margin:** later Intel EPROM evidence shows a cell characteristic can remain near a sense threshold when programming/erasing is insufficient; this is direct for 2716 and only a bounded comparison for 1702A;
 - **read disturbance:** sensing stress approaches a regime capable of changing state, even though the sourced preferred read stays below avalanche;
 - **erase failure:** the deliberate discharge operation does not sufficiently remove the trapped charge;
 - **verification failure:** after an intended erase/program operation, the readable logical postcondition does not match the expected state;
 - **regime-mismatch damage:** a programming control appropriate to the 1702A is applied to the 1702 even though Intel warns its duty cycle may permanently damage the older part;
 - **device damage:** an erase method such as excessive heat can destroy the device rather than merely reset its memory state.
 
-The patents and MCS-4 manual do not supply a universal commercial reliability model. This case therefore does not invent retention-year distributions, endurance-cycle counts, UV-dose margins beyond the bounded manual guidance, or failure rates.
+The patents, MCS-4 manual, and checked 1976 product entry do not supply a universal commercial reliability model or a quantified 1702A retention-years/endurance-cycle guarantee. This case therefore does not invent those distributions or silently transfer later EPROM numbers backward.
 
 ## Functional analogy and anti-anachronism
 
-Useful modern analytical phrases include `erase geometry`, `program/erase asymmetry`, `completion evidence`, and `control-plane asymmetry`. They are not period Intel terminology.
+Useful modern analytical phrases include `erase geometry`, `program/erase asymmetry`, `completion evidence`, `qualification envelope`, and `control-plane asymmetry`. They are not period Intel terminology.
 
 Likewise, it is reasonable to compare external UV erase with later block erase as two examples in which forgetting has a geometry different from ordinary read addressing, but they are not the same engineering mechanism. Case 04's Flash erase/reclamation semantics must not be projected backward into this EPROM case.
 
 The period workflow's separation of maintenance action from verification can also be compared functionally with later storage systems that verify a maintenance result. That abstract similarity is **not** evidence of genealogy from EPROM erase tools to scrub, consistency-check, sanitize, or repair systems.
+
+The 1977 2716 threshold discussion is a deliberately bounded same-vendor/same-broad-technology comparison. It clarifies why `logical value observed` and `physical margin` are different evidence objects; it does not establish that the 1702A had identical cells, thresholds, dose requirements, or failure distributions.
 
 ## Philosophical limit
 
@@ -289,7 +377,9 @@ The mechanism makes one conceptual problem concrete: a state can be highly resis
 
 The product workflow adds a second bounded observation: an intervention intended to make a device forget is not identical to evidence that the intended readable postcondition has actually been reached.
 
-Those observations may later matter for a philosophy of technical forgetting, but no patent or MCS-4 manual source is evidence that Frohman, Intel, or Kahng formulated a philosophical theory of memory, forgetting, verification, or exteriorization.
+The product-datasheet comparison adds a third: technical persistence is not exhausted by one `durability` number. A device can have a retention mechanism, an environmental/electrical envelope, a verification procedure, and a separately unquantified long-term margin in the checked document.
+
+Those observations may later matter for a philosophy of technical forgetting and persistence, but no patent, data catalog, MCS-4 manual, or memory handbook source is evidence that Frohman, Intel, or Kahng formulated a philosophical theory of memory, forgetting, verification, qualification, or exteriorization.
 
 ## Cross-case result
 
@@ -305,9 +395,11 @@ what senses it
 what is authorized/able to erase it
     !=
 what demonstrates erase completion
+    !=
+what product limits are actually qualified
 ```
 
-It also adds two independent boundaries:
+It also adds three independent boundaries:
 
 ```text
 addressable access
@@ -315,15 +407,19 @@ addressable access
 erase geometry
 ```
 
-and
-
 ```text
 stable package/interface
     !=
 stable programming-control contract
 ```
 
-Selection can be fine-grained for programming/read while deletion/reset may require a physically different intervention, and a successor device can preserve pinout while changing the admissible stress/timing regime.
+```text
+nonvolatile / storage-rated / factory-tested
+    !=
+quantified retention duration / endurance
+```
+
+Selection can be fine-grained for programming/read while deletion/reset may require a physically different intervention; a successor device can preserve pinout while changing the admissible stress/timing regime; and a product datasheet can qualify many operating properties without containing every lifetime metric a later historian wants.
 
 ## Claim ledger
 
@@ -338,20 +434,27 @@ Selection can be fine-grained for programming/read while deletion/reset may requ
 | Intel's period MCS-4 manual gives a bounded UV erase procedure and a listing-based complete-erase check for this product family | H/P | Intel _MCS-4 User's Manual_ |
 | The MCS-4 programming workflow checks programmed 1702A contents | H/P | Intel _MCS-4 User's Manual_ |
 | Intel describes 1702A as pin-for-pin replacement for 1702 while warning that the 1702A programming duty cycle may damage a 1702 | H/P | Intel _MCS-4 User's Manual_ |
+| Intel's 1976 1702A entry gives access grades, programming time, factory-programmability, temperature, and electrical qualification | H/P | Intel _1976 Data Catalog_ |
+| The checked 1976 1702A entry gives a quantified retention duration | X | not stated in the checked entry |
+| The checked 1976 1702A entry gives an erase/program endurance count | X | not stated in the checked entry |
+| Storage-temperature rating is itself a retention-years guarantee | X | unsupported category substitution |
+| `100% Factory Tested` programmability is an endurance guarantee | X | unsupported |
+| `Static MOS: No Clocks Required` means infinite retention | X | unsupported |
+| Intel's 1977 2716 handbook documents under-program/under-erase threshold-margin sensitivity to voltage/temperature | H/P | Intel _Memory Design Handbook_, May 1977; direct for 2716 only |
+| The 2716 threshold discussion proves identical 1702A internal behavior | X | unsupported backward projection |
 | Frohman invented floating-gate memory generally | X | contradicted by Kahng/Sze prior art and Frohman's own citation |
 | electrical programmability implies electrical erasure | X | contradicted by bounded radiation-erasure mechanism |
 | `read-only` means the physical state cannot be changed | X | contradicted by programming and erase regimes |
 | recommended UV exposure time alone proves complete erasure | X | too strong; period workflow exposes a separate complete-erase verification step |
 | pin-for-pin compatibility guarantees programming-regime compatibility | X | contradicted by Intel's duty-cycle warning |
 | the sources prove a modern forensic secure-erasure guarantee | X | unsupported category leap |
-| exact 1702A retention duration/endurance/temperature qualification is established here | X | still a datasheet-specific evidence gap |
 | program/read addressability and erase geometry must be identical | X | contradicted by bounded mechanism partition |
 
 ## Related repositories
 
 Searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `EPROM`, floating-gate terms, and `1702A` found no dedicated case to reuse. Its current semiconductor-memory gap should eventually carry the broader engineering history.
 
-`technical-retention` therefore keeps only the retention-specific distinction among quiescent trapped-charge persistence, addressed programming, nondestructive read, external erasure, and product-level erase verification.
+`technical-retention` therefore keeps only the retention-specific distinction among quiescent trapped-charge persistence, addressed programming, nondestructive read, external erasure, product-level erase verification, product qualification fields, and the evidence boundary around missing retention/endurance numbers.
 
 [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) supplies the anti-anachronism discipline: a later lineage `ROM → PROM → EPROM → EEPROM → Flash` can organize present research, but it must not be mistaken for the problem vocabulary or teleology of the historical actors.
 
@@ -362,11 +465,15 @@ Searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computi
 3. Dawon Kahng, Bell Telephone Laboratories, US3500142A, _Field effect semiconductor apparatus with memory involving entrapment of charge carriers_: <https://patents.google.com/patent/US3500142A/en>.
 4. Intel, _MCS-4 User's Manual_, period manufacturer manual, HTML/OCR mirror: <https://manualzilla.com/doc/7026262/intel-mcs-4-user-s-manual>.
 5. Intel, _MCS-4 User's Manual_, archival scan commonly identified as `MCS-4_UsersManual_Feb73.pdf`: <https://www.bitsavers.org/components/intel/MCS4/MCS-4_UsersManual_Feb73.pdf>.
-6. Intel, _A Success…Out of Quality Control Issues_: <https://www.intel.com/content/www/us/en/history/virtual-vault/articles/eprom.html>.
-7. Computer History Museum, _1971: Reusable Programmable ROM Introduces Iterative Design Flexibility_: <https://www.computerhistory.org/siliconengine/reusable-programmable-rom-introduces-iterative-design-flexibility/>.
+6. Intel, _1976 Intel Data Catalog_, 1702A entry: <https://deramp.com/downloads/mfe_archive/050-Component%20Specifications/Intel/Memory%20Components/1976_Intel_Data_Catalog.pdf>.
+7. Intel, 1702A datasheet extract mirror: <https://www.cpu-galaxy.at/CPU/Ram%20Rom%20Eprom/ROM/Intel%201702%20section-Dateien/1702_Datasheet.pdf>.
+8. Intel, _Memory Design Handbook_, May 1977, 2716 application/under-program/under-erase discussion: <https://www.bitsavers.org/components/intel/_dataBooks/1977_C-160_memDesignHb_May77.pdf>.
+9. Intel, _A Success…Out of Quality Control Issues_: <https://www.intel.com/content/www/us/en/history/virtual-vault/articles/eprom.html>.
+10. Computer History Museum, _1971: Reusable Programmable ROM Introduces Iterative Design Flexibility_: <https://www.computerhistory.org/siliconengine/reusable-programmable-rom-introduces-iterative-design-flexibility/>.
+11. National Museum of American History, _Intel 1702A Electrically Programmable Read Only Memory (EPROM)_: <https://americanhistory.si.edu/collections/object/nmah_713501>.
 
 ## Next bounded bridge
 
-Within Case 11, the remaining archival deepening is now narrower: directly inspect a period 1702A datasheet/data-book page for named-revision **retention duration, endurance, temperature assumptions, and formal erase/program qualification limits**, keeping those claims separate from the MCS-4 development-system operating procedure.
+Within Case 11, the generic datasheet-discovery debt is now closed. The remaining archival deepening is specifically to locate a period Intel 1702A **reliability/qualification source** that states named-revision retention duration and erase/program endurance together with their temperature/test assumptions. Do not infer those quantities from the 1976 storage-temperature range, `Static MOS` headline, factory programmability, or from later EPROM generations.
 
 Conceptually, do **not** jump directly from this EPROM case to generic Flash history. The next distinct mechanism bridge is an EEPROM case in which erasure itself becomes electrically controlled, followed only then by a separate Flash case about erase granularity / fast bulk erase if it changes the retention comparison. The key question is whether the locus and geometry of forgetting move back inside ordinary electrical control and what new endurance/maintenance obligations appear.
