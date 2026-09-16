@@ -32,6 +32,13 @@ The Background Control page states that setting `EN_BMS` from one to zero during
 
 The canonical record already grounds T10 `04-198r5`, the 2005 approval/2006 clarification path, and a 2007 Seagate Cheetah 15K.5 product witness. It already establishes that the standardization work separated detection, logging, ARRE/AWRE permission, repair/reassignment, pre-scan, foreground preemption, and scan coverage. This deepening does not repeat that work.
 
+### S3 — Hitachi 2008 BMS persistence-horizon deepening
+
+- [`101-hitachi-2008-bms-policy-log-persistence-deepening.md`](101-hitachi-2008-bms-policy-log-persistence-deepening.md)
+- **Evidence class:** `H/P` named-product specification plus bounded contemporaneous T10 standards-development interpretation.
+
+The 29 October 2008 Hitachi Ultrastar 15K450 specification supplies an earlier, independent-from-Seagate named-product witness for no in-scan reassignment and, more importantly, directly separates saveable Background Control policy from current progress/log state. Its MODE SELECT contract says `SP=1` mode-page data are saved in the disk Reserved Area and maintained across power cycle/reset, while `SP=0` values expire on power removal/reset. Its BMS status and medium-scan entries expose `DS=0` / `TSD=0`, which the companion record interprets conservatively against period T10 log-save semantics rather than as proof of an atomically durable latest scan position.
+
 ---
 
 ## Historical / product findings
@@ -57,7 +64,7 @@ The safe bounded claim is:
 
 `maintenance execution lifetime != maintenance-control/progress lifetime`
 
-This is not evidence for power-loss persistence. The specification does not, in the inspected text, identify the storage location or say that the suspended LBA survives reset, power cycle, firmware replacement, or format.
+The 2024 HC590 text inspected here does not by itself identify the storage location or say that the exact suspended LBA survives reset, power cycle, firmware replacement, or format. The companion Hitachi 2008 deepening now closes a narrower documentation-level question: **BMS policy can be stored as saveable mode-page state across reset/power boundaries, while BMS log parameters are save-capable under period SCSI semantics.** It still does not prove that the latest in-flight traversal position is atomically durable across unexpected power loss.
 
 ### H3 — later named-product behavior blocks a universal `BMS = automatic reassignment` reading
 
@@ -78,15 +85,17 @@ and:
 
 `defect detected != device-side relocation completed`
 
+The new Hitachi 2008 record shows this was not merely a 2024 Western Digital product choice: a Hitachi Ultrastar SAS product already documented `Reassignment during the background scan is not supported` in 2008. Because Hitachi and later HGST became part of Western Digital, this extends the product-line documentation chronology but should not be counted as two cleanly independent long-run engineering lineages.
+
 ### H4 — shared interface vocabulary does not imply identical vendor repair policy
 
-The existing Case 101 Seagate witness says unreadable and recovered-error sites are logged or reallocated according to ARRE/AWRE settings. HC590 uses the same broad BMS control/result family but explicitly does not support reassignment during the scan.
+The existing Case 101 Seagate witness says unreadable and recovered-error sites are logged or reallocated according to ARRE/AWRE settings. HC590 uses the same broad BMS control/result family but explicitly does not support reassignment during the scan. Hitachi 15K450 independently documents the latter policy in 2008.
 
 This supports only a product-comparison statement:
 
 `standardized control/reporting relation != identical vendor repair implementation`
 
-It does **not** prove a chronological trend from automatic repair to host-managed repair, nor a Seagate→Western Digital genealogy.
+It does **not** prove a chronological trend from automatic repair to host-managed repair, nor a Seagate→Hitachi→Western Digital genealogy.
 
 ### H5 — scan-result evidence has several horizons
 
@@ -103,7 +112,11 @@ Engineering reconstruction:
 
 `current maintenance state != cumulative summary != event record != payload`
 
-The source does not establish how long every individual error entry survives, whether logs wrap, or whether those entries survive every power/reset boundary.
+The 2008 companion record adds a fifth distinction at the control plane:
+
+`persistent maintenance policy != current traversal checkpoint`
+
+The sources still do not establish the exact update/atomicity rules for every individual error entry or the newest scan-position checkpoint under abrupt power loss.
 
 ---
 
@@ -119,54 +132,60 @@ The canonical case already separates:
 
 The HC590 adds a useful implementation counterexample inside that chain: a drive can implement BMS status/progress and defect discovery while declining in-scan reassignment.
 
-So the better generic model is:
+The Hitachi 2008 companion evidence further adds a control-state layer:
 
 ```text
-BMS control + scan progress
-        ↓
-proactive readability observation
+saved BMS policy
+        ↓ power/reset reconstitution
+current BMS policy
+        ↓ schedule / idle opportunity
+BMS execution + progress
         ↓
 defect/result evidence
         ↓
 repair authority branches
-   ┌───────────────┬────────────────┐
-   │ rewrite       │ host reassign  │
-   │ (if supported)│ / later write  │
-   └───────────────┴────────────────┘
 ```
 
-not:
+So the better generic model is not:
 
 ```text
 BMS -> automatic sector relocation
 ```
 
+and not:
+
+```text
+BMS enabled -> exact progress checkpoint is crash durable
+```
+
 ### Case 14 — SCSI defect reassignment
 
-Case 14 remains canonical for logical identity across physical reassignment. HC590 reinforces that Case 101's proactive discovery path can stop **before** reassignment and hand authority to the application client.
+Case 14 remains canonical for logical identity across physical reassignment. HC590 and Hitachi 15K450 reinforce that Case 101's proactive discovery path can stop **before** reassignment and hand authority to the application client.
 
 ### Cases 18 / 83 — higher-layer scrub/scanner
 
-Nothing in HC590 changes the existing boundary: drive-local BMS qualifies medium readability under drive error-recovery semantics; ZFS/HDFS verify higher-layer checksum/replica relations. Current drive scan progress cannot stand in for higher-layer integrity evidence.
+Nothing in HC590 changes the existing boundary: drive-local BMS qualifies medium readability under drive error-recovery semantics; ZFS/HDFS verify higher-layer checksum/replica relations. Current drive scan progress or persisted BMS policy cannot stand in for higher-layer integrity evidence.
 
 ---
 
 ## Philosophical limit
 
-The only bounded interpretive addition is about **maintenance evidence having plural temporal horizons**. A device can retain a current traversal point, a cumulative count, and event-specific defect evidence without any of them being the user payload or a complete history of the medium.
+The bounded interpretive addition is about **maintenance evidence and maintenance policy having plural temporal horizons**. A device can retain a maintenance regime across reset/power boundaries, expose a current traversal point, retain cumulative counts, and record event-specific defect evidence without any of them being the user payload or a complete history of the medium.
 
-This strengthens the repository's distinction between first-order retained state and second-order maintenance state, but it does not make a scan counter an archive, a memory of every sector, or a philosophical `retention` in Stiegler's sense.
+This strengthens the repository's distinction between first-order retained state and second-order maintenance state, but it does not make a saved mode page, scan counter, or BMS result log an archive, a memory of every sector, or a philosophical `retention` in Stiegler's sense.
 
 ---
 
 ## Stop conditions
 
-Do **not** infer from this source that:
+Do **not** infer from these sources that:
 
-- Western Digital invented BMS or the SCSI BMS interface;
-- 2024 HC590 semantics describe every SCSI/SAS drive;
-- Seagate 2007 and Western Digital 2024 firmware share one implementation lineage;
-- the current scan position is crash-durable or power-loss persistent;
+- Western Digital, HGST, or Hitachi invented BMS or the SCSI BMS interface;
+- 2008 Hitachi or 2024 HC590 semantics describe every SCSI/SAS drive;
+- Seagate 2007, Hitachi 2008, and Western Digital 2024 firmware share one implementation lineage;
+- different corporate mastheads automatically establish independent engineering lineages;
+- the current scan position is atomically crash-durable or power-loss persistent;
+- `DS=0` or `TSD=0` means every latest BMS update is already safely stored after every event;
 - lifetime scan counts are a complete per-LBA history;
 - a successful scan is a timeless integrity certificate;
 - `reassignment not supported during BMS` means the drive can never reassign sectors by other paths;
@@ -177,13 +196,13 @@ Do **not** infer from this source that:
 
 ## Related-repository boundary
 
-A fresh `tmzncty/computing-archaeology` search for `background media scan SCSI` returned no dedicated study in this run. Broader cross-vendor BMS/SMART/patrol-read genealogy and implementation history should live there if developed; this file remains a narrow Case 101 product-contract deepening.
+Fresh `tmzncty/computing-archaeology` searches for `C15K600` and `Background Media Scan` returned no dedicated study in this run. Broader cross-vendor BMS/SMART/patrol-read genealogy, Hitachi/HGST/Western Digital firmware continuity, SCSI mode/log persistence history, and implementation experiments should live there if developed; this file remains a narrow Case 101 product-contract deepening.
 
 ---
 
 ## Remaining debt
 
-- test named-drive BMS progress/log persistence across reset and power loss;
-- compare another contemporary SAS vendor for in-scan reassignment semantics;
-- recover exact normative SBC/SPC wording for the HC590 generation and distinguish mandatory interface semantics from optional vendor behavior;
-- connect BMS progress to controlled fault/load experiments rather than documentation alone.
+- perform abrupt reset/power-loss testing on named drives to determine whether the **latest** BMS traversal position and newest log entries survive, and at what checkpoint granularity; the 2008 Hitachi record closes only the weaker documentation-level facts that BMS policy can be saved across reset/power and BMS log parameters are save-capable/implicitly saveable under period SCSI semantics;
+- inspect a final SPC-4 revision around the 2008 product date line-by-line for exact normative DS/TSD/list-parameter semantics;
+- compare another genuinely independent later SAS vendor rather than treating Hitachi/HGST/Western Digital corporate-document multiplicity as multiple independent implementations;
+- connect BMS progress/persistence to controlled fault/load experiments rather than documentation alone.
