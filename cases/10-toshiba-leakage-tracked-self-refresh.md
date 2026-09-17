@@ -14,6 +14,8 @@ Cross-vendor proxy-topology deepening: [`../evidence/10-sharp-1997-1998-array-co
 
 Standards-era TCSR control-boundary deepening: [`../evidence/10-micron-2005-2009-temperature-compensated-self-refresh-control-boundary.md`](../evidence/10-micron-2005-2009-temperature-compensated-self-refresh-control-boundary.md).
 
+Named controller/device integration deepening: [`../evidence/10-xilinx-2010-micron-lpddr-refresh-authority-boundary-deepening.md`](../evidence/10-xilinx-2010-micron-lpddr-refresh-authority-boundary-deepening.md).
+
 ## Scope
 
 This case asks what changes when DRAM refresh no longer depends on an external controller for refresh cadence and instead uses an on-chip monitor of charge decay to decide when an intermittent refresh pass begins. It is not a general history of DRAM self-refresh and does not identify the patent embodiment with a named Toshiba commercial product.
@@ -177,21 +179,70 @@ The comparison is functional. Nothing inspected here proves that Hitachi, Toshib
 
 This later evidence changes the conceptual emphasis of Case 10. A preservation system need not derive its maintenance decision from a proxy that physically resembles the payload cell. Temperature can be used as a retention-relevant condition from which cadence is selected. And even when the interface retains a named policy field, the actual authority over preservation work can migrate behind that interface.
 
+## Controller/device integration deepening — Xilinx Spartan-6 MCB + Micron Mobile LPDDR, 2009–2010
+
+The Micron TCSR evidence identifies a device-side authority boundary, but it does not by itself show what a contemporaneous external memory controller actually owns. Xilinx UG388 v2.3 (9 August 2010) now supplies the controller-side half, and its supported-device table includes Micron's `MT46H32M16xxxx-5` 512Mb ×16 LPDDR family. See [`../evidence/10-xilinx-2010-micron-lpddr-refresh-authority-boundary-deepening.md`](../evidence/10-xilinx-2010-micron-lpddr-refresh-authority-boundary-deepening.md).
+
+The key controller attribute is `C_MEM_TREFI`, which UG388 defines as the **Average Periodic Refresh Interval** and explicitly describes as the rate at which the **MCB refreshes the memory, not the self-refresh interval**. The same guide separately exposes SELF REFRESH entry/exit and an LPDDR `C_MEM_MOBILE_PA_SR` Partial Array Self-Refresh setting with `Full` / `Half` choices.
+
+Micron's December-2009 512Mb Mobile LPDDR documentation supplies the matching device-side semantics. Its TCSR cadence is controlled by an automatic on-die temperature sensor; the nominal TCSR fields have no effect on that device, while PASR remains externally configurable through the extended mode register. During SELF REFRESH, refresh intervals are scheduled internally and may vary or differ from ordinary `tREFI`; regions excluded by PASR are not retained.
+
+This produces a named integration-level authority split:
+
+```text
+ordinary operation:
+    controller periodic AUTO REFRESH cadence
+        -> C_MEM_TREFI
+
+mode transition:
+    user / controller SELF REFRESH entry and exit
+
+inside SELF REFRESH:
+    device-internal temperature-sensor / oscillator cadence
+
+retained spatial scope:
+    externally selected PASR coverage
+```
+
+The engineering result is therefore:
+
+```text
+mode-entry authority
+    !=
+cadence authority
+    !=
+coverage authority
+    !=
+restoration execution
+```
+
+and, more specifically:
+
+```text
+controller supports SELF REFRESH
+    !=
+controller owns the internal SELF REFRESH clock
+```
+
+The paired documents also show that one retention relation can distribute **temporal policy** and **spatial policy** differently: Micron internalizes effective cadence control while leaving PASR coverage externally selectable. This is a functional control decomposition, not evidence of a historical Toshiba→Micron→Xilinx genealogy.
+
+The slice deliberately does not claim to have inspected the controlling 2005–2007 normative JEDEC TCSR clause. It narrows an implementation boundary with manufacturer-primary controller/device evidence while leaving standard genealogy as a separate debt.
+
 ## Failure boundaries
 
-The sourced mechanism separates several failure classes. A monitor that is not conservative enough can initiate maintenance too late; an overly conservative monitor can cause needless refresh and power cost; an incorrect threshold can reduce safety margin; and correct triggering still does not guarantee correct row enumeration or correct row restoration. The Sharp deepening adds another boundary: an aggregate leakage proxy can smooth individual-source variation without proving that it captures the worst-retention cell. The Micron TCSR deepening adds a different class: a controller-sensed design can fail in temperature observation / policy programming, while an on-die automatic design moves the relevant authority and failure path behind the external TCSR field. These are engineering implications of the documented partitions, not measured failure rates for commercial Toshiba, Sharp, or Micron devices.
+The sourced mechanism separates several failure classes. A monitor that is not conservative enough can initiate maintenance too late; an overly conservative monitor can cause needless refresh and power cost; an incorrect threshold can reduce safety margin; and correct triggering still does not guarantee correct row enumeration or correct row restoration. The Sharp deepening adds another boundary: an aggregate leakage proxy can smooth individual-source variation without proving that it captures the worst-retention cell. The Micron TCSR deepening adds a different class: a controller-sensed design can fail in temperature observation / policy programming, while an on-die automatic design moves the relevant authority and failure path behind the external TCSR field. The Xilinx/Micron integration adds a further separation: wrong controller `tREFI`, wrong device-internal SELF REFRESH cadence, wrong PASR coverage, and failed SELF REFRESH entry/exit are different failure surfaces. These are engineering implications of the documented partitions, not measured failure rates for commercial Toshiba, Sharp, Micron, or Xilinx systems.
 
 ## Functional analogy and anti-anachronism
 
-`Adaptive refresh`, `condition-derived scheduling`, `proxy state`, and `sentinel` can be useful modern comparisons, but they are not presented as period Toshiba terminology. Historical claims remain in the patents' own vocabulary.
+`Adaptive refresh`, `condition-derived scheduling`, `proxy state`, `sentinel`, and `refresh authority` can be useful modern comparisons, but they are not presented as period Toshiba terminology. Historical claims remain in the patents' and manufacturer documents' own vocabulary.
 
 US4682306A is a manufacturer-primary design disclosure, not proof that a named Toshiba DRAM or pseudo-SRAM used the exact preferred embodiment. It also cannot support a `first adaptive self-refresh` claim because the patent itself identifies earlier Hitachi work. Likewise, the Sharp family is design disclosure rather than proof of a named shipping part.
 
-Later SDRAM `AUTO REFRESH`, JEDEC self-refresh entry/exit, DDR per-bank refresh, and modern retention-aware policies remain separate regimes. The new Micron addendum only narrows one later bridge: standards-era TCSR can use temperature and can place effective cadence authority somewhere other than the host-visible TCSR field. It does not turn that later regime into the same mechanism as the 1980s leakage-monitor designs.
+Later SDRAM `AUTO REFRESH`, JEDEC self-refresh entry/exit, DDR per-bank refresh, and modern retention-aware policies remain separate regimes. The Micron addendum narrows one later bridge: standards-era TCSR can use temperature and can place effective cadence authority somewhere other than the host-visible TCSR field. The Xilinx/Micron integration narrows another: an external controller can own ordinary periodic-refresh timing and SELF REFRESH transitions without owning the internal cadence once the DRAM enters SELF REFRESH. Neither comparison turns the later regime into the same mechanism as the 1980s leakage-monitor designs.
 
 ## Philosophical limit
 
-A bounded conceptual question follows from the mechanism: apparent persistence can be maintained by instrumenting an approaching loss condition and converting it into maintenance work. The Sharp comparison adds that the useful signal need not be a miniature copy of the payload state; it can be an aggregate signature emitted by surrounding infrastructure. The Micron comparison adds that a visible control representation need not exhaust the effective policy relation: a named field can remain present while the preservation decision has moved to an internal sensor/control path. These are interpretations of engineering relations, not historical claims that Toshiba, Hitachi, Sharp, Micron, or JEDEC engineers formulated a philosophy of retention, representation, or authority.
+A bounded conceptual question follows from the mechanism: apparent persistence can be maintained by instrumenting an approaching loss condition and converting it into maintenance work. The Sharp comparison adds that the useful signal need not be a miniature copy of the payload state; it can be an aggregate signature emitted by surrounding infrastructure. The Micron comparison adds that a visible control representation need not exhaust the effective policy relation: a named field can remain present while the preservation decision has moved to an internal sensor/control path. The Xilinx/Micron integration adds that preservation authority itself can be distributed by dimension: the component that requests a preservation mode need not own its internal cadence, while another externally selected field can still govern the spatial scope of what is preserved. These are interpretations of engineering relations, not historical claims that Toshiba, Hitachi, Sharp, Micron, Xilinx, or JEDEC engineers formulated a philosophy of retention, representation, or authority.
 
 ## Cross-case result
 
@@ -212,9 +263,13 @@ control-field visibility
     !=
 effective cadence authority
     !=
+mode-entry / exit authority
+    !=
 maintenance trigger
     !=
 active-pass timing source
+    !=
+coverage policy
     !=
 row enumeration
     !=
@@ -223,7 +278,7 @@ row selection
 sense / restoration
 ```
 
-Case 09 grounds the separation between external trigger cadence and internal row enumeration. Case 10 grounds designs in which monitored physical conditions participate in generating refresh timing while showing that the monitored proxy, aggregation topology, sensor location, and effective policy authority can vary materially across manufacturer disclosures.
+Case 09 grounds the separation between external trigger cadence and internal row enumeration. Case 10 grounds designs in which monitored physical conditions participate in generating refresh timing while showing that the monitored proxy, aggregation topology, sensor location, effective policy authority, mode-transition authority, and coverage authority can vary materially across manufacturer disclosures and controller/device boundaries.
 
 ## Claim ledger
 
@@ -253,17 +308,24 @@ Case 09 grounds the separation between external trigger cadence and internal row
 | A standards-visible maintenance field necessarily has effective policy authority on every implementation | X | directly contradicted by TN-46-15 |
 | Temperature-derived TCSR is electrically the same mechanism as the 1980s leakage-monitor patents | X | different observed condition; genealogy not established |
 | The exact 2005–2007 normative JEDEC TCSR clause is established by this case | X | normative standard text not directly inspected in this slice |
+| Xilinx UG388 v2.3 supports LPDDR and lists Micron `MT46H32M16xxxx-5` as a supported 512Mb ×16 family | H/P | UG388 supported-device table |
+| Xilinx `C_MEM_TREFI` is the MCB periodic-refresh interval and explicitly not the self-refresh interval | H/P | UG388 memory-device attributes |
+| Xilinx exposes LPDDR Partial Array Self-Refresh coverage with `C_MEM_MOBILE_PA_SR` | H/P | UG388 memory-device attributes |
+| Micron Rev. I 12/09 documents internally scheduled SELF REFRESH cadence controlled by an on-die temperature path while PASR remains externally configurable | H/P | Micron 512Mb Mobile LPDDR datasheet |
+| Controller periodic-refresh cadence, SELF REFRESH entry/exit, internal cadence, and coverage policy are one undifferentiated authority | X | contradicted by the paired Xilinx/Micron documentation |
+| `tREFI` is one universal refresh interval across ordinary operation and SELF REFRESH | X | explicitly rejected by Xilinx and Micron documentation |
 | Toshiba invented adaptive refresh generally | X | blocked by the patent's own Hitachi prior-art discussion |
 | Internal refresh addressing automatically implies internal refresh scheduling | X | contradicted by the Case-09/Case-10 comparison |
 | A deliberately decaying proxy can trigger payload-preservation work | E | bounded reconstruction from the monitor role |
 | Leakage-derived refresh can use materially different proxy and aggregation topologies | E | bounded cross-vendor reconstruction from Hitachi, Toshiba, and Sharp records |
 | Sensor location, control-field visibility, and effective refresh-cadence authority are separable | E | bounded reconstruction from Micron TN-46-12 / TN-46-15 |
+| Mode-transition authority, cadence authority, and coverage authority are separable at a named controller/device boundary | E | bounded reconstruction from Xilinx UG388 + Micron Rev. I 12/09 |
 
 ## Related repositories
 
-Current searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for the Toshiba leak-monitor mechanism, `US6075739`, `TN-46-15`, `temperature compensated self refresh`, and related self-refresh leakage terms found no dedicated treatment to reuse. A broader history of DRAM generations, pseudo-SRAM, LPDDR standardization, oscillator and back-bias design, temperature sensing, process leakage, manufacturer competition, and later standards belongs there rather than being duplicated here.
+Current searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for the Toshiba leak-monitor mechanism, `US6075739`, `TN-46-15`, `temperature compensated self refresh`, `UG388`, `MT46H32M16`, and related self-refresh leakage terms found no dedicated treatment to reuse. A broader history of DRAM generations, pseudo-SRAM, LPDDR standardization, FPGA memory controllers, oscillator and back-bias design, temperature sensing, process leakage, manufacturer competition, and later standards belongs there rather than being duplicated here.
 
-`tmzncty/problem-history` remains the methodological guard against projecting later `adaptive refresh` or JEDEC terminology backward.
+`tmzncty/problem-history` remains the methodological guard against projecting later `adaptive refresh`, `refresh authority`, or JEDEC terminology backward.
 
 ## Sources
 
@@ -278,3 +340,5 @@ Current searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty
 9. Micron Technology, Inc., **TN-46-15: _Low-Power Versus Standard DDR SDRAM_**, Rev. A, 22 Jan. 2007, inspected manufacturer text preserved at: <https://dtsheet.com/doc/1384279/tn4615--low-power-versus-standard-ddr-sdram>.
 10. Micron Technology, **DRAM power calculators**, current support page listing Mobile LPDRAM TN-46-12: <https://www.micron.com/sales-support/design-tools/dram-power-calculator>.
 11. Freescale Semiconductor, **_MPC5121e DRAM Controller_**, Rev. 2 (2009), surviving copy preserving TN-46-15's legacy Micron URL and separately referencing JESD209: <https://manuals.plus/m/fd2a88e34742801074da475b621e1bec8a57e5b296ebe5e29d01ecf797b92919>.
+12. Xilinx, **_Spartan-6 FPGA Memory Controller User Guide (UG388)_**, v2.3, 9 Aug. 2010, official AMD/Xilinx archive: <https://docs.amd.com/v/u/en-US/ug388>.
+13. Micron Technology, Inc., **_512Mb: x16, x32 Mobile LPDDR SDRAM_**, Rev. I, Dec. 2009, PDF identifier `09005aef82d5d305`, device families including `MT46H32M16LF` / `MT46H16M32LF`; preserved document index: <https://datasheet.eeworld.com.cn/view/7768840.html>.
