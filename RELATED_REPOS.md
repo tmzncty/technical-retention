@@ -22,6 +22,10 @@ If the historical mechanism is already explained there, `technical-retention` sh
 
 If new research mainly improves the historical engineering account, contribute it there first.
 
+### Current bounded reuse example
+
+Case 02 now uses [`evidence/02-whirlwind-1953-1954-marginal-checking-recovery-copy-deepening.md`](evidence/02-whirlwind-1953-1954-marginal-checking-recovery-copy-deepening.md) only for the retention-specific boundary between **diagnostic disturbance** and **recovery-copy staging** in 1953–1954 Whirlwind I marginal checking. The broad magnetic-core mechanism, Whirlwind deployment, manufacturing, and engineering context remain in [`computing-archaeology/docs/memory/why-core-memory-was-worth-weaving.md`](https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md) rather than being duplicated here.
+
 ---
 
 ## 2. problem-history
