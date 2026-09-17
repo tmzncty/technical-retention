@@ -30,6 +30,8 @@ Case 142 now uses [`evidence/142-ceph-reef-mclock-maintenance-scheduling-boundar
 
 Case 42 now uses [`evidence/42-kafka-081-cleaner-checkpoint-restart-currentness-deepening.md`](evidence/42-kafka-081-cleaner-checkpoint-restart-currentness-deepening.md) only for the retention-specific seam between **cleaner progress checkpoint**, **reconstructed latest-key working state**, **runtime cleaner state**, **segment-swap recovery**, and **checkpoint currentness after log geometry changes**. A fresh companion search found no dedicated Kafka cleaner-checkpoint packet to reuse. A broad Kafka log-cleaner/segment-format/Databus engineering history remains `computing-archaeology` work rather than being duplicated here.
 
+Case 134 now uses [`evidence/134-cypress-copyback-interruption-quarantine-deepening.md`](evidence/134-cypress-copyback-interruption-quarantine-deepening.md) only for the retention-specific seam between **COPYBACK source integrity**, **destination-program completion**, **post-interruption quarantine/reuse admission**, and **restart-visible evidence that an operation was not proven complete**. A fresh companion search found no dedicated NAND copyback packet to reuse. Broader COPYBACK command genealogy, ONFI/Toggle standardization, page-buffer architecture, and controller-adoption history remain `computing-archaeology` work rather than being duplicated here.
+
 ---
 
 ## 2. problem-history
