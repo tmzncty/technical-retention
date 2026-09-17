@@ -36,6 +36,8 @@ Case 148 now uses [`evidence/148-ulink-2026-lexar-dst-controller-reset-conforman
 
 Case 149 now uses [`evidence/149-micron-2012-2015-otp-mode-vs-protection-persistence-deepening.md`](evidence/149-micron-2012-2015-otp-mode-vs-protection-persistence-deepening.md) only for the retention-specific boundary between **volatile OTP/access-mode selection** and the separately established **irreversible OTP mutation-authority relation**. Fresh companion searches found no dedicated Micron NAND OTP / `OTP DATA PROTECT` packet to reuse. Broad NAND OTP/security-register genealogy, ONFI committee evolution, exact lock-cell circuitry, physical attack work, and controller-driver history remain `computing-archaeology` work rather than being duplicated here.
 
+Case 152 now uses [`evidence/152-sqlite-wal-recovery-backfill-progress-reset-deepening.md`](evidence/152-sqlite-wal-recovery-backfill-progress-reset-deepening.md) only for the retention-specific seam between **authoritative committed WAL evidence**, **reconstructed WAL geometry**, **discardable checkpoint-progress state**, and **re-established WAL reuse authority** after restart. A fresh companion search for `SQLite` found no dedicated SQLite WAL/checkpoint packet to reuse. Broad System R/ARIES/WAL genealogy, SQLite pager and Fossil-check-in history, VFS evolution, and later checkpoint-mode history remain `computing-archaeology` work rather than being duplicated here.
+
 ---
 
 ## 2. problem-history
