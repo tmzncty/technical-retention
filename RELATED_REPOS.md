@@ -26,6 +26,8 @@ If new research mainly improves the historical engineering account, contribute i
 
 Case 02 now uses [`evidence/02-whirlwind-1953-1954-marginal-checking-recovery-copy-deepening.md`](evidence/02-whirlwind-1953-1954-marginal-checking-recovery-copy-deepening.md) only for the retention-specific boundary between **diagnostic disturbance** and **recovery-copy staging** in 1953–1954 Whirlwind I marginal checking. The broad magnetic-core mechanism, Whirlwind deployment, manufacturing, and engineering context remain in [`computing-archaeology/docs/memory/why-core-memory-was-worth-weaving.md`](https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md) rather than being duplicated here.
 
+Case 142 now uses [`evidence/142-ceph-reef-mclock-maintenance-scheduling-boundary-deepening.md`](evidence/142-ceph-reef-mclock-maintenance-scheduling-boundary-deepening.md) only for the retention-specific seam between **repair obligation**, **capacity/reservation admission**, **scheduler service class/resource allocation**, and **repair completion** in the bounded Reef `v18.2.0` baseline. A fresh companion search found no dedicated Ceph mClock recovery/backfill module to reuse. The broad dmClock/mClock algorithm history, pre-Pacific/Pacific/Quincy/Reef scheduler evolution, and benchmark/performance archaeology remain `computing-archaeology` work rather than being duplicated here.
+
 ---
 
 ## 2. problem-history
