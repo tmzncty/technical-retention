@@ -34,6 +34,8 @@ Case 134 now uses [`evidence/134-cypress-copyback-interruption-quarantine-deepen
 
 Case 148 now uses [`evidence/148-ulink-2026-lexar-dst-controller-reset-conformance-deepening.md`](evidence/148-ulink-2026-lexar-dst-controller-reset-conformance-deepening.md) only for the retention-specific evidence boundary between a **normative reset-surviving maintenance contract**, a **named-product feature witness**, a **named third-party controller-reset conformance result**, and the still-undisclosed **internal resume/checkpoint embodiment**. A fresh companion search found no dedicated NVMe Device Self-test packet to reuse. Broad ATA/SCSI/NVMe diagnostic-command genealogy, conformance-tool history, TP001a drafting history, and vendor firmware archaeology remain `computing-archaeology` work rather than being duplicated here.
 
+Case 149 now uses [`evidence/149-micron-2012-2015-otp-mode-vs-protection-persistence-deepening.md`](evidence/149-micron-2012-2015-otp-mode-vs-protection-persistence-deepening.md) only for the retention-specific boundary between **volatile OTP/access-mode selection** and the separately established **irreversible OTP mutation-authority relation**. Fresh companion searches found no dedicated Micron NAND OTP / `OTP DATA PROTECT` packet to reuse. Broad NAND OTP/security-register genealogy, ONFI committee evolution, exact lock-cell circuitry, physical attack work, and controller-driver history remain `computing-archaeology` work rather than being duplicated here.
+
 ---
 
 ## 2. problem-history
