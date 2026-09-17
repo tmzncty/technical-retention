@@ -32,6 +32,8 @@ Case 42 now uses [`evidence/42-kafka-081-cleaner-checkpoint-restart-currentness-
 
 Case 134 now uses [`evidence/134-cypress-copyback-interruption-quarantine-deepening.md`](evidence/134-cypress-copyback-interruption-quarantine-deepening.md) only for the retention-specific seam between **COPYBACK source integrity**, **destination-program completion**, **post-interruption quarantine/reuse admission**, and **restart-visible evidence that an operation was not proven complete**. A fresh companion search found no dedicated NAND copyback packet to reuse. Broader COPYBACK command genealogy, ONFI/Toggle standardization, page-buffer architecture, and controller-adoption history remain `computing-archaeology` work rather than being duplicated here.
 
+Case 148 now uses [`evidence/148-ulink-2026-lexar-dst-controller-reset-conformance-deepening.md`](evidence/148-ulink-2026-lexar-dst-controller-reset-conformance-deepening.md) only for the retention-specific evidence boundary between a **normative reset-surviving maintenance contract**, a **named-product feature witness**, a **named third-party controller-reset conformance result**, and the still-undisclosed **internal resume/checkpoint embodiment**. A fresh companion search found no dedicated NVMe Device Self-test packet to reuse. Broad ATA/SCSI/NVMe diagnostic-command genealogy, conformance-tool history, TP001a drafting history, and vendor firmware archaeology remain `computing-archaeology` work rather than being duplicated here.
+
 ---
 
 ## 2. problem-history
