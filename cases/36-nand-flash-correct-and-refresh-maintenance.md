@@ -2,13 +2,15 @@
 
 ## Status
 
-**`grounded`** — bounded to Yu Cai et al.'s peer-reviewed 2012 ICCD proposal and evaluation of **Flash Correct-and-Refresh (FCR)** for 3x-nm MLC NAND Flash, with later 2015 retention-characterization work used only as a boundary check on retention-age/read-recovery semantics. The historical novelty boundary is additionally deepened by pre-2012 nonvolatile-memory refresh patent records from 1978–2009; those records narrow what can safely be attributed to FCR without changing the case's bounded 2012 object. Named commercial evidence now includes IBM FlashSystem retention maintenance and a separate Swissbit first-party witness that exposes `Adaptive Read Refresh` and `Background Media Scan` as distinct product maintenance categories without revealing their firmware algorithm.
+**`grounded`** — bounded to Yu Cai et al.'s peer-reviewed 2012 ICCD proposal and evaluation of **Flash Correct-and-Refresh (FCR)** for 3x-nm MLC NAND Flash, with later 2015 retention-characterization work used only as a boundary check on retention-age/read-recovery semantics. The historical novelty boundary is additionally deepened by pre-2012 nonvolatile-memory refresh patent records from 1978–2009; those records narrow what can safely be attributed to FCR without changing the case's bounded 2012 object. A near-contemporary Intel-origin design record now adds a separate control-state and chronology boundary: it was filed in 2011 but not publicly published until 2013, and it describes retaining per-location elapsed-time refresh state across power cycles. This is filing/design chronology, **not** additional pre-2012 public prior art. Named commercial evidence now includes IBM FlashSystem retention maintenance and a separate Swissbit first-party witness that exposes `Adaptive Read Refresh` and `Background Media Scan` as distinct product maintenance categories without revealing their firmware algorithm.
 
 Grounding record: [`../evidence/36-cai-2012-flash-correct-refresh-grounding.md`](../evidence/36-cai-2012-flash-correct-refresh-grounding.md).
 
 Earlier prior-art deepening: [`../evidence/36-1978-1994-nonvolatile-flash-refresh-prior-art-deepening.md`](../evidence/36-1978-1994-nonvolatile-flash-refresh-prior-art-deepening.md).
 
 Prior-art deepening: [`../evidence/36-flash-refresh-1997-2009-prior-art-deepening.md`](../evidence/36-flash-refresh-1997-2009-prior-art-deepening.md).
+
+Power-cycle maintenance-clock deepening: [`../evidence/36-intel-2011-2013-power-cycle-elapsed-time-refresh-deepening.md`](../evidence/36-intel-2011-2013-power-cycle-elapsed-time-refresh-deepening.md).
 
 Commercial-product deepening: [`../evidence/36-ibm-flashsystem840-2014-2015-commercial-refresh-deepening.md`](../evidence/36-ibm-flashsystem840-2014-2015-commercial-refresh-deepening.md).
 
@@ -210,6 +212,18 @@ This is a **combination/evaluation boundary**, not an invention-priority judgmen
 
 Nor does this project project the FCR term backward onto the earlier records. Their own terms — `refresh`, `dynamic refresh`, `refresh timer`, `address mapping`, `storage date`, and `rewrite refresh` — remain historical vocabulary. `FCR` is used historically only for the 2012 proposal and its later descendants/citations where explicitly sourced.
 
+### Filing chronology != public-prior-art chronology — Intel 2011 / 2013
+
+A dedicated follow-up, [`../evidence/36-intel-2011-2013-power-cycle-elapsed-time-refresh-deepening.md`](../evidence/36-intel-2011-2013-power-cycle-elapsed-time-refresh-deepening.md), inspects Hanmant P. Belgal et al.'s Intel-origin **“Apparatus, system, and method for refreshing non-volatile memory.”** The U.S. application was filed on **1 July 2011**, but the public application `US20130007344A1` appeared on **3 January 2013**, after the September-2012 FCR conference record. The filing date is therefore preserved as design chronology without being silently promoted into a 2011 public disclosure.
+
+The design adds a useful persistence-horizon witness. It stores elapsed-time/timestamp state associated with data or data locations in nonvolatile memory, reloads that state after power-up into controller working state, compares the resulting elapsed time with a refresh time, and can relocate data to a new free physical location while resetting the elapsed-time relation for the new embodiment. The patent also allows the retention-time limit / refresh time to change as device conditions and aging change.
+
+The most important boundary is semantic rather than chronological. In the disclosed worked timing model, `elapsed time` is accumulated across **powered-on intervals** such as `t1 + t2`; the stored value survives the intervening power cycle, but the represented quantity is not automatically the same as total wall-clock time since programming. Hence:
+
+> **cross-reboot maintenance-clock continuity != complete wall-clock retention age.**
+
+This is an engineering reconstruction constrained by the source's time definition. It is **not** a claim that Flash stops aging while unpowered, that every embodiment ignores off-time, or that Intel shipped this exact controller design. Similarity to FCR's adaptive maintenance also does not establish influence or genealogy.
+
 ### Earlier public refresh floor — 1978–1994
 
 A separate earlier-prior-art addendum, [`../evidence/36-1978-1994-nonvolatile-flash-refresh-prior-art-deepening.md`](../evidence/36-1978-1994-nonvolatile-flash-refresh-prior-art-deepening.md), closes the bounded `pre-1997 nonvolatile-memory refresh` debt. A 1978-filed / 1980-public Matsushita patent describes natural-decay warning plus capture/erase/rewrite for a specific MNOS nonvolatile-memory embodiment; it is **not** treated as Flash. A 1990-filed / 1993-public Intel patent then explicitly describes blocked Flash EPROM refresh after program/erase disturbance, including a margin-sensitive scan and same-location reprogramming. A 1992-filed / 1994-public Texas Instruments patent independently describes flash EEPROM refresh through two-level margin tests, restorative program pulses, optional sector capture/erase/rewrite, and erase-cycle/time triggers.
@@ -335,6 +349,22 @@ undisclosed physical renewal action
 externally observable completion evidence
 ```
 
+The Intel elapsed-time deepening adds a separate cross-power state chain:
+
+```text
+retained payload embodiment
+    !=
+stored elapsed-time / timestamp record
+    !=
+runtime timing register after power-up
+    !=
+refresh-due decision
+    !=
+relocation / renewal completion
+```
+
+The stored timing relation can survive reboot without becoming a complete wall-clock history.
+
 ## Claim ledger
 
 | Claim | Label | Evidence status |
@@ -357,6 +387,12 @@ externally observable completion evidence
 | Pre-2012 public records already describe erase-free reprogram refresh triggered by time, drift, or read-error evidence | H/P | US20090161466A1 |
 | Generic Flash refresh, refresh-time remapping, or erase-free rewrite refresh is an invention unique to FCR | X | contradicted by inspected pre-2012 patent records |
 | Similarity between earlier patent mechanisms and FCR proves direct design genealogy or commercial deployment | X | neither influence chain nor shipped implementation is established by this slice |
+| Intel-origin application `13/174,926` was filed 1-Jul-2011 but public application US20130007344A1 appeared 3-Jan-2013 | H/P | patent filing/publication timeline; dates intentionally separated |
+| The Intel-origin design stores timing state across power-down, reloads it after power-up, and can refresh/relocate data after a threshold is crossed | H/P | US20130007344A1 / US8650353B2 description and claims |
+| The worked Intel `elapsed time` example accumulates powered-on intervals across power cycles | H/P | patent timing definition / `t1 + t2` example |
+| Cross-reboot Intel maintenance-clock continuity is automatically complete wall-clock retention age | X | source's powered-on-interval definition does not support that equivalence |
+| The Intel record is inspected pre-FCR public prior art because it was filed in 2011 | X | public application appeared only in Jan-2013 |
+| Similarity between Intel elapsed-time refresh and FCR proves influence or named-product deployment | X | no influence chain or shipping-product witness established |
 | IBM documents automatic refresh of FlashSystem 840 data even when host data are not written or modified | H/P | IBM product-era `Flash Data Retention` attachment |
 | An installed 840 powered off longer than seven days can automatically enter `deep scrub and refresh` after return | H/P | IBM product-era `Flash Data Retention` attachment |
 | The 840 up-to-90-day / up-to-40 °C power-off envelope is a universal raw-NAND retention law | X | the source gives a named-system operating/qualification relation, not a medium-wide cell constant |
@@ -373,9 +409,9 @@ externally observable completion evidence
 
 ## Related repositories
 
-Current inspection of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology), including a fresh search for `Swissbit`, finds broad Flash/controller history still listed as an area to deepen but no dedicated FCR or Swissbit Data Care case to reuse. A general NAND-controller reliability history and Swissbit product/controller genealogy belong there; this repository keeps the retention-specific comparison among nonvolatility, ECC margin, refresh trigger, active/read-related maintenance, background media scanning, remapping, endurance, and completion observability.
+Current inspection of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology), including fresh searches for `Swissbit`, exact patent numbers `8650353` / `20130007344`, and broad nonvolatile-refresh wording, finds broad Flash/controller history still listed as an area to deepen but no dedicated FCR, Swissbit Data Care, or Intel power-cycle refresh packet to reuse. A general NAND-controller reliability history, Intel patent/controller genealogy, and Swissbit product/controller genealogy belong there; this repository keeps the retention-specific comparison among nonvolatility, ECC margin, refresh trigger, elapsed-time control state, active/read-related maintenance, background media scanning, remapping, endurance, and completion observability.
 
-[`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) supplies the anti-anachronism rule: the 2012 authors' `Flash Correct-and-Refresh` vocabulary and Swissbit's `Data Care Management` / `Adaptive Read Refresh` / `Background Media Scan` vocabulary are historical to their own sources; `reliability-qualified continuation` and `maintenance metadata` remain modern analytical terms.
+[`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) supplies the anti-anachronism rule: the 2012 authors' `Flash Correct-and-Refresh` vocabulary, the Intel record's `elapsed time` / `refresh time` / `retention time limit`, and Swissbit's `Data Care Management` / `Adaptive Read Refresh` / `Background Media Scan` vocabulary are historical to their own sources; `reliability-qualified continuation`, `maintenance-clock continuity`, and `maintenance metadata` remain modern analytical terms.
 
 ## Sources
 
@@ -397,3 +433,4 @@ Current inspection of [`tmzncty/computing-archaeology`](https://github.com/tmznc
 16. Swissbit AG, **“Miniaturized highly reliable PCIe M.2 BGA SSD for ultra-small industrial applications”**, Press Release, 6 August 2020: <https://www.swissbit.com/files/public/press_news/Press_Releases/2020/2020-08-06_Miniaturized_highly_reliable_PCIe_M.2_BGA_SSD_for_ultra-small_industrial_applications_EN.pdf>.
 17. Swissbit AG, **N3202 Series Product Fact Sheet**, 28 October 2024, Revision 1.01, file `P000000294.2`: <https://www.swissbit.com/data/N3202/N3202_fact_sheet.pdf>.
 18. Swissbit AG, **Product Guide**, current inspected edition; used for current product-family continuity, not exact chronology: <https://www.swissbit.com/files/public/Documents/Swissbit_Product-Guide.pdf>.
+19. Hanmant P. Belgal, Xin Guo, Sai Krishna Mylavarapu, Neal R. Mielke, **“Apparatus, system, and method for refreshing non-volatile memory,”** U.S. application `13/174,926`; filed 1 July 2011; US20130007344A1 published 3 January 2013; US8650353B2 granted/published 11 February 2014; original assignee Intel Corporation: <https://patents.google.com/patent/US8650353B2/en>.
