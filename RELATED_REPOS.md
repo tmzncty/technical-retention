@@ -46,6 +46,8 @@ Case 149 now uses [`evidence/149-micron-2012-2015-otp-mode-vs-protection-persist
 
 Case 152 now uses [`evidence/152-sqlite-wal-recovery-backfill-progress-reset-deepening.md`](evidence/152-sqlite-wal-recovery-backfill-progress-reset-deepening.md) only for the retention-specific seam between **authoritative committed WAL evidence**, **reconstructed WAL geometry**, **discardable checkpoint-progress state**, and **re-established WAL reuse authority** after restart. A fresh companion search for `SQLite` found no dedicated SQLite WAL/checkpoint packet to reuse. Broad System R/ARIES/WAL genealogy, SQLite pager and Fossil-check-in history, VFS evolution, and later checkpoint-mode history remain `computing-archaeology` work rather than being duplicated here.
 
+Case 101 now uses [`evidence/101-ibm-1997-1998-serveraid-data-scrubbing-prior-art-deepening.md`](evidence/101-ibm-1997-1998-serveraid-data-scrubbing-prior-art-deepening.md) only for the retention-specific seam between **latent-sector unreadability**, **proactive controller-level coverage**, **redundancy/currentness qualification**, **repair authority**, and **restored reconstruction margin**. A fresh companion search found no dedicated ServeRAID data-scrubbing packet to reuse. Broad IBM RAID-controller genealogy, ServeRAID firmware evolution, 1990s controller competition, exact scrub command implementation, and the wider `scrub` / `patrol read` terminology history remain `computing-archaeology` work rather than being duplicated here.
+
 ---
 
 ## 2. problem-history
