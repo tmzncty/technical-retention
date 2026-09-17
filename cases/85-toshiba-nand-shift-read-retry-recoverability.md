@@ -6,6 +6,8 @@ Grounding record: [`../evidence/85-flash-2000-2021-read-threshold-retry-groundin
 
 Vendor parameter-state deepening: [`../evidence/85-linux-2014-2017-vendor-read-retry-parameter-state-deepening.md`](../evidence/85-linux-2014-2017-vendor-read-retry-parameter-state-deepening.md)
 
+Micron vendor mode-lifetime / power-boundary deepening: [`../evidence/85-micron-2015-read-retry-mode-power-boundary-deepening.md`](../evidence/85-micron-2015-read-retry-mode-power-boundary-deepening.md)
+
 ## Scope
 
 This case asks a narrow retention question:
@@ -106,7 +108,9 @@ and
 
 > **user payload state != metadata needed to establish a useful reader state**.
 
-The detailed implementation record is kept in the linked vendor parameter-state deepening rather than generalized into a universal NAND format.
+The 2015 Micron L83A family datasheet now sharpens the persistence horizon of the second distinction: the device exposes eight retry options and makes feature `89h` the selected read condition for subsequent reads, but that selection lasts only until the feature is rewritten or the NAND is powered down. Thus `mode persists across commands != mode persists across power`.
+
+The detailed implementation record is kept in the linked vendor parameter-state and Micron mode-lifetime deepenings rather than generalized into a universal NAND format.
 
 ---
 
@@ -190,6 +194,20 @@ The two implementations also block an easy standardization mistake:
 
 See the linked [`vendor read-retry parameter-state deepening`](../evidence/85-linux-2014-2017-vendor-read-retry-parameter-state-deepening.md) for exact commit provenance and non-claims.
 
+### H/P — Micron 2015 makes the active-mode lifetime explicit
+
+Micron's 2015 L83A 32Gb MLC family datasheet independently exposes the state shape reported by Linux. Its parameter page reports eight read-retry options, while configuration feature address `89h` selects `00h` as the default/disabled state and options `01h` through `07h` as alternate settings.
+
+More importantly for retention, the vendor text says that after `89h` is written, subsequent array reads use the associated internal NAND settings until either the feature address is rewritten or the device is powered down. Once a retry becomes ECC-correctable, the flow directs the host to restore the retry option to default before the next array read.
+
+This establishes a specific persistence horizon:
+
+> **selected read-retry mode can persist across read commands without being a cross-power retained state.**
+
+The datasheet is Rev. A **5/15**, so it is a later vendor-primary witness for the exact L83A/`MT29F32G08CBADA` family. It is not retroactively treated as proof of the exact wording in the datasheet consulted by the 2014 Linux patch author.
+
+See [`85-micron-2015-read-retry-mode-power-boundary-deepening.md`](../evidence/85-micron-2015-read-retry-mode-power-boundary-deepening.md) for the source ledger, reset non-claims, and persistence-horizon comparison.
+
 ---
 
 ## Engineering reconstruction
@@ -270,6 +288,18 @@ This supports a narrower relation than “metadata is fragile”:
 > **nonvolatile recovery metadata != automatically infallible recovery metadata**.
 
 A payload may still carry recoverable physical structure while a particular reader has difficulty establishing the vendor-specific calibration relation needed to exploit it. That is an engineering reconstruction from the implementation, not Hynix's historical vocabulary.
+
+### E — command-to-command persistence ≠ cross-power persistence
+
+The Micron 2015 vendor contract adds a smaller-grained state lifetime. A retry option selected through `89h` remains the reader condition for subsequent reads, but the stated lifetime ends when the feature is rewritten or the device is powered down.
+
+Therefore:
+
+> **runtime-retained reader configuration != power-retained reader configuration**.
+
+A device can retain user payload across power while intentionally discarding the particular read-retry option that was active before power loss. Functional continuity is still possible because the supported retry state space can be rediscovered and a useful mode selected again.
+
+This does not establish feature-`89h` behavior across every `RESET (FFh)` event; reset remains a separate source question.
 
 ### E — recoverability frontier can move without payload relocation
 
@@ -429,6 +459,7 @@ Safe claims:
 - by a **2000-priority** MLC-Flash patent family, ECC-triggered reference-voltage adjustment and rereading were already explicit engineering proposals;
 - by Toshiba's **2009-priority** family, an SSD/NAND design explicitly separated default read, positive/negative shift read, retry read, ECC evaluation, condition/history tables, and a distinct refresh/copy operation;
 - by **2014**, upstream Linux Micron support exposed a vendor-specific retry-mode count and vendor-specific feature address `89h` behind a generic NAND retry interface;
+- by **2015**, a Micron-authored datasheet for the L83A 32Gb MLC family including `MT29F32G08CBADA` exposed eight read-retry options, feature address `89h`, and an explicit selected-mode lifetime ending on feature rewrite or power-down;
 - by **2017**, upstream Linux Hynix support exposed NAND-specific retry registers and fixed-or-OTP-derived calibration values, including validation of repeated OTP data;
 - by **2021**, independent characterization of 160 real 3D TLC NAND chips showed modern read-retry repeatedly adjusting read-reference voltages and relying on the relation between RBER and ECC capability.
 
@@ -438,6 +469,7 @@ Unsafe claims rejected here:
 - the 2000 patent is the first adaptive sensing proposal of any kind;
 - the 2000 patent directly caused the Toshiba design;
 - Linux's 2014/2017 merge dates are the first commercial dates for Micron/Hynix read retry;
+- the 2015 Micron revision proves the exact vendor wording available to the Linux author before the 2014 merge;
 - ONFI standardizes one cross-vendor retry parameter format or Micron feature address `89h`;
 - every commercial SSD stores per-page successful retry voltages in the same way;
 - all modern NAND uses the same retry direction/table/step count;
@@ -455,6 +487,7 @@ Primary / contemporary:
 - Hiroyuki Nagashima, later continuation **US9524786B2**, “Memory system changing a memory cell read voltage upon detecting a memory cell read error”: <https://patents.google.com/patent/US9524786B2/en>.
 - Frank Yu et al., **“Cell-Downgrading and Reference-Voltage Adjustment for a Multi-Bit-Cell Flash Memory,”** US20070201274A1 / US7333364B2, claimed priority 2000-01-06: <https://patents.google.com/patent/US20070201274A1/en>.
 - Linux upstream commit `8429bb3975ef81c114cde4da111e64d224d19f83`, **“mtd: nand: support Micron READ RETRY,”** 2014-01-14: <https://github.com/torvalds/linux/commit/8429bb3975ef81c114cde4da111e64d224d19f83>.
+- Micron Technology, **“32Gb, Asynchronous/Synchronous NAND,”** `L83A_32Gb_Async_Sync_NAND_mlc_plus.pdf`, Rev. A 5/15 EN, PDF ID `09005aef8644c380`; Micron-authored document recovered from a public mirror: <https://www.unikeyic.com/media/datasheet/d9/6b/ded2/d9/8c2c3bd5996175045d2af62c6e827efe.pdf>.
 - Linux upstream commit `626994e0748019f9987ac520f1dcfd0adb7e34c6`, **“mtd: nand: hynix: Add read-retry support for 1x nm MLC NANDs,”** 2017-03-08: <https://github.com/torvalds/linux/commit/626994e0748019f9987ac520f1dcfd0adb7e34c6>.
 
 Independent later empirical witness:
@@ -480,6 +513,6 @@ Case 85 adds a retention regime that is easy to miss if storage is treated only 
 
 > **the same physical NAND cells can move from default-read failure back into logical recoverability because the system changes how it reads them, not because it has already rewritten them.**
 
-The retained object is therefore not adequately described by media survival alone. Operational availability depends on a relation among physical threshold distributions, adjustable read boundaries, ECC capability, controller policy, and — in some implementations — vendor-specific capability/calibration state needed to establish a useful read condition. When that relation becomes unfavorable, interpretation work can temporarily restore access; when the physical representation itself must be renewed, refresh/copy is a separate maintenance act.
+The retained object is therefore not adequately described by media survival alone. Operational availability depends on a relation among physical threshold distributions, adjustable read boundaries, ECC capability, controller policy, and — in some implementations — vendor-specific capability/calibration state needed to establish a useful read condition. The Micron family witness adds that even inside this relation, the supported retry state space and the currently selected retry state have different lifetimes: a mode can persist across commands while remaining deliberately power-bounded. When the relation becomes unfavorable, interpretation work can temporarily restore access; when the physical representation itself must be renewed, refresh/copy is a separate maintenance act.
 
-That distinction — `recoverability renewal ≠ representation renewal` — is the bounded contribution of this case.
+That distinction — `recoverability renewal ≠ representation renewal` — remains the bounded contribution of this case.
