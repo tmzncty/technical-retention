@@ -10,6 +10,8 @@ The inspected boundary is the exact Apache Hadoop `rel/release-3.0.1` tag, whose
 
 This slice is intentionally about **restart reconstitution of retention-control relations**, not generic Hadoop restart history.
 
+Related chronology follow-up: [`116-hadoop-2014-2017-maintenance-expiry-clock-persistence-genealogy-deepening.md`](116-hadoop-2014-2017-maintenance-expiry-clock-persistence-genealogy-deepening.md) now traces the narrower design/implementation movement from the 2014–2015 soft-state/timeout proposals through HDFS-9392's externally configured monotonic-clock deadline and HDFS-11296's epoch-time correction. Read that file for the historical clock/persistence genealogy; this file remains the release-3.0.1 restart-behavior slice.
+
 ## Source custody and exact locations
 
 Primary Apache sources, all inspected at commit `496dc57cc2e4f4da117f7a8e3840aaeac0c1d2d0`:
@@ -170,11 +172,11 @@ Do not inflate this into “memory of memory,” a universal theory of distribut
 
 This slice does **not** close:
 
-1. exact HDFS-7877 subtask/commit genealogy before the released 3.0.1 state;
+1. the remaining HDFS-7877 subtask/commit genealogy outside the now-grounded maintenance-expiry clock/persistence path, especially branch/backport and non-expiry admin-state implementation history;
 2. full HA active/standby failover semantics and whether every path behaves identically to the bounded process-restart tests;
 3. exact FSImage/edit-log serialization status for every maintenance-related field;
 4. erasure-coded block-group maintenance semantics;
 5. expiry/dead-node convergence under injected failures;
 6. broad maintenance-mode history across distributed storage systems.
 
-Those are separate research slices. The broader implementation/history items should primarily be routed to `computing-archaeology` if developed.
+The expiry-clock portion of the former genealogy debt is now bounded by [`116-hadoop-2014-2017-maintenance-expiry-clock-persistence-genealogy-deepening.md`](116-hadoop-2014-2017-maintenance-expiry-clock-persistence-genealogy-deepening.md). The remaining broader implementation/history items should primarily be routed to `computing-archaeology` if developed.
