@@ -2,7 +2,7 @@
 
 > **Question:** when one retained relation depends on auxiliary state that schedules, qualifies, resumes, authorizes, or audits maintenance, how long must that auxiliary state itself survive?
 
-**Status:** bounded cross-case synthesis over already-grounded evidence. It introduces one project analytical term, `maintenance-control state`, and compares persistence horizons across existing cases. It does **not** claim one historical lineage or one universal metadata architecture across DRAM, NAND, SSD firmware, HDFS, or other distributed systems.
+**Status:** bounded cross-case synthesis over already-grounded evidence, now deepened with Kafka Case 42 and SQLite Case 152 as counterexamples around maintenance-progress persistence. It introduces one project analytical term, `maintenance-control state`, and compares persistence horizons across existing cases. It does **not** claim one historical lineage or one universal metadata architecture across DRAM, NAND, SSD firmware, HDFS, Kafka, SQLite, or other distributed/storage systems.
 
 Grounded witnesses used here:
 
@@ -10,9 +10,10 @@ Grounded witnesses used here:
 - [`Case 78 — NAND bad-block management`](../cases/78-micron-nand-bad-block-marker-management.md), especially [`evidence/78-linux-mtd-2004-mirrored-versioned-bbt-deepening.md`](../evidence/78-linux-mtd-2004-mirrored-versioned-bbt-deepening.md): a Flash-resident bad-block table can require restart persistence, mirroring, version currentness, and protected placement;
 - [`Case 83 — HDFS BlockScanner`](../cases/83-apache-hdfs-block-scanner-checksum-verification.md), especially [`evidence/83-hdfs-blockscanner-cursor-checkpoint-clock-domain-deepening.md`](../evidence/83-hdfs-blockscanner-cursor-checkpoint-clock-domain-deepening.md): a resumable maintenance cursor can persist across restart, while loss falls back to replay and a clock-domain bug shows configured checkpoint policy need not equal effective checkpointing;
 - [`Case 116 — HDFS DataNode maintenance state`](../cases/116-apache-hdfs-datanode-maintenance-state.md), especially [`evidence/116-hadoop-301-maintenance-restart-reconstitution-deepening.md`](../evidence/116-hadoop-301-maintenance-restart-reconstitution-deepening.md): retained administrative intent can survive restart through configuration while runtime replica-location evidence is re-observed;
-- [`Case 15 — Intel SSD 320 power-loss durability`](../cases/15-intel-ssd320-power-loss-durability.md), especially [`evidence/15-intel320-2011-unsafe-shutdown-telemetry-deepening.md`](../evidence/15-intel320-2011-unsafe-shutdown-telemetry-deepening.md): a cumulative unsafe-shutdown count can retain event evidence without becoming a payload-durability verdict.
-
-- [`Case 45 — DDR5 on-die ECC / ECS`](../cases/45-micron-ddr5-on-die-ecc-ecs.md), especially [`evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md`](../evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md): a latest scrub diagnostic summary can be mode-relative, threshold-filtered, explicitly resettable, and interpretable only within a reporting/configuration epoch.
+- [`Case 15 — Intel SSD 320 power-loss durability`](../cases/15-intel-ssd320-power-loss-durability.md), especially [`evidence/15-intel320-2011-unsafe-shutdown-telemetry-deepening.md`](../evidence/15-intel320-2011-unsafe-shutdown-telemetry-deepening.md): a cumulative unsafe-shutdown count can retain event evidence without becoming a payload-durability verdict;
+- [`Case 45 — DDR5 on-die ECC / ECS`](../cases/45-micron-ddr5-on-die-ecc-ecs.md), especially [`evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md`](../evidence/45-micron-ddr5-2022-2026-ecs-telemetry-validity-deepening.md): a latest scrub diagnostic summary can be mode-relative, threshold-filtered, explicitly resettable, and interpretable only within a reporting/configuration epoch;
+- [`Case 42 — Kafka log compaction`](../cases/42-apache-kafka-log-compaction-delete-marker-retention.md), especially [`evidence/42-kafka-081-cleaner-checkpoint-restart-currentness-deepening.md`](../evidence/42-kafka-081-cleaner-checkpoint-restart-currentness-deepening.md): a cleaner frontier can survive process restart yet later require validation or correction against changed log geometry;
+- [`Case 152 — SQLite WAL checkpoint`](../cases/152-sqlite-wal-checkpoint-backfill-reader-retention.md), especially [`evidence/152-sqlite-wal-recovery-backfill-progress-reset-deepening.md`](../evidence/152-sqlite-wal-recovery-backfill-progress-reset-deepening.md): committed WAL evidence can survive while checkpoint-progress state is deliberately discarded and replayed conservatively after recovery.
 
 The historical claims remain in those case/evidence records. The categories below are **engineering reconstruction**, not source vocabulary unless a source independently uses the same words.
 
@@ -22,7 +23,7 @@ The historical claims remain in those case/evidence records. The categories belo
 
 The repository should use `maintenance-control state` as a bounded umbrella for non-payload state whose role is to **schedule, qualify, resume, authorize, or audit work that preserves another retained relation**.
 
-The term is useful only if it does not imply one persistence contract. The six witnesses immediately reject that shortcut:
+The term is useful only if it does not imply one persistence contract. The eight witnesses immediately reject that shortcut:
 
 ```text
 DRAM refresh counter
@@ -48,11 +49,32 @@ SSD unsafe-shutdown counter
 DDR5 ECS report state
     -> mode-relative + threshold-filtered latest maintenance summary
     -> explicitly resettable; not a lifetime event ledger
+
+Kafka cleaner frontier
+    -> restart-persistent progress coordinate
+    -> retained bytes still require validation against current log geometry
+
+SQLite WAL nBackfill
+    -> live checkpoint-progress coordinate
+    -> recovery deliberately resets it and replays work from retained WAL authority
+```
+
+The maintenance-progress witnesses now expose three distinct restart policies:
+
+```text
+persist-and-resume
+    -> HDFS BlockScanner
+
+persist-and-validate / rebind
+    -> Kafka log cleaner
+
+discard-and-replay
+    -> SQLite WAL checkpoint
 ```
 
 Therefore the main rule is:
 
-> **maintenance-control state must be classified by role, authority, failure consequence, and required persistence horizon; `metadata` or `checkpoint` alone is too coarse.**
+> **maintenance-control state must be classified by role, authority, referent/currentness, safe fallback, failure consequence, and required persistence horizon; `metadata` or `checkpoint` alone is too coarse.**
 
 This synthesis does not create an exhaustive taxonomy. It establishes a comparison discipline that survives the current counterexamples.
 
@@ -63,11 +85,11 @@ This synthesis does not create an exhaustive taxonomy. It establishes a comparis
 Following [`METHOD.md`](METHOD.md) and [`../AGENTS.md`](../AGENTS.md):
 
 - **H/P — historical / primary:** product, patent, project-source, and release-specific facts remain grounded in the individual cases;
-- **E — engineering reconstruction:** `maintenance-control state`, persistence-horizon comparison, and the role matrix are project analytical tools;
+- **E — engineering reconstruction:** `maintenance-control state`, persistence-horizon comparison, `persist-and-resume`, `persist-and-validate / rebind`, `discard-and-replay`, and the role matrix are project analytical tools;
 - **A — functional analogy:** similarity of role does not establish shared mechanism or genealogy;
 - **I — philosophical interpretation:** interpretation is limited to differentiated support conditions for technical persistence.
 
-The synthesis specifically rejects the phrase `memory of memory` as a substitute for mechanism. Auxiliary state can be initialized, replayed, mirrored, reloaded, re-observed, or accumulated under sharply different contracts.
+The synthesis specifically rejects the phrase `memory of memory` as a substitute for mechanism. Auxiliary state can be initialized, persisted, validated, rebound, discarded, replayed, mirrored, reloaded, re-observed, or accumulated under sharply different contracts.
 
 ---
 
@@ -79,13 +101,15 @@ This synthesis asks a different question:
 
 > **What state does the preservation machinery itself need in order to know what to do, where to continue, what to trust, or what happened — and across which interruption must that state survive?**
 
-Trigger regime and control-state horizon are therefore orthogonal. A deadline-driven DRAM regime can use volatile cyclic phase; a proactive scanner can use a restart checkpoint; a failure-management path can depend on a durable exclusion map.
+Trigger regime and control-state horizon are therefore orthogonal. A deadline-driven DRAM regime can use volatile cyclic phase; a proactive scanner can use a restart checkpoint; a failure-management path can depend on a durable exclusion map; two maintenance frontiers can have opposite restart policies even though both describe completed work.
 
 > **same maintenance trigger ≠ same maintenance-control-state persistence horizon**
 
-and
+> **same persistence horizon ≠ same control authority**
 
-> **same persistence horizon ≠ same control authority**.
+and now:
+
+> **same progress role ≠ same restart-persistence policy**.
 
 ---
 
@@ -98,10 +122,12 @@ For any proposed maintenance-control state, audit at least these axes:
 | **role** | Does the state carry phase, progress, qualification/currentness, policy/authority, event history, or runtime observation? |
 | **target relation** | What retained payload or service relation does it help preserve? |
 | **minimum horizon** | Must it survive only the active regime, process restart, device power cycle, media replacement, or the device/system lifetime? |
-| **reconstitution path** | Initialize, replay, reload configuration, compare copies, reconstruct from payload, or re-observe participants? |
-| **authority** | Advisory only, scheduling input, allocation gate, service-admission gate, or direct currentness selector? |
+| **referent/currentness** | If it is a coordinate, frontier, or summary, what structure makes it meaningful, and can that structure change independently? |
+| **reconstitution path** | Initialize, replay, reload configuration, compare copies, reconstruct from payload, validate/rebind a coordinate, or re-observe participants? |
+| **safe fallback** | If the state is missing, stale, or unprovable, is the safe response replay, reset, clamp/rebind, reject, or wait for fresh observation? |
+| **authority** | Advisory only, scheduling input, allocation gate, service-admission gate, reuse gate, or direct currentness selector? |
 | **failure consequence** | Repeated work, delayed evidence, unsafe reuse/admission, loss of optimization, loss of diagnosis, or direct loss of recoverability? |
-| **history semantics** | Current phase/currentness scalar, compact summary, or event-by-event history? |
+| **history semantics** | Current phase/currentness scalar, compact summary, progress coordinate, or event-by-event history? |
 | **durability evidence** | Interface/source contract only, or independently tested fault/power-loss behavior? |
 
 A strong case should avoid filling unknown cells by analogy.
@@ -152,7 +178,9 @@ cursor lost
     -> later blocks may wait longer for renewed verification evidence
 ```
 
-This fixes two boundaries:
+This is the first restart-progress pattern in the synthesis: **persist-and-resume, with replay fallback**.
+
+It fixes two boundaries:
 
 > **maintenance-progress loss ≠ payload loss**
 
@@ -163,6 +191,105 @@ but also
 The clock-domain defect in the intended periodic-save branch adds a second lesson: a documented/configured persistence policy can fail at implementation level.
 
 > **retention policy intent ≠ effective retention behavior**.
+
+---
+
+## 6A. Persisted progress whose referent can change — Case 42
+
+Kafka 0.8.1 adds a different restart-progress contract. The log cleaner externalizes a `topic/partition -> offset` frontier in `cleaner-offset-checkpoint`, while its key-to-latest-offset working map is rebuilt from the current log and its paused/in-progress state remains process-local.
+
+The important later bug genealogy is not that the checkpoint bytes failed to survive. It is that the retained coordinate could outlive the geometry that originally made it meaningful.
+
+KAFKA-1641 records a later broker restart where a saved cleaner offset fell below the current earliest segment base offset; Kafka 0.9 added a check that resets such a frontier to the current log start. KAFKA-3330 records the opposite-direction problem: truncation could leave the cleaner checkpoint incompatible with the new segment layout; Kafka 0.10 then coupled log truncation with cleaner-checkpoint correction.
+
+The bounded engineering relation is:
+
+```text
+checkpoint bytes survive
+    + referent log geometry changes
+    -> frontier may become semantically stale
+    -> validate against current geometry
+    -> reset / correct if no longer admissible
+```
+
+This is the second restart-progress pattern: **persist-and-validate / rebind**.
+
+Therefore:
+
+> **progress persistence ≠ progress currentness**
+
+> **persisted coordinate ≠ self-validating coordinate**
+
+and:
+
+> **bitwise continuity of maintenance metadata ≠ continuity of the proposition that metadata once encoded**.
+
+This does not mean Kafka's cleaner checkpoint is unsafe in general, nor does the later genealogy prove one universal filesystem crash issue. The claim is narrower: a retained progress coordinate can require a currentness test against a mutable referent before it is reused.
+
+---
+
+## 6B. Deliberately discarded progress under authoritative replay — Case 152
+
+SQLite 3.7.0 supplies the opposite counterexample. In WAL mode, committed page images and commit evidence remain in the WAL while the wal-index is explicitly transient. `WalCkptInfo.nBackfill` records how many WAL frames the live process believes have been copied back into the main database.
+
+Recovery rebuilds WAL geometry from the WAL but deliberately initializes `nBackfill` to zero. The implementation does not try to infer the exact amount of pre-crash checkpoint work that had already reached the database.
+
+The bounded relation is:
+
+```text
+retained committed WAL evidence
+    -> reconstruct valid WAL / commit geometry
+
+uncertain prior checkpoint progress
+    -> discard old progress coordinate
+    -> nBackfill = 0
+    -> repeat safe copying work as needed
+```
+
+This is the third restart-progress pattern: **discard-and-replay**.
+
+It blocks a strong but tempting rule:
+
+> **maintenance progress must survive restart for correctness**.
+
+In this case, preserving a possibly unprovable progress value would add no correctness advantage over conservative replay, because the stronger retained source — the valid WAL — is sufficient to reproduce the copying work.
+
+Therefore:
+
+> **physical maintenance work may already have happened ≠ restart retains proof that it happened**
+
+> **loss of checkpoint-progress metadata ≠ loss of committed transaction state**
+
+and:
+
+> **safe forgetting of derived progress can be part of a retention architecture**.
+
+This does not imply replay is free, that every maintenance action is idempotent, or that WAL contents can be retired before the stronger reuse conditions are re-established.
+
+---
+
+## 6C. One progress noun, three restart contracts
+
+The three cases should not be collapsed into one generic `checkpoint` pattern:
+
+| Case | Progress state | Restart policy | Why it works | Main failure if mishandled |
+| --- | --- | --- | --- | --- |
+| HDFS Case 83 | scanner traversal cursor | persist-and-resume; replay if missing | scan can restart from a fresh iterator | repeated work / delayed renewed coverage |
+| Kafka Case 42 | cleaner first-dirty / last-cleaned frontier | persist-and-validate / rebind | current log geometry can validate or replace the retained coordinate | stale coordinate can select an invalid maintenance starting point |
+| SQLite Case 152 | WAL checkpoint `nBackfill` | discard-and-replay | retained WAL remains authoritative enough to repeat copying safely | trusting unprovable progress could overstate completion/reuse readiness |
+
+The cross-case result is functional, not genealogical:
+
+```text
+maintenance progress
+    != one universal checkpoint contract
+```
+
+The safe policy depends on at least three things:
+
+1. what stronger authoritative state remains after interruption;
+2. whether the progress coordinate's referent can change independently;
+3. whether repeating work is safe enough to prefer over trusting uncertain completion.
 
 ---
 
@@ -180,7 +307,7 @@ And the version field is a currentness discriminator rather than an event log:
 
 > **qualification currentness ≠ failure history**.
 
-The BBT therefore differs from both the DRAM counter and HDFS cursor even though all three are non-payload state used by maintenance infrastructure.
+The BBT therefore differs from the DRAM counter and all three progress patterns even though all are non-payload state used by maintenance infrastructure.
 
 ---
 
@@ -232,10 +359,9 @@ The product documentation also leaves the exact counter-update persistence mecha
 
 ---
 
-
 ## 9A. Resettable, threshold-filtered diagnostic summary — Case 45
 
-DDR5 ECS adds a persistence horizon not represented by the first five witnesses. Micron's 2022 product-core record exposes a correction summary whose interpretation depends on count mode and threshold, whose maximum-row component compresses many visited rows into one retained diagnostic relation, and whose counters/report registers can be explicitly reset.
+DDR5 ECS adds a persistence horizon not represented by the earlier witnesses. Micron's 2022 product-core record exposes a correction summary whose interpretation depends on count mode and threshold, whose maximum-row component compresses many visited rows into one retained diagnostic relation, and whose counters/report registers can be explicitly reset.
 
 The later Linux CXL ECS control surface independently exposes row/code-word count mode, reporting threshold, and counter reset as host-visible policy where supported.
 
@@ -283,22 +409,26 @@ This is still not a cross-power claim. It makes the comparison more precise by c
 
 ## 10. Persistence horizon ≠ authority
 
-The six cases show that persistence duration and decision authority are independent axes.
+The eight cases show that persistence duration and decision authority are independent axes.
 
 - A short-lived DRAM counter phase can be essential to full-array coverage.
 - A restart-persistent HDFS cursor can be lost with replay rather than unsafe payload admission.
+- A restart-persistent Kafka frontier can still become stale relative to its referent and need rebinding.
+- SQLite can deliberately discard checkpoint progress while retaining stronger WAL authority and preserving transaction correctness.
 - A Flash BBT can gate whether a block is eligible for ordinary use.
 - An HDFS maintenance config can retain policy while runtime replica evidence is deliberately rebuilt conservatively.
 - A lifetime SMART count can persist for diagnosis without selecting payload currentness.
 - A resettable ECS summary can persist beyond one corrective operation while remaining filtered, mode-relative diagnostic evidence rather than a complete repair history.
 
-Therefore neither of these shortcuts is safe:
+Therefore none of these shortcuts is safe:
 
 > **long-lived metadata = more authoritative metadata**
 
-> **short-lived/reconstructable metadata = less important metadata**.
+> **short-lived/reconstructable metadata = less important metadata**
 
-Authority must be reconstructed from the bounded mechanism.
+> **more persistent progress metadata = safer recovery**.
+
+Authority and safe recovery policy must be reconstructed from the bounded mechanism.
 
 ---
 
@@ -308,6 +438,8 @@ A maintenance-control relation need not survive by preserving one unchanged repr
 
 - deterministic initialization;
 - replay of maintenance work;
+- validation/rebinding of a retained coordinate against a current referent;
+- conservative deletion/reset of an unprovable progress coordinate followed by replay from a stronger source;
 - mirror/version comparison and repair;
 - configuration reload;
 - participant re-observation;
@@ -315,7 +447,7 @@ A maintenance-control relation need not survive by preserving one unchanged repr
 
 This gives a useful cross-case rule:
 
-> **persistence can be provided by retained representation, by controlled reconstitution, or by a composition of both.**
+> **persistence can be provided by retained representation, by controlled reconstitution, by conservative forgetting plus replay, or by a composition of these.**
 
 That is compatible with [`SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md`](SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md): reconstitution can preserve an operational relation without implying that one physical token or one exact in-memory object survives.
 
@@ -325,33 +457,41 @@ The rule is analytical. It is not a claim that the historical systems shared voc
 
 ## 12. Checkpoint ≠ certificate
 
-The cases also expose why `checkpoint` is dangerous as a generic word.
+The cases expose why `checkpoint` is dangerous as a generic word.
 
 - The HDFS scanner cursor says where traversal had reached, not that every earlier block verified successfully.
+- The Kafka cleaner checkpoint records a frontier, but later log mutation can make the retained coordinate semantically stale.
+- SQLite's `nBackfill` is useful live progress state, but recovery intentionally does not treat the pre-crash value as a restart certificate of how much copying was durably completed.
 - The DRAM counter test can expose bounded enumerator progression, not certify all future refresh deadlines.
 - The BBT version says which readable table is newer under the implementation rule, not why each block was retired or that the whole update was crash-atomic.
 
 Therefore:
 
-> **retained progress/currentness evidence ≠ complete correctness certificate**.
+> **retained progress/currentness evidence ≠ complete correctness certificate**
 
-A maintenance-control record should be read according to the exact proposition it supports.
+and:
+
+> **checkpoint readability ≠ checkpoint currentness ≠ checkpoint authority**.
+
+A maintenance-control record should be read according to the exact proposition it supports and the referent against which that proposition is still valid.
 
 ---
 
 ## 13. Failure consequences differ by role
 
-Losing maintenance-control state can have qualitatively different consequences:
+Losing or retaining stale maintenance-control state can have qualitatively different consequences:
 
 | State role | Bounded loss/staleness consequence |
 | --- | --- |
 | cyclic phase | coverage sequence restarts / must be re-established within the active regime |
-| traversal checkpoint | maintenance replay and delayed later coverage |
+| resumable traversal checkpoint | maintenance replay and delayed later coverage |
+| referent-dependent progress frontier | retained coordinate may select an invalid start unless validated/rebound to current geometry |
+| discardable live progress | replay may increase I/O, but preserving uncertain progress can overstate completion/reuse readiness |
 | qualification/currentness map | risk of using or trusting an inadmissible physical resource if no safe reconstruction path exists |
 | retained policy | desired administrative relation may be lost unless reloadable; runtime reliance may still require fresh observation |
-| event-history summary | diagnostic/audit information can be incomplete without directly proving payload loss |
+| event-history / diagnostic summary | diagnostic/audit information can be incomplete without directly proving payload loss |
 
-This is why `control metadata corrupted` is not a sufficient failure description.
+This is why `control metadata corrupted` or `checkpoint lost` is not a sufficient failure description.
 
 ---
 
@@ -364,24 +504,28 @@ The cross-case comparison is functional only.
 - HDFS configuration reload is not a device firmware journal.
 - SMART event telemetry is not repair-history currentness.
 - Re-observed replica location is not proof that the bytes became physically rewritten.
+- Kafka cleaner progress is not SQLite WAL backfill state, even though both can be called maintenance frontiers in project analysis.
+- `persist-and-resume`, `persist-and-validate / rebind`, and `discard-and-replay` are comparison labels, not a demonstrated historical design lineage.
 
 No genealogy among these mechanisms is asserted.
 
-A fresh search of `tmzncty/computing-archaeology` for the combined refresh-counter / BBT / scanner-cursor / unsafe-shutdown relation found no dedicated cross-technology study to reuse. Broad histories of DRAM control logic, NAND BBTs, SMART telemetry, or HDFS maintenance mechanisms remain companion-repository work. This document keeps only the retention-specific comparison.
+Fresh companion-repository searches for the specific Kafka cleaner-checkpoint and SQLite WAL/checkpoint seams found no dedicated `tmzncty/computing-archaeology` packet to reuse. [`../RELATED_REPOS.md`](../RELATED_REPOS.md) already records the division of labor: broad Kafka cleaner/segment history and broad System R/ARIES/SQLite WAL genealogy remain companion-repository work. This synthesis keeps only the cross-case retention-control comparison.
 
 ---
 
 ## 15. Philosophical interpretation — bounded
 
-The exact technical fact is that preservation can depend on auxiliary state whose required lifetime differs from both the payload and from other control state in the same system.
+The exact technical fact is that preservation can depend on auxiliary state whose required lifetime differs from both the payload and from other control state in the same system. The new progress comparison adds a sharper fact: **continuity can sometimes depend on preserving progress, sometimes on validating preserved progress, and sometimes on refusing to preserve unprovable progress at all.**
 
 The narrow conceptual payoff is:
 
-> **technical persistence is often supported by a stratified set of states, some retained, some replayed, some reinitialized, and some re-observed. Continuity of the higher-level relation does not require every supporting representation to persist in the same way.**
+> **technical persistence is often supported by a stratified set of states, some retained, some replayed, some reinitialized, some revalidated, some deliberately forgotten, and some re-observed. Continuity of the higher-level relation does not require every supporting representation to persist in the same way.**
 
-This blocks both extremes: persistence is not merely untouched material survival, but neither does every support relation need infinite recursive preservation.
+SQLite is particularly useful as a counterexample to the intuition that more remembered intermediate state is necessarily better. When stronger retained evidence permits safe replay, forgetting a weaker progress claim can be the conservative continuity policy. Kafka supplies the opposite caution: a remembered coordinate can outlive the relation that once made it true enough to act on.
 
-The interpretation stops there. The evidence does not justify `machines remember how to remember`, a universal theory of metadata, or a claim that every maintenance process needs its own durable history.
+This blocks both extremes: persistence is not merely untouched material survival, but neither does every support relation need infinite recursive preservation or maximal metadata retention.
+
+The interpretation stops there. The evidence does not justify `machines remember how to remember`, a universal theory of metadata, or a claim that every maintenance process should discard its checkpoints after restart.
 
 ---
 
@@ -390,10 +534,13 @@ The interpretation stops there. The evidence does not justify `machines remember
 - **`maintenance-control state is always durable metadata` — rejected.** Case 09 directly supplies a regime-local, power-on-initialized counter phase.
 - **`reconstructable state is unimportant` — rejected.** Replay can consume maintenance budget; re-observation can change what embodiments may be credited.
 - **`persisted state is automatically authoritative` — rejected.** SMART event history can be persistent yet advisory; HDFS policy can persist while runtime replica evidence is rebuilt.
+- **`if progress bytes survive, progress remains current` — rejected.** Kafka's retained cleaner frontier can become invalid relative to a changed log start or truncation geometry.
+- **`maintenance progress must survive restart for correctness` — rejected.** SQLite reconstructs WAL authority and deliberately resets `nBackfill` to zero.
+- **`keeping more progress metadata is always safer` — rejected.** Kafka requires currentness validation of remembered progress, while SQLite conservatively forgets unprovable progress and replays from a stronger retained source.
 - **`version/currentness state is history` — rejected.** The BBT version selects the newer representation without preserving a bad-block event ledger.
-- **`checkpoint means verified correctness` — rejected.** The HDFS cursor and DRAM counter-test boundaries contradict this.
+- **`checkpoint means verified correctness` — rejected.** HDFS, Kafka, SQLite, and DRAM each make the proposition carried by a progress/currentness field narrower than a correctness certificate.
 - **`duplicate control state implies consensus or crash atomicity` — rejected.** The BBT mirror is a local reconciliation mechanism with explicit fault limits.
-- **`control-state loss implies payload loss` — rejected as a universal rule.** Cursor loss can cause replay; telemetry loss can lose diagnosis; other control-state failures can be much more severe.
+- **`control-state loss implies payload loss` — rejected as a universal rule.** Cursor loss can cause replay; SQLite progress loss can cause repeated checkpoint I/O; telemetry loss can lose diagnosis; other control-state failures can be much more severe.
 - **`payload survival implies control-state survival` — rejected.** A physical replica can survive while a restarted NameNode has not yet re-observed it.
 - **`one transition gives every maintenance-control state the same lifetime` — rejected.** DDR5 self-refresh entry/exit preserves ECS transparency state while resetting REFsb bank phase, and PASR can preserve bits while invalidating their prior full-array evidential scope.
 
@@ -406,11 +553,14 @@ Future cases that introduce auxiliary preservation state should explicitly answe
 1. What proposition does the state encode?
 2. What decision consumes it?
 3. What is its minimum required persistence horizon?
-4. Can it be reconstructed, replayed, or re-observed?
-5. What happens while it is missing or stale?
-6. Does it encode phase/currentness, a compact summary, or actual history?
-7. What evidence establishes its own durability under the relevant failure model?
-8. Does a duplicate copy add redundancy, currentness discrimination, atomicity, or only risk reduction?
+4. If it is a coordinate/frontier, what referent makes it meaningful and can that referent mutate independently?
+5. Can it be reconstructed, replayed, rebound, reset, or re-observed?
+6. If prior completion becomes uncertain, is the safe fallback resume, validate/clamp, reject, or discard-and-replay?
+7. What stronger authoritative source, if any, makes replay safe?
+8. What happens while the control state is missing or stale?
+9. Does it encode phase/currentness, a compact summary, progress, or actual history?
+10. What evidence establishes its own durability under the relevant failure model?
+11. Does a duplicate copy add redundancy, currentness discrimination, atomicity, or only risk reduction?
 
 This gives future Flash/SSD and distributed-storage cases a common checklist without forcing them into one mechanism.
 
@@ -424,7 +574,9 @@ This synthesis introduces no new historical floor. Historical claims are inherit
 - Linux MTD 2004 documentation/CVS source through Case 78 evidence;
 - Apache HDFS-7430, HDFS-12209, and Hadoop 2.7.3 source through Case 83 evidence;
 - Apache Hadoop 3.0.1 documentation/source/tests through Case 116 evidence;
-- Intel SSD 320 September/March 2011 manufacturer documents through Case 15 evidence.
-- Micron DDR5 SDRAM Product Core Data Sheet Rev. D 10/2022 plus official Linux EDAC/CXL ECS documentation through the Case 45 deepening evidence.
+- Intel SSD 320 September/March 2011 manufacturer documents through Case 15 evidence;
+- Micron DDR5 SDRAM Product Core Data Sheet Rev. D 10/2022 plus official Linux EDAC/CXL ECS documentation through the Case 45 deepening evidence;
+- Apache Kafka `0.8.1` source plus KAFKA-1641 and KAFKA-3330 / later corrective source through the Case 42 cleaner-checkpoint deepening evidence;
+- SQLite `version-3.7.0` `src/wal.c` plus first-party WAL documentation through the Case 152 restart-progress deepening evidence.
 
 For exact URLs, page anchors, version tags, and evidence grades, use the linked case/evidence records rather than treating this synthesis as a substitute source.
