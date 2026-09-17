@@ -39,6 +39,13 @@ The canonical record already grounds T10 `04-198r5`, the 2005 approval/2006 clar
 
 The 29 October 2008 Hitachi Ultrastar 15K450 specification supplies an earlier, independent-from-Seagate named-product witness for no in-scan reassignment and, more importantly, directly separates saveable Background Control policy from current progress/log state. Its MODE SELECT contract says `SP=1` mode-page data are saved in the disk Reserved Area and maintained across power cycle/reset, while `SP=0` values expire on power removal/reset. Its BMS status and medium-scan entries expose `DS=0` / `TSD=0`, which the companion record interprets conservatively against period T10 log-save semantics rather than as proof of an atomically durable latest scan position.
 
+### S4 — 1986–1994 SCSI VERIFY prior-art deepening
+
+- [`101-scsi-1986-1994-verify-host-command-prior-art-deepening.md`](101-scsi-1986-1994-verify-host-command-prior-art-deepening.md)
+- **Evidence class:** `H/P` ANSI/T10 archival standard lineage plus named HP (1988) and Seagate (1994) product documentation.
+
+This companion record closes a different historical seam: direct-access SCSI already exposed an initiator-issued `VERIFY (2Fh)` primitive in `ANSI X3.131-1986`, with `BYTCHK=0` medium verification distinguished from `BYTCHK=1` byte comparison. A 1988 HP 9753 manual documents an ECC-only VERIFY implementation, while Seagate's 18 January 1994 ST3655 manual directly documents both medium-only and byte-compare modes over an LBA range. The bounded consequence is `verification primitive != background coverage regime`: this predates BMS without proving that pre-2005 OS scanners used VERIFY or that BMS descended from it.
+
 ---
 
 ## Historical / product findings
@@ -146,6 +153,16 @@ defect/result evidence
 repair authority branches
 ```
 
+The pre-BMS VERIFY companion record adds an earlier control-locus boundary:
+
+```text
+host-issued VERIFY range
+        !=
+device-retained background coverage policy
+```
+
+A host could build a sweep out of repeated VERIFY commands, but command availability alone is not evidence that a particular operating system or controller actually implemented periodic whole-medium scrubbing.
+
 So the better generic model is not:
 
 ```text
@@ -158,13 +175,19 @@ and not:
 BMS enabled -> exact progress checkpoint is crash durable
 ```
 
+and not:
+
+```text
+VERIFY command existed -> BMS genealogy proved
+```
+
 ### Case 14 — SCSI defect reassignment
 
 Case 14 remains canonical for logical identity across physical reassignment. HC590 and Hitachi 15K450 reinforce that Case 101's proactive discovery path can stop **before** reassignment and hand authority to the application client.
 
 ### Cases 18 / 83 — higher-layer scrub/scanner
 
-Nothing in HC590 changes the existing boundary: drive-local BMS qualifies medium readability under drive error-recovery semantics; ZFS/HDFS verify higher-layer checksum/replica relations. Current drive scan progress or persisted BMS policy cannot stand in for higher-layer integrity evidence.
+Nothing in HC590 changes the existing boundary: drive-local BMS qualifies medium readability under drive error-recovery semantics; ZFS/HDFS verify higher-layer checksum/replica relations. Current drive scan progress or persisted BMS policy cannot stand in for higher-layer integrity evidence. The older VERIFY record adds the same warning at the command layer: medium verification, even when explicitly requested by a host, is not automatically an end-to-end checksum or replica-currentness test.
 
 ---
 
@@ -172,7 +195,9 @@ Nothing in HC590 changes the existing boundary: drive-local BMS qualifies medium
 
 The bounded interpretive addition is about **maintenance evidence and maintenance policy having plural temporal horizons**. A device can retain a maintenance regime across reset/power boundaries, expose a current traversal point, retain cumulative counts, and record event-specific defect evidence without any of them being the user payload or a complete history of the medium.
 
-This strengthens the repository's distinction between first-order retained state and second-order maintenance state, but it does not make a saved mode page, scan counter, or BMS result log an archive, a memory of every sector, or a philosophical `retention` in Stiegler's sense.
+The earlier VERIFY evidence sharpens the control-locus side of that claim: confidence in the same medium may be renewed by an external initiator's episodic command or by an embedded background regime. That functional comparison does not make the two mechanisms historically identical.
+
+This strengthens the repository's distinction between first-order retained state and second-order maintenance state, but it does not make a saved mode page, scan counter, VERIFY completion, or BMS result log an archive, a memory of every sector, or a philosophical `retention` in Stiegler's sense.
 
 ---
 
@@ -190,13 +215,16 @@ Do **not** infer from these sources that:
 - a successful scan is a timeless integrity certificate;
 - `reassignment not supported during BMS` means the drive can never reassign sectors by other paths;
 - host/application-client reassignment implies secure erasure of the old physical sector;
-- BMS status proves ZFS/HDFS/application end-to-end integrity.
+- BMS status proves ZFS/HDFS/application end-to-end integrity;
+- the presence of SCSI VERIFY proves an operating system performed periodic whole-disk scrub;
+- the OS-scanning statement in `04-198r5` proves those scanners used VERIFY;
+- BMS is historically just `VERIFY in the background`.
 
 ---
 
 ## Related-repository boundary
 
-Fresh `tmzncty/computing-archaeology` searches for `C15K600` and `Background Media Scan` returned no dedicated study in this run. Broader cross-vendor BMS/SMART/patrol-read genealogy, Hitachi/HGST/Western Digital firmware continuity, SCSI mode/log persistence history, and implementation experiments should live there if developed; this file remains a narrow Case 101 product-contract deepening.
+Fresh `tmzncty/computing-archaeology` searches for `SCSI VERIFY`, `Background Medium Scan`, and `Patrol Read` returned no dedicated study in the current search surface. Broader SCSI VERIFY evolution, host scrub utilities, cross-vendor BMS/SMART/patrol-read genealogy, Hitachi/HGST/Western Digital firmware continuity, SCSI mode/log persistence history, and implementation experiments should live there if developed; this file remains a narrow Case 101 product-contract/navigation deepening.
 
 ---
 
@@ -205,4 +233,5 @@ Fresh `tmzncty/computing-archaeology` searches for `C15K600` and `Background Med
 - perform abrupt reset/power-loss testing on named drives to determine whether the **latest** BMS traversal position and newest log entries survive, and at what checkpoint granularity; the 2008 Hitachi record closes only the weaker documentation-level facts that BMS policy can be saved across reset/power and BMS log parameters are save-capable/implicitly saveable under period SCSI semantics;
 - inspect a final SPC-4 revision around the 2008 product date line-by-line for exact normative DS/TSD/list-parameter semantics;
 - compare another genuinely independent later SAS vendor rather than treating Hitachi/HGST/Western Digital corporate-document multiplicity as multiple independent implementations;
-- connect BMS progress/persistence to controlled fault/load experiments rather than documentation alone.
+- connect BMS progress/persistence to controlled fault/load experiments rather than documentation alone;
+- recover direct archival evidence for actual **pre-2005 host/OS scrub loops**, including which SCSI command(s) they used. The new VERIFY deepening closes the command-prior-art layer only, not software-policy genealogy.
