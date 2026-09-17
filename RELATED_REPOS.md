@@ -28,6 +28,8 @@ Case 02 now uses [`evidence/02-whirlwind-1953-1954-marginal-checking-recovery-co
 
 Case 142 now uses [`evidence/142-ceph-reef-mclock-maintenance-scheduling-boundary-deepening.md`](evidence/142-ceph-reef-mclock-maintenance-scheduling-boundary-deepening.md) only for the retention-specific seam between **repair obligation**, **capacity/reservation admission**, **scheduler service class/resource allocation**, and **repair completion** in the bounded Reef `v18.2.0` baseline. A fresh companion search found no dedicated Ceph mClock recovery/backfill module to reuse. The broad dmClock/mClock algorithm history, pre-Pacific/Pacific/Quincy/Reef scheduler evolution, and benchmark/performance archaeology remain `computing-archaeology` work rather than being duplicated here.
 
+Case 42 now uses [`evidence/42-kafka-081-cleaner-checkpoint-restart-currentness-deepening.md`](evidence/42-kafka-081-cleaner-checkpoint-restart-currentness-deepening.md) only for the retention-specific seam between **cleaner progress checkpoint**, **reconstructed latest-key working state**, **runtime cleaner state**, **segment-swap recovery**, and **checkpoint currentness after log geometry changes**. A fresh companion search found no dedicated Kafka cleaner-checkpoint packet to reuse. A broad Kafka log-cleaner/segment-format/Databus engineering history remains `computing-archaeology` work rather than being duplicated here.
+
 ---
 
 ## 2. problem-history
