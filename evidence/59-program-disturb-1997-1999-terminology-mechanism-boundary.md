@@ -1,4 +1,8 @@
-# Case 59 Addendum — `program disturb` terminology and NAND program-inhibit boundary, 1997–1999
+# Case 59 Addendum — `program disturb` terminology and mechanism boundary, 1997–1999
+
+## Status
+
+**`bounded deepening complete`** — the 1998 Invox item is no longer used only as a title-level terminology witness. Its public patent abstract is now inspected directly enough to establish a non-NAND-specific analog/multilevel Flash mechanism in which later programming can disturb the threshold state of already-written, unselected cells, and in which row-history information selects different protective word-line bias. The full 1998 specification/facsimile remains a separate source-custody debt, so details not present in the inspected abstract are not projected backward from later related patents.
 
 ## Purpose
 
@@ -6,19 +10,26 @@ This addendum deepens the prior-art and terminology boundary around [`../cases/5
 
 The narrow question is:
 
-> **What NAND programming failure mechanisms were publicly documented before the 2002 `floating-gate interference` paper, and when may the phrase `program disturb` be used without silently collapsing those mechanisms into Case 59's later cell-to-cell capacitive program-interference model?**
+> **What programming-induced non-target state changes were publicly documented before the 2002 `floating-gate interference` paper, and when may the phrase `program disturb` be used without silently collapsing distinct physical mechanisms into Case 59's later cell-to-cell capacitive program-interference model?**
 
-The answer is deliberately split. Public NAND documentation before 2002 already treats **unintended programming of cells that were supposed to remain inhibited during another program operation** as an engineering problem. By 1999, an AMD patent explicitly defines that NAND failure family as `program disturb` and separately names `pass disturb`. That history is relevant prior art, but it is **not automatically the same mechanism** as the 2002–2014 Case 59 lineage in which an intentionally programmed aggressor's threshold transition capacitively shifts an already-programmed neighboring victim.
+The answer is now three-way rather than two-way. Before 2002, public records already document:
+
+1. NAND-specific failed-inhibit / inadvertent-programming risk;
+2. analog/multilevel nonvolatile-memory `program disturb` in which a later write can perturb the threshold state of already-programmed unselected cells, with protection conditioned on row programming history; and
+3. NAND self-boosting literature that explicitly defines `program disturb` and separately names `pass disturb`.
+
+Those records constrain origin claims, but they are **not automatically the same mechanism** as the 2002–2014 Case 59 lineage in which an intentionally programmed aggressor's threshold transition capacitively shifts an already-programmed neighboring victim.
 
 ## Evidence classes
 
 | Source | Public date | Evidence role | What it establishes | What it does not establish |
 | --- | --- | --- | --- | --- |
 | Samsung, US5677873A | 14 Oct 1997 | `H/P` manufacturer patent | NAND-specific inadvertent-programming problem; selected/adjacent programming can expose nondesignated cells; boosting/inhibit conditions reduce Fowler–Nordheim programming risk | use of the exact phrase `program disturb`; cell-to-cell floating-gate interference as later modeled in Case 59; invention priority |
-| Invox, US5818757A | 6 Oct 1998 | `H/P*` bibliographic terminology witness | a public patent title uses `program disturb` for analog/multilevel nonvolatile memory before the directly inspected 1999 NAND definition | NAND-specific mechanism details in this run; origin/coinage of the phrase; direct genealogy into later NAND papers |
+| Invox, US5818757A | 6 Oct 1998 | `H/P` primary patent record, abstract-level mechanism inspection | public `program disturb` terminology; disturbance of threshold voltages of unselected cells during another write; different bias treatment for already-written versus erased/virgin rows; sequential row-fill and row-history flags as disclosed control structure | NAND-specific geometry; the 2002 aggressor/victim capacitive-coupling model; exact full-specification circuit details not present in the inspected abstract; deployment; invention priority |
 | AMD, US5991202A | 23 Nov 1999 | `H/P` manufacturer patent | NAND self-boosting context; explicit definition of `program disturb`; separate `pass disturb`; pulse/pass-voltage mitigation | cell-to-cell aggressor/victim capacitive interference; proof of commercial deployment; universal meaning of every later use of `program disturb` |
+| So/Wong / SanDisk, US6285593B1 | 4 Sep 2001 | `H/P` later same-inventor continuity witness | later detailed description of program/drain-disturb risk to previously programmed unselected floating-gate cells, and explicit citation/incorporation of US5818757 | permission to back-project every 2001 embodiment, voltage, latch implementation, or terminology into the 1998 patent |
 
-`H/P*` is used only to flag that the 1998 item is retained at **title/bibliographic level** in this pass. No mechanism-specific claim below depends on unseen full text from that patent.
+`H/P` means historical/primary technical record. The Invox row is deliberately called **abstract-level mechanism inspection** rather than `full facsimile inspection`.
 
 ## 1997 Samsung NAND inhibit / inadvertent-programming record
 
@@ -37,18 +48,56 @@ Historical result:
 
 The inspected text does **not** use that result to prove the later Case 59 cell-to-cell interference mechanism. The relevant physical relation here is program-voltage/inhibit bias and tunneling risk in cells that should not program, not an already-retained victim distribution being shifted in proportion to a neighboring aggressor's threshold transition.
 
-## 1998 title-level `program disturb` witness
+## 1998 Invox `program disturb`: no longer only a title-level witness
 
 **Hock C. So and Sau C. Wong, Invox Technology, US5818757A, “Analog and multi-level memory with reduced program disturb,” publication 6 October 1998.**
 
 Stable record:
 <https://patents.google.com/patent/US5818757A/en>
 
-The publication metadata/title is enough for one modest chronology statement:
+Public patent metadata and the indexed patent abstract identify the inventors, Invox Technology as assignee, a **22 July 1996 filing date**, and **6 October 1998** patent/publication date. The earlier filing date is retained as application chronology; the public terminology floor used here is the 1998 publication.
 
-> **the phrase `program disturb` was publicly attached to a nonvolatile-memory patent by October 1998.**
+The abstract is mechanism-bearing, not merely bibliographic. It says that applying a bias voltage to **unselected word-lines** reduces `program disturb` of the **threshold voltages of unselected memory cells during a write**. It then makes the mitigation explicitly history-sensitive: the bias is applied to cells/rows that have **already been written** above a minimum threshold, while erased or `virgin` cells are treated differently. The disclosed sequential-recording example fills one row before moving to the next, and **bias flag circuits** in the row decoder indicate which rows are already filled so the appropriate word-line bias can be selected.
 
-This addendum does not use the item to establish NAND-specific circuit details because the full description was not directly inspected in this pass. It therefore cannot lower the **directly inspected NAND-specific definitional floor** established by the AMD record below.
+The retention-specific historical statement can therefore be upgraded from the old title-only claim:
+
+> **By October 1998, `program disturb` was publicly used for a nonvolatile-memory mechanism in which writing one state could perturb the threshold state of unselected cells, and the disclosed mitigation depended on whether those unselected rows already contained programmed data.**
+
+This is stronger than `the phrase appeared in a patent title`, but it remains narrower than a NAND claim. The patent is explicitly framed around **analog and multi-level nonvolatile memory**; the inspected abstract does not establish NAND-string geometry, NAND self-boosting, or the later wordline-to-wordline floating-gate coupling model.
+
+### Why the row-history detail matters
+
+The abstract exposes a control relation that is directly relevant to technical retention:
+
+```text
+row already contains programmed state
+    -> later write creates a disturb risk for that retained state
+    -> controller/decoder must choose protective bias for that row
+
+row still erased / virgin
+    -> different electrical treatment is admissible
+```
+
+The important retained relation is not simply `cell has charge`. A later write is conditioned on **the prior programming state of non-target rows**.
+
+That supports two engineering decompositions:
+
+> **same current write target ≠ same safe bias policy under different prior row histories**;
+
+and
+
+> **payload state ≠ the control knowledge needed to preserve that payload during a later write**.
+
+The second sentence does **not** claim that the Invox bias flags themselves are power-loss-persistent metadata. The inspected abstract establishes their role in recording/indicating row-filled state for bias selection, but not their persistence horizon, restart behavior, reconstruction algorithm, or exact implementation technology.
+
+### Later same-inventor continuity is evidence, not back-projection
+
+A later So/Wong/SanDisk patent, **US6285593B1, “Word-line decoder for multi-bit-per-cell and analog/multi-level memories with improved resolution and signal-to-noise ratio,”** provides a useful continuity witness. Its public description discusses high programming voltages creating a large floating-gate/drain field in **unselected, previously programmed cells**, leading to Fowler–Nordheim charge loss and threshold-voltage reduction; it calls this `drain disturb` and says the maximum usable threshold voltage can be limited by `program disturb (or drain disturb)`. The same document explicitly cites US5818757 as related prior work.
+
+Later record:
+<https://patents.justia.com/patent/6285593>
+
+This later description helps classify the Invox line as an already-programmed-state preservation problem, but it is **not** silently treated as the missing full 1998 specification. In particular, exact voltages, later decoder embodiments, volatile/nonvolatile flag alternatives, and the later patent's broader threshold-window discussion are not attributed to US5818757 unless independently present in the 1998 source.
 
 ## 1999 AMD NAND-specific `program disturb` / `pass disturb` record
 
@@ -68,7 +117,7 @@ The patent's mitigation uses pulsed program and pass voltages during self-boosti
 
 This grounds a strong terminology boundary:
 
-> **by November 1999, `program disturb` was explicit NAND engineering vocabulary for failed program inhibition of non-target cells, and `pass disturb` was separately named in the same manufacturer record.**
+> **By November 1999, `program disturb` was explicit NAND engineering vocabulary for failed program inhibition of non-target cells, and `pass disturb` was separately named in the same manufacturer record.**
 
 It still does not authorize the equation:
 
@@ -76,19 +125,46 @@ It still does not authorize the equation:
 
 ## Mechanism separation
 
-### Program-inhibit / program-disturb family in the 1997–1999 records
+### 1997 Samsung: NAND program-inhibit failure risk
 
 The bounded causal chain is approximately:
 
 ```text
-one cell/wordline is selected for programming
+one NAND cell/wordline is selected for programming
     -> high program/pass voltages also electrically expose cells that should remain inhibited
     -> channel/source/bitline boosting or inhibit margin is insufficient
     -> unintended tunneling / threshold increase can occur in a non-target cell
     -> later logical state may be wrong
 ```
 
-The important retained/control state includes whether a cell is intended to remain inhibited and whether the selected programming bias leaves enough electrical margin to keep it so.
+The critical relation is **selected programming bias versus inhibited non-target state**.
+
+### 1998 Invox: history-sensitive protection of already-written unselected threshold state
+
+The abstract-level chain is different:
+
+```text
+some rows already contain programmed threshold states
+    -> another cell/row is written
+    -> unselected cells can suffer threshold-voltage program disturb
+    -> row history determines which protective word-line bias is selected
+    -> sequential row fill + bias flags make that history usable by the decoder
+```
+
+This mechanism is important for Case 59 because it demonstrates an early **write-history-sensitive preservation problem**, but it is not yet the 2002 floating-gate-neighbor interference model.
+
+### 1999 AMD: NAND self-boosting program/pass disturb
+
+The bounded chain is:
+
+```text
+selected NAND wordline receives programming conditions
+    -> unselected NAND strings/cells rely on self-boosting / pass-voltage conditions
+    -> insufficient inhibit margin can unintentionally program a non-target cell
+    -> program/pass disturb terminology distinguishes failure paths
+```
+
+Again, the critical relation is **program inhibition under NAND string biasing**.
 
 ### Case 59 cell-to-cell program interference from 2002 onward
 
@@ -102,37 +178,49 @@ victim already has a programmed threshold state
     -> later read-reference/ECC work may be needed
 ```
 
-The central historical distinction is therefore:
+The central historical rule is therefore:
 
-> **failed inhibit / unintended programming of a non-target cell ≠ aggressor-threshold-transition-induced capacitive shift of an already-programmed victim.**
+> **shared non-target threshold movement ≠ one shared physical mechanism.**
 
-The two can share the broad fact that a program operation has effects outside its logical target and can both change threshold voltage. That functional overlap is not enough to merge the mechanisms, vocabulary, mitigation clocks, or genealogies.
+The three earlier records and the 2002+ interference lineage overlap functionally, but they differ in array context, electrical cause, mitigation, and the relation between target and victim.
 
 ## Engineering reconstruction
 
-The primary sources support several retention-specific decompositions.
+### Logical write target ≠ complete electrical effect scope
 
-### Logical target ≠ complete electrical exposure scope
-
-Both the inhibit records and Case 59 make the same high-level correction: the cell/page named by a program command is not necessarily the only state electrically affected by that command.
+All three pre-2002 records correct the naive assumption that the cell/page named by a program operation is the only physically relevant state.
 
 But:
 
-> **same cross-target effect pattern ≠ same physical mechanism.**
+> **same cross-target effect pattern ≠ same mechanism identity.**
 
-The 1997–1999 program-inhibit sources concern biasing and unintended tunneling in cells meant to remain unprogrammed; Case 59's later interference sources concern parasitic coupling from an aggressor threshold transition into a retained victim.
+Samsung/AMD emphasize NAND inhibit/self-boost conditions; Invox's inspected abstract emphasizes threshold disturb of already-written unselected cells and state-dependent row bias; Case 59's later sources emphasize parasitic neighbor coupling from an aggressor transition.
 
-### Inhibit success is a retention condition without being payload retention
+### Safe programming policy can depend on prior non-target state
 
-The controller/device must create an electrical condition under which a non-target cell remains outside the programming regime. That inhibit relation is not user payload, yet its successful enforcement protects retained state during another write.
+The Invox evidence adds a more precise retention relation than the earlier version of this addendum contained. The protective bias decision changes according to whether an unselected row is already programmed or remains erased/virgin.
 
 Therefore:
 
-> **retaining a value during a neighboring program operation can depend on transient control/bias state that is not itself the retained payload.**
+> **program safety can be history-dependent even when the current logical target is unchanged.**
+
+And:
+
+> **current payload arrangement can induce control obligations for future writes.**
+
+Those are project engineering reconstructions. They do not imply a modern FTL, a crash-consistent metadata structure, or a durable per-row database in the 1998 design.
+
+### Inhibit / bias control is retention infrastructure without being payload
+
+The device must create electrical conditions under which non-target states remain outside an unintended transition regime. That bias/inhibit relation is not user payload, yet its successful enforcement protects retained state during another write.
+
+Therefore:
+
+> **retaining a value during a neighboring or same-array program operation can depend on transient control/bias state that is not itself the retained payload.**
 
 ### Chronology of a word ≠ chronology of one mechanism
 
-A historical phrase can be broader than a later experimental mechanism. The 1998/1999 `program disturb` record cannot be projected forward to make every later `program interference` paper an instance of the same circuit failure; conversely, the 2002 floating-gate-interference paper cannot be projected backward to rename every earlier inadvertent-programming record.
+The evidence now makes this warning stronger. `Program disturb` appears in a 1998 analog/multilevel nonvolatile-memory context and in a 1999 NAND self-boosting context, yet the bounded mechanisms are not identical. The later 2002 `floating-gate interference` paper should neither be projected backward to rename every earlier disturb mechanism nor treated as the first public recognition that a write can damage non-target stored state.
 
 Therefore:
 
@@ -140,7 +228,7 @@ Therefore:
 
 ## Functional analogies — bounded
 
-### Case 52 — read disturb
+### Case 52 — NAND read disturb
 
 Safe comparison:
 
@@ -149,24 +237,29 @@ Safe comparison:
 Stop condition:
 
 - read disturb is repeated-read/pass-through stress;
-- 1997–1999 program disturb is a programming-inhibit/bias problem;
+- 1997/1999 NAND program disturb is a programming-inhibit/bias problem;
+- 1998 Invox program disturb is an analog/multilevel write-history-sensitive threshold-disturb problem;
 - Case 59 program interference is cell-to-cell capacitive neighbor coupling.
 
 ### Case 70 — magnetic-core half-select
 
-A very narrow analogy is permitted: both a half-selected core and an inhibited NAND cell are **not the intended write target but still receive part of the physical excitation generated by a write operation**.
+A very narrow analogy is permitted: both a half-selected core and an unselected nonvolatile-memory cell are **not the intended write target but still receive part of the physical excitation generated by a write operation**.
 
 Stop condition:
 
-> magnetic-field coincidence/half-select margin ≠ NAND wordline/bitline boosting ≠ floating-gate capacitive interference.
+> magnetic-field coincidence/half-select margin ≠ nonvolatile wordline/bitline bias ≠ NAND self-boosting ≠ floating-gate capacitive interference.
 
 No historical genealogy is asserted.
+
+### Case 93 / Case 43 — control knowledge can age or be wrong independently of payload
+
+Only a functional comparison is permitted. AVATAR's refresh classification and the Invox row-history/bias-selection relation both show that preserving payload can depend on **control knowledge about payload state**. But AVATAR concerns DRAM refresh classification and runtime revalidation; the 1998 patent concerns write-time bias selection in nonvolatile memory. No technical genealogy is claimed.
 
 ## Philosophical interpretation — bounded
 
 The evidence supports only a modest project-level pressure:
 
-> **writing a new state cannot always be modeled as an operation whose physically relevant scope is identical to its logical target. Preservation can depend on keeping non-target state outside an unintended transition regime.**
+> **Writing a new state cannot always be modeled as an operation whose physically relevant scope is identical to its logical target. Preservation can depend on knowing which non-target states already carry meaning and choosing a control regime that keeps them outside an unintended transition.**
 
 This is an interpretation of the engineering evidence, not terminology used by Samsung, Invox, AMD, Lee, or Cai.
 
@@ -175,21 +268,46 @@ This is an interpretation of the engineering evidence, not terminology used by S
 Do **not** upgrade this addendum into any of the following:
 
 - `program disturb was invented in 1997`, `1998`, or `1999`;
-- `US5677873A coined program disturb`;
+- `US5818757 coined program disturb`;
 - the 1995 priority date of US5677873A as a public-disclosure date;
 - the 1996 filing date of US5818757A as public terminology use;
 - the 1998 filing date of US5991202A as public terminology use;
-- `program disturb` as one universal NAND mechanism;
+- `US5818757 is a NAND patent`;
+- `US5818757 already described the 2002 cell-to-cell floating-gate interference model`;
+- `bias flags are proven persistent across reset/power loss`;
+- `sequential row recording in US5818757 is the ancestor of later NAND page-order rules`;
+- `program disturb` as one universal NAND/nonvolatile-memory mechanism;
 - `pass disturb = program disturb = program interference`;
 - proof that the 1997–1999 patented mitigations shipped in named commercial Flash products;
 - proof that the 2002/2013 program-interference work descends from any one patent family;
-- a teleological 1997 → 1999 → 2002 → 2013 invention chain.
+- a teleological 1997 → 1998 → 1999 → 2002 → 2013 invention chain.
+
+## Source-custody limits and remaining debt
+
+This pass closes one bounded gap and leaves another explicit.
+
+Closed:
+
+- the 1998 Invox item is no longer merely a title-level vocabulary witness;
+- its inspected public abstract supports a mechanism-level statement about threshold disturbance of unselected cells during another write;
+- the abstract directly supports state-dependent treatment of already-written versus erased/virgin rows and the existence of bias flags used for that decision.
+
+Still open:
+
+- direct page-by-page inspection of the complete 1998 US5818757 facsimile/specification;
+- exact claim scope and embodiment details beyond the public abstract;
+- whether any bias-history state survives reset/power loss, or is reconstructed;
+- named commercial implementation of the 1998 Invox design;
+- pre-1998 `program disturb` use in directly inspected nonvolatile-memory full texts;
+- direct genealogy, if any, into later NAND self-boosting or cell-to-cell interference work.
+
+A later related patent is used only as a continuity/cross-check source; it does not erase these open source-custody items.
 
 ## Related-repository boundary
 
-A fresh search of `tmzncty/computing-archaeology` for `program disturb` / `disturb` surfaced no dedicated case to reuse in the current search surface.
+A fresh search of `tmzncty/computing-archaeology` for `Invox program disturb`, `program disturb`, and `SSD/NAND disturb` surfaced no dedicated case to reuse in the current search surface.
 
-Accordingly, this file keeps only the retention-specific terminology/mechanism boundary needed by Case 59. A broader NAND programming genealogy — self-boosting, local/self-boost variants, ISPP evolution, inhibit circuits, charge-trap/3-D NAND disturb families, vendor implementation history, and patent-family prosecution — belongs primarily in `computing-archaeology` if developed.
+Accordingly, this file keeps only the retention-specific terminology/mechanism boundary needed by Case 59. A broader nonvolatile-memory programming genealogy — Invox/SanDisk analog/multilevel architecture, self-boosting/local-boost variants, ISPP evolution, inhibit circuits, charge-trap/3-D NAND disturb families, vendor implementation history, and patent-family prosecution — belongs primarily in `computing-archaeology` if developed.
 
 ## Result
 
@@ -199,11 +317,13 @@ The bounded chronology can now be stated conservatively:
 1997 public NAND record:
     inadvertent programming of nondesignated cells is an explicit inhibit problem
 
-1998 public title-level record:
-    `program disturb` is attested in nonvolatile-memory patent vocabulary
+1998 public Invox record:
+    `program disturb` is mechanism-bearing vocabulary
+    + writing can perturb threshold state of unselected cells
+    + already-written vs erased/virgin row history changes protective bias policy
 
 1999 directly inspected NAND record:
-    `program disturb` and `pass disturb` are explicitly distinguished
+    `program disturb` and `pass disturb` are explicitly distinguished in self-boosting context
 
 2002 Case 59 lineage:
     `floating-gate interference` explicitly describes adjacent-threshold-change / parasitic-capacitance coupling
@@ -214,4 +334,4 @@ The bounded chronology can now be stated conservatively:
 
 The historiographic rule is the important part:
 
-> **earlier disturb vocabulary and non-target programming mechanisms constrain origin claims, but they do not erase the mechanism boundary around cell-to-cell program interference.**
+> **Earlier disturb vocabulary and non-target programming mechanisms constrain origin claims, but they do not erase mechanism boundaries. The 1998 Invox record additionally shows that protection against later writes could already be conditioned on whether non-target state had previously been programmed.**
