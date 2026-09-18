@@ -52,6 +52,8 @@ Case 152 now uses [`evidence/152-sqlite-wal-recovery-backfill-progress-reset-dee
 
 Case 101 now uses [`evidence/101-ibm-1997-1998-serveraid-data-scrubbing-prior-art-deepening.md`](evidence/101-ibm-1997-1998-serveraid-data-scrubbing-prior-art-deepening.md) only for the retention-specific seam between **latent-sector unreadability**, **proactive controller-level coverage**, **redundancy/currentness qualification**, **repair authority**, and **restored reconstruction margin**. A fresh companion search found no dedicated ServeRAID data-scrubbing packet to reuse. Broad IBM RAID-controller genealogy, ServeRAID firmware evolution, 1990s controller competition, exact scrub command implementation, and the wider `scrub` / `patrol read` terminology history remain `computing-archaeology` work rather than being duplicated here.
 
+Case 140 now uses [`evidence/140-ibm-1991-1995-erasure-error-budget-deepening.md`](evidence/140-ibm-1991-1995-erasure-error-budget-deepening.md) only for the retention-specific seam between **coded redundancy physically present**, **known unavailable-member / erasure location**, **unknown errant-source identification**, **different redundancy consumption**, and the resulting **repair admissibility / remaining recovery margin**. A fresh companion search for `EVENODD` found no dedicated packet to reuse. Broad IBM array-code genealogy, Reed–Solomon / EVENODD / RDP lineage, controller adoption, product implementation, and the history of the `RAID-6` category remain `computing-archaeology` work rather than being duplicated here.
+
 ---
 
 ## 2. problem-history
