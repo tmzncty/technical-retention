@@ -2,11 +2,12 @@
 
 > **Question:** when the material inscription still survives, what else must survive—or be reconstructed—for a future system to make that state operationally available again?
 
-**Status:** bounded cross-case synthesis over already-grounded evidence. This document does not add an invention-priority claim or collapse software interpreters, tape drives, controller firmware, mapping metadata, and human interpretation into one mechanism.
+**Status:** bounded cross-case synthesis over already-grounded evidence. This document does not add an invention-priority claim or collapse software interpreters, tape drives, controller firmware, DRAM scrambling, mapping metadata, and human interpretation into one mechanism.
 
 Grounded cases used here:
 
 - [`39 — Flash mapping reconstruction after volatile map loss`](../cases/39-flash-mapping-reconstruction-after-power-loss.md);
+- [`127 — DRAM power-off remanence and DDR3 scrambling`](../cases/127-dram-power-off-remanence-gradual-decay.md), especially [`Evidence 127 — 2015–2016 DDR3 scrambling, remanence, and semantic recovery`](../evidence/127-2015-2016-ddr3-scrambling-semantic-recovery-deepening.md);
 - [`128 — ZFS vdev labels and uberblock restart roots`](../cases/128-zfs-vdev-label-uberblock-import-root-recovery.md);
 - [`129 — ZFS feature flags and software-format admissibility`](../cases/129-zfs-feature-flags-format-compatibility.md);
 - [`130 — LTO generational reader compatibility`](../cases/130-lto-generational-compatibility-reader-obsolescence.md);
@@ -20,7 +21,7 @@ The underlying historical claims remain sourced in those cases and their evidenc
 
 The repository can now defend a stronger version of an old caution:
 
-> **material survival is only one condition of recoverability. A future operation may also depend on retained or reproducible roots, mappings, format semantics, reader/transducer capability, controller admission rules, and operation-specific authority.**
+> **material survival is only one condition of recoverability. A future operation may also depend on retained or reproducible roots, mappings, transforms, format semantics, reader/transducer capability, controller admission rules, and operation-specific authority.**
 
 But the stronger shortcut is rejected:
 
@@ -37,7 +38,9 @@ material embodiment survives
         ↓
 identity / restart root / topology is recoverable
         ↓
-a compatible access apparatus can interpret or transduce it
+required transform / ordering / mapping relation is available or reconstructible
+        ↓
+a compatible access apparatus can interpret or transduce the result
         ↓
 currentness / admissibility rules accept the candidate
         ↓
@@ -48,7 +51,7 @@ read / recovery / migration / repair can proceed
 
 Not every case instantiates every stage, and the stages are not a historical progression. They are comparison axes.
 
-The important negative result is that **technical forgetting can occur as loss of an access relation without requiring physical erasure**, while equally important counterexamples prevent that statement from becoming too broad: restoring a compatible apparatus may recover the state without rewriting the payload; read-only access may survive after write compatibility is lost; and a compatible interpreter never proves that the underlying medium is intact.
+The important negative result is that **technical forgetting can occur as loss of an access relation without requiring physical erasure**, while equally important counterexamples prevent that statement from becoming too broad: restoring a compatible apparatus may recover the state without rewriting the payload; an interpretation relation may be reconstructed even if its original runtime state was lost; read-only access may survive after write compatibility is lost; and a compatible interpreter never proves that the underlying medium is intact.
 
 ---
 
@@ -66,11 +69,13 @@ Case 130 is different. An LTO drive is not merely a semantic decoder. It is a ph
 
 Case 131 differs again. A PERC controller recognizes disk-resident array configuration, admits or rejects a foreign configuration, and may also own pending write-back state on a separate retained-cache carrier. Its role includes protocol authority and reconstruction of an array service relation, not just symbol decoding.
 
+Case 127 adds another boundary. On the Intel DDR3 platforms studied by Bauer, Gruhn, and Freiling, the memory controller transparently scrambled data on the path to DRAM. The surviving cell state was therefore a transformed physical representation, while the historical logical image depended on controller-side scrambling and channel/address relations. Here the relevant relation is neither a file-format parser nor an obsolete physical reader: it is a runtime transform that may disappear or change across the same power event whose residual DRAM state is being recovered.
+
 Therefore the umbrella used here is **access apparatus**:
 
-> the hardware, software, firmware, retained control metadata, and admission logic needed to turn a surviving embodiment into an admissible future operation.
+> the hardware, software, firmware, retained or reconstructible control relations, and admission logic needed to turn a surviving embodiment into an admissible future operation.
 
-This is a project comparison term, not vocabulary attributed to ZFS, LTO, Dell, or Flash-controller engineers.
+This is a project comparison term, not vocabulary attributed to ZFS, LTO, Dell, Flash-controller engineers, Intel, or the cold-boot authors.
 
 ---
 
@@ -78,15 +83,16 @@ This is a project comparison term, not vocabulary attributed to ZFS, LTO, Dell, 
 
 | Layer | Bounded question | Cases that expose it |
 | --- | --- | --- |
-| Material embodiment | Do the relevant physical bytes / magnetic state / Flash pages still exist? | 39, 128–131 |
+| Material embodiment | Do the relevant physical bytes / charge state / magnetic state / Flash pages still exist? | 39, 127–131 |
 | Identity / restart legibility | Can the system locate the retained object and the root/topology needed to traverse it? | 39, 128, 131 |
-| Format / signal capability | Does the available software or hardware know how to interpret or transduce the retained representation? | 129, 130, 131 |
+| Transform / ordering relation | Can the surviving representation be related back to its historical logical value and ordering? | 127; functionally 39 |
+| Format / signal capability | Does the available software or hardware know how to interpret or transduce the retained representation? | 127, 129, 130, 131 |
 | Currentness / admission | Even if readable, is this candidate accepted as the state that may answer now? | 39, 128, 131 |
-| Service mode | Is read, write, boot, import, or recovery permitted under the available capability set? | 129, 130, 131 |
+| Service mode | Is read, write, boot, import, or recovery permitted under the available capability set? | 127, 129, 130, 131 |
 | Pending obligation | Is there retained work that still must be completed before ordinary service is fully restored? | 39, 131 |
 | Migration / repair | Must state be moved or apparatus preserved before a compatibility window disappears? | 130; functionally 129/131 |
 
-The table is intentionally typed. `readable`, `importable`, `bootable`, `writable`, and `recoverable` are not interchangeable predicates.
+The table is intentionally typed. `physically present`, `descramblable`, `readable`, `importable`, `bootable`, `writable`, and `recoverable` are not interchangeable predicates.
 
 ---
 
@@ -114,6 +120,84 @@ This yields two limits for the wider synthesis:
 - **reconstructing a resolver ≠ reconstructing the payload it resolves**.
 
 A lost mapping relation and an obsolete tape reader are functionally comparable only in the narrow sense that both can separate surviving embodiment from ordinary access. Their physical causes, historical actors, and recovery paths are different.
+
+---
+
+## 4A. Case 127 — physical remanence can outlive the transform that gives it its historical logical image
+
+The 2015–2016 DDR3 deepening makes the access-apparatus problem visible *inside* ordinary main memory rather than only in archival formats or storage controllers.
+
+Bauer, Gruhn, and Freiling model the relation between the normal logical image `P`, the memory-controller scrambling stream `K`, and the representation resident in DRAM `M` as:
+
+```text
+M = P XOR K
+```
+
+On the tested systems, software normally sees `P` because the controller applies the matching transform transparently on the memory path. A cold power boundary changes the retention problem. Enough charge can remain in DRAM for `M` to survive while the controller configuration that originally related `M` to `P` may be reset, reseeded, or replaced by the state of another acquisition machine.
+
+The bounded relation is therefore:
+
+```text
+physical DRAM residue survives
+        ≠
+historical logical image is directly readable
+```
+
+This case adds a second negative result that is just as important:
+
+```text
+original interpretation state is lost
+        ≠
+semantic recovery is impossible
+```
+
+The 2016 work did not require restoration of every historical controller register or recovery of the original key stream bit-for-bit. It reconstructed enough of the effective differential scrambling relation, with small known-plaintext constraints and channel/interleaving reconstruction, to recover the historical image on the tested platforms.
+
+For this synthesis the distinction is:
+
+```text
+interpreter / transform persistence
+        !=
+interpreter / transform reconstructibility
+```
+
+That prevents a preservation model from requiring the exact historical runtime state when surviving representation plus structural evidence is sufficient to regenerate an equivalent access relation.
+
+### Historical record boundary
+
+The historical claims remain those of Case 127 and its evidence record. Bauer, Gruhn, and Freiling experimentally studied specific Intel DDR3 systems and described the scrambling/recovery behavior they observed. Intel's 2007-priority scrambling patent independently discloses controller-side XOR/LFSR embodiments for suppressing data-pattern-dependent power-supply noise, but a patent embodiment is **not** proof of the exact undocumented shipping implementation in every measured machine.
+
+### Engineering reconstruction
+
+Case 127 lets the project separate at least two horizons:
+
+```text
+Hphysical:
+    how long enough DRAM cell state remains recoverable
+
+Hinterpretation:
+    how long the transform / ordering relation needed to recover
+    the historical logical image remains available or reconstructible
+```
+
+Either can fail first. Knowledge of the transform cannot recreate cell state that has physically decayed away; strong residual cell state does not by itself make the historical plaintext directly readable if the relevant transform relation has changed.
+
+### Functional comparison with Case 39
+
+Case 39 and Case 127 both show that a volatile runtime relation may disappear while a material representation survives.
+
+**Stop:** Case 39 reconstructs an address resolver from retained Flash metadata designed for that role. Case 127 reconstructs enough of a controller transform/order relation from residual representation, known plaintext, and architecture-specific structure. They are not the same metadata scheme, mechanism, or historical lineage.
+
+### Hard non-claims
+
+This synthesis does **not** claim that:
+
+- memory scrambling is encryption or a confidentiality guarantee;
+- every DDR3 platform uses the same scrambler, seed lifetime, or channel mapping;
+- physical remanence guarantees successful semantic recovery;
+- descrambling restores bits already lost to charge decay;
+- the original scrambler seed must be recovered for semantic recovery to succeed;
+- Intel's patent proves the exact implementation of the systems measured by Bauer et al.
 
 ---
 
@@ -241,6 +325,8 @@ Compatibility is typed by the requested operation:
 
 ```text
 can identify
+can acquire a physical image
+can reconstruct a transform / ordering relation
 can read
 can reconstruct
 can import read-only
@@ -251,7 +337,7 @@ can complete pending writes
 can migrate
 ```
 
-Case 129 explicitly separates read and write feature requirements. Case 130 separates read and write generation support. Case 131 separates configuration recognition/import from later dirty-cache commitment. Case 128 separates root selection from later integrity verification.
+Case 127 separates acquisition of surviving physical state from recovery of the historical logical image. Case 129 explicitly separates read and write feature requirements. Case 130 separates read and write generation support. Case 131 separates configuration recognition/import from later dirty-cache commitment. Case 128 separates root selection from later integrity verification.
 
 A preservation plan that records only `compatible: yes/no` therefore loses relevant state about *what operation remains possible*.
 
@@ -261,23 +347,25 @@ A preservation plan that records only `compatible: yes/no` therefore loses relev
 
 ### Engineering reconstruction
 
-A tape drive, boot loader, compatible ZFS implementation, controller firmware, mapping-recovery substrate, or replacement-controller cache interface may contain no copy of the user payload being preserved. Yet without it the surviving payload may be unusable.
+A tape drive, boot loader, compatible ZFS implementation, controller firmware, mapping-recovery substrate, DRAM transform/order relation, or replacement-controller cache interface may contain no copy of the user payload being preserved. Yet without it the surviving payload may be unusable or semantically misread.
 
 So this synthesis adds a controlled extension to the project's idea of retention infrastructure:
 
-> **some retention infrastructure preserves not the payload but the future ability to interpret, transduce, admit, or continue it.**
+> **some retention infrastructure preserves not the payload but the future ability to interpret, transduce, order, admit, or continue it.**
+
+That infrastructure need not itself persist in its original runtime embodiment. Case 39 can rebuild a resolver from retained metadata; Case 127 can reconstruct an equivalent transform relation from surviving structure. The preservation requirement is therefore sometimes **reproducibility of the access relation**, not byte-for-byte persistence of the old interpreter state.
 
 This is analogous to spare capacity or hold-up energy only at the level of `necessary enabling infrastructure`. It is not the same mechanism.
 
-The distinction also explains why long-term preservation can require work *before* physical decay is visible. The operator may have to preserve readers, software, keys, adapters, metadata, documentation, or a migration path while all current bits still read correctly.
+The distinction also explains why long-term preservation can require work *before* physical decay is visible. The operator may have to preserve readers, software, keys, adapters, metadata, documentation, reconstruction knowledge, or a migration path while all current bits still read correctly.
 
 ---
 
 ## 11. Loss of access relation is not automatically irreversible forgetting
 
-A particularly important counterexample is recoverability after apparatus restoration.
+A particularly important counterexample is recoverability after apparatus restoration **or relation reconstruction**.
 
-If an old LTO drive can still be obtained and operated, or compatible ZFS software can be restored, ordinary access can return without changing the retained payload first. Likewise, Case 39 can reconstruct a mapping relation from surviving controller metadata.
+If an old LTO drive can still be obtained and operated, or compatible ZFS software can be restored, ordinary access can return without changing the retained payload first. Case 39 can reconstruct a mapping relation from surviving controller metadata. Case 127 goes one step further: the exact original controller state need not remain available if enough evidence survives to reconstruct an equivalent transform/order relation for the requested recovery.
 
 Therefore:
 
@@ -287,12 +375,21 @@ unavailable under the current apparatus
 irrecoverably forgotten
 ```
 
+and:
+
+```text
+original interpreter state lost
+        ≠
+all equivalent interpretation paths lost
+```
+
 A better distinction is:
 
 - **current service unavailable** — the present stack cannot answer;
-- **recoverable with preserved/reconstructible apparatus** — a viable access path still exists;
+- **recoverable with preserved apparatus** — a compatible path still exists;
+- **recoverable with reconstructed relation** — the original runtime interpreter/transform is gone but sufficient evidence remains to regenerate an equivalent access path;
 - **migration-required risk** — the viable path is shrinking or depends on aging infrastructure;
-- **access-path exhaustion** — no admissible interpreter/reader/controller path is currently known;
+- **access-path exhaustion** — no admissible interpreter/reader/controller/reconstruction path is currently known;
 - **physical erasure/destruction** — the relevant material embodiment itself is gone or unusable.
 
 Those conditions can overlap, but they should not be collapsed.
@@ -300,6 +397,12 @@ Those conditions can overlap, but they should not be collapsed.
 ---
 
 ## 12. Functional analogies and hard stops
+
+### A — DDR3 transform reconstruction and Flash mapping reconstruction
+
+Both can restore a lost logical access relation above a surviving physical representation without reconstructing the payload from nothing.
+
+**Stop:** Flash mapping recovery uses retained controller metadata designed to re-establish address resolution. The DDR3 case infers enough of a runtime scrambling/order relation from residual state and structural constraints. No shared mechanism or genealogy is asserted.
 
 ### A — ZFS software compatibility and LTO drive compatibility
 
@@ -321,7 +424,7 @@ Both show that small retained control structures can organize a much larger surv
 
 ### X — `all technical access is interpretation`
 
-Rejected as too broad. Physical transduction, servo control, ECC, mapping reconstruction, software parsing, and administrator admission are technically different operations. `Interpretation` can be useful philosophically only after those distinctions are preserved.
+Rejected as too broad. Physical transduction, charge sensing, address/channel ordering, scrambling reversal, servo control, ECC, mapping reconstruction, software parsing, and administrator admission are technically different operations. `Interpretation` can be useful philosophically only after those distinctions are preserved.
 
 ---
 
@@ -333,13 +436,15 @@ The cases support a limited philosophical statement:
 
 > A technical inscription can remain materially present while the system loses the relation that makes the inscription available as a usable continuation of a prior state.
 
-That relation may involve mapping, root authority, software semantics, reader capability, or controller admission.
+That relation may involve mapping, transformation, ordering, root authority, software semantics, reader capability, or controller admission.
 
-This is stronger than saying `meaning is contextual`, because the contexts here are exact engineering dependencies that can often be tested: feature support, generation compatibility, checksums, topology metadata, controller model, or mapping-recovery evidence.
+Case 127 adds an important qualification: the historical relation itself need not survive in its original runtime embodiment if enough structure survives to reconstruct an equivalent relation. Therefore `technical memory` should not be identified either with the carrier alone or with literal persistence of one decoder instance.
+
+This is stronger than saying `meaning is contextual`, because the contexts here are exact engineering dependencies that can often be tested: scrambling relations, channel ordering, feature support, generation compatibility, checksums, topology metadata, controller model, or mapping-recovery evidence.
 
 ### Limit
 
-Do not turn this into `physical survival is irrelevant`. If the medium is destroyed, the access apparatus cannot reconstruct arbitrary missing payload. And do not equate machine compatibility with human semantic understanding: preserving an LTO reader and ZFS implementation does not by itself preserve the institutional, linguistic, or cultural meaning of the files recovered through them.
+Do not turn this into `physical survival is irrelevant`. If the medium or DRAM state is destroyed, the access apparatus cannot reconstruct arbitrary missing payload. And do not equate machine compatibility with human semantic understanding: preserving an LTO reader, descrambling relation, and ZFS implementation does not by itself preserve the institutional, linguistic, or cultural meaning of the files or memory objects recovered through them.
 
 The open human/procedural-context problem therefore remains larger than this synthesis.
 
@@ -347,12 +452,14 @@ The open human/procedural-context problem therefore remains larger than this syn
 
 ## 14. Related-repository boundary
 
-[`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) remains the proper home for broad histories of tape transports, storage-controller families, interface adapters, boot environments, and file-format/device genealogy. The grounded source cases already record searches that found no dedicated overlapping ZFS-feature, LTO-reader, PERC-H800, or FTL-recovery case to reuse at those moments.
+[`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) remains the proper home for broad histories of tape transports, storage-controller families, interface adapters, boot environments, DRAM scrambling/controller evolution, cold-boot tooling, and file-format/device genealogy. A fresh repository search for `DDR3 scrambling cold boot` and `Bauer Gruhn Freiling memory scrambling` found no dedicated overlapping packet to reuse in `computing-archaeology`; the existing grounded cases likewise record earlier no-overlap checks for the ZFS-feature, LTO-reader, PERC-H800, and FTL-recovery slices used here.
 
-`technical-retention` keeps only the cross-case result: **access apparatus and compatibility relations can be constitutive parts of retention even though they are not themselves the retained payload.**
+`technical-retention` keeps only the cross-case result: **access apparatus and reconstructible interpretation relations can be constitutive parts of retention even though they are not themselves the retained payload.**
 
 Future work that should not be forced into this synthesis includes:
 
+- a broad history of Intel/AMD memory-controller scrambling and firmware initialization;
+- cold-boot attack/tool genealogy beyond the bounded Case 127 evidence;
 - actual controlled migrations between LTO generations;
 - reader-head/servo aging and repair labor;
 - host-interface and adapter obsolescence;
@@ -379,6 +486,16 @@ stored state = interpretation alone
 
 The defensible relation is narrower:
 
-> **A surviving embodiment remains operationally retained for a future task only when the task still has an admissible path through the required identity/root, access apparatus, format or signal capability, currentness rules, and service authority. Those supporting relations can fail, be preserved, be reconstructed, or require migration independently of the payload's physical survival.**
+> **A surviving embodiment remains operationally retained for a future task only when the task still has an admissible path through the required identity/root, transform/order relation, access apparatus, format or signal capability, currentness rules, and service authority. Those supporting relations can fail, be preserved, be reconstructed from surviving evidence, or require migration independently of the payload's physical survival.**
 
-This is an analytical invariant across the selected cases, not evidence that Flash controllers, ZFS, LTO, and PERC share one historical lineage.
+Case 127 sharpens one final boundary:
+
+```text
+interpretation-state persistence
+        !=
+semantic recoverability
+```
+
+A historical decoder/transform may disappear while an equivalent access relation remains reconstructible; conversely, a perfectly preserved transform cannot recover physical state that has already decayed beyond reconstruction.
+
+This is an analytical invariant across the selected cases, not evidence that DDR3 memory controllers, Flash controllers, ZFS, LTO, and PERC share one historical lineage.
