@@ -2,20 +2,23 @@
 
 > **Question:** when a retained state needs work in order to remain usable, what makes that work become due?
 
-**Status:** bounded cross-case synthesis over already-grounded evidence. This document formalizes a project vocabulary requested by the roadmap; it does not add an invention-priority claim or assert one historical lineage among delay-line memory, magnetic core, DRAM, Flash/SSD, RAID, or distributed repair.
+**Status:** bounded cross-case synthesis over already-grounded evidence. This document formalizes a project vocabulary requested by the roadmap; it does not add an invention-priority claim or assert one historical lineage among delay-line memory, magnetic core, DRAM, Flash/SSD, RAID, or distributed repair. A later bounded deepening now also separates **maintenance trigger / obligation**, **service opportunity**, **maintenance credit / progress**, **execution**, and **completion**, using grounded Mostek DRAM, e.MMC BKOPS, managed-SSD garbage collection, and Ceph snap-trimming evidence.
 
 Grounded cases used here:
 
 - [`01 — Mercury delay-line circulation`](../cases/01-mercury-delay-line-circulation.md) — continuing circulation, regeneration, retiming, and environmental control;
 - [`02 — Magnetic-core destructive read`](../cases/02-magnetic-core-destructive-read.md) — quiescent remanence plus access-triggered restore in the bounded classic scheme;
-- [`03 — DRAM scheduled restoration`](../cases/03-dram-refresh-as-scheduled-restoration.md) — access restore plus elapsed-time/deadline regeneration;
+- [`03 — DRAM scheduled restoration`](../cases/03-dram-refresh-as-scheduled-restoration.md) — access restore plus elapsed-time/deadline regeneration; the [`Mostek MK4116 deepening`](../evidence/03-mostek-1977-1979-ras-only-refresh-boundary-deepening.md) additionally shows that a foreground access can earn row-refresh credit without becoming the trigger that makes the full deadline/coverage obligation due;
 - [`04 — Mapped Flash`](../cases/04-flash-virtual-mapping-logical-identity.md) — quiescent cell retention plus capacity/reclaim-driven relocation and erase;
 - [`36 — NAND Flash correct-and-refresh`](../cases/36-nand-flash-correct-and-refresh-maintenance.md) — renewal whose policy can compose elapsed time, wear, and error evidence;
 - [`76 — JESD218 SSD endurance/retention qualification`](../cases/76-jedec-ssd-endurance-retention-qualification.md) — workload/endurance history composed with later power-off retention qualification;
 - [`111 — Enterprise SSD extended shutdown`](../cases/111-enterprise-ssd-extended-shutdown-maintenance.md) — wear/lifetime and powered-maintenance admission at the deployed-product layer;
-- [`17 — RAID parity reconstruction`](../cases/17-raid-parity-reconstruction-degraded-repair.md) — failure-triggered reconstruction and restoration of redundancy margin.
+- [`17 — RAID parity reconstruction`](../cases/17-raid-parity-reconstruction-degraded-repair.md) — failure-triggered reconstruction and restoration of redundancy margin;
+- [`135 — e.MMC self-refresh / BKOPS`](../cases/135-micron-emmc-self-refresh-time-trigger-maintenance.md), especially the [`JESD84-B51 BKOPS deepening`](../evidence/135-jedec-emmc51-bkops-maintenance-opportunity-deepening.md) — generic background-maintenance capability, urgency, host/device scheduling authority, execution opportunity, and completion are exposed as different relations;
+- [`150 — Crucial M550 Active Garbage Collection`](../cases/150-crucial-m550-active-garbage-collection.md), with its [`grounding record`](../evidence/150-crucial-2014-2024-active-garbage-collection-grounding.md) — free-space/reclamation pressure can create demand while powered idle supplies an execution opportunity rather than a completion guarantee;
+- [`153 — Ceph RADOS snaptrim`](../cases/153-ceph-rados-snaptrim-asynchronous-reclamation.md), with its [`2013 grounding record`](../evidence/153-ceph-2013-snaptrim-asynchronous-reclamation-grounding.md) — snapshot retirement can leave a retained cleanup obligation queued before asynchronous execution and completion.
 
-Case 05 RADOS, the access-disturbance cases in Synthesis 11, and other mature cases are used only as bounded counterexamples where noted. The historical claims remain sourced in the individual case/evidence records. The regime names below are **project-controlled engineering terms** unless a source independently uses the same word.
+Case 05 RADOS, the access-disturbance cases in Synthesis 11, and other mature cases are used only as bounded counterexamples where noted. The historical claims remain sourced in the individual case/evidence records. The regime names below, plus `maintenance opportunity` and `maintenance credit` as cross-case comparison terms, are **project-controlled engineering terms** unless a source independently uses the same word.
 
 ---
 
@@ -37,6 +40,10 @@ The repository can therefore use the following seven regime terms:
 
 These are not mutually exclusive device classes. Magnetic core already gives a decisive counterexample: the same memory can be quiescent at rest and still owe restoration after a destructive read. DRAM can compose access-triggered restore with a separate elapsed-time refresh deadline. Managed Flash can combine quiescent cell state, capacity reclamation, wear-aware placement, and later refresh/renewal. RAID members can retain ordinary media state quiescently while array-level failure consumes redundancy margin and triggers rebuild.
 
+The later evidence adds a second rule:
+
+> **what makes maintenance due is not necessarily what gives the system an opportunity to execute it, and neither is necessarily the operation that counts as progress toward completion.**
+
 A better analytical shape is therefore:
 
 ```text
@@ -49,14 +56,24 @@ trigger basis
         ↓
 evidence / control state, where needed
         ↓
-response action
+maintenance opportunity / admission, where needed
+        ↓
+credit / progress relation, where meaningful
+        ↓
+response execution
+        ↓
+completion / residual obligation
         ↓
 current service / admissibility result
         ↓
 remaining or restored future retention margin
 ```
 
-The trigger and the response are separate axes. `rewrite`, `refresh`, `relocate`, `rebuild`, or `replace` does not by itself tell us why the work became due.
+This is a decomposition, not a universal chronological pipeline. An opportunity can exist before work is due, useful work can accidentally earn maintenance credit, and a retained obligation can remain queued while execution is temporarily inadmissible.
+
+The trigger and the response are separate axes. `rewrite`, `refresh`, `relocate`, `rebuild`, or `replace` does not by itself tell us why the work became due. The newer cases further require:
+
+> **trigger ≠ opportunity ≠ credit/progress ≠ execution ≠ completion**.
 
 ---
 
@@ -65,23 +82,27 @@ The trigger and the response are separate axes. `rewrite`, `refresh`, `relocate`
 This synthesis follows [`METHOD.md`](METHOD.md) and [`AGENTS.md`](../AGENTS.md).
 
 - **H/P — historical / primary:** historical vocabulary, dates, mechanisms, and product/standard contracts remain in the grounded case records.
-- **E — engineering reconstruction:** the seven regime names and the trigger/obligation decomposition are project analytical tools.
-- **A — functional analogy:** saying that two systems perform maintenance after a trigger does not establish a shared physical mechanism or genealogy.
+- **E — engineering reconstruction:** the seven regime names and the trigger/obligation/opportunity/credit decomposition are project analytical tools.
+- **A — functional analogy:** saying that two systems expose deferred or opportunistic maintenance does not establish a shared physical mechanism, controller architecture, or genealogy.
 - **I — philosophical interpretation:** the final interpretation is downstream of the engineering distinctions and deliberately narrow.
 
-The synthesis also preserves the project's anti-anachronism rule. `Continuous maintenance`, `deadline-driven maintenance`, and the other regime names are not retroactively attributed to Eckert, Mauchly, Wilkes, core-memory engineers, Dennard, M-Systems, JEDEC, IBM, NetApp, or the Berkeley RAID authors unless an individual source actually uses those words.
+The synthesis also preserves the project's anti-anachronism rule. `Continuous maintenance`, `deadline-driven maintenance`, `maintenance opportunity`, `maintenance credit`, and the other project terms are not retroactively attributed to Eckert, Mauchly, Wilkes, core-memory engineers, Dennard, Mostek, JEDEC, Micron, Crucial, Ceph, IBM, NetApp, or the Berkeley RAID authors unless an individual source actually uses those words.
 
 ---
 
-## 3. Why this is not a duplicate of Synthesis 11
+## 3. Why this is not a duplicate of Synthesis 11 or Synthesis 25
 
 [`SYNTHESIS_11_ACCESS_DISTURBANCE_MAINTENANCE.md`](SYNTHESIS_11_ACCESS_DISTURBANCE_MAINTENANCE.md) asks what happens when **access itself changes the retention problem**. It separates request target, physical effect scope, disturbance exposure, current correctness, remaining margin, trigger evidence, and later restore/refresh/reclaim response.
 
 The present synthesis asks a different question:
 
-> **Across the repository as a whole, what kinds of conditions can make retention work due, including cases where access is not the trigger at all?**
+> **Across the repository as a whole, what kinds of conditions can make retention work due, and how does that due-state differ from an opportunity to execute, progress that counts against the obligation, and completion?**
 
 Synthesis 11 therefore becomes one important subcase rather than being restated here. Access-triggered restoration remains distinct from access-conditioned cumulative disturbance, and both remain distinct from time, capacity, wear, or failure triggers.
+
+[`SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md`](SYNTHESIS_25_RECURRENCE_REFRESH_TERMINOLOGY.md) asks a terminology question: how `recurrence`, period terms such as `regeneration` and `refresh`, and the physical operation that re-instantiates state should be kept distinct. Its Mostek deepening supplies the crucial warning that a foreground access can count toward a refresh obligation without being the condition that made that obligation due.
+
+The present synthesis takes that bounded distinction and stress-tests it against **non-DRAM maintenance**: e.MMC BKOPS, managed-SSD reclamation, and distributed snapshot cleanup. This is a cross-case engineering comparison, not a history of one vocabulary spreading across those systems.
 
 ---
 
@@ -93,11 +114,11 @@ Synthesis 11 therefore becomes one important subcase rather than being restated 
 | **continuous maintenance** | the retained relation exists through continuing circulation/feedback/regeneration | Case 01 delay line | merely `powered`; periodic deadline refresh; one immutable carrier token survives |
 | **access-triggered restoration** | a particular access disturbs/destroys the selected physical state enough that restore is owed as part of preserving it | Case 02; bounded Case 03 read/restore | cumulative read-disturb policy; elapsed-time refresh; all reads in the technology are destructive |
 | **deadline-driven maintenance** | elapsed time / a bounded retention deadline makes restoration due even without a triggering foreground access | Case 03 DRAM | exact physical failure instant; proof every cell fails when the deadline is crossed |
-| **capacity/reclaim-triggered maintenance** | obsolete-state accumulation, free-space pressure, or erase-unit reuse makes copy/erase/remap work due | Case 04 mapped Flash | leakage refresh; wear leveling; secure erase; evidence that current payload was already failing |
+| **capacity/reclaim-triggered maintenance** | obsolete-state accumulation, free-space pressure, or erase-unit reuse makes copy/erase/remap work due | Case 04 mapped Flash; Case 150 managed-SSD GC | leakage refresh; idle opportunity; wear leveling; secure erase; evidence that current payload was already failing |
 | **wear/lifetime-triggered policy** | accumulated use/wear/lifetime evidence changes placement, renewal cadence, future-retention admission, or retirement action | Cases 36, 76, 111 | immediate unreadability; one universal endurance clock; a raw-cell law inferred from service telemetry |
 | **failure/repair-triggered maintenance** | a failure, missing member, or consumed redundancy margin creates reconstruction/re-replication/rebuild work | Case 17; functionally Case 05 | ordinary periodic refresh; backup; proof that current service was already unavailable |
 
-The table is intentionally about **obligation timing and trigger basis**, not about one universal maintenance algorithm.
+The table is intentionally about **obligation timing and trigger basis**, not about one universal maintenance algorithm. Cases 135 and 153 are especially useful for a separate plane — how an already-existing obligation is admitted, queued, executed, or reported complete — and therefore are not forced into new top-level trigger regimes merely because they expose richer scheduling state.
 
 ---
 
@@ -156,13 +177,15 @@ Classic destructive-read magnetic core is the cleanest bounded witness: a read t
 
 The label is deliberately narrower than `access-conditioned maintenance`. Synthesis 11 shows that NAND read disturb and RowHammer can let the current access succeed while consuming future margin elsewhere; those regimes may be driven by accumulated access history rather than requiring restoration as part of the single access itself.
 
+The Mostek MK4116 deepening supplies a different counterexample. An ordinary read or write can refresh the selected row, but the device still requires complete row-address coverage inside a bounded time window. The useful access supplies **credit** toward the maintenance obligation; it did not create the global obligation.
+
 Therefore:
 
 > **access-triggered restoration ≠ access-count-triggered preventive maintenance**
 
-and
+> **access-triggered restoration ≠ deadline-driven maintenance**
 
-> **access-triggered restoration ≠ deadline-driven maintenance**.
+> **maintenance performed during access ≠ maintenance made due by access**.
 
 ---
 
@@ -174,7 +197,9 @@ and
 
 Case 03 DRAM grounds the canonical form: leakage makes periodic regeneration necessary for reliable service. A quiet row still owes restoration on the schedule.
 
-Two limits matter.
+The MK4116 evidence makes the completion condition more precise. A qualifying foreground access or RAS-only cycle can service one selected row, but **activity count alone is not coverage**: all 128 row addresses have to receive qualifying cycles inside the documented 2 ms interval. Hence deadline, target-set coverage, and the operation that earns local credit are separate relations.
+
+Two further limits matter.
 
 First, the service deadline is not an exact microscopic loss timestamp. Case 127 later shows that residual DRAM state can outlive ordinary service guarantees after refresh/power withdrawal. So:
 
@@ -212,7 +237,11 @@ The present synthesis adds another guardrail:
 
 > **capacity reclamation ≠ decay refresh**.
 
-A reclaim cycle may happen to rewrite current data and thereby renew its embodiment, but that side effect does not make free-space pressure historically identical to a retention-time deadline.
+Case 150 adds a scheduling boundary. Micron's 2011 FTL note exposes free-page/full-block pressure as one reason GC becomes necessary while allowing an optional background-GC mode during idle time; maintained Crucial guidance later makes the operational opportunity more explicit by asking that the SSD remain **powered and idle**. Therefore:
+
+> **reclamation pressure ≠ powered-idle opportunity ≠ reclamation execution ≠ completion**.
+
+A reclaim cycle may happen to rewrite current data and thereby renew its embodiment, but that side effect does not make free-space pressure historically identical to a retention-time deadline. Likewise, an idle window can let maintenance run without being the reason the maintenance became due.
 
 ---
 
@@ -278,11 +307,56 @@ Therefore:
 
 This is an engineering reconstruction across already-grounded cases, not a historical vocabulary claim.
 
+### 12.1 Trigger ≠ opportunity ≠ credit/progress ≠ execution ≠ completion
+
+The newer grounded evidence shows that even `trigger -> response` is too coarse for several systems. At least five relations may have to be separated:
+
+1. **obligation / trigger** — why maintenance is now owed;
+2. **opportunity / admission** — when or under what authority the work may run;
+3. **credit / progress** — what operation counts as satisfying some portion of the obligation;
+4. **execution** — whether the maintenance worker or device is actually doing the work;
+5. **completion / residual obligation** — what establishes that the relevant bounded work is finished, or what remains owed.
+
+| Grounded witness | What creates or defines the bounded obligation? | Opportunity / admission | Credit / execution relation | Completion boundary |
+| --- | --- | --- | --- | --- |
+| **Mostek MK4116 / Case 03** | full row-set refresh inside the documented 2 ms interval | ordinary read/write cycles can incidentally service selected rows; dedicated RAS-only cycles can also be issued | a qualifying cycle to row `R` refreshes `R` | every one of the 128 row addresses must be serviced inside the interval; the source gives a contract, not a controller `done` flag |
+| **e.MMC BKOPS / Case 135** | hidden device maintenance becomes outstanding and is summarized through interface-specific urgency state | host can open a manual BKOPS window; later `AUTO_EN` permits device-started idle-time work | device executes background processing while exact physical target/algorithm remain hidden | no more currently needed BKOPS work under the interface is narrower than a universal media-health or future-risk guarantee |
+| **Micron/Crucial GC / Case 150** | obsolete pages/free-space pressure can make reclamation necessary | optional idle/background mode and, in maintained Crucial guidance, powered-idle time | preserve/copy live pages and erase selected blocks | recovered reusable capacity; a recommended 6–8 h powered-idle window is an opportunity/runbook window, not a completion SLA |
+| **Ceph snaptrim / Case 153** | snapshot retirement plus remaining reference state creates a distributed cleanup obligation | work can remain queued until asynchronous PG trim execution is admitted | per-object membership/clone cleanup and replicated/logged updates perform the work | `snaptrim_wait`, active `snaptrim`, and `snaptrim_error` expose queue/execution/error distinctions; clone removal also remains reference-conditioned |
+
+The comparison is functional only. No Mostek → JEDEC → Micron/Crucial → Ceph genealogy is asserted, and the historical terms `RAS-only refresh`, `BKOPS`, `garbage collection`, and `snaptrim` remain system-specific.
+
+The cross-case result is:
+
+```text
+maintenance due
+    != maintenance may run now
+    != useful work happened to earn maintenance credit
+    != maintenance is currently executing
+    != the bounded obligation is complete
+```
+
+Several anti-shortcuts follow.
+
+> **idle ≠ maintenance due** — an idle interval may merely create an opportunity.
+
+> **idle ≠ maintenance executing** — the device may have no work, may defer it, or may be blocked by another condition.
+
+> **activity ≠ completion** — cycles, worker activity, or elapsed runbook time do not by themselves prove the whole target set / queue / capacity objective is closed.
+
+> **queued obligation ≠ active execution** — Case 153 makes this distinction visible at a distributed-maintenance layer.
+
+> **foreground work can earn maintenance credit without being the maintenance trigger** — the Mostek row-refresh boundary is the cleanest early example.
+
+> **interface-specific `no work currently needed` ≠ all future retention risk eliminated** — Case 135 blocks turning BKOPS state into a universal media-health certificate.
+
+These are engineering reconstructions supported by separately grounded historical records; they are not vendor vocabulary claims.
+
 ---
 
 ## 13. Evidence/control state ≠ payload state
 
-Many regimes need retained evidence about whether maintenance is due:
+Many regimes need retained evidence about whether maintenance is due or still unfinished:
 
 - a refresh counter or row pointer;
 - a mapping/free-space relation;
@@ -290,19 +364,22 @@ Many regimes need retained evidence about whether maintenance is due:
 - wear/endurance telemetry;
 - validity/currentness metadata;
 - reconstruction progress;
+- queued cleanup obligation;
 - failure/membership state.
 
 Those states can be retention infrastructure without being the user payload they protect.
 
-Case 111 is especially useful because rated-life telemetry can change future-retention admission while the current payload remains readable. Case 17 similarly treats rebuild progress as constitutive `meta state` while the user data are a separate retained target.
+Case 111 is especially useful because rated-life telemetry can change future-retention admission while the current payload remains readable. Case 17 similarly treats rebuild progress as constitutive `meta state` while the user data are a separate retained target. Case 153 adds the inverse temporal lesson: a cleanup obligation can remain meaningful while no cleanup worker is currently executing.
 
 > **maintenance evidence ≠ maintained payload**.
+
+> **retained maintenance obligation ≠ active maintenance process**.
 
 And, following Case 93/Synthesis 11:
 
 > **evidence survival ≠ evidence authority**.
 
-A retained counter, profile, or health estimate can itself become stale, incomplete, or model-dependent.
+A retained counter, profile, queue, or health estimate can itself become stale, incomplete, reconstructed, or model-dependent.
 
 ---
 
@@ -332,6 +409,10 @@ on selected destructive read in the bounded 1T1C relation:
 with elapsed time:
     deadline-driven maintenance
 
+with a foreground access to one MK4116 row:
+    local refresh credit may be earned
+    without changing the global deadline/coverage trigger
+
 with RowHammer/VRT-era policies:
     workload/evidence-conditioned modifiers can alter urgency or target
 ```
@@ -345,6 +426,10 @@ cell state at rest:
 obsolete-space accumulation:
     capacity/reclaim-triggered maintenance
 
+powered idle:
+    possible maintenance opportunity
+    not itself proof of demand, execution, or completion
+
 wear/endurance history:
     wear/lifetime-triggered policy
 
@@ -352,7 +437,7 @@ retention/error evidence:
     time/evidence/wear-conditioned renewal can be composed
 ```
 
-### RAID / replicated storage
+### RAID / replicated / distributed storage
 
 ```text
 ordinary member/media state:
@@ -360,30 +445,38 @@ ordinary member/media state:
 
 member/replica loss:
     failure/repair-triggered maintenance at the redundancy layer
+
+retired distributed relation:
+    cleanup obligation may remain queued
+    before asynchronous reclamation executes
 ```
 
-The regime label therefore always needs a **target and layer**.
+The regime label therefore always needs a **target and layer**. The opportunity/execution state likewise needs a named maintenance relation; `background`, `idle`, or `queued` alone is not a trigger taxonomy.
 
 ---
 
-## 15. Orthogonal modifiers: evidence and environment
+## 15. Orthogonal modifiers and execution conditions: evidence, environment, and opportunity
 
 The seven roadmap regimes are useful but should not be promoted into an exhaustive ontology of every future trigger.
 
-Two recurrent dimensions are better treated as **orthogonal modifiers** for now:
+Two recurrent trigger/policy dimensions are better treated as **orthogonal modifiers** for now:
 
 - **evidence-conditioned** — measured/corrected error state, counters, profiles, telemetry, checksums, or policy evidence changes when maintenance is due;
 - **environment-conditioned** — temperature, power regime, or another operating condition changes retention validity or maintenance policy.
 
-Case 36 combines time, P/E wear, and error evidence. Case 93 combines an existing refresh regime with runtime evidence that can reclassify rows. Case 132 shows that temperature can change retention qualification and operation validity without becoming one universal `temperature-triggered refresh` mechanism.
+A third recurrent dimension is not a trigger class at all:
 
-Keeping these as modifiers avoids inventing a new top-level regime for every sensor or policy input while preserving the evidence that real systems compose clocks and conditions.
+- **opportunity/admission-conditioned execution** — power availability, idle time, controller/host permission, PG state, queue scheduling, or another service condition determines when already-useful or already-due maintenance can execute.
+
+Case 36 combines time, P/E wear, and error evidence. Case 93 combines an existing refresh regime with runtime evidence that can reclassify rows. Case 132 shows that temperature can change retention qualification and operation validity without becoming one universal `temperature-triggered refresh` mechanism. Cases 135 and 150 then show why an idle/powered service window should not be mistaken for the trigger itself, while Case 153 shows that a retained cleanup obligation can wait for an execution slot.
+
+Keeping evidence/environment as modifiers and opportunity as a separate execution plane avoids inventing a new top-level regime for every sensor, scheduler, or service window while preserving the evidence that real systems compose clocks, conditions, authority, and available work slots.
 
 ---
 
 ## 16. Anti-anachronism and prior-art boundary
 
-This synthesis makes **no origin claim** for maintenance categories.
+This synthesis makes **no origin claim** for maintenance categories or for the trigger/opportunity decomposition.
 
 Chronological precedence does not create genealogy:
 
@@ -396,11 +489,17 @@ magnetic-core destructive restore
 
 Flash reclamation
     ≠ ancestor mechanism of RAID rebuild
+
+Mostek foreground refresh credit
+    ≠ ancestor of e.MMC BKOPS or SSD background GC
+
+queued Ceph snaptrim
+    ≠ distributed descendant of controller-local background maintenance
 ```
 
-Likewise, shared words do not create identity. `refresh`, `restore`, `scrub`, `reclaim`, `rebuild`, `regenerate`, and `repair` have period- and system-specific meanings.
+Likewise, shared words do not create identity. `refresh`, `restore`, `scrub`, `reclaim`, `garbage collection`, `background operation`, `trim`, `rebuild`, `regenerate`, and `repair` have period- and system-specific meanings.
 
-> **shared maintenance vocabulary ≠ shared trigger ≠ shared physical mechanism ≠ shared genealogy**.
+> **shared maintenance vocabulary ≠ shared trigger ≠ shared opportunity protocol ≠ shared physical mechanism ≠ shared genealogy**.
 
 The purpose of the project taxonomy is comparison after source-specific histories are established, not retrospective renaming of those histories.
 
@@ -420,26 +519,31 @@ A state can be:
 - restored before a deadline;
 - moved because capacity must be reclaimed;
 - requalified because wear history changed its future margin;
-- rebuilt because a failure consumed redundancy.
+- rebuilt because a failure consumed redundancy;
+- owed maintenance while waiting for a permitted execution opportunity;
+- partially advanced by useful work whose primary purpose was not maintenance;
+- left as a retained cleanup obligation after the logical state that created it has already changed.
 
 This makes `persistence` a poor synonym for `unchanging endurance`. But the cases do **not** show that every retained state is secretly one form of continuous operation, nor that these engineering clocks are one universal philosophy of memory.
 
+The new decomposition adds one restrained interpretive point: **visible inactivity is ambiguous**. It can mean that no maintenance is due, that work is due but waiting for power/idle/authority, that work is queued, or that the relevant maintenance has already completed. Conversely, visible useful work can hide maintenance credit without making maintenance the purpose or trigger of the operation.
+
 The safe interpretive claim is only:
 
-> **technical retention can be constituted by differently triggered obligations whose timing changes what it means for a state to remain available.**
+> **technical retention can be constituted by differently triggered obligations whose execution depends on distinct opportunities, progress relations, and completion conditions.**
 
 ---
 
 ## 18. Related-repository boundary
 
-[`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) remains the home for broad histories of delay-line circuitry, core-memory selection, DRAM generations, Flash/SSD controllers, RAID hardware, and product genealogy. A fresh companion-repository search for a cross-technology `retention maintenance / refresh / reclamation / repair` taxonomy did not reveal a dedicated overlapping synthesis to reuse.
+[`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) remains the home for broad histories of delay-line circuitry, core-memory selection, DRAM generations, Flash/SSD controllers, e.MMC revision genealogy, RAID hardware, Ceph implementation evolution, and product genealogy. A fresh companion-repository search for a cross-technology `retention maintenance / refresh / reclamation / repair / BKOPS / snaptrim` taxonomy did not reveal a dedicated overlapping synthesis to reuse.
 
 That division of labor is deliberate:
 
 - `computing-archaeology` — how each historical mechanism worked and why it made engineering sense in its period;
 - `technical-retention` — what the mature cases jointly force us to distinguish about the conditions of persistence.
 
-The present document therefore keeps only the bounded cross-case regime vocabulary and routes future broad mechanism genealogy outward.
+The present document therefore keeps only the bounded cross-case regime vocabulary and the trigger/opportunity/credit/execution/completion relation, and routes future broad mechanism genealogy outward.
 
 ---
 
@@ -457,12 +561,20 @@ This synthesis closes the roadmap question of whether the project should **forma
 
 The answer is **yes, as relation-and-trigger classes, not mutually exclusive technology classes**.
 
+The later deepening also closes a bounded second question:
+
+> **Should maintenance trigger/obligation be treated as identical to the service window, foreground operation, worker activity, or completion signal through which maintenance happens?**
+
+The answer is **no**. The grounded Mostek, e.MMC, managed-SSD, and Ceph cases require a separate audit of **opportunity/admission**, **credit/progress**, **execution**, and **completion** whenever the interface exposes them.
+
 Still open:
 
 - whether later case pressure justifies promoting `evidence-conditioned` or `environment-conditioned` from modifiers to top-level regimes;
-- quantitative energy/labor comparison among maintenance regimes;
+- how starvation, priority escalation, fairness, and deadline miss interact with maintenance opportunities across named systems;
+- how often controller/device interfaces expose trustworthy completion evidence rather than only current urgency or worker state;
+- quantitative energy/labor comparison among maintenance regimes and opportunity windows;
 - named-controller and production fault-injection evidence for several Flash/SSD/RAID responses;
-- deeper histories of the words `refresh`, `restore`, `rebuild`, `scrub`, and `reclaim` in their own technical communities;
+- deeper histories of the words `refresh`, `restore`, `rebuild`, `scrub`, `reclaim`, `background operation`, and `garbage collection` in their own technical communities;
 - whether additional regimes are needed for migration/obsolescence work where no physical failure has yet occurred.
 
 The taxonomy should be revised when grounded counterexamples expose a bad distinction. It is a working research instrument, not a closed universal ontology.
