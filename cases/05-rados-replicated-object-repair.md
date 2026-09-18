@@ -29,6 +29,7 @@ That makes RADOS a useful transition from **location-independent identity inside
 ### Evidence deepening
 
 - [`evidence/05-rados-2005-2007-peering-pg-metadata-retention-deepening.md`](../evidence/05-rados-2005-2007-peering-pg-metadata-retention-deepening.md) — contemporaneous August 2005 source plus the mature 2007 RADOS presentation, separating payload completeness, peering/currentness knowledge, PG logs, missing-state metadata, and repair completion.
+- [`evidence/05-crush-2006-map-epoch-placement-currentness-deepening.md`](../evidence/05-crush-2006-map-epoch-placement-currentness-deepening.md) — direct 2006 CRUSH/OSDI inspection separating current map/epoch placement relation from replica-content currentness, and fixing `physical replica survival != current placement membership` and `deterministic recomputation != no retained resolver state`.
 
 ---
 
@@ -152,6 +153,8 @@ The cluster map includes device state and an epoch number that changes with memb
 
 The separate 2006 CRUSH paper describes the same family of mechanism as a deterministic pseudo-random mapping from an object or object-group identifier to a list of devices, using a hierarchical cluster description and placement rules that can separate replicas across failure domains.[^crush-2006]
 
+The direct-paper deepening adds two placement-specific boundaries. Failed or overloaded devices can remain represented in the hierarchy while being rejected as current selection targets, and the rank of a returned target can itself carry primary-copy or coded-fragment semantics. A changed cluster map therefore changes a policy-bearing placement relation; it does not merely update a passive address book. See [`../evidence/05-crush-2006-map-epoch-placement-currentness-deepening.md`](../evidence/05-crush-2006-map-epoch-placement-currentness-deepening.md).
+
 ### Engineering reconstruction
 
 `Location` is no longer only a stored coordinate. It is a **relation recomputed from identity + placement-group assignment + current cluster state + placement policy**.
@@ -159,6 +162,21 @@ The separate 2006 CRUSH paper describes the same family of mechanism as a determ
 The same object identifier can therefore remain stable while its correct physical replica set changes.
 
 That is a stronger form of location independence than Case 04's controller-local remapping because the replacement locations are separate machines with independent failure modes.
+
+The direct CRUSH inspection sharpens the boundary further:
+
+```text
+physical replica survives
+    != replica remains a current placement target
+
+current placement target
+    != payload is already current/complete there
+
+CRUSH is deterministic
+    != placement is timeless
+```
+
+Placement currentness is relative to a sufficiently current map/epoch and rule; replica-content currentness remains a separate peering/version-history question.
 
 ---
 
@@ -643,7 +661,7 @@ Replica count, correlated failures, placement rules, media failures, detection t
 
 ## Cross-case result
 
-Case 05 now adds five distinctions to the repository:
+Case 05 now adds seven distinctions to the repository:
 
 > **replica multiplicity ≠ retained currentness**
 
@@ -652,6 +670,14 @@ Several physical copies may exist while only some represent the current ordered 
 > **physical survival ≠ admission to service**
 
 A replica may retain bytes while membership/history changes force repeering before it can count as current.
+
+> **physical survival ≠ current placement membership**
+
+A replica may retain useful bytes after a map/epoch change while no longer being an intended destination under current placement policy.
+
+> **placement currentness ≠ content currentness**
+
+The cluster map/rule determines where state ought to be; peering/version history determines which surviving state is admissible as current.
 
 > **repair metadata ≠ repaired payload**
 
@@ -682,36 +708,40 @@ The sequence is comparative, not evolutionary.
 
 ## Related repositories
 
-A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated RADOS treatment during the 2005–2007 deepening slice.
+Fresh searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated RADOS/CRUSH treatment during the 2005–2007 peering and 2006 placement deepening slices.
 
-A broader history of RUSH → CRUSH, EBOFS, peering implementation evolution, monitor/Paxos development, object storage, RAID, erasure coding, or storage networking belongs there if later developed. `technical-retention` should link to that work instead of expanding this case into a general distributed-storage history.
+A broader history of RUSH → CRUSH, EBOFS, peering implementation evolution, monitor/Paxos development, algorithmic distributed placement, bucket evolution, object storage, RAID, erasure coding, or storage networking belongs there if later developed. `technical-retention` should link to that work instead of expanding this case into a general distributed-storage history.
 
 ---
 
 ## Evidence status
 
-**Status: first-pass candidate, materially strengthened; not yet promoted to `grounded`.**
+**Status: `grounded`.**
 
-Strong points now include:
+The repository roadmap and case-maturity ledger treat Case 05 as grounded. The canonical text is now aligned with that established repository state rather than retaining its older pre-promotion `first-pass candidate` wording.
+
+Strong points include:
 
 - primary peer-reviewed 2006 system paper with mechanism-level detail;
+- direct 2006 CRUSH-paper evidence for deterministic policy-bearing placement, failure-domain rules, map-change reorganization, and target-rank semantics;
+- direct 2006 OSDI evidence for cluster-map epochs and map-triggered responsibility recomputation;
 - direct 2007 RADOS/dissertation evidence for PG logs, `last_update`, `last_complete`, missing state, prior-set peering, and guarded metadata;
 - a dated contemporaneous implementation artifact from August 2005 showing explicit peering/currentness state and persistent-vs-soft control-state separation;
 - explicit historical vocabulary;
-- a sharper retained-state decomposition separating payload, expected state, currentness, repair debt, and transient peer sessions.
+- a retained-state decomposition separating payload, placement currentness, content currentness, expected state, repair debt, and transient peer sessions.
 
-This deepening closes two items from the previous debt list:
+The two bounded source debts previously named in this file are now materially closed:
 
-- **inspect the 2007 RADOS presentation** — materially completed for the peering/PG-metadata slice;
-- **add one primary implementation artifact for peering/recovery semantics** — completed with the 2005 source witness, with immaturity caveats retained.
+- **inspect the 2007 RADOS presentation / add a peering implementation witness** — closed by [`../evidence/05-rados-2005-2007-peering-pg-metadata-retention-deepening.md`](../evidence/05-rados-2005-2007-peering-pg-metadata-retention-deepening.md);
+- **inspect the 2006 CRUSH paper directly for placement-specific claims** — closed by [`../evidence/05-crush-2006-map-epoch-placement-currentness-deepening.md`](../evidence/05-crush-2006-map-epoch-placement-currentness-deepening.md).
 
-Still needed before promotion:
+Remaining work is narrower archival/implementation archaeology rather than a maturity blocker:
 
-1. inspect the 2006 OSDI PDF directly and record printed page / figure anchors for the central claims already cited from the USENIX HTML;
-2. inspect the 2006 CRUSH paper directly for placement-specific claims and page anchors;
-3. if implementation genealogy is pursued, bridge the 2005 RG/RUSH-era code to the mature 2007 PG-log/prior-set implementation without assuming continuity;
-4. add an independent institutional/scholarly history only if later chronology claims extend beyond the primary papers/source;
-5. optionally add a bounded historical-revision reproduction/fault-injection experiment if buildability permits.
+1. record printed page / figure anchors from a directly rendered 2006 OSDI PDF if later wording needs page-exact citation beyond the USENIX HTML;
+2. bridge the August-2005 RG/RUSH-era code to the 2006–2007 CRUSH/PG implementation without assuming continuity;
+3. inspect historically appropriate source for exact cluster-map serialization/persistence and OSD restart behavior;
+4. optionally add a bounded historical-revision CRUSH mapping reconstruction or fault-injection experiment if buildability permits;
+5. keep later `up`/`acting`/backfill semantics separate unless explicitly version-bounded.
 
 ---
 
