@@ -220,3 +220,32 @@ Accordingly, the remaining debt should now be stated more narrowly:
 - earlier factory acceptance/manufacturing correspondence and direct genealogy remain open.
 
 The IBM/DEC comparison is functional only. Similar concern with current, strobe, temperature, and sense margin does not establish shared circuitry or procedural descent.
+
+## Follow-on status — DEC MM11-S temperature-indexed margin and noise witness
+
+A third named production/service witness now further narrows the temperature/margin debt: DEC's 1972 MM11-S core memory for PDP-11/45 systems. See [`70-dec-mm11s-1972-temperature-margin-noise-test-deepening.md`](70-dec-mm11s-1972-temperature-margin-noise-test-deepening.md).
+
+The MM11-S source contributes evidence that the earlier two witnesses did not provide in the same form:
+
+- published X/Y-current margins of `±6% @ 0°C`, `±7% @ 25°C`, and `±6% @ 50°C`;
+- published strobe-pulse margins of `±30 ns @ 0°C`, `±40 ns @ 25°C`, and `±30 ns @ 50°C`;
+- a factory-set `410 ±5 mA` X/Y current pulse that field personnel check but are not authorized to adjust;
+- a `20–30°C` field test/adjustment condition despite the product's `0–50°C` operating specification;
+- a strobe procedure that finds early/late error endpoints under worst-case patterns and chooses the midpoint;
+- a named `Worst Case Noise Test` that deliberately produces high plane/sense noise and flags locations affected by previous RCRC traffic.
+
+This closes only a bounded part of the older `quantitative temperature dependence` and `cross-machine margin` debt. The three-machine set still does **not** constitute a statistical distribution, a deployed core-material survey, or a continuous ferrite temperature law.
+
+The new comparison also reinforces a control distinction that should remain explicit:
+
+```text
+published product operating envelope
+!=
+field adjustment environment
+!=
+observed per-unit error boundary
+!=
+chosen service operating point
+```
+
+The general DEC/PDP-11 product history, manufacturing lineage, and wider multi-vendor survey still belong primarily in `tmzncty/computing-archaeology`.
