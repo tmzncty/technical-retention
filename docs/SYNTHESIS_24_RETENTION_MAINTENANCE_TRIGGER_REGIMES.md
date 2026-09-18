@@ -578,3 +578,21 @@ Still open:
 - whether additional regimes are needed for migration/obsolescence work where no physical failure has yet occurred.
 
 The taxonomy should be revised when grounded counterexamples expose a bad distinction. It is a working research instrument, not a closed universal ontology.
+
+---
+
+## 20. Follow-on coverage synthesis
+
+The execution/completion distinction above is now deepened in [`Synthesis 30 — Maintenance Coverage: Local Work, Domain Completion, and Completion Evidence`](SYNTHESIS_30_MAINTENANCE_COVERAGE_COMPLETION_EVIDENCE.md).
+
+Synthesis 30 does **not** add another trigger regime. It asks what `completion` is scoped over once work is already due and executing, using grounded LPDDR2 per-bank refresh, Data General DRAM sniffing, HDFS BlockScanner, and IBM ESS maintenance evidence. Its central guardrail is:
+
+```text
+local maintenance action
+    != target traversal / advancement
+    != protected-domain coverage
+    != completion evidence
+    != permanent future safety
+```
+
+This cross-link is intentionally analytical rather than genealogical.
