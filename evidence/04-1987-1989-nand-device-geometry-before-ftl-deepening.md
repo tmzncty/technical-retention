@@ -18,17 +18,17 @@ device program / erase / read operation geometry
 controller mapping and logical-identity continuity
 ```
 
-The source situation is itself part of the evidence boundary. A directly inspectable full copy of the 1987 IEDM paper was not obtained in this pass. The 1987 claims below are therefore limited to its bibliographic record and reproduced abstract. The 1988–1989 continuity is supported by later peer-reviewed Toshiba-authored paper records and abstracts. No page-level quotation from an unavailable full text is invented.
+The source situation is itself part of the evidence boundary. In the original pass for this record, a directly inspectable full copy of the 1987 IEDM paper was not obtained, so the 1987 claims here were deliberately limited to its bibliographic record and reproduced abstract. That evidence debt is now **closed by direct four-page facsimile inspection** in [`04-masuoka-1987-iedm-nand-direct-facsimile-deepening.md`](04-masuoka-1987-iedm-nand-direct-facsimile-deepening.md). The 1988–1989 continuity below remains supported by later peer-reviewed Toshiba-authored paper records and abstracts unless separately deepened. No page-level quotation from an uninspected full text is invented.
 
 ## Related-repository check
 
-`tmzncty/computing-archaeology` was searched for `NAND EEPROM Masuoka` and did not expose a dedicated reusable module for this exact 1987–1989 device-history slice. Broader semiconductor-memory and Flash engineering history still belongs primarily there; this record retains only the boundary needed by `technical-retention`.
+`tmzncty/computing-archaeology` was searched for `NAND EEPROM Masuoka` and did not expose a dedicated reusable module for this exact 1987–1989 device-history slice. A fresh exact-title search made during the facsimile follow-on likewise exposed no dedicated reusable packet. Broader semiconductor-memory and Flash engineering history still belongs primarily there; this record retains only the boundary needed by `technical-retention`.
 
 ## Sources inspected
 
 ### A. Masuoka, Momodomi, Iwata, Shirota — IEDM 1987
 
-**Type:** H/P, abstract-level record of a primary peer-reviewed paper; no page-level full-text inspection in this pass.
+**Type:** H/P, abstract-level record of a primary peer-reviewed paper in this parent pass; the full paper is now directly inspected in the dedicated follow-on linked above.
 
 **Title:** `New ultra high density EPROM and Flash EEPROM with NAND structure cell`
 
@@ -43,7 +43,9 @@ The source situation is itself part of the evidence boundary. A directly inspect
 
 The reproduced abstract says the proposed NAND structure reduces cell size without scaling device dimensions, gives a 6.43 µm² cell under a 1.0-µm design rule, reports roughly 30% lower area per bit than the compared conventional 4-Mbit EPROM structure, and says individual bits in a NAND cell can be programmed selectively. It presents the structure as applicable to high-density nonvolatile memories up to 8 Mbit in the paper's contemporary frame.
 
-**Boundary:** this establishes a 1987 published NAND-structure density / selective-programming proposal. The abstract does not establish a logical sector mapping layer, a garbage collector, an SSD, or later FTL terminology.
+The direct-facsimile follow-on now adds page-level evidence for the four-bit serial string, selected/unselected programming bias, selected and sequential programming threshold behavior, the read path, and the paper's bounded read-retention result. Those additions strengthen the device-level record without introducing later FTL semantics.
+
+**Boundary:** this establishes a 1987 published NAND-structure density / selective-programming proposal and, after the follow-on, directly inspected device-level operation evidence. It does not establish a logical sector mapping layer, a garbage collector, an SSD, or later FTL terminology.
 
 ### B. Momodomi et al. — IEDM 1988
 
@@ -119,6 +121,7 @@ Taken conservatively, the inspected publication records establish the following 
 ```text
 1987
 NAND-structure density proposal + selective bit programming
++ directly inspected four-bit serial-string operation and bounded threshold-preservation tests
 
 1988
 5-V-only device programming / threshold-margin techniques
@@ -140,7 +143,7 @@ The chronology is important precisely because the layers are not interchangeable
 
 ## Engineering reconstruction — device operation geometry is a constraint, not already a translation layer
 
-The 1989 ISSCC abstract describes eight memory bits sharing a series NAND string between two select transistors. The 1989 JSSC abstract separately names block erasing, successive programming, and random reading.
+The now directly inspected 1987 paper demonstrates a four-bit serial NAND string, selected/unselected programming bias, and non-target threshold preservation under its reported tests. The 1989 ISSCC abstract later describes eight memory bits sharing a series NAND string between two select transistors. The 1989 JSSC abstract separately names block erasing, successive programming, and random reading.
 
 A safe engineering reconstruction is therefore:
 
@@ -173,6 +176,8 @@ This yields several bounded distinctions:
 
 > **device-level nonvolatility != logical-identity continuity across relocation.**
 
+> **one reported no-threshold-shift read-retention test != universal immunity to read disturb.**
+
 The physical operations help create the constraints that later mapping systems must accommodate, but `constraint exists` is not the same historical claim as `this later abstraction already existed`.
 
 ## Functional analogy — the later mapping layer answers a different retention question
@@ -194,11 +199,13 @@ This is a **functional relation**, not a demonstrated genealogy from the 1987–
 
 ## Philosophical interpretation — persistence at one layer does not settle identity at another
 
-The technical fact is narrow: a NAND cell can be designed as nonvolatile and densely organized while a later storage service still requires additional state to decide which physical instance is the current bearer of one logical identity.
+The technical fact is narrow: a NAND cell can be designed as nonvolatile and densely organized while its usable state during selected access depends on a shared-string bias regime, and a later storage service still requires additional state to decide which physical instance is the current bearer of one logical identity.
 
 A bounded interpretation is therefore:
 
 > material persistence of a device state is not yet an account of the continuity of an addressable object when rewriting changes embodiment.
+
+The direct-facsimile follow-on adds a preceding layer: even before remapping exists, physical persistence can be operationally conditional on how selected and unselected members of a shared string are driven.
 
 This is the repository's interpretation, not vocabulary attributed to Masuoka, Momodomi, Ban, or their contemporaries.
 
@@ -206,14 +213,13 @@ This is the repository's interpretation, not vocabulary attributed to Masuoka, M
 
 This deepening does **not** claim:
 
-- that the 1987 IEDM paper has been page-by-page inspected here;
-- that abstract-level records prove every circuit detail in the full papers;
 - that Masuoka or Toshiba invented every form of NAND memory, Flash memory, page programming, block erase, or high-density nonvolatile memory;
 - that 1987 is the first commercial shipment date of NAND Flash;
 - that the 1987–1989 papers used `FTL`, `garbage collection`, `TRIM`, `wear leveling`, `SSD`, or modern host-block vocabulary;
 - that the Toshiba device papers directly caused or were cited by the 1992–1995 mapping / FTL line used in Case 04;
 - that block erase proves immediate logical deletion, reclamation, secure sanitization, or forensic non-recoverability;
-- that a later controller can be reconstructed from device-paper abstracts alone.
+- that the 1987 paper's bounded read-retention result proves indefinite data retention or immunity to later-known read disturb;
+- that a later controller can be reconstructed from device-paper evidence alone.
 
 ## Resulting bounded distinctions
 
@@ -242,6 +248,10 @@ physical nonvolatility
     !=
 currentness / authority of one logical embodiment
 
+reported no threshold shift under one read-retention test
+    !=
+universal read-disturb immunity
+
 historical ordering
     !=
 demonstrated actor-to-actor genealogy
@@ -249,7 +259,7 @@ demonstrated actor-to-actor genealogy
 
 ## Open work deliberately left outside this slice
 
-- obtain and directly inspect the full 1987 IEDM paper if a renderable copy becomes available;
+- ~~obtain and directly inspect the full 1987 IEDM paper if a renderable copy becomes available~~ — **closed** by [`04-masuoka-1987-iedm-nand-direct-facsimile-deepening.md`](04-masuoka-1987-iedm-nand-direct-facsimile-deepening.md);
 - page-level inspection of the 1988–1989 papers where exact circuit wording matters;
 - earlier NAND-string patent / device genealogy and commercial-shipment chronology;
 - direct citation / influence genealogy between early Toshiba NAND work and later mapping / FTL actors;
@@ -258,10 +268,11 @@ demonstrated actor-to-actor genealogy
 
 Broader semiconductor-memory history belongs primarily in `computing-archaeology`; this record exists to prevent Case 04 from collapsing device geometry into later logical-retention machinery.
 
-## Follow-on navigation — 1987 patent-side chronology
+## Follow-on navigation — 1987 patent-side chronology and direct facsimile
 
-The bounded patent portion of the `earlier NAND-string patent / device genealogy` debt is now continued in:
+Two bounded follow-ons now deepen different parts of the original evidence debt:
 
-- [`04-toshiba-1987-series-cell-nand-patent-chronology-deepening.md`](04-toshiba-1987-series-cell-nand-patent-chronology-deepening.md)
+- [`04-toshiba-1987-series-cell-nand-patent-chronology-deepening.md`](04-toshiba-1987-series-cell-nand-patent-chronology-deepening.md) directly inspects two 1987-priority Toshiba patent lines: Masuoka's April series-connected nonvolatile-cell filing and Iwahashi's June explicit `NAND cell structure` filing. It keeps **priority / filing dates separate from later patent-publication dates**, and therefore does not misuse a claimed priority date as proof of public disclosure.
+- [`04-masuoka-1987-iedm-nand-direct-facsimile-deepening.md`](04-masuoka-1987-iedm-nand-direct-facsimile-deepening.md) directly inspects all four pages of the December 1987 IEDM paper and closes the former full-paper evidence debt while preserving the device-layer / later-FTL boundary.
 
-That follow-on directly inspects two 1987-priority Toshiba patent lines: Masuoka's April series-connected nonvolatile-cell filing and Iwahashi's June explicit `NAND cell structure` filing. It keeps **priority / filing dates separate from later patent-publication dates**, and therefore does not misuse a claimed priority date as proof of public disclosure. The full 1987 IEDM paper and commercial-shipment chronology remain open.
+Commercial-shipment chronology and direct influence genealogy remain open.
