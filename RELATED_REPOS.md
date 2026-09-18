@@ -56,6 +56,8 @@ Case 77 now uses [`evidence/77-data-general-1982-1984-mv4000-product-sniffing-de
 
 Case 140 now uses [`evidence/140-ibm-1991-1995-erasure-error-budget-deepening.md`](evidence/140-ibm-1991-1995-erasure-error-budget-deepening.md) only for the retention-specific seam between **coded redundancy physically present**, **known unavailable-member / erasure location**, **unknown errant-source identification**, **different redundancy consumption**, and the resulting **repair admissibility / remaining recovery margin**. A fresh companion search for `EVENODD` found no dedicated packet to reuse. Broad IBM array-code genealogy, Reed–Solomon / EVENODD / RDP lineage, controller adoption, product implementation, and the history of the `RAID-6` category remain `computing-archaeology` work rather than being duplicated here.
 
+Case 76 now uses [`evidence/76-ocp-2021-2026-datacenter-nvme-retention-profile-deepening.md`](evidence/76-ocp-2021-2026-datacenter-nvme-retention-profile-deepening.md) only for the retention-specific seam between **powered-off end-of-life retention**, **powered-on retention**, the separately required **whole-device continuous background refresh regime**, and **customer/manufacturing profile selection between one- and three-month powered-off retention requirements** in OCP Datacenter NVMe SSD v2.0 and v2.7. Fresh companion searches for `Datacenter NVMe SSD retention OCP` found no dedicated packet to reuse. Broad OCP/CloudSSD/NVMe datacenter-spec genealogy, revision/issue history, vendor adoption, supplier conformance reports, controller refresh algorithms, and platform procurement history remain `computing-archaeology` work rather than being duplicated here.
+
 ---
 
 ## 2. problem-history
