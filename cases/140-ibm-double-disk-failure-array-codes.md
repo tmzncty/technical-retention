@@ -413,7 +413,7 @@ Broader IBM Almaden array-code history, Reed–Solomon / EVENODD / RDP genealogy
 - [Evidence 140D — IBM 1991–1995 error-vs-erasure recovery budget](../evidence/140-ibm-1991-1995-erasure-error-budget-deepening.md)
 - [Case 17 — RAID parity reconstruction](17-raid-parity-reconstruction-degraded-repair.md)
 - [Case 94 — RAID-6 P/Q dual-erasure / corruption boundary](94-raid6-pq-dual-erasure-corruption-boundary.md)
-- [Case 101 — scrub / repair-authority boundary](101-drive-patrol-read-latent-sector-repair.md)
+- [Case 101 — scrub / repair-authority boundary](101-scsi-background-medium-scan-proactive-defect-discovery.md)
 - [Case 136 — MegaRAID/PERC rebuild rate](136-megaraid-perc-rebuild-rate-repair-priority.md)
 - [IBM Research — ICC 1992 double disk failures](https://research.ibm.com/publications/a-coding-technique-for-recovery-against-double-disk-failures-in-disk-arrays)
 - [IBM Research — EVENODD journal record](https://research.ibm.com/publications/evenodd-an-efficient-scheme-for-tolerating-double-disk-failures-in-raid-architectures)
