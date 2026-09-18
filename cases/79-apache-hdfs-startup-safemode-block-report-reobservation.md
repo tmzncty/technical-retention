@@ -7,6 +7,8 @@
 - **Primary evidence:** the 2010 HDFS architecture paper; Apache HDFS 1.0.4 and 2.7.3 documentation; tag-matched Hadoop 2.7.3 `FSNamesystem.java` and `DFSConfigKeys.java`.
 - **Status:** `grounded`.
 
+Manual-SafeMode restart-lifetime deepening: [`../evidence/79-hadoop-2008-2016-manual-safemode-restart-lifetime-deepening.md`](../evidence/79-hadoop-2008-2016-manual-safemode-restart-lifetime-deepening.md).
+
 This is **not** a general history of HDFS, NameNode HA, block placement, leases, checksums, replication algorithms, or Hadoop operations. Cases 49–51 and 61 already cover other HDFS control-state boundaries: generation-stamp lease recovery, QJM epoch fencing, DataNode command fencing, and Observer read freshness. This case asks a different startup question:
 
 > **How can a distributed filesystem recover durable namespace identity while deliberately refusing to treat surviving replica locations as already known enough for ordinary mutation/repair?**
@@ -69,6 +71,8 @@ In Hadoop 2.7.3 the `SafeModeInfo` object tracks, among other things:
 - whether the threshold has been reached and whether the extension period has elapsed.
 
 These values are neither user payload nor a complete record of every block-report event. They are bounded control state used to decide when the recovered namespace/location view is sufficient for later operations.
+
+The manual-SafeMode deepening adds another lifetime boundary: a running NameNode can carry a manual operator-imposed SafeMode state, while a fresh NameNode process constructs the startup automatic SafeMode form rather than restoring the prior process's manual `SafeModeInfo` as namespace state.
 
 ---
 
@@ -370,6 +374,26 @@ This strengthens the existing boundary:
 
 The distinction is historical/implementation evidence, not a modern philosophical analogy.
 
+### H/P + E — manual SafeMode does not share the namespace's restart persistence path
+
+The dedicated restart-lifetime deepening now compares the positive startup and manual-entry paths in both released Hadoop 0.18.0 and 2.7.3.
+
+In 0.18.0, `FSNamesystem.initialize(...)` loads the namespace image and then constructs `new SafeModeInfo(conf)` for the new process. Manual `SAFEMODE_ENTER` instead calls `enterSafeMode()`, which creates the separate no-argument manual `SafeModeInfo()` form. In 2.7.3 the distinction remains explicit: `SafeModeInfo(Configuration)` is the automatic startup form, while manual/low-resource entry uses `SafeModeInfo(boolean resourcesLow)` or marks an already-active SafeMode manual.
+
+Therefore the bounded lifecycle supports:
+
+```text
+durable namespace state
+    != process-resident manual SafeMode state
+    != freshly constructed startup SafeMode state
+```
+
+A restart from manual SafeMode does **not** mean the NameNode is immediately unrestricted: the new process constructs startup SafeMode and follows startup admission/re-observation logic. What does not continue as the same state is the prior process's manual provenance and exit rule.
+
+The 2.7.3 manual-entry path also calls `logSyncAll()` when the edit log is open, with an explicit comment about synchronizing concurrent namespace operations so the on-disk namespace is stable. This is evidence for a durability barrier around namespace edits, not evidence that the manual SafeMode flag itself is a logged namespace edit. A complete negative proof across every release would require a broader edit-log/image-schema audit and is not claimed here.
+
+See [`../evidence/79-hadoop-2008-2016-manual-safemode-restart-lifetime-deepening.md`](../evidence/79-hadoop-2008-2016-manual-safemode-restart-lifetime-deepening.md).
+
 ### Cross-case controls added by consolidation
 
 Case 80 separately shows that replica count does not establish rack/failure-domain placement satisfaction. Case 83 separately shows that a present/reported replica is not thereby checksum-qualified. Case 116 separately models temporary DataNode maintenance with an expiry. Consequently:
@@ -414,7 +438,10 @@ The case adds these controlled retention relations:
 8. `repair suppression under startup uncertainty ≠ maintenance abandonment`;
 9. `read-only startup policy ≠ universal read-availability guarantee`;
 10. `positive location evidence ≠ content-integrity proof`;
-11. `startup SafeMode ≠ HA command fencing ≠ Observer freshness alignment`.
+11. `startup SafeMode ≠ HA command fencing ≠ Observer freshness alignment`;
+12. `manual SafeMode lifetime ≠ durable namespace lifetime`;
+13. `manual SafeMode not restored after restart ≠ immediate unrestricted service`, because fresh startup SafeMode is constructed;
+14. `syncing namespace edits at manual entry ≠ proof that manual SafeMode intent itself is journaled`.
 
 These are project reconstructions used to compare mechanisms. They are not claims that Apache developers used the repository's vocabulary.
 
@@ -423,6 +450,8 @@ These are project reconstructions used to compare mechanisms. They are not claim
 ## Philosophical interpretation — bounded
 
 Case 79 is useful for the repository's addressability/currentness thesis because **physical survival and logical designation still do not exhaust technical availability**. A block can have a stable file/block identity and surviving bytes, while the restarted coordination layer has not yet reconstructed the relation needed to treat that embodiment as presently available for ordinary management.
+
+The manual-SafeMode deepening adds one limited pressure: the object and its durable namespace can outlive a process-local policy state that restricted mutation, while the next process establishes a new restriction for a different startup reason. Retention of an object therefore need not imply equal-lifetime retention of every authority relation surrounding it.
 
 That does not justify calling SafeMode “memory,” “institutional forgetting,” or a Heideggerian concept. The legitimate philosophical use is narrower: availability is an achieved relation among retained identity, surviving embodiment, re-established knowledge, and operational authority.
 
@@ -436,6 +465,8 @@ This bounded case does not establish:
 - the genealogy of safe startup/read-only recovery modes;
 - behavior of every Hadoop release outside the bounded 0.18.0 / 1.0.4 / 2.7.3 / 2.8.0 evidence chain;
 - every HA startup/failover interaction;
+- persistence or propagation semantics of manual SafeMode across every later HA/service-manager regime;
+- an exhaustive edit-log/fsimage proof that no SafeMode-related state is ever persisted elsewhere in any Hadoop release;
 - checksum validation semantics of block reports;
 - exact large-cluster startup performance;
 - DataNode-local on-disk recovery internals;
@@ -449,7 +480,7 @@ Those are separate archival, implementation, or experimental projects.
 
 ## Related repositories
 
-A search of `tmzncty/computing-archaeology` found no dedicated HDFS/SafeMode treatment at the time of this case. The broader history of distributed filesystems, NameNode architecture, and startup/recovery design should be built there if needed. `technical-retention` should retain only the bounded comparison among durable namespace state, reconstructed replica-location evidence, SafeMode admission, and later repair.
+Fresh searches of `tmzncty/computing-archaeology` for `safemode` and `HDFS` did not surface a dedicated reusable packet during this deepening pass; GitHub reported incomplete code-search results, so this is only a routing check rather than proof of absence. The broader history of distributed filesystems, NameNode architecture, safe-startup modes, and recovery design should be built there if needed. `technical-retention` should retain only the bounded comparison among durable namespace state, reconstructed replica-location evidence, startup/manual SafeMode lifecycle, admission, and later repair.
 
 ---
 
@@ -459,6 +490,8 @@ A search of `tmzncty/computing-archaeology` found no dedicated HDFS/SafeMode tre
 | --- | --- | --- |
 | released Hadoop 0.18.0 keeps block→machine location state in memory and rebuilds it from reports | `H/P` | exact `release-0.18.0` `FSNamesystem.java`; HDFS implementation chronology floor only |
 | startup and manual SafeMode already use distinguishable control state in 0.18.0 | `H/P` | separate `SafeModeInfo` constructors plus `isManual()`; later 2.8.0 source is continuity evidence |
+| a fresh 0.18.0/2.7.3 NameNode constructs startup SafeMode rather than restoring the previous process's manual `SafeModeInfo` as namespace state | `E` grounded in `H/P` | positive startup-construction and manual-entry paths in both released source trees |
+| 2.7.3 edit-log synchronization around manual entry is a namespace-durability barrier, not by itself proof of a persisted SafeMode flag | `H/P` + bounded `E` | exact `enterSafeMode(boolean)` implementation; no exhaustive negative claim beyond the inspected path |
 | HDFS NameNode persistent namespace recovery is separated from replica-location reconstruction | `H/P` | Shvachko et al. 2010 plus Apache architecture docs |
 | block replica locations are not part of the persistent NameNode checkpoint in the bounded architecture | `H/P` | Shvachko et al. 2010 |
 | DataNodes re-advertise local block inventories through block reports | `H/P` | 2010 paper + Apache docs/source |
@@ -489,14 +522,16 @@ A search of `tmzncty/computing-archaeology` found no dedicated HDFS/SafeMode tre
 
 ### Repository comparisons
 
+- Case 05 — RADOS restart map/placement context as a bounded functional counterexample for retained control evidence.
 - Case 46 — GFS master log/checkpoint recovery.
 - Case 49 — HDFS generation-stamp lease recovery.
 - Case 50 — HDFS QJM epoch fencing.
 - Case 51 — HDFS DataNode command fencing.
 - Case 61 — HDFS Observer state-ID freshness.
+- Case 116 — HDFS per-DataNode maintenance expiry as a separate operator-control scope.
 
 ---
 
 ## Status
 
-**`grounded`** for the bounded 2008–2017 HDFS startup relation among persistent namespace state, report-rebuilt replica locations, startup/manual SafeMode control state, admission thresholds, and post-exit replication repair. The accidental later Case 117 duplicate has been consolidated into this canonical case without asserting a broader invention genealogy.
+**`grounded`** for the bounded 2008–2017 HDFS startup relation among persistent namespace state, report-rebuilt replica locations, startup/manual SafeMode control state, admission thresholds, and post-exit replication repair. The new 2008–2016 manual-SafeMode restart-lifetime deepening additionally grounds the narrower boundary `durable namespace lifetime ≠ prior process manual SafeMode lifetime ≠ fresh startup SafeMode provenance` without asserting a universal Hadoop/HA persistence contract. The accidental later Case 117 duplicate has been consolidated into this canonical case without asserting a broader invention genealogy.
