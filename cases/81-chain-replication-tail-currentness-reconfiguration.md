@@ -2,18 +2,25 @@
 
 ## Scope
 
-- **Bounded historical/technical regime:** van Renesse and Schneider's OSDI 2004 chain-replication protocol for fail-stop storage servers.
+- **Bounded historical/technical regime:** van Renesse and Schneider's OSDI 2004 chain-replication protocol for fail-stop storage servers, with a bounded 2010 Hibari implementation deepening where explicitly marked.
 - **Primary question:** what state must remain while an update has entered a replicated chain but has not yet reached the replica whose processing defines the client-visible completed history, and how is that unfinished obligation preserved across reconfiguration?
-- **Retention-specific focus:** head/tail role asymmetry, tail-qualified currentness, per-server `Sent_i` lists, acknowledgement-driven retirement of in-process state, internal-server failure repair, and new-tail catch-up before role admission.
-- **Excluded from this case:** a general history of replication; later CRAQ or production descendants; Byzantine or partition-tolerant variants; storage-media durability below each server; and invention priority for primary/backup, state-machine replication, acknowledgements, or replicated storage.
+- **Retention-specific focus:** head/tail role asymmetry, tail-qualified currentness, per-server `Sent_i` lists, acknowledgement-driven retirement of in-process state, internal-server failure repair, new-tail catch-up before role admission, and the distinction between protocol completion and implementation-specific local persistence frontiers.
+- **Excluded from this case:** a general history of replication; later CRAQ or unrelated descendants; Byzantine or partition-tolerant variants; exhaustive storage-stack durability below `fsync(2)`; and invention priority for primary/backup, state-machine replication, acknowledgements, write-ahead logging, group commit, or replicated storage.
 
-The case uses the paper's formal `Hist` / `Pending` model as evidence about the protocol specification while preserving the authors' own warning that an implementation need not retain a complete update sequence.
+The case uses the paper's formal `Hist` / `Pending` model as evidence about the protocol specification while preserving the authors' own warning that an implementation need not retain a complete update sequence. The Hibari follow-on is kept separate so that its WAL/`fsync` contract is not projected backward into the abstract 2004 protocol.
+
+---
+
+## Evidence navigation
+
+- [`evidence/81-chain-replication-2004-grounding.md`](../evidence/81-chain-replication-2004-grounding.md) — original protocol, `Hist` / `Pending`, `Sent_i`, failure reconfiguration, chain extension, and prior-art boundary.
+- [`evidence/81-hibari-2010-wal-durability-frontier-deepening.md`](../evidence/81-hibari-2010-wal-durability-frontier-deepening.md) — 2010 Hibari WAL/group-commit implementation, per-brick safe-serial durability frontier, downstream propagation gate, write/sync race evidence, and documented weaker durability modes.
 
 ---
 
 ## Historical vocabulary
 
-The primary paper uses terms including:
+The primary 2004 paper uses terms including:
 
 - `chain`;
 - `head`;
@@ -29,13 +36,23 @@ The primary paper uses terms including:
 - `state machine approach`;
 - `fail-stop`.
 
+The 2010 Hibari implementation report additionally uses concrete implementation vocabulary including:
+
+- write-ahead log / WAL;
+- group commit;
+- `fsync(2)`;
+- write serial number;
+- largest serial number safely flushed to disk.
+
 The following are **project engineering terms**, not quotations from the authors:
 
 - `tail-qualified currentness`;
 - `forwarding obligation`;
 - `role admission`;
 - `in-process suffix retention`;
-- `configuration authority`.
+- `configuration authority`;
+- `local durability frontier`;
+- `composed acknowledgement contract`.
 
 They are used only to expose retention relations across cases.
 
@@ -106,11 +123,41 @@ This is especially important for `technical-retention`:
 
 `Hist` is therefore not evidence that chain replication is intrinsically an append-only history-retention system.
 
+### H/P — Hibari 2010 adds a local WAL/flush frontier beneath protocol completion
+
+Scott Lystig Fritchie's 2010 Hibari implementation report gives a concrete stable-storage policy that the abstract 2004 protocol did not specify. Hibari uses a write-ahead log and group commit; the shared WAL process reports to each logical brick the **largest serial number safely flushed to disk**. The brick may then propagate that safe prefix downstream.
+
+The implementation therefore distinguishes:
+
+```text
+update known locally
+    != WAL I/O requested
+    != WAL flush completed
+    != safe-serial frontier learned
+    != downstream propagation completed
+    != tail-qualified completion
+```
+
+The same report records early bugs in which WAL writes occurred out of order, `fsync(2)` completion was associated with the wrong serial number, or replay messages went downstream in the wrong order; it says many of these bugs caused data loss. The bookkeeping relation between serial order and local safe-flush progress is therefore historically witnessed as correctness-critical, not merely diagnostic metadata.
+
+### H/P — Hibari's durability is a configurable implementation policy, not a chain-replication theorem
+
+First-party Hibari documentation later exposes weaker modes. `fsync()` may be disabled for asynchronous writes at the cost of possible crash/power-failure data loss, and logging may be disabled for non-durable updates at the cost of data loss if all chain nodes crash.
+
+So retain the boundary:
+
+```text
+chain replication
+    != mandatory local fsync policy
+```
+
+Hibari's durable default composes a local persistence contract with chain ordering; it does not prove that every chain-replicated system has the same lower-layer durability semantics.
+
 ---
 
 ## Retained state
 
-At least six state classes should remain distinct.
+At least seven state classes should remain distinct.
 
 ### 1. Object payload / current replica state
 
@@ -136,11 +183,15 @@ Which replicas are head, middle, tail, predecessor, and successor determines whe
 
 During internal failure repair or chain extension, sequence progress and transferred state determine whether a surviving/new replica can safely take its new place in the chain.
 
+### 7. Implementation-specific local persistence progress
+
+In Hibari's 2010 WAL design, a brick needs to know how far its ordered write stream has crossed the intended local stable-storage boundary. The reported largest safely flushed serial is not payload and is not tail completion; it is a local progress relation that controls downstream eligibility.
+
 ---
 
 ## Maintenance and transition
 
-### Normal update path
+### Normal update path — abstract 2004 protocol
 
 ```text
 client update
@@ -154,6 +205,21 @@ client update
 ```
 
 The payload and the temporary forwarding obligation have different lifetimes.
+
+### Normal update path — Hibari 2010 durable-default deepening
+
+The implementation report adds a lower-layer gate at each brick:
+
+```text
+ordered update at brick
+    -> local WAL work
+    -> group-commit / fsync completion
+    -> largest safely flushed serial advances
+    -> safe prefix may propagate downstream
+    -> eventual tail/client acknowledgement
+```
+
+This is a composed implementation path, not a retroactive definition of the abstract protocol.
 
 ### Internal-server failure
 
@@ -190,17 +256,19 @@ Queries are directed to the tail in the strong-consistency protocol. The tail is
 
 ### Write
 
-Updates enter through the head and propagate serially to the tail. Upstream processing does not by itself produce the client-view completed state.
+Updates enter through the head and propagate serially to the tail. Upstream processing does not by itself produce the client-view completed state. In the bounded Hibari default, local persistence progress also qualifies which ordered prefix is eligible to proceed downstream.
 
 ### Recovery
 
-Recovery from an internal replica failure uses retained `Sent` state plus successor progress evidence to close the missing suffix before the new chain edge handles later work normally.
+Recovery from an internal replica failure uses retained `Sent` state plus successor progress evidence to close the missing suffix before the new chain edge handles later work normally. Hibari's implementation report further shows that repair/re-sync must coexist with local write/sync latency and ordered replay; copied bytes alone are not a sufficient description of repair completion.
 
 ### Forgetting
 
 An acknowledged request can be removed from `Sent_i` because the protocol has learned that the tail processed it. This is **forgetting a forwarding obligation**, not erasing the object update itself.
 
-Likewise, removing a failed server from the chain changes membership/current role; it is not evidence that bytes formerly stored by that server have been sanitized.
+Likewise, moving a local safe-serial frontier forward summarizes a prefix that has crossed one implementation-defined persistence boundary; it is not deletion of those WAL records, secure erasure, or proof of client knowledge.
+
+Removing a failed server from the chain changes membership/current role; it is not evidence that bytes formerly stored by that server have been sanitized.
 
 ---
 
@@ -230,17 +298,39 @@ A new predecessor/successor relation is admitted only after the possible gap bet
 
 A new tail needs enough object state, the concurrent delta closure, and a configuration transition before it may serve the tail role.
 
+### E — local persistence and chain completion are orthogonal frontiers
+
+Hibari's largest safely flushed serial qualifies a prefix at one brick. Tail processing/acknowledgement qualifies service progress through the chain. A single word such as “committed” should not be allowed to hide this distinction.
+
+```text
+per-brick safe serial
+    != tail-qualified completion
+    != client receipt of success
+```
+
+### E — stronger acknowledgement meaning arises by composition
+
+The abstract protocol gives tail completion an ordering/currentness role. Hibari's durable default additionally gates progress on local WAL flush. The stronger practical acknowledgement contract comes from composing those layers; it is not intrinsic to chain replication as a protocol family.
+
+### E — group commit makes completion evidence prefix-shaped
+
+One `fsync(2)` can qualify multiple ordered writes. The system therefore retains a frontier such as “largest safe serial” rather than requiring an independent flush event per operation. This compact representation is safe only if serial order, WAL order, and flush-completion attribution remain aligned.
+
+### E — false progress evidence can be worse than missing progress evidence
+
+A missing safe-serial notification can stall useful work. A falsely advanced serial can authorize propagation based on an update that has not crossed the intended local durability boundary. The reported early Hibari wrong-serial/out-of-order bugs and associated data loss provide a concrete historical witness for this control-state hazard.
+
 ---
 
 ## Functional comparisons — not genealogy
 
 ### A — Case 56, Kafka high watermark
 
-Both cases distinguish bytes/updates that exist on replicas from a stronger frontier that ordinary clients may treat as committed/current. Kafka's high watermark is an offset frontier derived from ISR progress; chain replication uses tail processing and role ordering. Similarity of function is not protocol descent.
+Both cases distinguish bytes/updates that exist on replicas from a stronger frontier that ordinary clients may treat as committed/current. Kafka's high watermark is an offset frontier derived from ISR progress; chain replication uses tail processing and role ordering. Hibari additionally exposes a per-brick safe-flush serial. Similar frontier shape does not imply identical authority or protocol descent.
 
 ### A — Case 05, RADOS repair
 
-Both systems retain control relations that qualify which replicas count for current service and repair. RADOS uses placement/version/peering relations rather than one fixed head-to-tail order. This is a mechanism comparison, not genealogy.
+Both systems retain control relations that qualify which replicas count for current service and repair. RADOS uses placement/version/peering relations rather than one fixed head-to-tail order. The EBOFS persistence deepening also shows a distinct application/journal/checkpoint chain; functional similarity to Hibari's WAL frontier is not genealogy.
 
 ### A — Case 23, Dynamo divergent versions
 
@@ -249,6 +339,10 @@ Dynamo deliberately allows concurrent causally unrelated versions to remain admi
 ### A — Cases 79–80, HDFS re-observation and decommission
 
 HDFS startup SafeMode re-observes replica inventory, and DataNode decommission safely withdraws a still-existing embodiment after preservation work. Chain replication's bounded failure path instead repairs an ordered in-flight suffix and reassigns head/tail topology. All three retain control evidence around changing replica populations, but their objects, triggers, and authority rules differ.
+
+### A — Case 152, SQLite WAL
+
+Both SQLite WAL and Hibari separate working updates, retained log evidence, and later completion boundaries. SQLite's transaction/checkpoint authority and Hibari's per-brick flush/chain-propagation authority are different. The comparison is structural only.
 
 ---
 
@@ -262,6 +356,10 @@ The technically grounded point is narrower than a general philosophy of memory:
 
 When `ack(r)` arrives, forgetting that obligation is successful completion rather than failure of memory. This can discipline later discussions of technical forgetting, but `Sent_i` is not thereby a cultural archive, a Stieglerian tertiary retention, or Heideggerian `Bestand`.
 
+### I — “completion” is layer-relative
+
+Hibari sharpens the same discipline: ordering, local log persistence, downstream propagation, tail processing, and client knowledge are separately nameable transitions. Philosophical interpretation should not begin by collapsing them into one undifferentiated event called “the write exists.”
+
 ---
 
 ## Counterexamples and limits
@@ -271,32 +369,52 @@ When `ack(r)` arrives, forgetting that obligation is successful completion rathe
 - Chain replication does not gracefully provide the same guarantees through arbitrary network partitioning; partition-tolerant protocols are outside this bounded case.
 - `Hist_objID` and `Pending_objID` are specification/proof constructs. The paper explicitly warns that an implementation can store the current object value instead of complete update history.
 - `Sent_i` is not a write-ahead log, an application audit trail, or proof of stable-media persistence.
-- A tail acknowledgement proves the protocol event described by the paper; it is not generalized into an end-to-end fsync/media-durability guarantee below each storage server.
+- A tail acknowledgement in the **abstract 2004 protocol** proves the protocol event described by the paper; it is not generalized into an end-to-end fsync/media-durability guarantee below each storage server.
+- Hibari's 2010 durable-default policy is implementation-specific. First-party documentation exposes asynchronous/non-durable modes, so local `fsync` cannot be treated as a chain-replication theorem.
+- Hibari's use of `fsync(2)` states the software persistence boundary used by the implementation report; it is not independent proof about every disk cache, RAID controller, filesystem, firmware, or power-loss behavior beneath that interface.
+- One group-commit `fsync` may qualify multiple writes; one physical/logical flush event is not one-to-one with one chain operation.
 - Adding a new tail proves a protocol state-transfer/catch-up relation, not physical secure deletion of any old replica.
-- The simulation/prototype performance results do not establish production deployment or universal performance superiority.
-- No invention-priority claim is made for primary/backup, state-machine replication, acknowledgements, or replicated storage.
+- The 2004 simulation/prototype performance results do not establish production deployment or universal performance superiority.
+- The 2010 Hibari report documents implementation/production experience but is not evidence that all deployments used identical configuration or hardware.
+- No invention-priority claim is made for primary/backup, state-machine replication, acknowledgements, WAL, group commit, `fsync`, or replicated storage.
 
 ---
 
 ## Prior-art boundary
 
-The paper itself supplies the key restraint. It explicitly describes chain replication as **a form of primary/backup**, and primary/backup as **an instance of the state-machine approach**. Its references include earlier primary/backup and state-machine work.
+The 2004 paper itself supplies the key restraint. It explicitly describes chain replication as **a form of primary/backup**, and primary/backup as **an instance of the state-machine approach**. Its references include earlier primary/backup and state-machine work.
 
 The defensible historical statement is therefore narrow:
 
-> **In the 2004 OSDI paper, van Renesse and Schneider specified a fail-stop chain-replication protocol in which the tail defines the client-view completed history, per-server `Sent` lists retain not-yet-tail-confirmed forwarded updates, backward acknowledgements retire that in-process state, and failure/extension protocols preserve the chain invariants before new roles become authoritative.**
+> **In the 2004 OSDI paper, van Renesse and Schneider specified a fail-stop chain-replication protocol in which the tail defines the client-view completed history, per-server `Sent` lists retain not-yet-tail-confirmed forwarded updates, backward acknowledgements retire that in-process state, and failure/extension protocols preserve the chain invariants before new roles become authoritative. By 2010, Fritchie's Hibari implementation report documented one concrete composition of that protocol with local WAL/group-commit persistence, using ordered serial numbers to represent a per-brick safe-flush frontier before downstream propagation.**
 
-This case does **not** claim that the paper invented replicated storage, primary/backup, state-machine replication, acknowledgement-based completion, or online state transfer.
+This case does **not** claim that either work invented replicated storage, primary/backup, state-machine replication, acknowledgement-based completion, online state transfer, write-ahead logging, group commit, or stable-storage interfaces.
 
 ---
 
 ## Evidence status
 
-**Status: `grounded`.**
+**Status: `grounded`. No maturity change in this deepening.**
 
-Grounded in the original OSDI 2004 paper's HTML full text plus the USENIX proceedings metadata. The mechanism claims above are drawn from the paper's storage-service specification, normal protocol, failure handling, chain extension, primary/backup comparison, and implementation note.
+The original mechanism remains grounded in the OSDI 2004 primary paper and USENIX proceedings metadata. The new implementation-specific lower layer is grounded in Scott Lystig Fritchie's 2010 Erlang Workshop implementation report and author slides, plus first-party Hibari operator/contributor documentation.
 
-A search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated Chain Replication / van Renesse–Schneider case at the time of this slice. A broader replication history should be developed there rather than duplicated here.
+The follow-on closes the previous evidence-debt item “production implementations such as Hibari and their product-specific stable-storage contracts” **for the bounded 2010 durable-default / safe-serial question only**. It does not close source-revision archaeology, hardware-level persistence validation, Admin-Server durability, or all optional-mode semantics.
+
+A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for both `Hibari` and `Chain Replication` found no dedicated packet in this run. Broader replication genealogy, Hibari/Gemini product history, carrier deployments, CRAQ/Hibari influence relations, and storage-stack history below `fsync(2)` belong there rather than being duplicated here.
+
+---
+
+## Remaining evidence debt
+
+Useful future slices, none required for the current `grounded` status:
+
+- exact master/Admin-Server configuration-state durability and network-partition behavior;
+- exact 2010 Hibari source revision corresponding to the paper and a source-level brick ↔ shared-WAL message reconstruction;
+- crash/fault-injection validation of safe-serial propagation, suffix repair, and tail extension;
+- exact semantics of asynchronous/non-durable Hibari modes across releases;
+- filesystem/RAID/controller/device persistence beneath the documented `fsync(2)` boundary;
+- later CRAQ / chain-replication descendants and read scaling;
+- broader production/deployment genealogy, which should be routed through `computing-archaeology`.
 
 ---
 
@@ -304,4 +422,8 @@ A search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computi
 
 - Robbert van Renesse and Fred B. Schneider, “Chain Replication for Supporting High Throughput and Availability,” *6th Symposium on Operating Systems Design & Implementation (OSDI 04)*, USENIX Association, December 2004, pp. 91–104. USENIX record: <https://www.usenix.org/conference/osdi-04/chain-replication-supporting-high-throughput-and-availability>.
 - Full HTML of the OSDI 2004 paper: <https://www.usenix.org/legacy/events/osdi04/tech/full_papers/renesse/renesse_html/>.
+- Scott Lystig Fritchie, “Chain Replication in Theory and in Practice,” *Proceedings of the 9th ACM SIGPLAN Workshop on Erlang*, September 30, 2010, pp. 33–44, DOI `10.1145/1863509.1863515`. Proceedings facsimile: <https://www.erlang-solutions.com/wp-content/uploads/2024/05/Erlang_10-Workshop.pdf>.
+- Fritchie, author slides for the Erlang 2010 paper: <https://www.snookles.com/scott/presentations/erlang2010-slf-slides.pdf>.
+- Hibari first-party documentation, “Hibari's Main Features in Broad Detail”: <https://hibari.readthedocs.io/en/latest/admin-guide/main-features.html>.
+- Hibari documentation repository: <https://github.com/hibari/hibari-doc>.
 - Robbert van Renesse, author page, retrospective Chain Replication note: <https://www.cs.cornell.edu/people/rvr/>.
