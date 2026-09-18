@@ -2,10 +2,11 @@
 
 ## Status
 
-**`grounded`** — bounded to publicly documented LSI MegaRAID / Dell PERC rebuild-rate and maintenance-continuation semantics. This case does not claim a general history of RAID rebuild scheduling, exact controller bandwidth allocation, or failure-probability measurements.
+**`grounded`** — bounded to publicly documented MegaRAID / LSI / Dell PERC rebuild-rate and maintenance-continuation semantics. This case does not claim a general history of RAID rebuild scheduling, exact controller bandwidth allocation, or failure-probability measurements.
 
 Grounding records:
 
+- [`../evidence/136-megaraid-2000-2002-rebuild-policy-prior-art-deepening.md`](../evidence/136-megaraid-2000-2002-rebuild-policy-prior-art-deepening.md) — pre-2006 documentation floor for rebuild priority, restart-continuation policy, and policy lifetime across configuration clear;
 - [`../evidence/136-lsi-2006-dell-perc-rebuild-rate-grounding.md`](../evidence/136-lsi-2006-dell-perc-rebuild-rate-grounding.md) — rebuild-rate / maintenance-policy semantics;
 - [`../evidence/136-lsi-2006-flexraid-powerfail-maintenance-continuation-deepening.md`](../evidence/136-lsi-2006-flexraid-powerfail-maintenance-continuation-deepening.md) — named `FlexRAID PowerFail` cross-restart continuation policy for reconstruction, rebuild, and consistency-check work;
 - [`../evidence/136-dell-2013-2018-perc-puncture-source-readability-deepening.md`](../evidence/136-dell-2013-2018-perc-puncture-source-readability-deepening.md) — surviving-source unreadability, rebuild-with-errors, and RAID-puncture boundary.
@@ -16,7 +17,7 @@ Case 17 already establishes RAID reconstruction as the work that recreates a fai
 
 > Once repair is possible, what retained controller policy determines how aggressively the system spends service capacity on rebuilding, and what retained control relation lets selected maintenance work continue after interruption?
 
-The bounded LSI/Dell record exposes a `rebuild rate` control whose semantics are priority/resource allocation rather than a direct promise of wall-clock throughput. It also exposes two especially useful lifetime boundaries: the controller can re-enter selected maintenance work after system restart through the named `FlexRAID PowerFail` policy, while the configured rebuild rate is documented as unaffected by clearing the array configuration.
+The bounded MegaRAID/LSI/Dell record exposes a `rebuild rate` control whose semantics are priority/resource allocation rather than a direct promise of wall-clock throughput. It also exposes two especially useful lifetime boundaries: the controller can re-enter selected maintenance work after system restart through the named `FlexRAID PowerFail` policy, while the configured rebuild rate is documented as unaffected by clearing the array configuration.
 
 This case is **not**:
 
@@ -30,7 +31,47 @@ This case is **not**:
 
 ## Historical record
 
-### March 2006 — LSI MegaRAID exposes rebuild as user-scheduled background repair
+### April 2000 — MegaRAID documentation already exposes user-defined rebuild priority
+
+The preliminary *MegaRAID Express 500 Hardware Guide*, MAN-475 dated 14 April 2000, describes automatic rebuild with **user-definable rebuild rates**. It defines rebuild rate as the fraction of compute cycles devoted to rebuilding failed drives:
+
+- `0%` means rebuilding occurs only while the system is otherwise idle;
+- `100%` gives rebuilding higher priority than other system activity.
+
+The guide also says a rebuild is restarted if the system goes down during rebuild.
+
+Because the surviving guide is explicitly marked `Preliminary Draft`, it is evidence of published manufacturer documentation/design state, not by itself proof of a particular shipping-firmware behavior on that date.
+
+### July 2000 — priority, continuation, and configuration lifetime are already separate management relations
+
+The *MegaRAID RAID Controller Configuration Software Guide*, MAN-MR-GENSW dated 20 July 2000, exposes `Rebuild Rate` and `FlexRAID PowerFail` as separate adapter properties. Its Power Console Plus description treats rebuild rate as the amount of system resources devoted to failed-drive rebuild; a higher setting leaves fewer resources for ordinary RAID operations. The same guide describes `FlexRAID PowerFail` as allowing drive reconstruction to continue when the system restarts after a power failure.
+
+Operational guidance in the same document says that rebuild rate **is not affected when configuration is cleared**.
+
+This pushes three Case 136 relations earlier than the former 2006 documentation floor:
+
+```text
+while maintenance runs:
+    Rebuild Rate -> how aggressively maintenance competes for resources
+
+after interruption:
+    FlexRAID PowerFail -> whether documented reconstruction continues after restart
+
+across configuration retirement:
+    clear array configuration -/-> rebuild-rate policy necessarily cleared
+```
+
+The manual does not disclose the exact physical storage of either property or the exact rebuild-progress representation.
+
+See [`136-megaraid-2000-2002-rebuild-policy-prior-art-deepening.md`](../evidence/136-megaraid-2000-2002-rebuild-policy-prior-art-deepening.md).
+
+### August 2002 — LSI SCSI 320-1 preserves the same broad rebuild-rate semantics
+
+LSI Logic's *MegaRAID SCSI 320-1 Hardware Guide*, MAN-520 dated 16 August 2002 and marked `Initial release`, independently documents user-definable rebuild rates, the same `0%` idle-only / `100%` higher-priority endpoints, and `User-specified rebuild rate: Yes` among controller features.
+
+This strengthens the historical claim from a single preliminary 2000 document to a repeated MegaRAID operator concept before 2006. It does **not** prove the same scheduler implementation, firmware code, persistence field, or uninterrupted product genealogy.
+
+### March 2006 — LSI MegaRAID preserves rebuild as user-scheduled background repair
 
 LSI Logic's `MegaRAID Configuration Software User's Guide`, Version 2.0, document DB15-000269-01 (March 2006), describes automatic hot-spare rebuilds at **user-defined rebuild rates**. It states that if a system goes down during a rebuild, the controller automatically restarts the rebuild after reboot.
 
@@ -41,43 +82,33 @@ The same guide defines `Rebuild Rate` as the percentage of **compute cycles** de
 - LSI recommends avoiding both extremes;
 - the default is `30%`.
 
-This is a primary manufacturer floor for an explicit, host-configurable repair-priority control in this MegaRAID software generation. It is not invention priority for RAID rebuild throttling in general.
+This remains a strong later manufacturer witness, but it is no longer the earliest directly checked documentation floor for the operator-visible repair-priority concept in this case.
 
-### March 2006 — `FlexRAID PowerFail` makes restart continuation a separately represented controller policy
+### March 2006 — `FlexRAID PowerFail` broadens the documented restart classes
 
 The same manual's BIOS Configuration Utility lists a named `FlexRAID PowerFail` option that allows drive reconstruction to continue when the system restarts after a power failure. The WebBIOS Adapter Properties table is broader: it says the feature allows **drive reconstruction, rebuild, or check consistency** to continue after a **power failure, reset, or hard boot**, and documents the default as `Enabled`.
 
-This adds a second controller-policy axis beside `Rebuild Rate`:
-
-```text
-while maintenance runs:
-    Rebuild Rate -> how aggressively maintenance competes for resources
-
-after interruption:
-    FlexRAID PowerFail -> whether the documented maintenance regime continues after restart
-```
-
-The historical source therefore supports:
+This supports:
 
 > **maintenance priority != cross-restart maintenance continuation.**
 
 It also supports a bounded terminology warning:
 
-> **`PowerFail` product label != power-removal-only interruption semantics**, because the WebBIOS description explicitly includes reset and hard boot.
+> **`PowerFail` product label != power-removal-only interruption semantics**, because the 2006 WebBIOS description explicitly includes reset and hard boot.
 
-The manual does **not** disclose whether reconstruction resumes at the exact previous stripe/LBA, how much work can be replayed, or where the relevant progress representation is physically retained. The new source-level deepening is therefore about **maintenance-task continuity**, not an inferred exact-progress checkpoint.
+The manual does **not** disclose whether reconstruction resumes at the exact previous stripe/LBA, how much work can be replayed, or where the relevant progress representation is physically retained. The source-level deepening is therefore about **maintenance-task continuity**, not an inferred exact-progress checkpoint.
 
 See [`136-lsi-2006-flexraid-powerfail-maintenance-continuation-deepening.md`](../evidence/136-lsi-2006-flexraid-powerfail-maintenance-continuation-deepening.md).
 
 ### The maintenance policy has a different lifetime from array configuration
 
-The same 2006 guide later instructs operators to check each adapter's rebuild rate and states that the rebuild rate **is not affected when configuration is cleared**. Nearby text separately says array configuration is saved to controller NVRAM and to disks in the array.
+Both the July 2000 configuration guide and the March 2006 guide instruct operators to check each adapter's rebuild rate and state that the rebuild rate **is not affected when configuration is cleared**. The 2006 guide separately says array configuration is saved to controller NVRAM and to disks in the array.
 
 The safe conclusion is relational, not a hidden-implementation claim:
 
 > **rebuild-rate policy lifetime != array-configuration lifetime in this documented management regime.**
 
-The guide does not identify the exact physical field that preserves the rate, so this case does not infer a specific NVRAM layout.
+The inspected guides do not identify the exact physical field that preserves the rate, so this case does not infer a specific NVRAM layout.
 
 ### One rate control can govern more than one maintenance task
 
@@ -91,7 +122,7 @@ Dell OpenManage Storage Management documentation describes the rebuild rate as a
 
 Dell's PERC 9 guide adds a controller-specific scheduling detail: above `30%`, PERC modifies command allocation to prioritize rebuild operations when application I/O is consistent in the disk group.
 
-Together these later product documents support a bounded continuity of the operational concept: the configured number expresses a controller scheduling/priority policy, not a literal guaranteed rebuild bandwidth.
+Together these product documents support a bounded continuity of the operational concept: the configured number expresses a controller scheduling/priority policy, not a literal guaranteed rebuild bandwidth.
 
 ## Retained states and relations
 
@@ -119,7 +150,7 @@ This extends Case 17's degraded/repaired distinction by adding a scheduler state
 
 ### 0% priority != rebuild disabled
 
-Dell explicitly states that a rebuild rate of 0% does not stop or pause the rebuild. LSI's earlier wording says work proceeds when the system is otherwise idle.
+The 2000 and 2002 MegaRAID hardware guides explicitly describe 0% as idle-only rebuild; later Dell documentation likewise says 0% does not stop or pause the rebuild.
 
 > **lowest maintenance priority != absence of maintenance obligation.**
 
@@ -127,7 +158,7 @@ A system can retain an owed repair while making its execution opportunistic.
 
 ### Nominal percentage != linear throughput guarantee
 
-LSI defines the value in compute-cycle/priority terms; Dell describes system-resource allocation, and PERC 9 can change command-allocation strategy above 30% under a stated workload condition.
+Early MegaRAID manuals define the value in compute-cycle/resource-priority terms; Dell describes system-resource allocation, and PERC 9 can change command-allocation strategy above 30% under a stated workload condition.
 
 Therefore:
 
@@ -137,9 +168,9 @@ The control is a scheduling policy exposed as a percentage. Its observed through
 
 ### Cross-restart continuation policy != exact progress checkpoint
 
-LSI's generic rebuild description says the controller automatically restarts rebuilding after a system reboot. More specifically, the same 2006 manual exposes `FlexRAID PowerFail`: in WebBIOS it allows reconstruction, rebuild, or check consistency to continue after power failure, reset, or hard boot.
+MegaRAID documentation says the controller restarts or continues reconstruction after documented restart conditions. The 2000 and 2006 configuration guides expose `FlexRAID PowerFail` as a distinct continuation control.
 
-This demonstrates continuity of the **maintenance obligation / task regime** across the documented interruption classes and makes that continuity an explicit controller policy.
+This demonstrates continuity of the **maintenance obligation / task regime** across the documented interruption classes.
 
 It still does not tell us whether the controller resumes from an exact stripe offset, reconstructs a bitmap, stores only a coarse percentage/frontier, or repeats some prior work.
 
@@ -149,11 +180,11 @@ and:
 
 > **restart continuation != exactly-once maintenance execution.**
 
-A named cross-restart policy is stronger evidence than the earlier bare verb `restarts`, but it is not a license to invent an undocumented checkpoint representation.
+A named cross-restart policy is stronger evidence than a bare verb such as `restarts`, but it is not a license to invent an undocumented checkpoint representation.
 
 ### Rebuild priority != restart continuity
 
-`Rebuild Rate` and `FlexRAID PowerFail` appear as separate adapter properties in the 2006 management interface.
+`Rebuild Rate` and `FlexRAID PowerFail` appear as separate adapter properties in the July 2000 management guide and remain separately represented in later MegaRAID documentation.
 
 They answer different questions:
 
@@ -166,19 +197,19 @@ Therefore:
 
 ### Shared continuation policy != identical maintenance semantics
 
-The WebBIOS description spans reconstruction, rebuild, and check consistency. That shared continuation feature does not make those maintenance operations identical.
+The 2006 WebBIOS description spans reconstruction, rebuild, and check consistency. That shared continuation feature does not make those maintenance operations identical.
 
 > **one continuation policy can govern multiple task classes without collapsing verification and reconstruction into one mechanism.**
 
 ### Array configuration clear != rebuild-rate reset
 
-The 2006 management guide says clearing configuration does not affect rebuild rate.
+The July 2000 and March 2006 management guides say clearing configuration does not affect rebuild rate.
 
 > **configuration retirement != maintenance-policy retirement.**
 
 This is a particularly useful retention boundary: a controller-level policy can outlive the logical storage configuration to which a particular rebuild episode belonged.
 
-The inspected source does not establish the corresponding clear/default lifetime of `FlexRAID PowerFail`, so the persistence horizons of those two controller properties must not be assumed identical.
+The inspected sources do not establish the corresponding clear/default lifetime of `FlexRAID PowerFail`, so the persistence horizons of those two controller properties must not be assumed identical.
 
 ### Policy update != immediate effect on every active maintenance operation
 
@@ -187,6 +218,14 @@ For background initialization, the 2006 guide says changing rebuild rate does no
 > **stored policy value != necessarily current task's already-admitted scheduling regime.**
 
 This claim is limited to the documented background-initialization path. The source does not establish identical latch/update semantics for an in-flight rebuild.
+
+### Same label across generations != same hidden implementation
+
+The 2000 Express 500, 2002 SCSI 320-1, 2006 MegaRAID, and later Dell/PERC materials expose closely related operator concepts. That supports a documentation-level continuity of rebuild-priority semantics.
+
+It does not prove a single scheduler implementation, one firmware lineage, one persistent field, or identical percentage accounting across those generations.
+
+> **interface-semantic continuity != demonstrated implementation identity.**
 
 ### Surviving-source readability can limit reconstruction even while rebuild continues
 
@@ -237,7 +276,7 @@ The comparison is direct within RAID, but Case 136 does not rewrite the historic
 
 ### Case 83 — HDFS BlockScanner cursor checkpointing
 
-Case 83 exposes a maintenance traversal with a concrete saved cursor and a fallback to a fresh iterator if that cursor cannot be loaded. The 2006 MegaRAID source instead exposes the **policy and behavior of task continuation** but not the exact progress representation.
+Case 83 exposes a maintenance traversal with a concrete saved cursor and a fallback to a fresh iterator if that cursor cannot be loaded. The MegaRAID sources instead expose the **policy and behavior of task continuation** but not the exact progress representation.
 
 > **explicit maintenance continuation != disclosed maintenance-progress checkpoint format.**
 
@@ -265,37 +304,40 @@ Case 94's RAID 6 P/Q example is a counterexample to universalizing Dell's RAID 5
 
 ### Case 131 — PERC foreign configuration
 
-Case 131 asks whether topology/configuration can survive controller replacement and become admissible again. Case 136 shows the inverse-looking but separate boundary that one controller maintenance-policy value can survive a **configuration clear** in the bounded 2006 management interface.
+Case 131 asks whether topology/configuration can survive controller replacement and become admissible again. Case 136 shows the inverse-looking but separate boundary that one controller maintenance-policy value can survive a **configuration clear** in the bounded 2000 and 2006 MegaRAID management interfaces.
 
 > **topology retention != maintenance-policy retention.**
 
-This is a functional comparison, not evidence that later PERC uses the same internal storage layout as 2006 MegaRAID.
+This is a functional comparison, not evidence that later PERC uses the same internal storage layout as an early MegaRAID controller.
 
 ## Failure and forgetting boundaries
 
 A rebuild-capable array can still spend a long time degraded if repair is assigned low priority under sustained foreground work. Conversely, a high rebuild priority can reduce service headroom. The exposed control therefore changes the temporal competition between `continue serving now` and `restore redundancy sooner`.
 
-The `FlexRAID PowerFail` deepening adds a different failure boundary: system power failure/reset/hard boot need not end the maintenance obligation. The controller can retain enough relation to continue documented maintenance after restart. But the source does not prove that exact micro-progress, every intermediate read result, or every prior reconstructed stripe is represented as a durable checkpoint.
+The `FlexRAID PowerFail` evidence adds a different failure boundary: the documented restart event need not end the maintenance obligation. The controller can retain enough relation to continue documented maintenance after restart. But the sources do not prove that exact micro-progress, every intermediate read result, or every prior reconstructed stripe is represented as a durable checkpoint.
 
 The case therefore provides three negative controls:
 
 - losing/clearing array configuration does not necessarily erase every controller policy setting;
 - cross-restart maintenance continuity does not prove preservation of exact prior rebuild progress;
-- default-enabled continuation policy does not erase the distinction between policy state and maintenance execution.
+- a continuation policy does not erase the distinction between policy state and maintenance execution.
 
 None of these claims implies anything about secure erasure of old member contents.
 
 ## Prior art and anti-anachronism
 
-The safe historical claim is narrow:
+The safe historical claim is now narrower and earlier:
 
-- by March 2006, LSI's MegaRAID management documentation publicly exposed a configurable `Rebuild Rate` with explicit priority/compute-cycle semantics and a 30% default;
-- the same manual exposed a named `FlexRAID PowerFail` property for continuing reconstruction/rebuild/check-consistency work across documented restart classes, default-enabled in the inspected WebBIOS table.
+- by 14 April 2000, a preliminary MegaRAID Express 500 hardware guide publicly described user-definable rebuild rates with explicit idle-only / high-priority endpoints;
+- by 20 July 2000, MegaRAID configuration-software documentation exposed `Rebuild Rate` and `FlexRAID PowerFail` as separate adapter properties and stated that clearing configuration did not affect rebuild rate;
+- by 16 August 2002, an LSI Logic SCSI 320-1 initial-release guide independently preserved the same broad 0%–100% rebuild-priority semantics;
+- by March 2006, LSI documentation additionally gives the 30% default and broader WebBIOS continuation wording used elsewhere in this case.
 
 This does **not** establish:
 
 - the first RAID implementation of throttled rebuild;
 - the first use of the phrase `rebuild rate`;
+- that the feature already existed in every pre-2000 revision listed in the 2000 software guide's revision history;
 - invention priority for cross-restart RAID maintenance or rebuild checkpoints;
 - genealogy from an earlier controller family to every later PERC generation;
 - a universal 30% industry norm.
@@ -310,20 +352,20 @@ A cautious formulation is:
 
 > technical continuation can depend on retained scheduling and continuation preferences that govern how damaged or unchecked redundancy relations are reconstituted across time and interruption.
 
-That is an engineering-derived interpretation. It is not LSI/Dell historical vocabulary, and it does not make every scheduler or restart parameter a `memory` in a philosophical sense.
+That is an engineering-derived interpretation. It is not MegaRAID/LSI/Dell historical vocabulary, and it does not make every scheduler or restart parameter a `memory` in a philosophical sense.
 
 ## Related-repository check
 
-Fresh searches of `tmzncty/computing-archaeology` for `MegaRAID`, `FlexRAID PowerFail`, and `rebuild rate` returned no dedicated overlapping study during this round.
+Fresh searches of `tmzncty/computing-archaeology` for exact early-source terms including `MegaRAID SCSI 320-1` and `MAN-MR-GENSW FlexRAID PowerFail` returned no dedicated overlapping study during this round.
 
 Division of labor:
 
 - `technical-retention`: rebuild priority as retained maintenance policy; interruption-continuation policy; policy/progress/configuration separation; cross-case retention comparison;
-- `computing-archaeology`: broader RAID-controller genealogy, exact firmware algorithms, controller generations, progress-checkpoint representation, benchmarks, and device-level reconstruction history.
+- `computing-archaeology`: broader MegaRAID/RAID-controller genealogy, ownership/product evolution, exact firmware algorithms, controller generations, progress-checkpoint representation, benchmarks, and device-level reconstruction history.
 
 ## Open evidence debt
 
-- earlier pre-2006 rebuild-throttling and cross-restart maintenance terminology/implementations;
+- pre-2000 direct product/manual evidence and cross-vendor rebuild-priority controls;
 - exact persistence location and reset/default semantics of rebuild-rate and `FlexRAID PowerFail` policy on named controllers;
 - whether in-flight rebuild resumes from an exact progress checkpoint or replays a bounded region after power loss;
 - controller-generation-specific telemetry and persistence mechanism for punctured/error locations;
