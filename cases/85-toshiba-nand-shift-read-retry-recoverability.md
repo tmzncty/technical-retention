@@ -8,6 +8,8 @@ Vendor parameter-state deepening: [`../evidence/85-linux-2014-2017-vendor-read-r
 
 Micron vendor mode-lifetime / power-boundary deepening: [`../evidence/85-micron-2015-read-retry-mode-power-boundary-deepening.md`](../evidence/85-micron-2015-read-retry-mode-power-boundary-deepening.md)
 
+Micron reset-class / Hard Reset boundary deepening: [`../evidence/85-micron-2018-2020-read-retry-reset-class-boundary-deepening.md`](../evidence/85-micron-2018-2020-read-retry-reset-class-boundary-deepening.md)
+
 ## Scope
 
 This case asks a narrow retention question:
@@ -27,7 +29,7 @@ This is **not**:
 - a claim that a successful shifted read has repaired or refreshed the medium;
 - a full history of soft-decision LDPC, read-voltage tracking, or modern NAND calibration.
 
-A broader command genealogy and vendor comparison belong primarily in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology). A repository search performed for this slice found no existing dedicated read-retry/reference-voltage case there, so only the retention-specific mechanism is developed here.
+A broader command genealogy and vendor comparison belong primarily in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology). Repository searches performed for these slices found no existing dedicated read-retry/reference-voltage or `89h` reset-semantics case there, so only the retention-specific mechanism is developed here.
 
 ---
 
@@ -64,7 +66,8 @@ The following are **project engineering-reconstruction terms**, not historical T
 - `read-decision state`;
 - `interpretation margin`;
 - `recoverability frontier`;
-- `reader-side requalification`.
+- `reader-side requalification`;
+- `reset-class persistence horizon`.
 
 They are useful only if their reconstructed status remains explicit.
 
@@ -108,9 +111,11 @@ and
 
 > **user payload state != metadata needed to establish a useful reader state**.
 
-The 2015 Micron L83A family datasheet now sharpens the persistence horizon of the second distinction: the device exposes eight retry options and makes feature `89h` the selected read condition for subsequent reads, but that selection lasts only until the feature is rewritten or the NAND is powered down. Thus `mode persists across commands != mode persists across power`.
+The 2015 Micron L83A family datasheet sharpens the persistence horizon of the second distinction: the device exposes eight retry options and makes feature `89h` the selected read condition for subsequent reads, but that selection lasts only until the feature is rewritten or the NAND is powered down. Thus `mode persists across commands != mode persists across power`.
 
-The detailed implementation record is kept in the linked vendor parameter-state and Micron mode-lifetime deepenings rather than generalized into a universal NAND format.
+A later Micron family with 2018 priority adds a second boundary: ordinary reset examples (`FFh`, `FCh`, `FAh`) may not reset feature `89h`, while `Hard Reset (FDh)` can return it to default; disclosed custom retry scratch state can live in internal SRAM and be cleared by `FDh` or power cycle. This does **not** retroactively establish the exact 2015 L83A `89h` behavior under `FFh`. It establishes that `reset` is too coarse a lifetime label unless the reset class and feature are named.
+
+The detailed implementation record is kept in the linked vendor parameter-state, Micron mode-lifetime, and reset-class deepenings rather than generalized into a universal NAND format.
 
 ---
 
@@ -182,7 +187,7 @@ This evidence is useful as a modern empirical witness, not as proof that every d
 
 ### H/S — Linux 2014–2017 exposes vendor-specific retry state below the generic operation
 
-A 2014 upstream Linux Micron implementation records read-retry capability through a vendor-specific ONFI parameter block and switches the active retry mode through ONFI feature commands at vendor-specific address `89h`; after the retry sequence it returns the device to mode `0`. A 2017 Hynix implementation exposes a different shape: NAND-specific register values may be fixed or obtained from a read-retry OTP area, and the OTP-derived path validates repeated values with majority logic before using them.
+A 2014 upstream Linux Micron implementation records read-retry capability through a vendor-specific ONFI parameter block and switches the active retry mode through ONFI feature commands at vendor-specific address `89h`; after the retry sequence it returns the device to mode `0`. A 2017 Hynix implementation exposes a different shape: NAND-specific register values may be fixed or obtained from a read-retry OTP area, and the OTP-derived path validates repeated values with majority logic before use.
 
 This is historical **software-artifact** evidence rather than a claim that the two commits are first commercial implementations. Its retention-specific result is narrower:
 
@@ -207,6 +212,22 @@ This establishes a specific persistence horizon:
 The datasheet is Rev. A **5/15**, so it is a later vendor-primary witness for the exact L83A/`MT29F32G08CBADA` family. It is not retroactively treated as proof of the exact wording in the datasheet consulted by the 2014 Linux patch author.
 
 See [`85-micron-2015-read-retry-mode-power-boundary-deepening.md`](../evidence/85-micron-2015-read-retry-mode-power-boundary-deepening.md) for the source ledger, reset non-claims, and persistence-horizon comparison.
+
+### H/P — Micron's 2018-priority family makes reset class part of read-retry lifetime
+
+Micron's later `Read retry scratch space` family, priority **2018-01-12**, states in an example that reset commands such as `FFh`, `FCh`, and `FAh` may not reset feature address `89h` P1 data and disable Read Retry. The same disclosure says `Hard Reset (FDh)` can reset `89h` to its default value for a target LUN.
+
+The family also discloses custom retry scratch state loaded into internal SRAM and says custom retry can be reset using `FDh` or a power cycle. This gives a later Micron-primary design witness for a state-lifetime distinction that the 2015 source could not close:
+
+```text
+ordinary reset example
+    !=
+hard-reset retirement boundary
+    !=
+power-cycle boundary
+```
+
+The patent wording is embodiment/design evidence, not a conformance report for every Micron product. It also does **not** prove that the 2015 L83A family preserves `89h` across `FFh`; that exact-family question remains open. See [`85-micron-2018-2020-read-retry-reset-class-boundary-deepening.md`](../evidence/85-micron-2018-2020-read-retry-reset-class-boundary-deepening.md).
 
 ---
 
@@ -289,7 +310,7 @@ This supports a narrower relation than “metadata is fragile”:
 
 A payload may still carry recoverable physical structure while a particular reader has difficulty establishing the vendor-specific calibration relation needed to exploit it. That is an engineering reconstruction from the implementation, not Hynix's historical vocabulary.
 
-### E — command-to-command persistence ≠ cross-power persistence
+### E — command-to-command persistence ≠ cross-power persistence ≠ generic reset semantics
 
 The Micron 2015 vendor contract adds a smaller-grained state lifetime. A retry option selected through `89h` remains the reader condition for subsequent reads, but the stated lifetime ends when the feature is rewritten or the device is powered down.
 
@@ -299,7 +320,19 @@ Therefore:
 
 A device can retain user payload across power while intentionally discarding the particular read-retry option that was active before power loss. Functional continuity is still possible because the supported retry state space can be rediscovered and a useful mode selected again.
 
-This does not establish feature-`89h` behavior across every `RESET (FFh)` event; reset remains a separate source question.
+The later Micron family shows why `reset` must remain a separate axis rather than being silently folded into power loss. In that design record, `FFh/FCh/FAh` may not reset feature `89h`, while `FDh` can. Thus:
+
+```text
+RESET command accepted
+    !=
+all runtime state retired
+    !=
+feature 89h defaulted
+    !=
+power removed
+```
+
+This **partially closes and reframes** the generic reset debt, but it still does not establish the exact L83A feature-`89h` behavior across every `RESET (FFh)` event.
 
 ### E — recoverability frontier can move without payload relocation
 
@@ -347,6 +380,14 @@ A formerly successful shift can become stale as retention age, cycling, temperat
 Vendor-specific retry capability or calibration state can also become an operational dependency. The Hynix Linux implementation's repeated OTP values and majority validation are a concrete example of software treating recovery parameters as state that must itself be established credibly before use.
 
 This failure mode should not be confused with proof that user payload charge has vanished.
+
+### Reset-class mismatch
+
+Software that treats every reset as equivalent can make the opposite mistake: it may assume feature `89h` has returned to default even though a bounded implementation permits the selected retry state to survive an ordinary reset. Conversely, assuming the state survives a stronger reset or power cycle can also be wrong.
+
+The maintenance rule is therefore event-specific:
+
+> **state lifetime must be attached to a named reset/power event, not to the word `reset` alone.**
 
 ### Recovery without renewal
 
@@ -413,7 +454,11 @@ The comparison is functional only:
 
 > **OTP-resident state != one universal OTP semantic role.**
 
-No shared command set, protection semantics, or direct vendor genealogy is inferred.
+The newer reset-class evidence adds a second bounded comparison: volatile/reset-bounded interpretation or access modes can coexist with nonvolatile substrate state. No shared command set, protection semantics, or direct vendor genealogy is inferred.
+
+### Case 38 — current versus saved feature state
+
+[`38-intel-s3700-power-loss-imminent-capacitor-self-test.md`](38-intel-s3700-power-loss-imminent-capacitor-self-test.md) distinguishes current feature state from saved/nonvolatile feature state and keeps reset/power behavior feature-specific. Case 85 now supplies a raw-NAND counterpart: capability, currently selected read-retry state, ordinary-reset survival, hard-reset survival, and cross-power survival are separate questions. This is a functional persistence-horizon comparison only.
 
 ### Case 76 — JEDEC SSD endurance / retention qualification
 
@@ -427,9 +472,10 @@ The following are **functional only**:
 
 - adjusting a radio receiver's tuning to recover a still-present signal;
 - changing an analog comparator threshold to classify a noisy state;
-- changing an OCR threshold/model while leaving the scanned page unchanged.
+- changing an OCR threshold/model while leaving the scanned page unchanged;
+- a receiver whose ordinary reset aborts work while a stronger reset restores a tuning preset to default.
 
-These analogies make the role of interpretation visible, but they establish no historical genealogy and should never substitute for NAND evidence.
+These analogies make the role of interpretation and event-specific state lifetime visible, but they establish no historical genealogy and should never substitute for NAND evidence.
 
 ---
 
@@ -441,11 +487,14 @@ This case supports one limited philosophical proposition:
 
 That does **not** mean that data is immaterial, or that interpretation can rescue any degraded substrate. The physical threshold distributions, sensing electronics, ECC redundancy, and controller policy jointly delimit what can still be recovered.
 
+The newer reset-class evidence adds a second restrained proposition: `reset` is not a metaphysical return to an original state. It is a technically specified retirement of some state relations while others may survive. Continuity and discontinuity are therefore **state-class × event-class relations**, not properties of a device taken as an undifferentiated whole.
+
 The useful contrast is therefore not `matter versus meaning`, but:
 
 - physical state that still carries discriminable structure;
 - an interpretation boundary that may no longer fit it;
 - technical work that changes the boundary;
+- a specified event that may retire one interpretation state without erasing the substrate;
 - a later decision about whether the representation itself must be renewed.
 
 A successful retry demonstrates retained operational recoverability under a new read condition. It does not prove metaphysical identity, pristine media, archival permanence, or unlimited reversibility.
@@ -461,6 +510,7 @@ Safe claims:
 - by **2014**, upstream Linux Micron support exposed a vendor-specific retry-mode count and vendor-specific feature address `89h` behind a generic NAND retry interface;
 - by **2015**, a Micron-authored datasheet for the L83A 32Gb MLC family including `MT29F32G08CBADA` exposed eight read-retry options, feature address `89h`, and an explicit selected-mode lifetime ending on feature rewrite or power-down;
 - by **2017**, upstream Linux Hynix support exposed NAND-specific retry registers and fixed-or-OTP-derived calibration values, including validation of repeated OTP data;
+- in a Micron family with priority **2018-01-12**, ordinary reset examples (`FFh/FCh/FAh`) were explicitly distinguished from `Hard Reset (FDh)` with respect to feature-`89h` retirement, and custom retry scratch state was disclosed in internal SRAM with FDh/power-cycle reset semantics;
 - by **2021**, independent characterization of 160 real 3D TLC NAND chips showed modern read-retry repeatedly adjusting read-reference voltages and relying on the relation between RBER and ECC capability.
 
 Unsafe claims rejected here:
@@ -470,12 +520,15 @@ Unsafe claims rejected here:
 - the 2000 patent directly caused the Toshiba design;
 - Linux's 2014/2017 merge dates are the first commercial dates for Micron/Hynix read retry;
 - the 2015 Micron revision proves the exact vendor wording available to the Linux author before the 2014 merge;
+- the 2018-priority Micron patent proves every disclosed reset behavior shipped in a commercial product;
+- the later Micron family proves exact 2015 L83A feature-`89h` behavior across `FFh`;
+- all reset commands clear all NAND feature state;
 - ONFI standardizes one cross-vendor retry parameter format or Micron feature address `89h`;
 - every commercial SSD stores per-page successful retry voltages in the same way;
 - all modern NAND uses the same retry direction/table/step count;
 - retry read is equivalent to refresh, reclaim, COPYBACK, or secure rewrite.
 
-A complete genealogy of adaptive sensing, reference cells, soft-decision decoding, proprietary retry commands, LDPC, and vendor-specific calibration belongs in `computing-archaeology` if pursued.
+A complete genealogy of adaptive sensing, reference cells, soft-decision decoding, proprietary retry commands, reset-command classes, LDPC, and vendor-specific calibration belongs in `computing-archaeology` if pursued.
 
 ---
 
@@ -489,6 +542,7 @@ Primary / contemporary:
 - Linux upstream commit `8429bb3975ef81c114cde4da111e64d224d19f83`, **“mtd: nand: support Micron READ RETRY,”** 2014-01-14: <https://github.com/torvalds/linux/commit/8429bb3975ef81c114cde4da111e64d224d19f83>.
 - Micron Technology, **“32Gb, Asynchronous/Synchronous NAND,”** `L83A_32Gb_Async_Sync_NAND_mlc_plus.pdf`, Rev. A 5/15 EN, PDF ID `09005aef8644c380`; Micron-authored document recovered from a public mirror: <https://www.unikeyic.com/media/datasheet/d9/6b/ded2/d9/8c2c3bd5996175045d2af62c6e827efe.pdf>.
 - Linux upstream commit `626994e0748019f9987ac520f1dcfd0adb7e34c6`, **“mtd: nand: hynix: Add read-retry support for 1x nm MLC NANDs,”** 2017-03-08: <https://github.com/torvalds/linux/commit/626994e0748019f9987ac520f1dcfd0adb7e34c6>.
+- Rahul Mitchell Jairaj, Mark A. Hawes, Terry M. Grunzke / Micron Technology, **“Read retry scratch space,”** priority 2018-01-12, US20200371876A1 / US11586498B2: <https://patents.google.com/patent/US11586498B2/en>.
 
 Independent later empirical witness:
 
@@ -497,6 +551,7 @@ Independent later empirical witness:
 Related repository cases:
 
 - [`36-nand-flash-correct-and-refresh-maintenance.md`](36-nand-flash-correct-and-refresh-maintenance.md)
+- [`38-intel-s3700-power-loss-imminent-capacitor-self-test.md`](38-intel-s3700-power-loss-imminent-capacitor-self-test.md)
 - [`52-nand-flash-read-disturb-access-induced-decay.md`](52-nand-flash-read-disturb-access-induced-decay.md)
 - [`59-nand-program-interference-write-induced-neighbor-drift.md`](59-nand-program-interference-write-induced-neighbor-drift.md)
 - [`65-3d-nand-early-retention-loss-age-aware-reading.md`](65-3d-nand-early-retention-loss-age-aware-reading.md)
@@ -513,6 +568,6 @@ Case 85 adds a retention regime that is easy to miss if storage is treated only 
 
 > **the same physical NAND cells can move from default-read failure back into logical recoverability because the system changes how it reads them, not because it has already rewritten them.**
 
-The retained object is therefore not adequately described by media survival alone. Operational availability depends on a relation among physical threshold distributions, adjustable read boundaries, ECC capability, controller policy, and — in some implementations — vendor-specific capability/calibration state needed to establish a useful read condition. The Micron family witness adds that even inside this relation, the supported retry state space and the currently selected retry state have different lifetimes: a mode can persist across commands while remaining deliberately power-bounded. When the relation becomes unfavorable, interpretation work can temporarily restore access; when the physical representation itself must be renewed, refresh/copy is a separate maintenance act.
+The retained object is therefore not adequately described by media survival alone. Operational availability depends on a relation among physical threshold distributions, adjustable read boundaries, ECC capability, controller policy, and — in some implementations — vendor-specific capability/calibration state needed to establish a useful read condition. The Micron family witnesses add that even inside this relation, the supported retry state space, the currently selected retry state, and the event that retires that state can have different lifetimes: a mode can persist across commands, later Micron examples distinguish ordinary resets from Hard Reset, and power remains a separate boundary. When the relation becomes unfavorable, interpretation work can temporarily restore access; when the physical representation itself must be renewed, refresh/copy is a separate maintenance act.
 
-That distinction — `recoverability renewal ≠ representation renewal` — remains the bounded contribution of this case.
+That distinction — `recoverability renewal ≠ representation renewal`, with `reset class ≠ one universal state-lifetime boundary` — remains the bounded contribution of this case.
