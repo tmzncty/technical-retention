@@ -2,13 +2,17 @@
 
 ## Status
 
-**`grounded`** — bounded to Texas Instruments' TMS4164 contrast, TMS4256/TMS4257 refresh behavior, TI's 1984-filed on-chip refresh-counter design, a 1973–1982 public-patent prior-art deepening, an early-1980s autonomous-self-refresh publication deepening, and a late-1999 Micron SDRAM product comparison separating externally repeated AUTO REFRESH from device-clocked SELF REFRESH.
+**`grounded`** — bounded to an early-1970s system-level automatic-refresh witness around commercial 1103 DRAMs, period 1103 product refresh contracts, Texas Instruments' TMS4164 contrast, TMS4256/TMS4257 refresh behavior, TI's 1984-filed on-chip refresh-counter design, a 1973–1982 public-patent prior-art deepening, an early-1980s autonomous-self-refresh publication deepening, and a late-1999 Micron SDRAM product comparison separating externally repeated AUTO REFRESH from device-clocked SELF REFRESH.
 
 Grounding record: [`../evidence/09-ti-cbr-refresh-address-grounding.md`](../evidence/09-ti-cbr-refresh-address-grounding.md).
 
 Deepening record: [`../evidence/09-dram-refresh-counter-initialization-test-deepening.md`](../evidence/09-dram-refresh-counter-initialization-test-deepening.md).
 
 Early public-patent prior-art deepening: [`../evidence/09-1973-1982-early-self-refresh-control-partitions-prior-art-deepening.md`](../evidence/09-1973-1982-early-self-refresh-control-partitions-prior-art-deepening.md).
+
+GTE system-boundary deepening: [`../evidence/09-gte-1971-1973-self-initiating-refresh-system-boundary-deepening.md`](../evidence/09-gte-1971-1973-self-initiating-refresh-system-boundary-deepening.md).
+
+1103 product-contract deepening: [`../evidence/09-1972-1975-1103-refresh-product-contract-deepening.md`](../evidence/09-1972-1975-1103-refresh-product-contract-deepening.md).
 
 Early autonomous-self-refresh publication deepening: [`../evidence/09-1981-1983-autonomous-self-refresh-prior-art-deepening.md`](../evidence/09-1981-1983-autonomous-self-refresh-prior-art-deepening.md).
 
@@ -18,16 +22,16 @@ SDRAM control-boundary deepening: [`../evidence/09-micron-1999-sdram-auto-vs-sel
 
 ## Scope
 
-- **Object / system:** a bounded comparison of DRAM refresh-control partitions: externally enumerated refresh, internally tracked/self-initiated refresh in early public patent literature, externally triggered refresh with an on-chip refresh-address counter, internally clocked refresh with on-chip row enumeration and access arbitration, CAS-before-RAS refresh, and later SELF REFRESH; a late-1999 SDRAM product is retained as a clean AUTO REFRESH / SELF REFRESH interface comparison.
-- **Date range:** 1973–1986 for the central early control-partition evidence, using public patent dates rather than silently treating filing dates as public disclosure dates; a 1984-filed TI patent supplies mechanism-level CBR design detail. A January 1988 revision of the TMS4256/TMS4257 sheet was directly inspected only as a page-stable facsimile witness to the same documented device-family behavior. Micron's November-1999 64 Mb SDRAM documentation is used only as a later product-level successor witness for AUTO REFRESH versus SELF REFRESH control partition.
-- **Primary comparison:** MOS Technology's 1973 public self-refresh patent supplies row-age/deadline-triggered mandatory and opportunistic refresh; TI's 1980 public patent supplies external cadence plus internal row enumeration; TI's 1982 public patent supplies internal cadence plus internal row enumeration and access arbitration; TMS4164/TMS4256/TMS4257 and the 1984-filed TI CBR patent supply the named commercial/product-family contrast; Reese et al. 1981 and Yamada et al. 1983 remain peer-reviewed/publication witnesses for early autonomous self-refresh; the later Micron SDRAM comparison supplies a directly documented synchronous-interface contrast between repeated AUTO REFRESH commands and SELF REFRESH recurrence after mode entry.
-- **Question:** what changes when the DRAM still has a periodic retention deadline but row enumeration, recurrence timing, deadline evidence, mode control, and access arbitration can be placed under different authorities?
+- **Object / system:** a bounded comparison of DRAM refresh-control partitions: externally enumerated refresh, a memory-system-level self-initiating refresh controller around commercial 1103 devices, internally tracked/self-initiated refresh in early public patent literature, externally triggered refresh with an on-chip refresh-address counter, internally clocked refresh with on-chip row enumeration and access arbitration, CAS-before-RAS refresh, and later SELF REFRESH; a late-1999 SDRAM product is retained as a clean AUTO REFRESH / SELF REFRESH interface comparison.
+- **Date range:** 1972–1986 for the central early product/control evidence, while preserving the distinction between the GTE patent's 1971 filing date and its April-1973 public patent date; a 1984-filed TI patent supplies mechanism-level CBR design detail. A January 1988 revision of the TMS4256/TMS4257 sheet was directly inspected only as a page-stable facsimile witness to the same documented device-family behavior. Micron's November-1999 64 Mb SDRAM documentation is used only as a later product-level successor witness for AUTO REFRESH versus SELF REFRESH control partition.
+- **Primary comparison:** GTE's April-1973 public patent supplies automatic recurring refresh at the memory-system boundary around commercial Intel 1103 chips; Signetics 1972 and Intel 1975 product documents independently ground the 1103-family coverage/deadline contract; MOS Technology's June-1973 public self-refresh patent supplies row-age/deadline-triggered mandatory and opportunistic refresh; TI's 1980 public patent supplies external cadence plus internal row enumeration; TI's 1982 public patent supplies internal cadence plus internal row enumeration and access arbitration; TMS4164/TMS4256/TMS4257 and the 1984-filed TI CBR patent supply the named commercial/product-family contrast; Reese et al. 1981 and Yamada et al. 1983 remain peer-reviewed/publication witnesses for early autonomous self-refresh; the later Micron SDRAM comparison supplies a directly documented synchronous-interface contrast between repeated AUTO REFRESH commands and SELF REFRESH recurrence after mode entry.
+- **Question:** what changes when the DRAM still has a periodic retention deadline but row enumeration, recurrence timing, deadline evidence, mode control, access arbitration, and the system boundary that owns them can be placed under different authorities?
 
-This is **not** a general history of DRAM evolution. The early patent and publication material is a bounded prior-art correction, not an invention-priority, product-shipment, or direct-influence genealogy. The SDRAM material is a bounded AUTO REFRESH / SELF REFRESH control comparison, not a JEDEC genealogy or a full SDRAM history. DDR per-bank refresh, temperature-compensated refresh, retention-aware refresh research, and broad controller/test-mode history remain outside this case unless needed for a later retention comparison.
+This is **not** a general history of DRAM evolution. The early patent and publication material is a bounded prior-art correction, not an invention-priority, product-shipment, or direct-influence genealogy. The 1103 material is a bounded product-contract comparison, not a second-source genealogy. The SDRAM material is a bounded AUTO REFRESH / SELF REFRESH control comparison, not a JEDEC genealogy or a full SDRAM history. DDR per-bank refresh, temperature-compensated refresh, retention-aware refresh research, and broad controller/test-mode history remain outside this case unless needed for a later retention comparison.
 
 Case 03 already grounds the physical reason dynamic semiconductor state needs periodic reconstruction. This case starts one layer higher:
 
-> **Does moving refresh-row enumeration, deadline tracking, or recurring refresh cadence on-chip change the retention mechanism, the maintenance obligation, or the location and authority of maintenance control?**
+> **Does moving refresh-row enumeration, deadline tracking, or recurring refresh cadence across system/package boundaries change the retention mechanism, the maintenance obligation, or the location and authority of maintenance control?**
 
 ---
 
@@ -52,9 +56,12 @@ next-row enumeration
 row selection / address-source authority
 access-vs-refresh arbitration
 sense / restoration
+system/package boundary that owns each function
 ```
 
-The early prior-art evidence adds an important historical correction: these functions did not migrate on-chip in one simple linear order. Public patent evidence by 1973 already describes self-refresh logic that tracks row-specific time-to-refresh and can force maintenance; public TI patents in 1980 and 1982 then provide a clean contrast between external cadence with internal row enumeration and internally timed refresh with internal enumeration plus access arbitration. The 1981–1983 publication evidence remains important as a peer-reviewed/contemporary DRAM witness rather than the earliest public-document floor for the broader idea.
+The early prior-art evidence adds an important historical correction: these functions did not migrate on-chip in one simple linear order. GTE's April-1973 public patent already describes self-initiating recurring refresh at the **memory-system** boundary while keeping the free-running clock, pulse generator, row counter, address gating, and `memory busy` relation outside the commercial Intel 1103 chips in its preferred embodiment. MOS Technology's June-1973 public patent instead tracks row-specific time-to-refresh and can force maintenance. Public TI patents in 1980 and 1982 then provide a clean contrast between external cadence with internal row enumeration and internally timed refresh with internal enumeration plus access arbitration. The 1981–1983 publication evidence remains important as a peer-reviewed/contemporary DRAM witness rather than the earliest public-document floor for the broader idea.
+
+The 1103 product evidence adds another separation: a device can specify **how much restorative coverage must occur by when** without thereby specifying one unique scheduler, counter placement, or arbitration design. GTE's 16 kHz worked cadence is one system implementation derived from the 1103's 32-row / 2 ms requirement, not the device contract itself.
 
 The Micron SDRAM successor evidence then provides a later same-product distinction:
 
@@ -72,6 +79,7 @@ The case matters because these functions need not live at the same layer or unde
 The period sources use:
 
 - `refresh`;
+- `self-initiating refresh` in GTE US3729722A;
 - `self-refreshing memory`;
 - `mandatory refresh` and `voluntary refresh` in US3737879;
 - `on-chip refresh` in US4207618;
@@ -88,9 +96,11 @@ The period sources use:
 
 ### Terminology warning
 
-`Self refresh` cannot be treated as a timeless circuit category whose mechanism follows automatically from the phrase.
+`Self refresh` and adjacent autonomy language cannot be treated as timeless circuit categories whose mechanism follows automatically from the phrase.
 
-US3737879's 1973 public patent uses `self-refreshing memory` for a row-age/deadline-driven design with mandatory refresh and optional opportunistic/voluntary refresh. Reese et al. 1981 is indexed as describing self-refresh with an on-chip timer, arbiter, and refresh counter. Yamada et al. 1983 concerns a DRAM with auto/self-refresh functions, and later Mitsubishi prior-art reconstructions attribute an internal timer + refresh-counter architecture to that work.
+GTE's 1973 `self-initiating refresh` is automatic relative to the processor/requester, but the preferred embodiment places its free-running clock, pulse generator, row counter, gating, and busy logic at the memory-system boundary around commercial DRAM chips. It is therefore **not** evidence that the Intel 1103 itself contains chip-local self-refresh machinery.
+
+US3737879's June-1973 public patent uses `self-refreshing memory` for a row-age/deadline-driven design with mandatory refresh and optional opportunistic/voluntary refresh. Reese et al. 1981 is indexed as describing self-refresh with an on-chip timer, arbiter, and refresh counter. Yamada et al. 1983 concerns a DRAM with auto/self-refresh functions, and later Mitsubishi prior-art reconstructions attribute an internal timer + refresh-counter architecture to that work.
 
 By contrast, `self refresh circuitry` in TI's 1984-filed patent title does **not** mean that the disclosed CBR counter supplies recurring cadence: the patent explicitly says the processor or memory controller external to the memory device controls how often the CAS-before-RAS sequence occurs.
 
@@ -98,7 +108,7 @@ Micron's 1999 `SELF REFRESH` documents yet another concrete interface contract: 
 
 Therefore:
 
-> **same historical phrase `self refresh` ≠ same command semantics, interface contract, deadline representation, or distribution of retention work.**
+> **same or similar historical autonomy vocabulary ≠ same command semantics, physical integration boundary, interface contract, deadline representation, or distribution of retention work.**
 
 The period terms are historical record. Any cross-period taxonomy is functional comparison only.
 
@@ -165,20 +175,54 @@ fully autonomous refresh scheduler
 
 ---
 
-## 1973–1982 earlier public-patent prior-art deepening
+## 1971–1982 early refresh-control prior-art deepening
 
-Detailed record: [`../evidence/09-1973-1982-early-self-refresh-control-partitions-prior-art-deepening.md`](../evidence/09-1973-1982-early-self-refresh-control-partitions-prior-art-deepening.md).
+Detailed prior-art record: [`../evidence/09-1973-1982-early-self-refresh-control-partitions-prior-art-deepening.md`](../evidence/09-1973-1982-early-self-refresh-control-partitions-prior-art-deepening.md).
 
-### H/P* — a 1973 public patent already describes row-age/deadline-driven self-refresh
+GTE direct-inspection record: [`../evidence/09-gte-1971-1973-self-initiating-refresh-system-boundary-deepening.md`](../evidence/09-gte-1971-1973-self-initiating-refresh-system-boundary-deepening.md).
+
+1103 product-contract record: [`../evidence/09-1972-1975-1103-refresh-product-contract-deepening.md`](../evidence/09-1972-1975-1103-refresh-product-contract-deepening.md).
+
+### H/P — GTE's April-1973 `self-initiating refresh` is automatic at the memory-system boundary
+
+GTE Automatic Electric Laboratories' US3729722A, filed 17 September 1971 and granted/published 24 April 1973, describes a dynamic-memory system whose refresh circuitry contains a free-running clock, refresh pulse generator, row-address counter, address gating, and a `memory busy` relation.
+
+Its preferred embodiment explicitly uses commercially available Intel 1103 MOS memory chips and describes the refresh apparatus around those chips. For the worked 1103 geometry it uses 32 rows, a stated two-millisecond refresh requirement, and a 16 kHz clock so one row is selected every 62.5 microseconds. An external memory access attempted during refresh is deferred until the refresh cycle completes.
+
+The historical boundary is therefore:
+
+```text
+self-initiating at memory-system boundary
+    !=
+self-initiating at DRAM-package boundary
+```
+
+This closes the earlier discovery-only status of US3729722A. It does not establish invention priority, shipment of GTE's controller, or a direct implementation genealogy to later on-chip refresh.
+
+### H/P — period 1103 product documents independently ground the coverage/deadline contract
+
+Signetics' 1972 MOS handbook documents its 1103 as a 1024-word × 1-bit dynamic memory in which refreshing all 1,024 bits is accomplished in 32 read cycles and is required every two milliseconds for the documented 0–70 °C ambient range. Intel's own 1975 data catalog independently gives the same 32-read-cycle / two-millisecond relation for the Intel 1103.
+
+The same Intel catalog supplies a useful anti-generalization: the faster 1103A-1 still uses 32 read cycles for full coverage but specifies a one-millisecond refresh period. Thus:
+
+```text
+same coverage geometry
+    !=
+one invariant refresh deadline across related variants
+```
+
+The product contract says how much coverage is required by when. GTE's free-running clock, counter, gating, and service deferral are one specific system implementation for meeting that obligation.
+
+### H/P* — MOS Technology's June-1973 public patent describes row-age/deadline-driven self-refresh
 
 MOS Technology's US3737879, filed 5 January 1972 and granted/published 5 June 1973, is titled `Self-refreshing memory`.
 
 Its disclosed architecture associates refresh-age state with each row. A read-and-restore or write resets the corresponding row counter; if a row reaches the permitted maximum interval without being restored, its counter causes a mandatory refresh and temporarily inhibits access. An optional program-sensing path can instead use an idle interval to refresh rows approaching the mandatory deadline.
 
-This changes the conservative public-document floor for the broader self-refresh control problem:
+This supplies a different early control partition:
 
 ```text
-by public patent in 1973
+by public patent in June 1973
     row-specific maintenance-age evidence
     + mandatory deadline-triggered refresh
     + optional opportunistic early refresh
@@ -237,6 +281,11 @@ Both are maintenance-control state, but their semantics and failure consequences
 Patent filing dates are not silently treated as public dates:
 
 ```text
+US3729722A
+    filed / priority 1971-09-17
+    public patent 1973-04-24
+    automatic recurrence at memory-system boundary
+
 US3737879
     filed 1972-01-05
     public patent 1973-06-05
@@ -250,7 +299,7 @@ US4333167
     public patent 1982-06-01
 ```
 
-A still-earlier GTE patent, US3729722A (`Dynamic mode integrated circuit memory with self-initiating refresh means`, publication 24 April 1973), appears in later patent citation records and is a concrete next lead. Its full primary text was not directly inspected in this slice, so the canonical case does not yet use it for mechanism claims.
+This chronology is a checked public-document/control-partition chronology. It is **not** a first-invention or direct-influence genealogy.
 
 ---
 
@@ -294,29 +343,30 @@ The later patents are manufacturer-authored prior-art reconstructions, not subst
 The early source set therefore supports at least these design classes:
 
 ```text
-external cadence + external row enumeration
+system-level automatic cadence + system-level row enumeration
+    (GTE April-1973 preferred embodiment around commercial Intel 1103 chips)
+
+row-age/deadline-triggered selective refresh
+    (MOS Technology June-1973 public patent)
 
 external cadence + internal row enumeration
     (for example, TI's 1980 public on-chip-refresh patent and later CBR/internal-counter designs)
 
 internal cadence + internal row enumeration + access arbitration
     (for example, TI's 1982 public patent and early self-refresh publication evidence)
-
-row-age/deadline-triggered selective refresh
-    (for example, MOS Technology's 1973 public patent)
 ```
 
-The historical correction is important: **internal cadence is not a late-1990s invention merely because the 1999 Micron device gives Case 09 a particularly clean product-level AUTO/SELF comparison. Nor is 1981 now treated as the earliest public-document floor for the broader self-refresh control problem.**
+The historical correction is important: **automatic recurrence does not imply on-chip integration, and internal cadence is not a late-1990s invention merely because the 1999 Micron device gives Case 09 a particularly clean product-level AUTO/SELF comparison. Nor is 1981 now treated as the earliest public-document floor for the broader self-refresh control problem.**
 
 ### E — autonomous recurrence remains a powered, regime-scoped property
 
-The early self-refresh evidence does not turn DRAM into a nonvolatile medium. Internal timer and counter logic still require sufficient electrical power, valid mode/control conditions where applicable, and functioning restoration circuitry.
+The early self-refresh evidence does not turn DRAM into a nonvolatile medium. External memory-system automatic controllers and internal timer/counter logic alike require sufficient electrical power, valid mode/control conditions where applicable, and functioning restoration circuitry.
 
 Thus:
 
 ```text
-main system relinquishes recurring refresh control
-    != DRAM becomes unpowered
+main requester relinquishes recurring refresh control
+    != memory subsystem becomes unpowered
     != refresh obligation disappears
 ```
 
@@ -454,13 +504,13 @@ The 1973 MOS Technology patent exposes one form of maintenance evidence that tra
 
 ### Refresh-coverage state
 
-The refresh counter has a current count that determines which row will be selected on a later refresh request. This count is not application payload and does not preserve user history. It is nevertheless retained control state that helps ensure maintenance is distributed across the row set.
+A refresh counter has a current count that determines which row will be selected on a later refresh request. The GTE preferred embodiment places such traversal state in surrounding system circuitry; TI's later on-chip designs provide examples with the counter inside the memory device. The count is not application payload and does not preserve user history. It is nevertheless retained control state that helps ensure maintenance is distributed across the row set.
 
 ### Cadence / timer state
 
-In an internally timed self-refresh regime, an on-chip timer or clocking mechanism supplies the recurrence relation that an external controller otherwise has to supply.
+Recurring cadence can likewise live at different boundaries. GTE's preferred embodiment uses a free-running system-level clock; an internally timed self-refresh regime can instead use on-chip timing or clocking machinery.
 
-Timer state and counter phase are distinct: one answers approximately **when** maintenance is due; the other answers **which row** is next.
+Timer/oscillator state and counter phase are distinct: one answers approximately **when** maintenance is due; the other answers **which row** is next.
 
 ### Maintenance-mode state
 
@@ -468,7 +518,7 @@ An entered self-refresh mode is another control condition: it changes the source
 
 ### Arbitration / service state
 
-The 1973 mandatory-refresh path can inhibit access, TI's 1982 patent can delay/latch service around an internal refresh, and the 1981 self-refresh publication's abstract-level arbiter/`ready` relation makes the same general distinction visible: deciding that refresh is due does not by itself determine how a simultaneous service request is handled.
+GTE's `memory busy` relation can defer external service, the 1973 MOS Technology mandatory-refresh path can inhibit access, TI's 1982 patent can delay/latch service around an internal refresh, and the 1981 self-refresh publication's abstract-level arbiter/`ready` relation makes the same general distinction visible: deciding that refresh is due does not by itself determine how a simultaneous service request is handled.
 
 This gives the repository a recursive retention relation:
 
@@ -482,18 +532,21 @@ That is an engineering reconstruction from documented counter/timer/mode roles, 
 
 The physical payload-retention regime remains deadline-driven reconstruction. What changes is the control partition.
 
-### External-row-address regime
+### Externally controlled / system-level automatic regime
 
-A system that must present each refresh row externally needs external machinery to:
+In GTE's bounded preferred embodiment:
 
-1. know which row is next;
-2. place that row on the multiplexed address pins;
-3. issue the refresh timing sequence often enough;
-4. repeat until all rows have been covered inside the retention deadline.
+1. the commercial DRAM chips expose a finite refresh obligation;
+2. a free-running clock in the memory-system apparatus produces recurring cadence;
+3. a system-level row counter supplies successive maintenance row addresses;
+4. gating selects the refresh address rather than the ordinary external row address during maintenance;
+5. a `memory busy` relation defers ordinary access while refresh occupies the memory cycle.
+
+This is automatic recurrence relative to the CPU/requester without being chip-local self-refresh.
 
 ### Row-age/deadline-tracked self-refresh regime
 
-In the bounded 1973 patent:
+In the bounded MOS Technology 1973 patent:
 
 1. a row's ordinary access/restoration can reset its maintenance-age state;
 2. rows that age to the permitted limit can force mandatory refresh;
@@ -573,11 +626,11 @@ The normal row/column address designates payload for read/write service.
 
 The refresh row designates payload for reconstruction, not because software requested that data, but because the array must revisit it before a retention deadline.
 
-The early patents, CBR, early self-refresh, and later SDRAM AUTO/SELF REFRESH create bounded cases in which:
+GTE's preferred embodiment switches between the external row-address register and a system-level refresh counter; later CBR/self-refresh examples can generate the maintenance address inside the memory device. The source set therefore creates bounded cases in which:
 
-> **service addressing and maintenance addressing share row-selection infrastructure but can have different address sources, scheduling authorities, deadline evidence, and arbitration rules.**
+> **service addressing and maintenance addressing can have different address sources, scheduling authorities, physical locations, deadline evidence, and arbitration rules while reaching the same payload array.**
 
-The same physical row can be selected for an application access using an external address or selected for retention work using internally generated refresh addressing.
+The same physical row can be selected for an application access using an ordinary service address or selected for retention work using a separately generated maintenance address.
 
 ---
 
@@ -587,7 +640,9 @@ This case does not redefine DRAM read/write physics. Its contribution is the add
 
 ### Ordinary access as maintenance input
 
-The 1973 patent makes one interaction especially explicit: a read-and-restore or write can reset a row's refresh-age state. A service operation can therefore change the timing of a later dedicated maintenance obligation without becoming identical to a refresh command.
+The MOS Technology 1973 patent makes one interaction especially explicit: a read-and-restore or write can reset a row's refresh-age state. A service operation can therefore change the timing of a later dedicated maintenance obligation without becoming identical to a refresh command.
+
+The 1103 product documents add a separate historical witness: they describe whole-array refresh as accomplished in 32 read cycles while describing stored information as non-destructively read. This is a product-interface contract, not proof that all DRAM generations refresh through identical read semantics.
 
 ### RAS-only refresh
 
@@ -606,6 +661,14 @@ This means:
 > **visible output continuity does not prove internal quiescence.**
 
 The system can be actively maintaining retained state while one interface appears unchanged.
+
+### System-level automatic recurrence
+
+GTE's free-running refresh apparatus can initiate a maintenance cycle without a CPU/requester issuing one refresh command per event, yet the patent explicitly maintains `memory busy` and defers an ordinary access that collides with refresh.
+
+This means:
+
+> **automatic initiation != zero service occupancy.**
 
 ### Internally clocked / early self-refresh
 
@@ -627,21 +690,23 @@ A mode-entry command establishes a regime in which recurring refresh clocking pr
 
 ## Maintenance and labor
 
-The case should not be narrated as `refresh became automatic`.
+The case should not be narrated as `refresh became automatic` or as one monotonic migration into the chip.
 
 A more accurate decomposition is:
 
-| Function | 1973 deadline-tracked patent | TI 1980 / bounded CBR locus | TI 1982 internally clocked patent | Early self-refresh literature | Micron 1999 AUTO REFRESH | Micron 1999 SELF REFRESH steady state |
-| --- | --- | --- | --- | --- | --- | --- |
-| physical need to refresh before deadline | array/device physics | array/device physics | array/device physics | array/device physics | array/device physics | array/device physics |
-| recurring cadence / due-state authority | per-row age/deadline logic | external processor/controller | internal refresh clock | internal timer within entered self-refresh regime | external system/controller | internal clocking after external mode entry |
-| request / mode establishment | deadline-triggered mandatory path; optional idle-period voluntary path | external refresh command / CBR timing | internal periodic signal | external establishment of self-refresh condition; exact interface design-specific | AUTO REFRESH command each time | SELF REFRESH entry + maintained CKE condition |
-| next refresh-row selection | due row selected from deadline evidence | on-chip refresh counter | on-chip refresh counter | on-chip refresh counter in bounded examples | on-chip refresh controller/counter | on-chip refresh controller/counter |
-| access conflict policy | mandatory refresh can inhibit access | ordinary controller/device timing | colliding read/write waits for refresh already underway | explicit arbitration / possible access lockout in bounded evidence | command/timing rules | normal access unavailable until exit/handoff |
-| row sensing / restoration | memory circuitry | on-chip memory circuitry | on-chip memory circuitry | on-chip memory circuitry | on-chip memory circuitry | on-chip memory circuitry |
-| transition back to ordinary operation | after mandatory refresh | not this mode distinction | after internal refresh completes | implementation-specific | ordinary command regime | external clock stabilization + `tXSR` handoff |
+| Function | GTE 1973 system-level controller | MOS Technology 1973 deadline-tracked patent | TI 1980 / bounded CBR locus | TI 1982 internally clocked patent | Early self-refresh literature | Micron 1999 AUTO REFRESH | Micron 1999 SELF REFRESH steady state |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| physical need to refresh before deadline | DRAM/device physics | array/device physics | array/device physics | array/device physics | array/device physics | array/device physics | array/device physics |
+| recurring cadence / due-state authority | free-running memory-system clock | per-row age/deadline logic | external processor/controller | internal refresh clock | internal timer within entered self-refresh regime | external system/controller | internal clocking after external mode entry |
+| request / mode establishment | controller self-initiates while powered | deadline-triggered mandatory path; optional idle-period voluntary path | external refresh command / CBR timing | internal periodic signal | external establishment of self-refresh condition; exact interface design-specific | AUTO REFRESH command each time | SELF REFRESH entry + maintained CKE condition |
+| next refresh-row selection | system-level row counter | due row selected from deadline evidence | on-chip refresh counter | on-chip refresh counter | on-chip refresh counter in bounded examples | on-chip refresh controller/counter | on-chip refresh controller/counter |
+| access conflict policy | `memory busy`; colliding access deferred | mandatory refresh can inhibit access | ordinary controller/device timing | colliding read/write waits for refresh already underway | explicit arbitration / possible access lockout in bounded evidence | command/timing rules | normal access unavailable until exit/handoff |
+| row sensing / restoration | DRAM circuitry | memory circuitry | on-chip memory circuitry | on-chip memory circuitry | on-chip memory circuitry | on-chip memory circuitry | on-chip memory circuitry |
+| transition back to ordinary operation | after refresh cycle / busy clears | after mandatory refresh | not this mode distinction | after internal refresh completes | implementation-specific | ordinary command regime | external clock stabilization + `tXSR` handoff |
 
 The relevant historical differences are **alternative distributions of retention work and authority**, not disappearance of work and not necessarily one linear sequence of offload.
+
+The 1103 product contract sits orthogonally to this table: `32 read cycles / 2 ms` states a coverage/deadline obligation, while the GTE controller shows one concrete way surrounding infrastructure can generate cadence, traversal, address-source selection, and service arbitration to satisfy it.
 
 This is closely related to the repository's maintenance-visibility audit: automation can remove a responsibility from one interface or board-level circuit while making another internal state/path or mode more important.
 
@@ -657,7 +722,7 @@ In a deadline-tracked design, control state about how long a row has gone withou
 
 ### Missed deadline
 
-The responsible scheduler causes too few refresh cycles before the retention interval expires. Depending on mode, that scheduler may be external or internal.
+The responsible scheduler causes too few refresh cycles before the retention interval expires. Depending on architecture/mode, that scheduler may be system-level, controller-local, or internal to the memory device.
 
 ### Wrong operation selection / wrong mode
 
@@ -665,11 +730,15 @@ The control sequence fails to invoke the intended refresh path or maintenance mo
 
 ### Enumeration failure
 
-The internal counter/address path fails to cover the required rows correctly.
+The active refresh counter/address path — whether system-level or on-chip in the bounded examples — fails to cover the required rows correctly.
 
 ### Internal cadence failure
 
 Within an internally clocked or documented self-refresh regime, internal recurring timing fails to cause the required refresh work.
+
+### External/system cadence failure
+
+Within a system-level automatic or externally commanded regime, the surrounding oscillator/controller fails to produce sufficient refresh events despite a still-valid DRAM payload/coverage contract.
 
 ### Arbitration / service-handoff failure
 
@@ -691,13 +760,43 @@ Case 03 links the deadline to physical charge leakage. Case 09 shows that the pl
 
 The retention requirement can remain stable while maintenance responsibility moves.
 
+### E — automatic recurrence ≠ on-chip integration
+
+The GTE source provides a particularly clean counterexample to a one-axis automation story. Its memory subsystem can self-initiate recurring refresh relative to the processor while the worked Intel 1103 chips remain externally maintained by a free-running clock, counter, gating, and busy logic outside the DRAM package.
+
+Therefore:
+
+```text
+who initiates recurring maintenance
+    !=
+where refresh-control machinery is physically integrated
+```
+
+GTE 1973 and TI 1980 even occupy complementary partitions: the former automates cadence while keeping enumeration outside the DRAM; the latter places refresh enumeration on-chip while still requiring an external refresh request for each event.
+
+### E — product coverage/deadline contract ≠ one scheduler implementation
+
+The 1103 product evidence constrains **coverage** and **deadline**. It does not logically require GTE's uniform 16 kHz phase, a particular counter package, or one arbitration policy. GTE's worked controller is one system realization of the product obligation.
+
+The Intel 1103A-1 comparison further blocks an easy geometry shortcut: the same 32-cycle coverage count can coexist with a different one-millisecond refresh deadline.
+
+Thus:
+
+```text
+row/coverage geometry
+    != retention deadline
+
+retention deadline + coverage requirement
+    != one unique maintenance scheduler
+```
+
 ### E — internalized refresh addressing ≠ autonomous refresh scheduling
 
 The TI CBR patent directly says the processor or memory controller controls the frequency of the CAS-before-RAS sequence. Micron's 1999 AUTO REFRESH similarly uses internal addressing while requiring each refresh command externally.
 
-The earlier prior-art deepening adds complementary witnesses: the 1980 TI patent already isolates external cadence + internal enumeration; the 1982 TI patent puts cadence and enumeration on chip; the 1973 MOS Technology patent instead tracks row-specific due state; the 1981–1983 publication record adds peer-reviewed/self-refresh examples with timer, counter, and arbitration.
+The earlier prior-art deepening adds complementary witnesses: GTE automates cadence at the memory-system level while keeping enumeration outside the DRAM; the 1980 TI patent isolates external cadence + internal enumeration; the 1982 TI patent puts cadence and enumeration on chip; the 1973 MOS Technology patent instead tracks row-specific due state; the 1981–1983 publication record adds peer-reviewed/self-refresh examples with timer, counter, and arbitration.
 
-Therefore `internal refresh address`, `internal refresh schedule`, and `internal deadline evidence` are demonstrably different properties, and multiple combinations existed well before the late SDRAM era.
+Therefore `internal refresh address`, `internal refresh schedule`, `automatic refresh relative to requester`, and `internal deadline evidence` are demonstrably different properties, and multiple combinations existed well before the late SDRAM era.
 
 This gives a cleaner vocabulary for future cases:
 
@@ -711,6 +810,7 @@ address-source authority
 access/maintenance arbitration
 refresh executor / restorer
 transition / handoff semantics
+physical/system boundary for each function
 ```
 
 Do not collapse them back into one word, `refresh`.
@@ -725,17 +825,17 @@ external everything
     -> much later internal timer
 ```
 
-A better historical reconstruction is that different designs explored different control partitions: deadline-tracked selective refresh, external cadence with internal addressing, internally timed refresh, and self-refresh modes were all part of the early design space.
+A better historical reconstruction is that different designs explored different control partitions: automatic system-level recurrence, deadline-tracked selective refresh, external cadence with internal addressing, internally timed refresh, and self-refresh modes were all part of the early design space.
 
 Historical coexistence does not itself establish influence or descent among those designs.
 
 ### E — hidden maintenance is observer-relative
 
-The 1982 TI patent can hide recurring refresh commands from the CPU while occasional collisions still affect access latency. Hidden refresh can maintain an output while refresh cycles proceed. Self-refresh can remove recurring host command traffic while internal cycles continue. In each case the operation is hidden only relative to particular interfaces or observers. It remains visible to timing, power, control, or device-level analysis.
+GTE's controller can hide one-refresh-command-per-event labor from the processor while still exposing `memory busy` and access deferral. The 1982 TI patent can hide recurring refresh commands from the CPU while occasional collisions still affect access latency. Hidden refresh can maintain an output while refresh cycles proceed. Self-refresh can remove recurring host command traffic while internal cycles continue. In each case the operation is hidden only relative to particular interfaces or observers. It remains visible to timing, power, control, or device-level analysis.
 
 ### E — maintenance machinery can have retention state
 
-A refresh traversal counter must carry enough sequential state between refresh requests to choose successive rows. A deadline-tracked design can instead retain due-state/age evidence for rows. In internally timed self-refresh, timer/mode/arbitration state additionally organizes when maintenance happens and when normal access may proceed.
+A refresh traversal counter must carry enough sequential state between refresh requests to choose successive rows. GTE places that coverage state in surrounding system circuitry; later TI examples place it inside the memory device. A deadline-tracked design can instead retain due-state/age evidence for rows. In internally timed self-refresh, timer/mode/arbitration state additionally organizes when maintenance happens and when normal access may proceed.
 
 The earlier counter-initialization deepening adds a horizon boundary: the TI disclosed CBR phase is initialized at power-on rather than preserved as a durable cross-power checkpoint. The early patent/publication evidence adds a control decomposition, while the Micron evidence adds a clean later authority boundary: the same row refresh counter participates in both AUTO REFRESH and SELF REFRESH even though cadence authority differs by mode.
 
@@ -743,12 +843,12 @@ The earlier counter-initialization deepening adds a horizon boundary: the TI dis
 
 ### E — autonomy is regime-scoped and power-dependent
 
-Internally clocked refresh, early self-refresh, and Micron's later SELF REFRESH support autonomous refresh recurrence only within their documented powered operating conditions/regimes.
+System-level automatic recurrence, internally clocked refresh, early self-refresh, and Micron's later SELF REFRESH support autonomous recurrence only within their documented powered operating conditions/regimes.
 
 Thus:
 
 ```text
-internal recurring refresh
+automatic recurring refresh
     != globally autonomous memory system
     != unpowered nonvolatile retention
 ```
@@ -761,11 +861,13 @@ internal recurring refresh
 
 This case sharpens the project's maintenance thesis without turning it into a metaphor. The relevant technical fact is not merely that `DRAM needs refresh`; that was already established. The new fact is that the functions making refresh possible can migrate across an interface, coexist in alternative partitions, or switch authority by mode while the underlying physical obligation remains.
 
-This makes `where is the maintenance?`, `who currently initiates it?`, `what evidence says maintenance is due?`, and `what infrastructure remains powered?` as important as `is there maintenance?`
+GTE adds a particularly useful limit: responsibility can move away from the CPU/requester into dedicated infrastructure **without** moving into the DRAM chip itself.
 
-### I — invisibility is a relation between mechanism and observer
+This makes `where is the maintenance?`, `who currently initiates it?`, `what evidence says maintenance is due?`, `what system boundary is being described?`, and `what infrastructure remains powered?` as important as `is there maintenance?`
 
-The 1982 `invisible to CPU` patent is a particularly strict technical example: the CPU can be relieved of recurring refresh control even though a colliding request may still wait for internal maintenance. Hidden refresh is another case in which continued output availability can coexist with ongoing reconstruction beneath that interface. Self-refresh adds another: recurring maintenance may continue without recurring host commands or external refresh clocks even though power and mode conditions still sustain the device.
+### I — invisibility and autonomy are relations between mechanism and observer
+
+At the CPU boundary, GTE's memory subsystem can appear to initiate its own refresh; at the DRAM-package boundary, the same chips are externally refreshed. The 1982 `invisible to CPU` patent is another strict technical example: the CPU can be relieved of recurring refresh control even though a colliding request may still wait for internal maintenance. Hidden refresh is another case in which continued output availability can coexist with ongoing reconstruction beneath that interface. Self-refresh adds another: recurring maintenance may continue without recurring host commands or external refresh clocks even though power and mode conditions still sustain the device.
 
 These observations do not by themselves establish Heideggerian `Bestand`, Stieglerian tertiary retention, or a general philosophy of technological autonomy.
 
@@ -778,7 +880,13 @@ These observations do not by themselves establish Heideggerian `Bestand`, Stiegl
 The early prior art gives a controlled counterexample to one-period/one-architecture storytelling:
 
 ```text
-MOS Technology 1973 patent
+GTE April-1973 patent
+    system-level automatic cadence
+    + system-level row enumeration / address gating
+    + memory-busy service deferral
+    != on-chip self-refresh
+
+MOS Technology June-1973 patent
     row-age/deadline evidence + mandatory/opportunistic refresh
 
 TI 1980 patent
@@ -824,13 +932,13 @@ The useful conclusion is a control-locus distinction and a historical correction
 
 ### A — analogy to controller offload
 
-Moving row enumeration or recurring cadence from board/controller logic into the DRAM can be described functionally as an offload of maintenance-control functions.
+Moving row enumeration or recurring cadence from requester logic into dedicated memory-system circuitry or into the DRAM can be described functionally as an offload of maintenance-control functions.
 
 `Offload` is a modern analytical term here, not a recovered 1970s/1980s or 1999 actor category.
 
 ### A — analogy to HDFS scanner progress state
 
-Case 83's HDFS scanner cursor is also retained control state that distributes maintenance work across a payload population. The analogy stops at that function. HDFS checkpoints traversal position so a process/restart can resume without replaying the entire scan; the TI CBR embodiment initializes the cyclic refresh phase at power-on, and DRAM self-refresh keeps regime-local timing/coverage state only while the powered retention episode exists. Their persistence horizons and authority semantics are therefore different.
+Case 83's HDFS scanner cursor is also retained control state that distributes maintenance work across a payload population. The analogy stops at that function. HDFS checkpoints traversal position so a process/restart can resume without replaying the entire scan; GTE's and TI's DRAM refresh counters organize a powered recurrence regime rather than a durable process-restart history, and the TI CBR embodiment initializes the cyclic refresh phase at power-on. Their persistence horizons and authority semantics are therefore different.
 
 > **maintenance-control state != one universal checkpoint contract.**
 
@@ -838,7 +946,11 @@ This is a functional comparison, not a DRAM-to-HDFS genealogy.
 
 ### Limit — patent disclosure ≠ product implementation
 
-US3737879, US4207618, and US4333167 are strong public technical documents for prior-art control partitions. They are not, in this slice, named-product shipment evidence. Shared corporate authorship and later citation do not prove which commercial die implemented which disclosed circuit.
+US3729722A, US3737879, US4207618, and US4333167 are strong public technical documents for prior-art control partitions. They are not, in this slice, proof that a particular commercial product shipped with every disclosed mechanism. GTE's preferred embodiment names a commercial Intel 1103 as the maintained device, but that does not prove commercial deployment of the surrounding GTE controller. Shared corporate authorship and later citation do not prove which commercial die implemented which disclosed circuit.
+
+### Limit — product contract ≠ system-controller genealogy
+
+The Signetics 1972 and Intel 1975 1103 documents ground a coverage/deadline product contract. They do not prove that Signetics and Intel implementations were electrically identical, that GTE's exact controller shipped with either product, or that one product contract dictates one controller topology.
 
 ### Limit — patent mechanism ≠ exact TMS4256 implementation
 
@@ -866,7 +978,7 @@ Case 03 established:
 
 Case 09 adds:
 
-> **the obligation, evidence that maintenance is due, and the machinery that discharges it must be analyzed separately, and those functions historically had multiple control partitions rather than one simple migration path.**
+> **the obligation, evidence that maintenance is due, the machinery that discharges it, and the boundary at which that machinery appears automatic must be analyzed separately; those functions historically had multiple control partitions rather than one simple migration path.**
 
 A compact comparison is:
 
@@ -875,7 +987,15 @@ Case 03
     why refresh is required
     deadline-driven reconstruction
 
-Case 09 — 1973 deadline-tracked patent
+Case 09 — GTE 1973 system-level automatic refresh
+    free-running cadence + row traversal live outside commercial DRAM chips
+    colliding service can be deferred
+
+Case 09 — 1103 product contract
+    coverage count + retention deadline
+    does not itself choose scheduler topology
+
+Case 09 — MOS Technology 1973 deadline-tracked patent
     retained row-age evidence can force selective maintenance
     ordinary access can reset that due-state relation
 
@@ -898,16 +1018,18 @@ Case 09 — 1999 SDRAM successor
     same product exposes both authority regimes
 ```
 
-This produces eight particularly useful controls:
+This produces ten particularly useful controls:
 
 1. **refresh obligation ≠ refresh-address-generation locus**;
 2. **refresh-age/deadline evidence ≠ traversal position**;
-3. **internalized refresh addressing ≠ autonomous refresh scheduling**;
-4. **internal cadence authority ≠ transparent concurrent access**;
-5. **hidden refresh ≠ absence of retention work**;
-6. **shared maintenance-control state ≠ shared scheduling authority**;
-7. **self-refresh ≠ nonvolatility or absence of power dependence**;
-8. **public patent prior art ≠ demonstrated product genealogy**.
+3. **automatic recurring refresh ≠ on-chip refresh integration**;
+4. **coverage geometry ≠ retention deadline ≠ one unique scheduler**;
+5. **internalized refresh addressing ≠ autonomous refresh scheduling**;
+6. **internal cadence authority ≠ transparent concurrent access**;
+7. **hidden refresh ≠ absence of retention work**;
+8. **shared maintenance-control state ≠ shared scheduling authority**;
+9. **self-refresh ≠ nonvolatility or absence of power dependence**;
+10. **public patent prior art / product chronology ≠ demonstrated implementation genealogy**.
 
 ---
 
@@ -915,12 +1037,17 @@ This produces eight particularly useful controls:
 
 | Claim | Label | Evidence status |
 | --- | --- | --- |
+| US3729722A publicly documents `self-initiating refresh` by 24 April 1973 | H/P | direct public patent transcript; filing/public dates kept distinct |
+| GTE's preferred embodiment uses commercial Intel 1103 chips with a separate free-running clock, refresh pulse generator, row-address counter, gating, and `memory busy` relation | H/P | direct US3729722A description; system-level apparatus, not chip-local self-refresh |
+| In the GTE embodiment, colliding external access is deferred until refresh completes | H/P | direct US3729722A description |
+| GTE's `self-initiating refresh` establishes automatic recurrence at the memory-system boundary, not proof of on-chip self-refresh | H/P/E | direct mechanism + bounded boundary reconstruction |
+| Signetics 1972 and Intel 1975 1103 product documents specify full-array refresh in 32 read cycles every two milliseconds | H/P | manufacturer-authored product documentation; exact early Intel stepping chronology not claimed |
+| Intel 1103A-1 keeps the 32-cycle coverage count while specifying a one-millisecond refresh period | H/P | Intel 1975 catalog product comparison |
 | US3737879 publicly documents a `self-refreshing memory` by June 1973 | H/P* | direct public patent transcript/mirror; filing/public dates kept distinct |
 | US3737879 uses row-specific counters so ordinary access can reset refresh-age state and an expired row can force mandatory refresh | H/P* | direct public patent transcript; patent disclosure, not product deployment |
 | US3737879 also describes voluntary refresh during otherwise idle periods | H/P* | direct public patent transcript; not equated with modern background scheduling |
 | US4207618 publicly documents external refresh requests with internal row enumeration by June 1980 | H/P | Google Patents primary patent text |
 | US4333167 publicly documents internally timed refresh plus internal row enumeration and read/write collision handling by June 1982 | H/P* | Justia public patent transcript; patent disclosure, not named product |
-| A still-earlier GTE US3729722A exists with a `self-initiating refresh means` title and April 1973 publication date | H/P-discovery | later patent citation/index record only in this slice; mechanism not promoted until direct inspection |
 | TMS4256/TMS4257 documentation specifies a 4 ms refresh period | H/P | TI period data book; later revision facsimile directly inspected |
 | TMS4256/TMS4257 supports RAS-only, CAS-before-RAS, and hidden refresh | H/P | TI period data book + direct later-revision facsimile |
 | CBR refresh ignores the external address and generates the refresh address internally | H/P | TI manufacturer documentation |
@@ -940,6 +1067,8 @@ This produces eight particularly useful controls:
 | Micron SELF REFRESH retains data without external clocking and uses internal clocking for recurring refresh | H/P | same 1999 page |
 | AUTO REFRESH and SELF REFRESH share the row refresh counter in the bounded Micron product | H/P | same 1999 page |
 | SELF REFRESH exit includes a `tXSR` handoff because internal refresh may still be in progress | H/P | same 1999 page |
+| `self-initiating refresh` in GTE proves Intel 1103 contained on-chip self-refresh | X | directly rejected by the preferred embodiment's separate system-level clock/counter/gating apparatus |
+| A 32-cycle / 2 ms product contract proves one required scheduler phase/topology | X | product coverage/deadline obligation does not dictate GTE's specific controller implementation |
 | Internal row enumeration proves internal recurring scheduling | X | directly rejected by TI 1980/CBR and Micron AUTO REFRESH control partitions |
 | Internal recurring scheduling proves transparent concurrent normal access | X | rejected by TI 1982 wait semantics and early self-refresh arbitration/access-lockout evidence |
 | Self-refresh proves unpowered retention / nonvolatility | X | rejected: dynamic payload still depends on powered periodic restoration |
@@ -951,7 +1080,7 @@ This produces eight particularly useful controls:
 | Moving refresh enumeration on-chip removes the periodic retention obligation | X | contradicted by the same source set |
 | `self refresh circuitry` in the TI CBR patent automatically means autonomous self-refresh | X | rejected by TI's external-trigger statement and early/later distinct self-refresh mechanisms |
 | 1981 Reese or 1999 Micron marks invention priority for autonomous DRAM self-refresh | X | contradicted by earlier public patent evidence; first-invention question remains out of scope |
-| The early patents/publications, TI CBR patent, and Micron SDRAM form a demonstrated direct genealogy | X | unsupported historical continuity |
+| The early patents/publications, GTE controller, TI CBR patent, and Micron SDRAM form a demonstrated direct genealogy | X | unsupported historical continuity |
 | Patent filing date is interchangeable with public disclosure date | X | explicitly rejected by chronology discipline |
 | The TI CBR patent is proven to be the exact TMS4256 circuit | X | unsupported product-identity leap |
 | Micron's 1999 datasheet proves JEDEC invention/standardization chronology | X | product evidence ≠ normative genealogy |
@@ -963,15 +1092,15 @@ This produces eight particularly useful controls:
 
 ### `tmzncty/computing-archaeology`
 
-Fresh related-repository searches for `CAS-before-RAS`, `self-refresh DRAM Reese`, and the exact patent number `3737879` found no dedicated case to reuse. A broad history of early dynamic-memory refresh patents/products, quasi-static RAM, ISSCC/JSSC publication genealogy, DRAM refresh counters/timers, silicon implementation, vendor competition, SDRAM standardization, test modes, oscillators, and controller integration still belongs there:
+Fresh related-repository searches for the exact GTE patent number `US3729722`, `1103`, `Intel 1103 refresh`, and the earlier Case-09 terms found no dedicated case to reuse. A broad history of early dynamic-memory refresh patents/products, Intel/Signetics second-source genealogy, exact 1103 stepping history, board-level refresh-controller development, quasi-static RAM, ISSCC/JSSC publication genealogy, DRAM refresh counters/timers, silicon implementation, vendor competition, SDRAM standardization, test modes, oscillators, and controller integration still belongs there:
 
 <https://github.com/tmzncty/computing-archaeology>
 
-This repository should keep only the retention-specific comparison about the **locus, authority, retained due-state/coverage state, persistence horizon, and visibility of maintenance work**.
+This repository should keep only the retention-specific comparison about **device coverage/deadline contract, cadence authority, traversal state, system/package locus, retained due-state/coverage state, persistence horizon, arbitration, and visibility of maintenance work**.
 
 ### `tmzncty/problem-history`
 
-Use its anti-anachronism discipline for the phrase `self refresh`. The 1973 patent term, Reese/Yamada early self-refresh, TI's later patent title phrase, and Micron's 1999 mode name must each be interpreted through the mechanism actually described rather than treated as timelessly identical vocabulary.
+Use its anti-anachronism discipline for `self-initiating refresh`, `self-refreshing memory`, and later `self refresh`. GTE's 1973 system-boundary wording, the June-1973 MOS Technology patent term, Reese/Yamada early self-refresh, TI's later patent title phrase, and Micron's 1999 mode name must each be interpreted through the mechanism and system boundary actually described rather than treated as timelessly identical vocabulary.
 
 ---
 
@@ -993,3 +1122,6 @@ Use its anti-anachronism discipline for the phrase `self refresh`. The 1973 pate
 14. Richard M. Greene, Donald L. McLaughlin, John O. Paivinen, `Self-refreshing memory`, US3737879, filed 5 January 1972, granted/published 5 June 1973, assigned to MOS Technology: <https://uspto.report/patent/grant/3737879>; patent-corpus mirror: <https://patents.google.com/patent/US3737879A/en>.
 15. Lionel S. White, Jr. and G. R. Mohan Rao, `On-chip refresh for dynamic memory`, US4207618A, filed/priority 26 June 1978, granted/published 10 June 1980, Texas Instruments: <https://patents.google.com/patent/US4207618A/en>.
 16. David J. McElroy, `Dynamic memory with on-chip refresh invisible to CPU`, US4333167, filed 5 October 1979, granted/published 1 June 1982, Texas Instruments: <https://patents.justia.com/patent/4333167>.
+17. Joseph Patrick Shuba, `Dynamic mode integrated circuit memory with self-initiating refresh means`, US3729722A, filed 17 September 1971, granted/published 24 April 1973, GTE Automatic Electric Laboratories: <https://patents.google.com/patent/US3729722A/en>; full public transcript mirror: <https://uspto.report/patent/grant/3729722>.
+18. Signetics Corporation, 1972 MOS handbook, `1103 / 1103-1 — Fully Decoded Random Access 1024 Bit Dynamic Memory`, printed p. 23, directly inspected in the dedicated product-contract evidence: <https://device.report/m/dafd5c77c72a981090c96e4a55aefea73e10f1e24d60e279806c3cf4fb8a94a5.pdf>.
+19. Intel Corporation, *1975 Intel Data Catalog*, `Silicon Gate MOS 1103 — Fully Decoded Random Access 1024 Bit Dynamic Memory`, catalog p. 2-7; same catalog supplies the bounded 1103A/1103A-1 comparison: <https://deramp.com/downloads/mfe_archive/050-Component%20Specifications/Intel/Memory%20Components/1975_Intel_Data_Catalog.pdf>.
