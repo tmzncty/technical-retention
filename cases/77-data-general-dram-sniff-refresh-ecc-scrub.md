@@ -2,11 +2,13 @@
 
 ## Status
 
-**`grounded`** — bounded to Data General's 1980-filed dynamic-RAM refresh/error-correction design in US4380812A, with IBM's 1971-filed US3735105A used as earlier manufacturer-primary prior art for systematic cycle-stealing memory correction and IBM Research's mid-1980s `soft error scrubbing` record used only as a later terminology/reliability boundary.
+**`grounded`** — bounded to Data General's 1980-filed dynamic-RAM refresh/error-correction design in US4380812A, with IBM's 1971-filed US3735105A used as earlier manufacturer-primary prior art for systematic cycle-stealing memory correction, a 1982 Data General MV/4000 product manual now providing a named-product refresh-coupled sniffing witness, and IBM Research's mid-1980s `soft error scrubbing` record used only as a later terminology/reliability boundary.
 
 Grounding record: [`../evidence/77-ibm-data-general-1971-1988-ecc-scrub-grounding.md`](../evidence/77-ibm-data-general-1971-1988-ecc-scrub-grounding.md).
 
 Failed-page / maintenance-eligibility deepening: [`../evidence/77-data-general-1985-sniff-page-inhibit-deepening.md`](../evidence/77-data-general-1985-sniff-page-inhibit-deepening.md).
+
+Named-product MV/4000 deepening: [`../evidence/77-data-general-1982-1984-mv4000-product-sniffing-deepening.md`](../evidence/77-data-general-1982-1984-mv4000-product-sniffing-deepening.md).
 
 ## Scope
 
@@ -173,6 +175,31 @@ Source: Peter G. Marshall and Robert Feldstein / Data General, US4908749A, filed
 
 See [`../evidence/77-data-general-1985-sniff-page-inhibit-deepening.md`](../evidence/77-data-general-1985-sniff-page-inhibit-deepening.md).
 
+### 8. A 1982 MV/4000 manual establishes named-product refresh-coupled sniffing
+
+Data General's 1982 ECLIPSE MV/4000 system-characteristics documentation gives the product-level witness that the patent record alone could not provide. It describes ERCC on ordinary double-word reads and on memory accessed during refresh. More decisively, it states that when the memory controller performs the refresh operations required by the dynamic RAM modules, it also checks for memory errors, and calls this operation `sniffing`.
+
+The same product documentation says sniffing verifies all memory locations and corrects a single-bit error in memory even if that location is not being used by a program. It explicitly gives the preventive reason: an unused region should not accumulate single-bit errors until they become an uncorrectable multiple-bit error. The system control program can log ERCC and sniffing errors.
+
+A SUGI '84 proceedings panel speaking from a Data General product perspective independently lists `error correcting memory and memory sniffing` among MV/4000 features and says every memory location is tested every **four seconds**.
+
+This closes the earlier named-product gap at the functional level:
+
+```text
+1980-filed patent
+    -> detailed refresh-coupled sniff design
+
+1982 MV/4000 product manual
+    -> named-product refresh-coupled sniff behavior
+
+1984 MV/4000 product discussion
+    -> memory sniffing + four-second whole-memory test description
+```
+
+The evidence still does **not** prove that every counter, pipeline stage, timing constant, or circuit in US4380812A shipped unchanged in the MV/4000. The patent's illustrative two-second same-word interval and the product-facing four-second figure therefore remain separate facts rather than being forced into false identity.
+
+See [`../evidence/77-data-general-1982-1984-mv4000-product-sniffing-deepening.md`](../evidence/77-data-general-1982-1984-mv4000-product-sniffing-deepening.md).
+
 ## Mechanism
 
 ### 1. Refresh and integrity scrub preserve different margins
@@ -330,6 +357,8 @@ The useful project formulation is:
 
 - **1971 IBM:** `memory correcting system`, systematic sequential addressing, cycle stealing, correction and reinsertion/rewriting of corrected data.
 - **1980 Data General:** dynamic-RAM refresh plus `sniff` / `sniffing`, full-word error checking, conditional corrective writeback, and a separate illustrative scrub/scan cadence.
+- **1982 Data General MV/4000:** manufacturer product documentation explicitly describes refresh-time error checking as `sniffing`, whole-memory verification, and single-bit correction in memory.
+- **1984 SUGI MV/4000 product discussion:** `error correcting memory and memory sniffing`, with every memory location described as tested every four seconds.
 - **1985 Data General filing:** a later preferred embodiment still names `sniff` and separately exposes `PAGEINH` so failed/no-longer-used memory can be skipped by `REFRESH` and `SNIFF`.
 - **mid-1980s IBM Research record:** explicit `soft error scrubbing` terminology and a reliability model parameterized by scrub interval.
 
@@ -337,7 +366,7 @@ The useful project formulation is:
 
 This repository uses `integrity scrub`, `patrol-like scan`, `redundancy-margin renewal`, `second-order retention-control state`, `carrier admissibility`, and `maintenance eligibility` as modern engineering descriptors where useful.
 
-They are **not** silently projected into the 1971 IBM, 1980 Data General, or 1985 Data General documents as the actors' own words.
+They are **not** silently projected into the 1971 IBM, 1980 Data General, 1982 MV/4000, or 1985 Data General documents as the actors' own words.
 
 ### Rejected claims
 
@@ -346,7 +375,7 @@ They are **not** silently projected into the 1971 IBM, 1980 Data General, or 198
 - `Data General sniffing = DDR5 ECS` — **rejected**; only the read/correct/writeback relation is functionally comparable.
 - `refresh = scrub` — **rejected** by the distinct address coverage, timescales, predicates, and writeback conditions inside the Data General design itself.
 - `PAGEINH = NAND bad-block table` — **rejected**; only the negative carrier-qualification relation is functionally comparable.
-- `patent disclosure = proven production deployment` — **rejected**; no named shipping system implementation is claimed here.
+- `US4380812A alone proves named-product deployment` — **rejected**; separate 1982 MV/4000 manufacturer documentation now grounds named-product refresh-coupled sniff behavior, while exact patent-circuit identity remains unproven.
 
 ## Functional analogy and philosophical limit
 
@@ -362,28 +391,32 @@ That relation is neither identical to the payload nor reducible to the DRAM cell
 
 ## Related repositories
 
-A repository search found no dedicated ECC/memory-scrubbing case in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for this slice. A fresh search for `Data General sniff memory ECC` also found no directly reusable treatment of the later `PAGEINH` boundary. A future full genealogy of Hamming/SEC-DED memory, semiconductor soft errors, IBM/Data General implementations, patrol scrub, Chipkill, and DDR-era RAS belongs primarily there.
+A repository search found no dedicated ECC/memory-scrubbing case in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for this slice. Fresh searches for `Data General sniff`, `MV/4000 memory`, and the later `PAGEINH` boundary also found no directly reusable treatment. A future full genealogy of ECLIPSE MV hardware, Hamming/SEC-DED memory, semiconductor soft errors, IBM/Data General implementations, patrol scrub, Chipkill, and DDR-era RAS belongs primarily there.
 
 `technical-retention` should keep only the cross-mechanism distinction developed here: **charge refresh, codeword correction, stored repair, scan coverage, carrier eligibility, and remaining correction margin are separate retention relations even when one controller schedules them together**.
 
+See the repository-level division of labor in [`../RELATED_REPOS.md`](../RELATED_REPOS.md), including the bounded MV/4000 product-sniffing seam.
+
 ## Sources
 
-### Manufacturer-primary / patent evidence
+### Manufacturer-primary / product / patent evidence
 
-1. Gerald A. Maley / IBM, **US3735105A, “Error correcting system and method for monolithic memories”**, filed 11 June 1971, published 22 May 1973. <https://patents.google.com/patent/US3735105A/en>
-2. Michael L. Ziegler II, Michael B. Druke, John R. Van Roekel, Ward Baxter II / Data General, **US4380812A, “Refresh and error detection and correction technique for a data processing system”**, filed 25 April 1980, published 19 April 1983. <https://patents.google.com/patent/US4380812A/en>
-3. Peter G. Marshall and Robert Feldstein / Data General, **US4908749A, “System for controlling access to computer bus having address phase and data phase by prolonging the generation of request signal”**, filed 15 November 1985, granted 13 March 1990; patent-family searchable text: <https://patents.google.com/patent/JPS62163160A/en>.
+1. Data General Corporation, **ECLIPSE MV/4000 system-characteristics documentation**, part no. 014-000736-00, copyright 1982; archived as `MV4000_SystemChar_Dec82.pdf`. <https://bitsavers.trailing-edge.com/pdf/dg/mv4000/014-000736-00_MV4000_SystemChar_Dec82.pdf>
+2. Gerald A. Maley / IBM, **US3735105A, “Error correcting system and method for monolithic memories”**, filed 11 June 1971, published 22 May 1973. <https://patents.google.com/patent/US3735105A/en>
+3. Michael L. Ziegler II, Michael B. Druke, John R. Van Roekel, Ward Baxter II / Data General, **US4380812A, “Refresh and error detection and correction technique for a data processing system”**, filed 25 April 1980, published 19 April 1983. <https://patents.google.com/patent/US4380812A/en>
+4. Peter G. Marshall and Robert Feldstein / Data General, **US4908749A, “System for controlling access to computer bus having address phase and data phase by prolonging the generation of request signal”**, filed 15 November 1985, granted 13 March 1990; patent-family searchable text: <https://patents.google.com/patent/JPS62163160A/en>.
 
-### Institutional / scholarly terminology and reliability boundary
+### Contemporary product-description / institutional / scholarly evidence
 
-4. M. Blaum, Rodney M. Goodman, Robert J. McEliece, **“Effect of Soft Error Scrubbing on Single-Error Protected RAM Systems”**, IBM Research publication record; catalog labels `ISIT 1985` and displays a December 1986 date. <https://research.ibm.com/publications/effect-of-soft-error-scrubbing-on-single-error-protected-ram-systems>
-5. Mario Blaum, Rodney Goodman, Robert McEliece, **“The Reliability of Single-Error Protected Computer Memories,”** *IEEE Transactions on Computers* 37(1), 1988, pp. 114–119; IBM Research record. <https://research.ibm.com/publications/the-reliability-of-single-error-protected-computer-memories>
+5. Jon Fleig, Jerry Harber, Steve Sashihara, **“Panel Discussion of SAS Users under the AOS/VS Operating System,”** SUGI '84 proceedings, 18–21 March 1984. <https://support.sas.com/resources/papers/proceedings-archive/SUGI84/Sugi-84-136%20Harber%20Fleig%20Sashihara.pdf>
+6. M. Blaum, Rodney M. Goodman, Robert J. McEliece, **“Effect of Soft Error Scrubbing on Single-Error Protected RAM Systems”**, IBM Research publication record; catalog labels `ISIT 1985` and displays a December 1986 date. <https://research.ibm.com/publications/effect-of-soft-error-scrubbing-on-single-error-protected-ram-systems>
+7. Mario Blaum, Rodney Goodman, Robert McEliece, **“The Reliability of Single-Error Protected Computer Memories,”** *IEEE Transactions on Computers* 37(1), 1988, pp. 114–119; IBM Research record. <https://research.ibm.com/publications/the-reliability-of-single-error-protected-computer-memories>
 
 ## Open questions
 
-- Which named Data General machines, if any, implemented the exact refresh-coupled sniff mechanism disclosed in US4380812A or the later controller-level `PAGEINH` behavior?
-- What period service/engineering manuals expose the scan interval, counters, ECC fault reports, failed-page classification, or spare/replacement behavior in deployed systems?
-- Did the 1985 preferred embodiment retain failed-page classification across restart/power loss, and if so in what representation?
+- Which period MV/4000 field-engineering or logic manual exposes the exact sniff counter/state machine closely enough to compare the shipping implementation clause-by-clause with US4380812A?
+- Which named Data General machine/manual, if any, exposes the later controller-level `PAGEINH` behavior, failed-page classification, or spare/replacement semantics?
+- Does the MV/4000 sniff scan position survive reset or power interruption, or does a sweep restart from a fixed state?
+- Is the 1984 four-second whole-memory figure fixed, capacity-dependent, or revision/configuration dependent in product engineering documentation?
 - When did `scrub`, `scrubbing`, and later `patrol scrub` become stable vendor/architecture vocabulary rather than one paper's terminology?
 - How did system-level memory scrub move between processor, memory controller, chipset, DIMM, and eventually device-internal DDR5 ECS loci?
-- Which commercial systems coupled scrub to refresh versus running an independent scan engine?
