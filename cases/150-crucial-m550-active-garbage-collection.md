@@ -24,6 +24,7 @@ The case is useful because the same product family exposes `Active Garbage Colle
 - [2013–2015 AGC provenance and m4 experiment deepening](../evidence/150-crucial-2013-2015-agc-provenance-experiment-deepening.md) — narrows the public-circulation floor of Crucial's `6–8 hours` powered-idle support wording to contemporaneous 2013–2014 preservation witnesses and uses a peer-reviewed named Crucial m4 experiment to separate GC presence, deallocation/reclaim eligibility, execution, physical erase, and observed stale-data recoverability.
 - [2013 support-page version provenance deepening](../evidence/150-crucial-2013-support-page-version-provenance-deepening.md) — moves the independently witnessed named-resource existence floor to 12 June 2013, records later-preserved page metadata reporting 17 January 2013 creation and 23 October 2013 edit timestamps, and separates page identity from content-version identity rather than back-dating the later `6–8 hours` body wholesale.
 - [IBM 2009–2012 SSD GC validity/map/erase prior-art deepening](../evidence/150-ibm-2009-2012-ssd-gc-validity-map-erase-prior-art-deepening.md) — adds a manufacturer-authored controller design that separates PI invalidity evidence, victim selection, live-data recovery/re-storage, address-map update, erase eligibility, and actual old-block erase. It is used as prior-art/control-architecture evidence, **not** as M550 implementation evidence or genealogy.
+- [T13 2007–2010 TRIM logical-invalidation/read-semantics deepening](../evidence/04-t13-2007-2010-trim-logical-invalidation-read-semantics-deepening.md) — shared standards evidence already developed for Case 04 and intentionally **reused rather than duplicated** here; separates host discardability notification, post-TRIM read semantics (including DRAT/read-zero proposals), later physical reclamation, and sanitization.
 
 ---
 
@@ -141,6 +142,39 @@ Therefore:
 Crucial's maintained material also presents Active Garbage Collection as useful where TRIM is unavailable. That means controller-local reclamation cannot be reduced to merely “executing a TRIM command.” The two mechanisms can cooperate, but they are not one state transition.
 
 The m4 experiment adds a useful observability guardrail: when a tested host path did not produce the authors' expected TRIM effect, stale payload remained recoverable. That result does not establish that no garbage collector existed; a controller that still regards pages as live may have to preserve/relocate them rather than discard them. Thus `TRIM absent != GC absent`, just as `TRIM delivered != physical erase necessarily synchronous with the command`.
+
+### Reused T13 interface evidence: read semantics can change before reclamation is proved complete
+
+The repository already has a detailed standards-history packet for Case 04, [`04-t13-2007-2010-trim-logical-invalidation-read-semantics-deepening.md`](../evidence/04-t13-2007-2010-trim-logical-invalidation-read-semantics-deepening.md). Case 150 deliberately reuses that packet instead of creating a second TRIM history.
+
+The T13 proposal sequence adds an interface-level layer between deallocation knowledge and physical reclamation. In `e07154r6`, trimmed logical-block data become indeterminate until rewritten. The later `e08137` DRAT proposal distinguishes deterministic from non-deterministic reads after TRIM, and the `e09117` / `e09158` read-zero/clarification work further distinguishes an advertised all-zero post-TRIM read result.
+
+For this case, the bounded consequence is:
+
+```text
+TRIM/deallocation delivered
+    != old payload remains host-visible/current at that LBA
+    != old NAND embodiment proved physically erased
+    != garbage-collection completion
+    != sanitize completion
+```
+
+In particular, a host-visible zero after a read-zero-after-TRIM contract is a **block-interface read result**, not by itself evidence that the old physical cells have already been erased. Conversely, indeterminate post-TRIM reads are an interface freedom, not proof that stale cells necessarily remain recoverable.
+
+This sharpens Case 150's existing state chain:
+
+```text
+host retirement decision
+    -> TRIM/deallocation knowledge
+    -> post-TRIM read/currentness contract
+    -> controller stale/invalid authority
+    -> later live-data relocation as required
+    -> erase-block reclamation
+```
+
+The source evidence does not require every controller to expose these as separately timed internal events, but it blocks the stronger and unsupported equation `TRIM completion = physical reclaim completion`.
+
+The T13 material is standards/interface prior art only. No inspected source establishes that the M550 advertised DRAT or RZAT, or that its firmware implemented any particular post-TRIM return mechanism.
 
 ---
 
@@ -315,7 +349,9 @@ Cases 44 and 47 remain the stronger sanitize/remanence boundary.
 
 Case 04 shows that logical designation can survive physical relocation. Case 150 adds the reclamation motive: live data may be relocated specifically so that a mixed old erase block can be erased and returned to the free pool. Same broad abstraction layer, different bounded question.
 
-The new IBM prior-art/control-architecture witness gives that relation a later manufacturer-defined state sequence: physical re-storage, address-map update, and old-block erase are distinct transitions. It is a functional/historical control witness, not a claim that the early Case-04 systems or M550 implemented the IBM stride/C2 architecture.
+Case 04's later T13 deepening is now explicitly shared with this case. There it answers how host-side discardability knowledge crosses the interface and how read-after-TRIM semantics can change without proving immediate physical reclamation. Here the same evidence is used only to refine the **TRIM → GC** boundary; the standards chronology remains authoritative in the Case-04 evidence file rather than being copied into a second packet.
+
+The IBM prior-art/control-architecture witness gives that relation a later manufacturer-defined state sequence: physical re-storage, address-map update, and old-block erase are distinct transitions. It is a functional/historical control witness, not a claim that the early Case-04 systems or M550 implemented the IBM stride/C2 architecture.
 
 The m4 experiment deepening adds the reverse-side control question: if device-level retirement/deallocation evidence is absent or not acted on, upper-layer deletion need not make a physical embodiment reclaimable. That is a functional reconstruction, not a claim that the m4 implements Case 04's historical patent structures.
 
@@ -350,13 +386,14 @@ This case does **not** claim that the 2014 M550 introduced SSD garbage collectio
 Guardrails:
 
 - Gal and Toledo's 2005 flash-management survey already records erase-unit constraints, not-in-place update, reclamation/erase management, and wear-management problem families;
+- the T13 2007–2010 Data Set Management / TRIM / DRAT / read-zero proposal chain predates M550 and already separates host discardability notification from later read behavior; it is interface prior art, not M550 implementation evidence;
 - IBM's manufacturer-authored `US20120266050A1 / US8904261B2`, with **2009-12-17 priority**, exposes a concrete managed-SSD controller sequence separating invalidity state, victim selection, live-data re-storage, map update, and later block erase;
 - SNIA publicly discussed drive-internal garbage collection and TRIM by 2011;
 - the M550 evidence therefore serves as a **named-product embodiment floor**, not an invention date;
 - the IBM patent is a prior-art/control-architecture witness, not evidence that IBM invented GC or that Crucial/Micron implemented that design;
 - chronology does not prove a Micron/Crucial genealogy from any particular earlier paper, patent, controller family, or SSD vendor.
 
-A fresh search of `tmzncty/computing-archaeology` for combinations of `garbage collection`, `SSD`, `FTL`, `IBM`, and `Cideciyan` found no dedicated matching study to reuse. A new search for `Crucial Active Garbage Collection powered idle` likewise found no dedicated support-page/product-history module to reuse. Broader FTL genealogy, early commercial SSD GC, controller architecture, SATA low-power/TRIM transport genealogy, support-site migration, and product-by-product scheduler history belong primarily there if pursued; Case 150 keeps only the retention/reclamation relation.
+A fresh search of `tmzncty/computing-archaeology` for combinations of `garbage collection`, `SSD`, `FTL`, `IBM`, and `Cideciyan` found no dedicated matching study to reuse. A new search for `Crucial Active Garbage Collection powered idle` likewise found no dedicated support-page/product-history module to reuse. The current pass also searched `DRAT RZAT TRIM ATA` and `e07154` and found no dedicated companion packet. Broad FTL genealogy, early commercial SSD GC, controller architecture, T13/T10/SATA low-power/TRIM transport genealogy, Windows adoption, support-site migration, and product-by-product scheduler history belong primarily there if pursued; Case 150 keeps only the retention/reclamation relation and reuses the existing Case-04 T13 packet for interface semantics.
 
 ---
 
@@ -367,6 +404,8 @@ The engineering evidence supports one restrained observation: **technical forget
 A mixed erase block cannot be forgotten wholesale. The controller must discriminate current from stale embodiments, carry current data forward, and only then erase the old container. “Garbage collection” is therefore not pure destruction; it is a selective transition that preserves one continuity while ending another.
 
 The IBM deepening sharpens this without changing the philosophical boundary: negative validity evidence, positive mapping/currentness state, and later physical erase can be different retained relations. Forgetting at one layer can therefore depend on preserving enough state to know what must **not** be forgotten during the same transition.
+
+The reused T13 interface evidence adds a narrower observation: an old payload can cease to be the host-visible/current value at an LBA before lower-layer physical erasure is proved complete. That is an interface/currentness statement, not a claim that the old NAND pattern necessarily survives.
 
 A second observation is that **inactivity at one layer can be maintenance activity at another**. Host idleness can provide the interval in which a controller reorganizes physical state while leaving the logical namespace apparently unchanged.
 
@@ -494,6 +533,12 @@ This follow-on is the authoritative location for the decomposition `invalidity e
 
 This follow-on is the authoritative location for the chronology distinction among reported page creation metadata, independently witnessed public resource existence, specific detailed text preservation, and later page-body quotation. It explicitly rejects `same page identity = same historical body version`.
 
+### F5 — shared T13 TRIM logical-invalidation / read-semantics deepening
+
+[Case 04 Deepening — T13 TRIM, Logical Invalidation, and Read-After-Invalidation Semantics (2007–2010)](../evidence/04-t13-2007-2010-trim-logical-invalidation-read-semantics-deepening.md)
+
+This pre-existing shared evidence packet is authoritative for the T13 proposal chronology and for the distinctions `host knows data are no longer needed != that fact reaches the device`, `Trim notification != immediate physical erase`, and `post-Trim read contract != old payload remains logically current`. Case 150 reuses it only to sharpen the boundary between deallocation/currentness semantics and later garbage-collection reclamation.
+
 ---
 
 ## Evidence-strength summary
@@ -502,12 +547,13 @@ This follow-on is the authoritative location for the chronology distinction amon
 - **Strong for current vendor behavior:** Crucial's maintained support material explicitly describes controller-local Active Garbage Collection, powered idle opportunity, free-space dependence, and power-setting changes that preserve a long idle maintenance window.
 - **Moderate period-provenance evidence:** a 12 June 2013 independent contemporaneous resource listing establishes the named support-page identity in public circulation by that date; a later 2014 quotation preserves reported 17 January 2013 creation / 23 October 2013 edit metadata; the detailed `6–8 hours` procedure remains safely bounded by the 18 August 2013 support-email reproduction. None is an authenticated January 2013 Crucial-origin capture.
 - **Strong named-device experimental evidence for the tested setups:** SecureComm identifies a Crucial m4 CT064M4SSD2 and reports USB/secondary-SATA stale-data survival versus primary-SATA/Windows-7/TRIM non-recovery; the internal causal interpretation remains more limited than the observable outcome.
+- **Strong standards-interface prior art:** the already-grounded Case-04 T13 packet traces `e07154` / `e08137` / `e09117` / `e09158` and separates discardability notification, post-TRIM read semantics, physical reclamation, and sanitization. This is not M550 behavior evidence.
 - **Strong manufacturer-primary prior-art/control-architecture evidence:** IBM's 2009-priority patent explicitly separates PI invalidity state, victim selection, live-data recovery/re-storage, address-map update, and immediate-or-later old-block erase. This is not M550 implementation evidence.
 - **Strong generic mechanism:** SNIA describes relocation of valid data before erase-block reclamation and its write-amplification/performance cost.
 - **Strong protocol boundary:** SATA-IO distinguishes DevSleep from active/other reduced-power interface states, but does not specify M550's internal GC eligibility.
-- **Strong anti-priority guardrail:** 2005 academic flash-management literature plus IBM's 2009-priority manufacturer record and 2011 SNIA terminology all predate M550 productization; none establishes a direct Micron/Crucial genealogy.
+- **Strong anti-priority guardrail:** 2005 academic flash-management literature plus T13's 2007–2010 TRIM proposal chain, IBM's 2009-priority manufacturer record, and 2011 SNIA terminology all predate M550 productization; none establishes a direct Micron/Crucial genealogy.
 - **Moderate product revision guardrail:** M550 MU02 explicitly changed power-state-transition handling, but no inspected source ties that change to GC.
-- **Not established:** exact M550 GC algorithm, victim policy, internal metadata, free-space threshold, power-fail transaction, per-power-state GC eligibility, firmware-version scheduler differences, authenticated January–October 2013 Crucial support-page body revisions, command-level trace for the m4 experiments, or complete physical sanitization effect.
+- **Not established:** exact M550 GC algorithm, victim policy, internal metadata, free-space threshold, power-fail transaction, per-power-state GC eligibility, firmware-version scheduler differences, actual M550 DRAT/RZAT advertisement, authenticated January–October 2013 Crucial support-page body revisions, command-level trace for the m4 experiments, or complete physical sanitization effect.
 
 ---
 
@@ -516,5 +562,5 @@ This follow-on is the authoritative location for the chronology distinction amon
 1. Recover an authenticated origin-hosted or archived **January–October 2013 Crucial** support-page capture. The named resource is independently visible by 12 June 2013 and later-preserved metadata reports a 17 January creation / 23 October edit, but the exact January body and revision delta remain unverified; the detailed `6–8 hours` wording is safely preserved by 18 August 2013.
 2. The generic first-party controller-state-machine gap is now **partly closed** by IBM's 2009-priority manufacturer patent. The remaining high-value debt is **M550-specific**: find Micron/Crucial or Marvell evidence for its victim selection, map-publication/currentness transition, arbitrary-power-cut recovery, and explicit per-power-state GC eligibility.
 3. Extend the named-device evidence with controlled traces that separately correlate deallocation delivery, active idle, low-power states, internal writes, mapping/currentness changes, and reclaimed space; the SecureComm m4 results establish path-dependent recoverability but do not instrument internal GC or exact ATA command delivery.
-4. Trace early commercial SSD GC / FTL and SATA low-power/TRIM transport genealogy in `computing-archaeology` rather than expanding this case into a general SSD history.
+4. The T13 2007–2010 logical-invalidation/read-semantics seam is now reused from Case 04 rather than duplicated here. Broader T13/T10/SATA genealogy, Windows adoption, early commercial SSD GC/FTL, controller-vendor uptake, and product-by-product behavior remain `computing-archaeology` work.
 5. Keep ordinary reclamation erase and quick-format forensic recovery separate from sanitize/remanence testing unless lower-layer security-command evidence is obtained.
