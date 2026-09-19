@@ -4,15 +4,16 @@
 
 - **Bounded historical/technical regime:** HDFS administrative decommissioning as documented in Hadoop 0.18-era architecture material, Hadoop 1.0.4 administration documentation, the Hadoop 2.7.0 decommission-manager refactor record, and exact Hadoop 2.7.3 source; the rack-placement deepening additionally inspects Hadoop 0.18 replica-placement documentation, Hadoop 2.7.3 `BlockPlacementPolicyDefault`, and GFS 2003 as an earlier prior-art floor.
 - **Primary question:** what must remain, be copied, be topologically qualified, and be re-checked before an otherwise surviving storage node may stop counting as an ordinary in-service embodiment of replicated HDFS blocks?
-- **Retention-specific focus:** administrative exclusion, `DECOMMISSION_INPROGRESS`, replication work before retirement, replica-count versus rack-placement sufficiency, final full-map verification, health qualification, and recommission cleanup.
+- **Retention-specific focus:** administrative exclusion, `DECOMMISSION_INPROGRESS`, replication work before retirement, replica-count versus rack-placement sufficiency, final full-map verification, health qualification, recommission cleanup, and the restart boundary between retained decommission intent, reconstructible progress bookkeeping, and revalidated storage evidence.
 - **Excluded from this case:** a general HDFS history; generic cluster expansion; balancing; HDFS erasure coding; storage-media sanitization; node hardware replacement procedure; or invention priority for graceful node draining/rack-aware storage.
 
 Grounding records:
 
 - [`../evidence/80-hadoop-2008-2016-datanode-decommission-grounding.md`](../evidence/80-hadoop-2008-2016-datanode-decommission-grounding.md)
 - [`../evidence/80-hadoop-2003-2016-rack-placement-decommission-deepening.md`](../evidence/80-hadoop-2003-2016-rack-placement-decommission-deepening.md)
+- [`../evidence/80-hadoop-273-namenode-restart-decommission-intent-reconstruction-deepening.md`](../evidence/80-hadoop-273-namenode-restart-decommission-intent-reconstruction-deepening.md) — exact Hadoop 2.7.3 source and regression-test deepening for external exclude-policy re-import, fresh `DecommissionManager` progress state, DataNode re-registration, and post-restart re-establishment of retirement authority.
 
-This case is deliberately adjacent to Case 79 but asks the inverse operational question. Case 79 studies how a restarted NameNode **re-observes surviving replicas before acting on an incomplete inventory**. Case 80 studies how HDFS **intentionally withdraws one still-existing DataNode from service only after enough other embodiments satisfy a bounded replication and placement condition**.
+This case is deliberately adjacent to Case 79 but asks the inverse operational question. Case 79 studies how a restarted NameNode **re-observes surviving replicas before acting on an incomplete inventory**. Case 80 studies how HDFS **intentionally withdraws one still-existing DataNode from service only after enough other embodiments satisfy a bounded replication and placement condition**. The restart deepening now adds a second relation: the withdrawal obligation can itself survive a NameNode process restart even though its transient progress collections need not.
 
 ---
 
@@ -121,6 +122,30 @@ This gives a strong retention distinction:
 
 The summary accelerates progress checking; final retirement authority is gated by revalidation against a more current relation.
 
+### H/P — NameNode restart can re-import decommission intent without preserving the old progress collections
+
+The [restart deepening](../evidence/80-hadoop-273-namenode-restart-decommission-intent-reconstruction-deepening.md) inspects Hadoop 2.7.3 at pinned source commit `baa91f7c6bc9cb92be5982de4719c1c8af91ccff`.
+
+A newly constructed `DatanodeManager` creates a fresh `HostFileManager` and refreshes it from the configured `dfs.hosts` / `dfs.hosts.exclude` paths. When a DataNode registers, `startDecommissioningIfExcluded(...)` re-evaluates the exclusion relation and calls `DecommissionManager.startDecommission(...)` when appropriate.
+
+Meanwhile a newly constructed `DecommissionManager` creates fresh in-memory `decomNodeBlocks` and `pendingNodes` collections. Those collections are therefore not the only carrier by which the decommission obligation crosses a NameNode process boundary.
+
+The release's own `TestDecommission.testDecommissionWithNamenodeRestart()` makes that relation concrete: the test writes a target DataNode into the exclude file, starts another DataNode, restarts the NameNode, waits for the target to reach `DECOMMISSIONED`, keeps both DataNodes alive, and verifies the post-decommission replica relation.
+
+The bounded restart chain is therefore:
+
+```text
+retained exclude-policy relation
+    -> new NameNode imports host configuration
+    -> DataNode registration re-applies exclusion
+    -> fresh decommission working state is built
+    -> current replica/block relation is re-observed
+    -> preservation condition is checked again
+    -> retirement authority can be re-established
+```
+
+This does **not** mean the old `decomNodeBlocks` cache, pending queue, iterator position, or monotonic decommission start time survived unchanged. It means the **maintenance obligation can survive even when its transient progress representation does not**.
+
 ### H/P — `under-replicated` and `blocks decommission` are not identical predicates in this bounded release
 
 `isSufficientlyReplicated` first accepts blocks whose live-replica count meets the expected replication factor **and** whose placement policy is satisfied. But Hadoop 2.7.3 also has bounded exceptions: for the last block of an under-construction file, the code can permit decommission when at least `minReplication` live copies remain; for a non-under-construction block whose expected replication exceeds live replicas, the code can still regard it as sufficient for decommission once `defaultReplication` is met.
@@ -221,13 +246,19 @@ A block can have a live-replica count and separately have a placement result. Th
 
 `In Service`, `Decommission In Progress`, and `Decommissioned` qualify what the system is allowed to conclude or do about a node independently of simple liveness.
 
+The restart deepening prevents one extra shortcut: the continuity of the administrative **obligation** does not imply that the same in-memory `AdminState` object is the sole restart-surviving carrier.
+
 ### 6. Administrative configuration / intent
 
 The include/exclude configuration and `refreshNodes` path express operator-selected membership intent. They are distinct from heartbeat-derived reachability.
 
+In the bounded 2.7.3 restart path, this relation has a longer persistence horizon than one NameNode process: a fresh `DatanodeManager` re-reads the configured host files, and DataNode registration can re-apply exclusion to the new runtime state.
+
 ### 7. Decommission progress state
 
 The monitor's current list/counters of insufficiently replicated blocks are working control state. They help schedule and bound maintenance but are explicitly revalidated before final retirement.
+
+The restart deepening shows that the relevant `pendingNodes` / `decomNodeBlocks` containers are freshly allocated with a new `DecommissionManager`. Their persistence horizon is therefore not the same as the external exclusion policy's horizon. The maintenance obligation can be reconstructed even when these exact runtime structures are not retained.
 
 ---
 
@@ -246,6 +277,18 @@ in-service DataNode
     -> blocker set reaches zero
     -> full block-map re-check + node-health check
     -> DECOMMISSIONED
+```
+
+A NameNode restart can interrupt the process-local representation without necessarily ending the obligation:
+
+```text
+exclude intent remains externally represented
+    -> old NameNode process / progress collections disappear
+    -> new NameNode imports host configuration
+    -> DataNodes register / block state is re-observed
+    -> exclusion re-establishes decommission work
+    -> fresh progress state is reconstructed
+    -> current completion predicate is re-proved
 ```
 
 A later policy change can instead produce:
@@ -276,6 +319,8 @@ A live-copy count is not the complete ordinary full-strength preservation predic
 
 `DECOMMISSIONED` is an administrative outcome, not evidence that the machine, disks, or block files have been physically destroyed. The inspected decommission manager reaches completion by state transition after replication/placement/health checks; it does not establish secure media erasure.
 
+The restart deepening adds that retained exclusion is not itself proof of retirement. After restart it can recreate the obligation, but the system still needs current storage evidence to re-establish completion authority.
+
 ### Forgetting
 
 The safe objective is to forget **dependence on this node as an in-service embodiment**, not necessarily to erase every byte on that node at the moment decommission completes.
@@ -303,6 +348,33 @@ The system can replicate blocks away from a retiring live node before allowing r
 ### E — progress metadata can be useful without being final authority
 
 The tracked blocker list reduces repeated work, but its documented staleness requires a final full-block-map check. A retained summary can support maintenance while remaining epistemically subordinate to re-observation.
+
+### E — a maintenance obligation can survive a process restart without exact progress-state persistence
+
+The 2.7.3 restart evidence separates four relations:
+
+```text
+retained external policy
+    != process-local progress collections
+    != re-observed current block relation
+    != recomputed retirement authority
+```
+
+The old monitor state need not cross the process boundary byte-for-byte if the new process can recover the operator-selected policy, re-observe enough of the storage world, and rebuild the derived working state.
+
+This yields:
+
+> **maintenance-obligation continuity != exact maintenance-progress continuity**.
+
+It does not say reconstruction is free: repeated scans or delayed completion remain possible.
+
+### E — retention horizon and authority are orthogonal
+
+The exclude policy survives the NameNode process boundary in the tested path, yet it cannot certify replica sufficiency. The blocker map is shorter-lived, yet it contributes useful scheduling/progress information. The actual block relation is re-observed, and final authority is recomputed.
+
+Therefore:
+
+> **more persistent control state != more authoritative control state**.
 
 ### E — retirement admissibility is relational
 
@@ -337,7 +409,9 @@ The direction differs:
 - Case 79 **re-observes surviving embodiments after NameNode startup** before ordinary repair/mutation proceeds;
 - Case 80 **intentionally withdraws one embodiment** while ensuring other replicas are sufficient before retirement completes.
 
-`startup inventory confidence ≠ planned replica drain`.
+The restart deepening adds a further difference: startup re-observation supplies storage evidence, while the externally retained exclude relation separately supplies **which administrative withdrawal should be re-enacted**.
+
+`startup inventory confidence ≠ decommission policy persistence ≠ planned replica drain`.
 
 ### A — Case 05, RADOS repair
 
@@ -369,6 +443,18 @@ Case 51 asks which NameNode may issue block-changing commands after HA transitio
 
 Disk/NAND defect management can preserve a logical address while retiring a failed physical sector/block. HDFS decommission also preserves higher-level block identity across embodiment changes, but its trigger is planned cluster administration rather than a local media defect. Again, similarity of continuity relation is not descent.
 
+### A — Cases 145 and 152, reconstruction of derived maintenance state
+
+Case 145 reconstructs volatile JFFS2 block classifications at mount from stronger on-flash evidence; Case 152 separates authoritative SQLite WAL evidence from reconstructible checkpoint-progress state. The Case-80 restart result is functionally comparable only at the relation level:
+
+```text
+derived runtime maintenance state disappears
+    + stronger policy / system evidence remains
+    -> operational state can be rebuilt
+```
+
+The implementations, histories, failure models, and correctness conditions are otherwise different. No genealogy is claimed.
+
 ---
 
 ## Philosophical interpretation — bounded
@@ -382,6 +468,14 @@ The technically grounded point is modest:
 > **a system can make withdrawal from service conditional on prior preservation work and current evidence about both the number and placement of the remaining embodiments.**
 
 That may inform later analysis of availability, replaceability, or technical forgetting. It does not by itself establish a Heideggerian `Bestand` claim, and `decommissioned` is not a philosophical synonym for forgotten.
+
+### I — continuity of obligation need not be continuity of executor state
+
+The restart evidence adds a second bounded conceptual problem. The old NameNode process and its progress collections can disappear while an externally represented exclusion policy remains; a later process can then re-import that policy, re-observe current storage state, and reconstruct the work needed to finish the withdrawal safely.
+
+Thus what persists can be **an obligation-producing relation** rather than one uninterrupted internal executor state.
+
+This is an interpretation of the exact technical boundary, not a claim that a host file is a human memory/archive or that reconstruction is philosophically superior to checkpointing.
 
 ---
 
@@ -399,7 +493,11 @@ That may inform later analysis of availability, replaceability, or technical for
 - The inspected code does not establish that decommission completion securely erases local block data.
 - Decommission is not equated with dead-node failure recovery, rack rebalancing, storage-volume removal, or modern HDFS maintenance state.
 - The blocker list is explicitly allowed to become stale; it is not treated as a durable audit history.
-- The case does not prove crash-persistence semantics for every transient `DecommissionManager` data structure.
+- `pendingNodes`, `decomNodeBlocks`, monitor cursor/iterator state, and the monotonic decommission start time are not claimed to survive NameNode restart as identical runtime objects/values.
+- The restart regression test does not prove crash consistency of the `dfs.hosts.exclude` file itself, arbitrary torn config writes, or every possible crash interleaving.
+- The restart regression test is not silently generalized into HA Active/Standby or federation configuration-distribution semantics.
+- Retained exclusion intent is not proof that sufficient current replicas exist; post-restart storage evidence remains necessary.
+- Rebuilding progress state can repeat work or delay completion; reconstructibility is not consequence-free.
 - Recommission processing of over-replication establishes cleanup behavior in this source path, not an invariant that every recommission always deletes a replica.
 - The topology-aware excess-copy source path is not claimed to be globally optimal under every workload/failure model.
 - No claim is made about exact throughput, completion time, network volume, or operator labor for a named production cluster.
@@ -414,6 +512,12 @@ For decommissioning, the defensible historical statement remains:
 
 > Hadoop 0.18-era documentation already exposed an explicit DataNode decommission operation; Hadoop 1.0.4 documentation tied later decommission/recommission intent to administrator-controlled host configuration; and Hadoop 2.7.3 source makes the retention relation inspectable as a monitored transition in which a live node remains `DECOMMISSION_INPROGRESS` while insufficient replicas are scheduled/checked, followed by a full-map and health revalidation before `DECOMMISSIONED`.
 
+The 2.7.3 restart deepening adds only this narrower source-level result:
+
+> **a fresh NameNode-side manager can re-import external exclude intent, re-apply decommission on DataNode registration, reconstruct fresh progress state, and complete retirement after current storage evidence is re-established.**
+
+It does not convert decommission progress into a hidden durable checkpoint or establish a general HDFS configuration-durability protocol.
+
 For rack-placement prior art, Ghemawat, Gobioff, and Leung's GFS 2003 paper explicitly says machine-level spreading is insufficient for its goal and that chunk replicas must also be spread across racks. This is an earlier distributed-filesystem mechanism floor than the bounded HDFS 0.18 record.
 
 That permits the negative priority statement:
@@ -426,7 +530,7 @@ But it does **not** establish:
 
 A real genealogy would require direct design/citation/code-history evidence rather than chronology plus functional similarity.
 
-The `computing-archaeology` repository was searched for dedicated `HDFS rack replica placement` / `rack awareness` material before this deepening; no directly reusable treatment was found. A broader history of cluster placement, failure-domain modeling, draining, and membership protocols belongs there if developed later.
+The `computing-archaeology` repository was searched for dedicated `HDFS rack replica placement` / `rack awareness` material before the earlier deepening and again for `HDFS decommission restart` / `dfs.hosts.exclude` before the restart deepening; no directly reusable treatment was found. A broader history of Hadoop cluster administration, placement, failure-domain modeling, draining, membership protocols, configuration distribution, and HA evolution belongs there if developed later.
 
 ---
 
@@ -447,6 +551,10 @@ The `computing-archaeology` repository was searched for dedicated `HDFS rack rep
 | final completion also checks node health | H/P | grounded in source |
 | a decommission-in-progress node that becomes dead does not automatically finish retirement in the bounded source | H/P | grounded in class documentation |
 | recommission can trigger over-replication processing | H/P | grounded in `stopDecommission` |
+| a new 2.7.3 `DatanodeManager` re-reads configured include/exclude files | H/P | grounded in exact constructor source |
+| DataNode registration re-evaluates exclusion and can re-start decommission | H/P | grounded in exact registration/helper source |
+| a new `DecommissionManager` allocates fresh pending/tracked progress collections | H/P | grounded in exact constructor source |
+| the 2.7.3 NameNode-restart test writes exclude intent before restart and expects post-restart decommission completion | H/P | grounded in exact release regression test |
 | GFS 2003 provides an earlier rack-aware distributed-filesystem placement floor | H/P | grounded in original SOSP paper |
 | replica multiplicity ≠ failure-domain diversity | E | bounded reconstruction |
 | live-replica count ≠ placement-policy satisfaction | E | bounded reconstruction |
@@ -455,11 +563,15 @@ The `computing-archaeology` repository was searched for dedicated `HDFS rack rep
 | decommission request ≠ completed retirement | E | bounded reconstruction |
 | planned embodiment withdrawal can require proactive preservation work | E | bounded reconstruction |
 | progress summary ≠ final retirement authority | E | bounded reconstruction |
+| maintenance-obligation continuity ≠ exact maintenance-progress continuity | E | bounded restart reconstruction |
+| retained exclusion policy ≠ retained proof of retirement safety | E | bounded restart reconstruction |
+| process-local progress reconstruction ≠ payload rollback | E | bounded negative reconstruction |
 | over-replica deletion ≠ arbitrary copy deletion | E | bounded reconstruction |
 | placement qualification ≠ integrity/currentness qualification | E/A | cross-case boundary only |
 | decommission ≠ secure sanitization | E | bounded negative claim |
 | GFS rack placement ≠ demonstrated GFS→HDFS implementation genealogy | X | chronology/function insufficient for descent |
 | HDFS decommission ≈ failure repair / media reassignment only functionally | A | explicitly non-genealogical comparison |
+| JFFS2/SQLite restart comparisons ≈ reconstructible derived state only functionally | A | explicitly non-genealogical comparison |
 
 ---
 
@@ -471,9 +583,11 @@ The bounded 2.7.3 implementation is especially revealing because it refuses a on
 
 The rack-placement deepening sharpens what “enough elsewhere” means. In the ordinary full-strength path, enough live replicas and acceptable placement are separate predicates. Three copies need not mean three racks; placement satisfaction need not mean maximal dispersion; and later excess-copy cleanup can itself be topology-aware. The 0.18/2.7.3 comparison also shows why the repository must keep release mechanics dated rather than silently fusing them into one timeless HDFS algorithm.
 
+The restart deepening now sharpens what “the decommission operation itself survives” means. The 2.7.3 path does not require byte-for-byte persistence of `pendingNodes` or `decomNodeBlocks`: a new NameNode can re-import the external exclude policy, re-evaluate it when DataNodes register, reconstruct working progress state from current observations, and re-prove the final preservation condition. Thus **the obligation can outlive the executor state that happened to be carrying it**.
+
 Therefore:
 
-> **planned embodiment withdrawal can itself be retention work: the system preserves enough, in an admissible topology, before it authorizes itself to stop depending on here.**
+> **planned embodiment withdrawal can itself be retention work: the system preserves enough, in an admissible topology, before it authorizes itself to stop depending on here; across restart, that obligation can be reconstructed from retained policy plus re-observed storage evidence rather than an exact persisted monitor checkpoint.**
 
 ---
 
