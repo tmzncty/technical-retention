@@ -595,3 +595,33 @@ CASSANDRA-19399 then supplies a bounded 4.1.3 counterexample: the reporter obser
 This closes the narrower open debt around **post-4.0 observability and administrative retirement of pending repair state**. It reframes rather than closes the broader stuck/zombie-session question: exact root causes, CASSANDRA-17172/19399 evolution, later fixes, modern auto-repair interaction, and independent crash/fault-injection validation remain open.
 
 **Case status remains `Grounded`.**
+
+---
+
+## Deepening navigation — 2021 parent-session cleanup and retirement
+
+See [`evidence/48-cassandra-2021-parent-session-cleanup-retirement-deepening.md`](../evidence/48-cassandra-2021-parent-session-cleanup-retirement-deepening.md) for the bounded participant-cache follow-up around CASSANDRA-16446, Apache commit `23512cf3da5e8206d8797841f2238cdd86c13d96`, and the matching Apache dtest commit `c89dea0e8c38ed35ed40d59c975a07585584a637`.
+
+This slice separates a third repair-state carrier from the persistent consistent-repair session table and SSTable `pendingRepair` metadata:
+
+```text
+repair / LocalSession outcome state
+    != SSTable pendingRepair affiliation
+    != ActiveRepairService.parentRepairSessions cache state
+```
+
+CASSANDRA-16446 records that `parentRepairSessions` entries could leak and accumulate until restart-time cleanup became pause-prone. The 2021 fix wires successful ordinary and preview repair completion to `ActiveRepairService.cleanUp(parentSession, preparedEndpoints)`. On receipt, `CLEANUP_MSG` calls `removeParentRepairSession(...)`; however, `cleanUp(...)` explicitly does not throw on messaging failure and logs node restart as a later fallback cleanup opportunity. Apache's matching dtests expose `parentRepairSessionsCount()` through JMX and assert that the participant cache returns to zero after normal repair paths.
+
+The resulting boundary is:
+
+```text
+main repair success
+    != cleanup-message delivery
+    != participant parent-session cache retirement
+```
+
+`CleanupMessage` itself is documented `@since 2.1.6`, so the 2021 change is not treated as the invention of repair cleanup messaging; it is a completion-path retirement fix using an existing mechanism. CASSANDRA-17172 is retained only as a bounded later counterexample showing that a visible `REPAIRING` label does not itself prove active streaming/progress; no common root cause with CASSANDRA-16446 is claimed.
+
+This closes the specific debt around **CASSANDRA-16446 parent-session cache retirement** while leaving lost/delayed-cleanup fault injection, the exact CASSANDRA-17172/19399 root causes, later 4.x/5.x cleanup evolution, and auto-repair interaction open.
+
+**Case status remains `Grounded`.**
