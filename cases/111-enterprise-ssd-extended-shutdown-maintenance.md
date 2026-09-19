@@ -12,10 +12,13 @@ IBM ESS post-offline scrub-completion deepening: [`../evidence/111-ibm-ess-post-
 
 IBM / Lenovo shutdown-cadence and documentation-lineage deepening: [`../evidence/111-ibm-lenovo-2020-2022-shutdown-cadence-lineage-deepening.md`](../evidence/111-ibm-lenovo-2020-2022-shutdown-cadence-lineage-deepening.md).
 
+Seagate Pulsar.2 2012 powered retention-refresh prior-art deepening: [`../evidence/111-seagate-pulsar2-2012-powered-retention-refresh-prior-art-deepening.md`](../evidence/111-seagate-pulsar2-2012-powered-retention-refresh-prior-art-deepening.md).
+
 ## Scope
 
 - **Object / system:** enterprise SSD/NVMe storage kept powered off for extended periods, as addressed by IBM storage-system support guidance and Dell PowerEdge support guidance.
-- **Historical anchor:** an IBM support-content mirror records the extended-shutdown guidance as created on **16 December 2020**; the current IBM support page is marked modified **28 March 2023**.
+- **Earlier product-level prior-art witness:** Seagate's Pulsar.2 SAS Product Manual, Rev. B, April 2012, documents powered controller-local cell monitoring / refresh while separately stating that no routine scheduled preventive maintenance is required.
+- **Historical anchor for the operator-runbook layer:** an IBM support-content mirror records the extended-shutdown guidance as created on **16 December 2020**; the current IBM support page is marked modified **28 March 2023**.
 - **Later continuity / cross-vendor witness:** Dell support article **000198930**, version 3, marked last modified **14 May 2026**.
 - **Research question:** what changes when a standards-level power-off retention interval becomes an operator scheduling problem involving backup, environment, powered maintenance opportunity, recommissioning time, and sometimes an explicit read sweep?
 
@@ -33,7 +36,7 @@ This case is a bounded continuation of Case 76's JESD218 SSD endurance/retention
 
 The bounded retention claim is:
 
-> **A power-off retention qualification interval can be operationalized as a maintenance schedule without becoming the same thing as that schedule. IBM and Dell both warn about extended enterprise-SSD shutdown around the three-month / 40 °C regime, yet prescribe different powered-run intervals. Dell additionally documents powered background retention work and a full-used-NAND read as a trigger for retention tasks. The surviving vendor record therefore separates passive offline survival, maintenance opportunity, maintenance completion, operator policy, and standards qualification.**
+> **A power-off retention qualification interval can be operationalized as a maintenance schedule without becoming the same thing as that schedule. A Seagate enterprise-SSD manual already documented powered controller-local monitoring / refresh by April 2012 while requiring no routine scheduled preventive maintenance. IBM and Dell later turned extended shutdown into explicit operator-facing powered-run policies. The surviving record therefore separates passive offline survival, autonomous device maintenance, maintenance opportunity, maintenance completion, operator policy, and standards qualification.**
 
 `maintenance opportunity`, `operator scheduling`, `offline survival`, and `recommissioning window` are project engineering terms unless explicitly attributed to a source.
 
@@ -178,6 +181,31 @@ standards qualification horizon
 
 The same deepening also cautions against treating Lenovo's January 2021 HT511702 page as an automatically independent third-vendor engineering witness. It closely tracks the IBM generic flash in title, wording, `chdrive` command vocabulary, and cadence, and it covers a Storwize-for-Lenovo product family for which Lenovo's own product documentation explicitly uses the name **IBM Storwize V7000 for Lenovo**. The bounded historical conclusion is documentation / platform-lineage continuity, not proof of independent engineering discovery or one shared firmware implementation.
 
+## Seagate Pulsar.2 follow-up — powered autonomous retention work predates the operator-runbook layer
+
+A third bounded follow-up is now grounded in [`evidence/111-seagate-pulsar2-2012-powered-retention-refresh-prior-art-deepening.md`](../evidence/111-seagate-pulsar2-2012-powered-retention-refresh-prior-art-deepening.md).
+
+Seagate's **Pulsar.2 SAS Product Manual, Rev. B, April 2012** gives a typical powered-off retention value of three months at 40 °C and says the SSD contains firmware / hardware features that can monitor and refresh memory cells while power is applied. Its `6.2.5 Data Retention` section is more specific: while powered, SSD-cell retention is monitored and cells are rewritten if levels decay to an unexpected level.
+
+The same manual says `Preventive maintenance: None required` and later `No routine scheduled preventive maintenance is required`.
+
+That combination establishes a responsibility boundary that the later operator runbooks make visible from the other side:
+
+```text
+no routine operator-scheduled preventive maintenance
+    !=
+no controller-local retention maintenance
+
+power applied
+    -> autonomous monitor / conditional rewrite capability available
+    !=
+maintenance completion proved
+```
+
+A Seagate 1200.2 SAS SSD manual from October 2016 repeats the same broad powered monitoring / rewrite relation and the no-routine-scheduled-maintenance statement. It is a documentation-continuity witness only; it does not establish identical firmware, thresholds, NAND, or scheduler.
+
+This moves Case 111's named **product-level powered-retention-maintenance** witness back to at least April 2012. It does **not** move the explicit **operator-cadence** floor back to 2012: the inspected Pulsar.2 manual gives no IBM/Dell-style instruction to power the system every N months for M weeks.
+
 ## Engineering reconstruction
 
 ### E — qualification interval and maintenance schedule are different relations
@@ -196,6 +224,8 @@ The schedule can be earlier than the qualification boundary without contradictin
 
 The IBM / Lenovo cadence deepening makes the same distinction stronger: even one vendor's surviving 2020 documentation maps the same standards-level background onto different schedules for different system contexts. `operator cadence` is therefore a system-policy relation, not a universal NAND physical constant.
 
+The Seagate follow-up adds a separate product layer: a named SSD can expose powered autonomous monitoring / conditional rewrite without exposing any operator cadence at all. Thus `device-local maintenance capability != field runbook`.
+
 ### E — passive offline survival and active powered maintenance must be separated
 
 The bounded vendor documentation supports at least three states:
@@ -212,7 +242,7 @@ and:
 
 > **powered state ≠ proved maintenance completion**.
 
-The first relation is consistent with Case 37's Samsung statement that its product-specific periodic refresh did not run while the drive was powered off. The second is newly sharp at the operator-policy level because Dell assigns a minimum powered duration.
+The Seagate 2012 record gives direct named-product support for the first distinction: its cell monitoring / refresh is explicitly conditioned on power being applied. The second remains newly sharp at the operator-policy level because Dell assigns a minimum powered duration and IBM exposes a separate system-level scrub completion witness.
 
 ### E — a read sweep can be maintenance-triggering without becoming universal “refresh” semantics
 
@@ -225,6 +255,8 @@ But the evidence does not justify the stronger statement:
 > `every read refreshes every NAND cell`.
 
 The host action and the hidden device action are different layers. A host issues reads over a logical used-data set; firmware may use the resulting error/age/read evidence to schedule hidden work. The source does not disclose exact physical rewrite geometry, thresholds, or completion telemetry.
+
+Seagate's earlier manual does not say its retention monitoring is triggered by a host read sweep, so the two mechanisms must not be merged from functional similarity alone.
 
 ### E — maintenance time becomes capacity-sensitive operational infrastructure
 
@@ -240,7 +272,7 @@ This is a retention issue that has migrated above the NAND cell: rack power, ope
 
 ### E — “three months” is a risk/qualification boundary, not a deterministic failure clock
 
-Neither the standard-level relation grounded in Case 76 nor the vendor support wording proves that one particular drive becomes unreadable exactly when a clock reaches three months. IBM says there is **potential** for data loss/failure after extended shutdown; Dell says systems powered off for more than three months **may** exhibit errors or faults.
+Neither the standard-level relation grounded in Case 76 nor the vendor support wording proves that one particular drive becomes unreadable exactly when a clock reaches three months. IBM says there is **potential** for data loss/failure after extended shutdown; Dell says systems powered off for more than three months **may** exhibit errors or faults. The Seagate Pulsar.2 manual likewise presents three months at 40 °C as a typical product retention specification, not a deterministic individual-unit failure timestamp.
 
 Therefore:
 
@@ -266,41 +298,46 @@ Case 76 answers:
 
 Case 111 asks instead:
 
-> how do system vendors turn an extended power-off risk into an operator runbook before or around that boundary?
+> how do named products and system vendors turn retention into powered device work and, later, an operator runbook before or around that boundary?
 
 Thus:
 
 ```text
 standards qualification
     !=
+named-product autonomous maintenance
+    !=
 field maintenance policy
 ```
 
-The field policy can cite the standard while adding earlier intervention, backup, environment, powered-run duration, and recommissioning rules. The IBM-internal cadence variance now shows that one standards background can support multiple product/system runbooks without implying multiple underlying retention standards.
+The field policy can cite the standard while adding earlier intervention, backup, environment, powered-run duration, and recommissioning rules. The IBM-internal cadence variance shows that one standards background can support multiple product/system runbooks without implying multiple underlying retention standards; the Seagate witness shows that a product can also perform powered retention work without exposing such a runbook.
 
 ### Case 37 — Samsung 840 EVO periodic refresh
 
 Case 37 gives a named commercial product episode in which Samsung described a powered periodic refresh feature for **old-data read performance** and explicitly said it did not operate while power was off.
 
-Case 111 is not another 840 EVO refresh case. It moves the comparison one level outward: IBM and Dell document **operator-facing shutdown schedules** for enterprise SSD/NVMe systems. The similarity is functional — powered time can be retention infrastructure — while the product, target property, mechanism, and evidence class differ.
+The new Seagate witness is earlier and enterprise-oriented, but it is not evidence that Pulsar.2 and 840 EVO use the same mechanism. The shared functional statement is only that powered controller work can renew or protect NAND-resident state. The product class, symptom framing, thresholds, schedule, and genealogy remain different or undisclosed.
+
+Case 111 then moves the comparison one level outward: IBM and Dell document **operator-facing shutdown schedules** for enterprise SSD/NVMe systems. Powered device maintenance and human scheduling can therefore occupy different responsibility layers.
 
 ### Case 36 — Flash Correct-and-Refresh
 
-Case 36 is a research algorithm/evaluation for maintaining NAND recoverability within ECC margin. Case 111 contains no evidence that IBM or Dell implemented that algorithm. `background retention task`, `read-triggered task`, `background scrub`, and academic `FCR` are not synonyms and no genealogy is asserted.
+Case 36 is a research algorithm/evaluation for maintaining NAND recoverability within ECC margin. Neither the Seagate Pulsar.2 manual nor the IBM/Dell field guidance establishes that those products implement that algorithm. `monitor and refresh memory cells`, `background retention task`, `read-triggered task`, `background scrub`, and academic `FCR` are not synonyms and no genealogy is asserted.
 
 ## Prior art and anti-anachronism
 
-No invention-priority claim is made for any of these support documents. The standards relation predates them, and Case 37 already grounds a 2014–2015 commercial SSD maintenance episode in which powered time mattered. The 2020–2026 sources are valuable because they expose **operator-facing policy**: how storage vendors tell administrators to manage an extended shutdown once nonvolatile media cannot simply be treated as indefinitely passive shelf storage.
+No invention-priority claim is made for any of these product or support documents. The standards relation predates the later operator runbooks, and the new Seagate record now supplies a **named enterprise-SSD product-level powered-maintenance witness by April 2012**. Case 37 separately grounds a 2014–2015 commercial client-SSD maintenance episode in which powered time mattered. The 2020–2026 sources remain valuable for a different historical object: **operator-facing policy** that tells administrators how to manage an extended shutdown once nonvolatile media cannot simply be treated as indefinitely passive shelf storage.
 
-The Lenovo deepening adds a source-critical caution: a second corporate masthead is not automatically a second independent technical witness. Lenovo HT511702 closely follows the IBM generic support wording and sits inside an explicit IBM Storwize-for-Lenovo product/document lineage. It is useful historical evidence of policy propagation, but should not be double-counted as independent validation unless a separate engineering basis is recovered.
+The Seagate chronology does not prove direct ancestry to Samsung, IBM, Dell, or NetApp. Likewise, the Lenovo deepening adds a source-critical caution: a second corporate masthead is not automatically a second independent technical witness. Lenovo HT511702 closely follows the IBM generic support wording and sits inside an explicit IBM Storwize-for-Lenovo product/document lineage. It is useful historical evidence of policy propagation, but should not be double-counted as independent validation unless a separate engineering basis is recovered.
 
-A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated enterprise-SSD extended-shutdown / powered-maintenance case to reuse. A generic history of SSD retention-management firmware or the IBM Storwize / ESS / TS7700 platform genealogy belongs there; this case keeps only the retention-specific distinctions among qualification, offline survival, powered maintenance opportunity, maintenance admission, operator scheduling, and recommissioning.
+A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `Pulsar.2`, `Seagate data retention SSD`, and the existing extended-shutdown terms found no dedicated packet to reuse. A generic history of Seagate enterprise SSDs, SSD retention-management firmware, or the IBM Storwize / ESS / TS7700 platform genealogy belongs there; this case keeps only the retention-specific distinctions among qualification, offline survival, powered controller maintenance, maintenance opportunity, maintenance admission, operator scheduling, and recommissioning.
 
 ## Failure and forgetting boundaries
 
 For this bounded case, distinguish:
 
 - **extended power-off:** controller background work is unavailable;
+- **powered autonomous-maintenance capability:** in the Seagate product witness, controller monitoring / conditional rewrite becomes available without a routine operator maintenance schedule;
 - **short offline-history trigger:** in the named ESS alert, more than seven days off after installation admits an automatic background scrub on return;
 - **approaching a vendor risk window:** policy calls for backup/environment checks and a powered maintenance interval;
 - **power restored:** maintenance becomes possible but is not thereby proved complete;
@@ -313,14 +350,20 @@ None of these states proves physical sanitization, permanent archival safety, or
 
 ## Functional analogy and philosophical limit
 
-A limited functional analogy is useful: a supposedly “passive” nonvolatile storage system can impose **periodic human scheduling work** because the device's own maintenance machinery cannot operate while unpowered. Retention work can therefore cross an organizational boundary: from cell physics and controller firmware into power planning, backup policy, rack/system availability, and operator time.
+A limited functional analogy is useful: a supposedly “passive” nonvolatile storage system can contain **autonomous powered maintenance** below the user-visible interface and, under long shutdown conditions, can later impose **periodic human scheduling work** because that maintenance machinery cannot operate while unpowered. Retention work can therefore cross an organizational boundary: from cell physics and controller firmware into power planning, backup policy, rack/system availability, and operator time.
 
-The new cadence evidence also shows that institutions can place several clocks around one material risk: qualification horizon, scrub-admission threshold, operator intervention point, powered dwell, and completion evidence. This is a project interpretation, not IBM, Lenovo, or Dell's philosophical vocabulary. It must not be generalized into the claim that every act of powering a system is “memory maintenance,” or that operational runbooks are the same mechanism as NAND refresh.
+The Seagate witness makes the interface boundary especially visible: `No routine scheduled preventive maintenance` can coexist with explicit powered monitoring / conditional rewrite inside the device. The later cadence evidence then shows that institutions can place several clocks around one material risk: qualification horizon, scrub-admission threshold, operator intervention point, powered dwell, and completion evidence. This is a project interpretation, not Seagate, IBM, Lenovo, Dell, or NetApp's philosophical vocabulary. It must not be generalized into the claim that every act of powering a system is “memory maintenance,” or that operational runbooks are the same mechanism as NAND refresh.
 
 ## Claim ledger
 
 | Claim | Type | Evidence strength | Boundary |
 | --- | --- | --- | --- |
+| Seagate Pulsar.2 Rev. B is an April 2012 named enterprise-SSD product witness | H/P | strong | documented-by boundary, not invention date |
+| Pulsar.2 says powered firmware / hardware can monitor and refresh memory cells | H/P | strong | exact metric, threshold and scheduler undisclosed |
+| Pulsar.2 says powered cell state is monitored and rewritten when levels decay unexpectedly | H/P | strong | conditional behavior, not continuous whole-device rewrite |
+| Pulsar.2 says no routine scheduled preventive maintenance is required | H/P | strong | operator requirement; does not negate controller-local maintenance |
+| `no scheduled preventive maintenance = no internal maintenance` | X | rejected | contradicted by the same Seagate manual |
+| `power applied = retention maintenance complete` | X | rejected | no completion telemetry / dwell contract in inspected Seagate source |
 | IBM support guidance recommends at least two weeks powered after two months off | H/P | strong | IBM affected-system operational guidance, not universal SSD law |
 | IBM TS7770 notice recommends at least one week powered after two months off | H/P | strong | TS7770 / FC 8081 context |
 | IBM ESS 5000 Redbook recommends at least one week powered every six weeks off | H/P | strong | December 2020 ESS 5000 first-edition guidance |
@@ -331,16 +374,16 @@ The new cadence evidence also shows that institutions can place several clocks a
 | Dell current guidance recommends every 2.5 months, minimum three weeks powered | H/P | strong | Dell PowerEdge affected-product context; version 3, 14 May 2026 |
 | Dell says powered SSD/NVMe performs retention background tasks while extended power-off prevents them | H/P | strong | vendor support description; firmware internals not disclosed |
 | Dell says a read over all used NAND cells triggers retention tasks | H/P | strong | bounded Dell claim; does not prove universal read-refresh semantics |
-| qualification interval ≠ operator maintenance schedule | E | strong | cross-source decomposition, not source vocabulary |
+| qualification interval ≠ autonomous device maintenance ≠ operator maintenance schedule | E | strong | cross-source decomposition, not source vocabulary |
 | same standards background ≠ one IBM field cadence | H/E | strong | 2020 IBM generic, TS7770, and ESS 5000 schedules differ |
 | automatic maintenance trigger ≠ operator intervention schedule ≠ completion | E | strong | coexisting ESS rules plus separate completion evidence |
-| power restored ≠ maintenance completion | E | strong | Dell minimum-duration wording and IBM scrub-completion evidence support the distinction |
+| power restored ≠ maintenance completion | E | strong | Seagate capability wording, Dell minimum-duration wording and IBM scrub-completion evidence support the distinction |
 | powered maintenance opportunity can become fleet-level retention infrastructure | E/A | medium | useful cross-layer interpretation, not vendor terminology |
 | NetApp warns at 90/95% rated life and requires replacement above 100% | H/P | strong | wear-state operator policy; not a deterministic failure threshold |
 | NetApp `Rated Life Used >99` means endurance estimate consumed but not necessarily device failure | H/P | strong | directly documented CLI semantic boundary |
 | readable now ≠ qualified for long powered-off retention | E | strong | current service and future-offline admission are distinct |
-| IBM/Dell guidance demonstrates FCR or Samsung's exact refresh algorithm | X | rejected | no genealogy or implementation identity established |
-| three months is a deterministic failure instant for every drive | X | rejected | vendor wording is probabilistic/risk-based and Case 76 is qualification-bounded |
+| Seagate / IBM / Dell guidance demonstrates FCR or Samsung's exact refresh algorithm | X | rejected | no genealogy or implementation identity established |
+| three months is a deterministic failure instant for every drive | X | rejected | product/vendor wording is qualification/risk-bounded |
 
 ## Open questions
 
@@ -351,11 +394,14 @@ The new cadence evidence also shows that institutions can place several clocks a
 - Can independent fault/retention testing validate the IBM/Dell operational windows after rated endurance?
 - What engineering rationale produced the one-week / two-week / six-week cadence differences across the 2020 IBM documents?
 - Was Lenovo HT511702 mechanically syndicated, contractually inherited, or separately reissued from a shared Storwize support corpus?
-- How do other enterprise vendors beyond the now-grounded NetApp wear-state relation operationalize long powered-off intervals?
+- Did the August 2011 Pulsar.2 Rev. A manual already contain the same powered monitoring / refresh wording, and what earlier enterprise-SSD products exposed a comparable contract?
+- Beyond the now-grounded Seagate product-level powered-refresh capability and NetApp wear-state relation, which vendors publish explicit long-offline operator cadences or completion telemetry?
 - How do these runbooks change across later NAND generations and controller ECC/refresh policies?
 
 ## Sources
 
+- Seagate Technology, **_Pulsar.2 SAS Product Manual_**, publication 100666271, Rev. B, April 2012: <https://www.seagate.com/files/www-content/product-content/pulsar-fam/pulsar/pulsar-2/en-us/docs/100666271b.pdf>.
+- Seagate Technology, **_1200.2 SAS SSD Product Manual_**, Rev. D, October 2016: <https://www.seagate.com/content/dam/seagate/migrated-assets/www-content/product-content/ssd-fam/1200-ssd/en-us/docs/1200-2-sas-ssd-product-manual-100773817d.pdf>.
 - IBM Support, **“Potential for SSD data loss after extended shutdown,”** current page modified 28 March 2023: <https://www.ibm.com/support/pages/potential-ssd-data-loss-after-extended-shutdown>.
 - IBM support-content mirror of the same guidance, showing creation on 16 December 2020: <https://supportcontent.ibm.com/support/pages/potential-ssd-data-loss-after-extended-shutdown>.
 - IBM Support, **“TS7770 with FC 8081 may experience issues when being powered off for more than three months,”** first published 17 December 2020: <https://www.ibm.com/support/pages/node/6382550>.
