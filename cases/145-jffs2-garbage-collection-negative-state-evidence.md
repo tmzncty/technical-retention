@@ -27,6 +27,7 @@ The case is useful because it places three retention relations in one 2001 imple
 - [`evidence/145-jffs2-2001-garbage-collection-negative-state-grounding.md`](../evidence/145-jffs2-2001-garbage-collection-negative-state-grounding.md) — canonical 2001 mechanism grounding.
 - [`evidence/145-jffs2-2001-erase-pipeline-reuse-admission-deepening.md`](../evidence/145-jffs2-2001-erase-pipeline-reuse-admission-deepening.md) — Linux 2.4.10 source deepening: `erase_pending` → active erase → `MTD_ERASE_DONE` → `erase_complete` → qualification/cleanmarker → `free_list`, with retry and bad-list exits.
 - [`evidence/145-jffs2-2004-2007-nand-oob-cleanmarker-placement-deepening.md`](../evidence/145-jffs2-2004-2007-nand-oob-cleanmarker-placement-deepening.md) — later NAND/OOB deepening: reuse-admission semantics versus physical marker placement, `MTD_OOB_AUTO`, conservative requalification, and bad-block-marker separation.
+- [`evidence/145-jffs2-2001-mount-scan-reuse-reconstruction-deepening.md`](../evidence/145-jffs2-2001-mount-scan-reuse-reconstruction-deepening.md) — mount/restart deepening: volatile list state is rebuilt from retained Flash evidence; erased-looking blocks are not automatically reuse-authoritative; near-release `scan.c` lineage also preserves a whole-medium destructive-erase refusal when no valid JFFS2 state is reconstructed.
 
 ---
 
@@ -249,6 +250,36 @@ runtime maintenance phase
 
 The full state machine, retry paths, source classification, and non-claim ledger are in [`evidence/145-jffs2-2001-erase-pipeline-reuse-admission-deepening.md`](../evidence/145-jffs2-2001-erase-pipeline-reuse-admission-deepening.md).
 
+### Mount-time reuse-authority reconstruction deepening
+
+The restart side of that state machine is now grounded separately in [`evidence/145-jffs2-2001-mount-scan-reuse-reconstruction-deepening.md`](../evidence/145-jffs2-2001-mount-scan-reuse-reconstruction-deepening.md).
+
+Woodhouse's 2001 paper explicitly describes mount as a reconstruction from the physical medium: the first pass scans Flash, checks node CRCs, allocates raw-node references and inode caches, and caches version/range information for later passes. The same period description says a `free_list` block contains the marker showing that it was properly and completely erased, while a block that merely appears all `0xFF` is not trusted because interrupted erase can leave unstable bits. Blocks lacking valid nodes are sent through erase and subsequent marker establishment rather than simply being declared free.
+
+Linux 2.4.10's archival `nodelist.h` independently exposes the release-era in-core erase-block accounting, scan structures, `jffs2_scan_medium()`, and erase-side entry points. A later 2.4.19 patch identifies its 2.4.18 `scan.c` preimage as RCS revision `1.51` dated **19 September 2001** and preserves in unchanged context the scan-time refusal to proceed with destructive pending erases when no valid JFFS2 state has been reconstructed except in the allowed empty-medium case. Because that is a 2.4.18 preimage, it is retained as near-release source-lineage evidence rather than claimed as a byte-identical 2.4.10 facsimile.
+
+The bounded restart relation is now:
+
+```text
+runtime free / erase workflow lists
+    -> lost with the running kernel
+
+retained node + CLEANMARKER evidence
+    -> mount scan
+    -> reconstructed in-core classification
+    -> allocation / GC authority
+```
+
+and, separately:
+
+```text
+all-0xFF / no-valid-node appearance
+    != successful-erase history
+    != immediate free-list authority
+```
+
+This closes the mechanism-level `retained restart witness -> reconstructed reuse authority` seam while keeping one source-provenance debt explicit: exact branch-by-branch `BLK_STATE_*` release pinning still awaits a directly inspected origin-hosted or cryptographically matched Linux 2.4.10 `scan.c` artifact.
+
 ### NAND/OOB placement deepening, 2004–2007
 
 Later Linux-MTD records add an important boundary to the 2001 mechanism. By 2004 JFFS2's NAND cleanmarker could reside in OOB rather than the ordinary data area. A 2007 JFFS2 patch moved NAND cleanmarker access from fixed OOB placement to `MTD_OOB_AUTO`, under which MTD can present free OOB bytes as a contiguous buffer even when their physical positions are discontinuous.
@@ -278,6 +309,7 @@ Keep the following separate:
 - **erase obligation** — an erase-eligible block may be queued or retried without yet being active or complete;
 - **lower-layer erase completion** — the MTD callback may report `MTD_ERASE_DONE` without the block yet being on `free_list`;
 - **reuse admission** — cleanmarker success plus accounting moves the block to allocator-visible free space in the inspected 2001 path;
+- **mount reconstruction** — restart loses volatile list membership and rebuilds it from retained Flash/node/marker evidence rather than treating erased appearance as self-authenticating;
 - **Flash erase** — physically changes the erase block for reuse at this layer;
 - **secure sanitization** — not established by these mechanisms.
 
@@ -315,6 +347,10 @@ Both JFFS2 cleanmarkers and NAND bad-block metadata can involve spare/OOB state,
 
 The 2001 source adds another caution: JFFS2's runtime `bad_list` path for erase/qualification failure must not be promoted into a claim that a persistent NAND bad-block marker or device bad-block table has been written.
 
+### Case 137 — LevelDB recovery-root selection
+
+The new mount deepening permits one narrow functional comparison. Both LevelDB `CURRENT` and JFFS2's cleanmarker are small retained control evidence whose interpretation affects whether a much larger surviving substrate is admissible for a role. `CURRENT` selects a manifest/recovery root; a JFFS2 cleanmarker qualifies an erase block for reuse after restart. This is not a genealogy claim and the layers, failure models, and encodings are unrelated.
+
 ### Case 44 — sanitization
 
 JFFS2 block erase is performed for filesystem reuse and wear/space management. It is not evidence for an interface-level or security-level sanitize guarantee. Likewise, `free_list` admission is not a sanitize-completion certificate.
@@ -330,7 +366,7 @@ The 2001 paper itself makes JFFS2's predecessor relation to Axis Communications'
 - Linux 2.4.10 / October 2001 provides a **public implementation/documentation floor**, not an invention-priority date;
 - exact pre-mainline Linux-MTD CVS history and broader JFFS/LFS/YAFFS/UBIFS genealogy belong primarily in `tmzncty/computing-archaeology` if pursued.
 
-A fresh repository search found no existing dedicated JFFS2 study in `tmzncty/computing-archaeology`, so the retention-specific erase-pipeline and NAND/OOB deepenings added here do not duplicate known companion-repository work.
+A fresh repository search again found no existing dedicated JFFS2 study in `tmzncty/computing-archaeology`, so the retention-specific erase-pipeline, mount-reconstruction, and NAND/OOB deepenings added here do not duplicate known companion-repository work.
 
 ---
 
@@ -340,7 +376,7 @@ The engineering evidence supports one modest philosophical observation: **forget
 
 In the truncation example, physical persistence of older bytes is not enough to make them current, while mere absence of new payload is not enough to guarantee zero semantics. An explicit relation can preserve the fact that a range should count as empty/zero until stale positive embodiments cease to threaten reconstruction.
 
-Likewise, the `CLEANMARKER` shows that an apparently blank substrate need not count as reusable until the system retains evidence of a successful transition into that state. The 2.4.10 erase pipeline adds a narrower point: a block may be logically erasable, queued, physically under erase, or even reported complete by the lower layer without yet being admitted by the filesystem allocator. The later NAND evidence adds another: the meaning of such a witness can outlive one physical placement convention if the system retains a safe way to recognize or re-establish the qualifying relation.
+Likewise, the `CLEANMARKER` shows that an apparently blank substrate need not count as reusable until the system retains evidence of a successful transition into that state. The 2.4.10 erase pipeline adds a narrower point: a block may be logically erasable, queued, physically under erase, or even reported complete by the lower layer without yet being admitted by the filesystem allocator. The mount deepening adds that volatile admission state need not itself persist: lower-level retained evidence can be scanned to reconstruct a new running classification after restart. The later NAND evidence adds another: the meaning of such a witness can outlive one physical placement convention if the system retains a safe way to recognize or re-establish the qualifying relation.
 
 This does not make JFFS2 a theory of memory, archival absence, or human forgetting. It is a mechanism-level counterexample useful for the project's larger distinction among physical survival, logical currentness, maintenance progress, reclamation, admissibility, and interpretability.
 
@@ -373,7 +409,7 @@ This is a manufacturer/developer-authored period technical record. It is not a f
 Archived reproduction of Linus Torvalds's release message:
 <https://www.linuxtoday.com/developer/linus-torvalds-linux-2-4-10/>
 
-It explicitly lists `jffs2` among major filesystem updates. Because the surviving page used here is an archival reproduction rather than an origin-hosted kernel mailing-list artifact, it is used only as a release-date/public-availability witness, not for detailed mechanism claims.
+It explicitly lists `jffs2` among major filesystem updates. Because the surviving page used here is an archival reproduction rather than an origin-hosted kernel mailing-list artifact, it is used only as a release-date/public-availability witness, not for detailed mechanism claims. The new mount evidence additionally records the Indiana University LKML archive copy and kernel.org archive index.
 
 ### P3 — Linux 2.4.10 archival implementation, `fs/jffs2/read.c` — `H/P*`
 
@@ -407,11 +443,19 @@ FUNET archival patch mirrors:
 
 These period source witnesses ground the finer erase-state pipeline: GC only queues a block after no used bytes remain; erase work can be retried or fail; `MTD_ERASE_DONE` moves to `erase_complete_list`; verification can reject the block but may be skipped if the verification buffer cannot be allocated; cleanmarker write precedes `free_list` admission. The mirror status is retained, and these files are not used to claim exact pre-mainline CVS introduction dates.
 
+### P7 — near-release `scan.c` lineage and release archive — `H/P*`
+
+- Linux 2.4.19 patch exposing the Linux 2.4.18 `scan.c` preimage and its RCS identifier: <https://ftp.funet.fi/pub/linux/kernel/v2.4/patch-html/patch-2.4.19/linux-2.4.19_fs_jffs2_scan.c.html>
+- Linux 2.4.10 release message, IU LKML archive: <https://lkml.iu.edu/0109.2/1616.html>
+- kernel.org v2.4 release archive: <https://www.kernel.org/pub/linux/kernel/v2.4/>
+
+The preimage is identified as `scan.c,v 1.51 2001/09/19 00:06:35`; unchanged diff context retains the whole-medium refusal to erase pending blocks when no valid JFFS2 state is reconstructed outside the accepted empty case. This is near-release source-lineage evidence, not a directly rendered 2.4.10 `scan.c` facsimile. The detailed provenance and non-claim ledger are in Evidence 145D.
+
 ---
 
 ## Evidence-strength note
 
-The central 2001 mechanism claims depend on P1, a directly inspectable developer-authored period source. P2–P4 and P6 provide archival release/source witnesses but are mirrors; they are therefore not upgraded into origin-hosted primary facsimiles. P6 materially strengthens the state-machine boundary because it exposes implementation transitions that the prose paper compresses into “erase” and “free” operations. P5 is a later primary implementation record used to deepen NAND placement semantics. No claim in this case depends on a current JFFS2 manual being projected backward onto 2001.
+The central 2001 mechanism claims depend on P1, a directly inspectable developer-authored period source. P2–P4, P6, and P7 provide archival release/source witnesses but are mirrors or near-release source lineage; they are therefore not upgraded into origin-hosted primary facsimiles. P6 materially strengthens the live state-machine boundary because it exposes implementation transitions that the prose paper compresses into “erase” and “free” operations. P7 strengthens the restart side by tying the mount-scan safety guard to a `scan.c` RCS revision dated immediately before the 2.4.10 release, while preserving the explicit limitation that the rendered artifact is a 2.4.18 preimage. P5 is a later primary implementation record used to deepen NAND placement semantics. No claim in this case depends on a current JFFS2 manual being projected backward onto 2001.
 
 ---
 
@@ -422,7 +466,7 @@ Still open:
 - exact Linux-MTD CVS / pre-2.4.10 JFFS2 introduction genealogy;
 - exact history of the original clean-marker change beyond Woodhouse's retrospective statement that it followed real-application use;
 - direct origin-hosted historical 2.4.10 source snapshots or cryptographically matched artifacts if recoverable;
-- exact 2001 `scan.c` mount-time path that reconstructs clean/free/erase-pending classification, to bind restart behavior to the newly documented erase pipeline;
+- directly inspect an exact Linux 2.4.10 `fs/jffs2/scan.c` artifact so each release-specific `BLK_STATE_*` classification branch can be pinned without relying on the period prose plus near-release `scan.c` lineage;
 - exact introduction commit for NAND OOB cleanmarkers and exact upstream merge/released-kernel floor for the 2007 `MTD_OOB_AUTO` change;
 - later `MTD_OPS_AUTO_OOB`, large-OOB/ECC-layout, and mtd-utils compatibility evolution;
 - device-specific replication of interrupted-erase / unstable-bit behavior;
@@ -431,7 +475,7 @@ Still open:
 - managed-SSD/FTL garbage collection composition;
 - broader JFFS/LFS/Flash-filesystem genealogy.
 
-The source-level erase-pipeline debt is now partially closed: the 2.4.10 transition from GC eligibility through marker-qualified `free_list` admission is directly inspected. Crash-window experiments, mount-time reconstruction, device physics, and exact source genealogy remain open.
+The source-level erase-pipeline debt is now partially closed: the 2.4.10 transition from GC eligibility through marker-qualified `free_list` admission is directly inspected. The mount-time reconstruction debt is also partially closed at mechanism level: the 2001 paper directly grounds scan/reconstruction and marker-qualified reuse, while near-release `scan.c` lineage grounds the conservative no-valid-state erase refusal. Exact 2.4.10 branch-level `scan.c` archaeology, crash-window experiments, device physics, and exact source genealogy remain open.
 
 None is required to support the bounded 2001 relation or the 2004–2007 NAND/OOB placement deepening established here.
 
@@ -439,4 +483,4 @@ None is required to support the bounded 2001 relation or the 2004–2007 NAND/OO
 
 ## Maturity note
 
-This case remains `grounded`. The central claims — mixed valid/obsolete erase blocks, relocation-before-reclamation, version/range-based obsolescence, explicit zero-range state after truncation, staged erase/reuse admission, and post-erase clean-marker qualification — are directly anchored in a period developer-authored technical record plus archival 2.4.10 implementation witnesses. The new erase-pipeline deepening strengthens the distinction among logical retirement, maintenance progress, lower-layer completion, verification, retained witness, and allocator admission; the later NAND/OOB deepening strengthens the distinction between reuse-admission semantics and physical witness placement. Neither alone justifies promoting the entire case to `mature`.
+This case remains `grounded`. The central claims — mixed valid/obsolete erase blocks, relocation-before-reclamation, version/range-based obsolescence, explicit zero-range state after truncation, staged erase/reuse admission, restart reconstruction from retained marker/node evidence, and post-erase clean-marker qualification — are directly anchored in a period developer-authored technical record plus archival 2.4.10 implementation witnesses and carefully bounded near-release source lineage. The erase-pipeline deepening strengthens the distinction among logical retirement, maintenance progress, lower-layer completion, verification, retained witness, and allocator admission; the mount deepening strengthens the distinction between transient runtime classification and restart-reconstructible reuse authority; the later NAND/OOB deepening strengthens the distinction between reuse-admission semantics and physical witness placement. None alone justifies promoting the entire case to `mature`.
