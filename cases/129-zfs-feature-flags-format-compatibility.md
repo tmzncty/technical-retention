@@ -12,7 +12,12 @@ The historical core is the **21 May 2012 illumos** integration `ad135b5d644628e7
 
 This is not a generic ZFS history, a second Case 128, a complete release matrix, a send-stream study, or a claim that ZFS invented filesystem feature flags.
 
-A fresh `tmzncty/computing-archaeology` search found no dedicated ZFS feature-flag case in the current search surface. Broad compatibility-bit genealogy, software preservation, migration, and format history belong there if developed.
+A fresh `tmzncty/computing-archaeology` search found no dedicated ZFS/ext2 feature-flag case in the current search surface. Broad compatibility-bit genealogy, software preservation, migration, and format history belong there if developed.
+
+## Evidence navigation
+
+- [Evidence 129B — `async_destroy` reclamation lifetime and compatibility state](../evidence/129-zfs-async-destroy-reclamation-compatibility-deepening.md) — grounds one feature-specific case where outstanding reclamation keeps a read-write compatibility obligation active after logical destroy returns.
+- [Evidence 129C — ext2 1997–2001 compatibility-mask prior art](../evidence/129-ext2-1997-2001-compat-rocompat-incompat-prior-art-deepening.md) — grounds the earlier `COMPAT` / `RO_COMPAT` / `INCOMPAT` topology and the stricter e2fsck tool-role boundary, blocking a broad novelty claim without asserting ext2→ZFS genealogy.
 
 ## Vocabulary and claim boundary
 
@@ -161,15 +166,28 @@ Installing compatible software may restore access to unchanged surviving bytes. 
 
 ## Prior art boundary
 
-No invention claim is made. A 2013 porting commit (`c1cdd9900b7b676fd1d1952125a5acd3435db5d7`) itself describes ZFS feature flags as conceptually similar to Linux `ext[234]`-style feature flags. That is a useful participant-side anti-novelty warning, but it is not enough to establish a direct ext→ZFS genealogy.
+No invention claim is made. A 2013 porting/integration commit (`c1cdd9900b7b676fd1d1952125a5acd3435db5d7`) itself describes ZFS feature flags as conceptually similar to Linux `ext[234]`-style feature flags. Evidence 129C now grounds the older side of that comparison with period Linux material rather than leaving it as a retrospective analogy alone.
 
-A proper history of filesystem compatibility masks and format migration belongs in `computing-archaeology`.
+Linux's April-2001 ext2 documentation explicitly distinguishes `COMPAT`, `RO_COMPAT`, and `INCOMPAT` feature classes. In the documented contract, unknown `COMPAT` features can remain read/write-safe to an older kernel; unknown `RO_COMPAT` features can preserve reading while preventing unsafe writes; and unknown `INCOMPAT` features can make mounting/reading unsafe. The same document says e2fsck is stricter and refuses to check a filesystem when it encounters any unknown feature in those classes. An April-1998 kernel patch additionally shows `s_feature_compat`, `s_feature_incompat`, and `s_feature_ro_compat` already present in the inspected v2.1.92 source preimage.
+
+This blocks the broad claim that ZFS 2012 was the first public filesystem mechanism to retain feature metadata that conditions read/write admissibility for older software. It also adds another retention boundary:
+
+```text
+safe to read
+    != safe to write
+    != safe to validate / repair with the same software generation
+```
+
+The comparison is functional. ext2 uses categorical superblock masks; ZFS uses feature identifiers and separate required-for-read / required-for-write relations plus `disabled` / `enabled` / `active` lifecycle state. Neither the earlier ext2 record nor the 2013 participant-side analogy establishes direct ext→ZFS genealogy.
+
+A proper history of filesystem compatibility masks, format revisioning, and influence belongs in `computing-archaeology`.
 
 ## Cross-case boundaries
 
 - **Case 128:** restart-root/topology admissibility makes the pool graph legible; Case 129 asks whether the interpreter understands the retained format. `restart-root admissibility ≠ format admissibility`.
 - **Case 90 / Kafka:** both reject `metadata presence = admissibility`, but leader-epoch lineage and filesystem format support are unrelated mechanisms.
 - **Case 123 / ATA DCO:** both retain small control state that changes a future access surface; DCO is drive capability configuration, not filesystem format interpretation.
+- **Case 130 / LTO:** both show that surviving data can lose requested operations when the compatible interpreter/reader chain is unavailable. Filesystem feature masks and tape-drive generations are only functionally analogous.
 
 These are functional comparisons (`A`), not genealogy.
 
@@ -179,7 +197,9 @@ These are functional comparisons (`A`), not genealogy.
 
 `I` — Obsolescence can therefore be relational rather than destructive: changing the interpreter can restore access to unchanged media.
 
-These are project interpretations, not claims about illumos/OpenZFS authors' intent.
+`I` — Evidence 129C sharpens the relation further: preservation of observational access does not automatically preserve authority to mutate, validate, or repair the retained format.
+
+These are project interpretations, not claims about ext2/e2fsprogs, illumos/OpenZFS, or FreeBSD authors' intent.
 
 
 ## Evidence deepening 129B — `async_destroy` reclamation lifetime and compatibility state
@@ -207,6 +227,32 @@ Engineering reconstruction, not project wording:
 
 This conclusion is feature-specific. `freeing == 0` is neither byte-identical rollback nor a physical-sector erasure/sanitization witness. The bounded functional analogy to [Case 153](153-ceph-rados-snaptrim-asynchronous-reclamation.md) is only `logical deletion != asynchronous reclamation completion`; Ceph SnapTrim and ZFS `async_destroy` are not treated as one mechanism or genealogy.
 
+## Evidence deepening 129C — ext2 access-mode and tool-role prior art
+
+[`Evidence 129C`](../evidence/129-ext2-1997-2001-compat-rocompat-incompat-prior-art-deepening.md) adds primary historical grounding for the ext-family comparison already present in the case.
+
+The April-2001 Linux ext2 documentation explicitly defines three compatibility classes and ties them to different behavior by an older interpreter. `COMPAT` may remain read/write-safe, `RO_COMPAT` can preserve reads while refusing unsafe writes, and `INCOMPAT` can require refusing the mount. The same document then gives e2fsck a stricter rule: unknown features in **any** class block the filesystem check because the tool cannot verify the newer feature's invariants.
+
+This produces a broader operation-conditioned admissibility model:
+
+```text
+surviving filesystem bytes
+    + retained feature class
+    + interpreter capability
+    + requested operation / tool role
+    -> admissible read / write / check / repair path
+```
+
+The resulting distinctions are useful beyond the prior-art chronology:
+
+```text
+readable by old software
+    != writable by old software
+    != safely checkable / repairable by old tooling
+```
+
+The ZFS comparison remains guarded. The ext2 masks are not ZFS feature objects, and the ext2 record does not supply ZFS's enabled/active lifecycle. The evidence is sufficient to block a broad novelty claim about read/write compatibility gating; it is insufficient to establish design descent.
+
 ## Limits
 
 This case does not establish that:
@@ -218,7 +264,9 @@ This case does not establish that:
 - pool import compatibility equals boot compatibility;
 - preserving one binary guarantees future executability;
 - current OpenZFS semantics may be projected backward onto every 2012 feature;
-- ZFS invented compatibility metadata.
+- ZFS invented compatibility metadata;
+- ext2 and ZFS feature mechanisms share one encoding or lifecycle;
+- an old reader that can mount a filesystem can necessarily validate or repair all active feature semantics.
 
 ## Sources
 
@@ -228,3 +276,5 @@ This case does not establish that:
 - OpenZFS, **Feature Flags**: <https://openzfs.github.io/openzfs-docs/Basic%20Concepts/Pool%20Structure/Feature%20Flags.html>
 - FreeBSD, `4deb8929ea01a581258a31cc027c0d4177daaff8`, 1 August 2016: <https://github.com/freebsd/freebsd-src/commit/4deb8929ea01a581258a31cc027c0d4177daaff8>
 - FreeBSD, `c1cdd9900b7b676fd1d1952125a5acd3435db5d7`, 8 January 2013: <https://github.com/freebsd/freebsd-src/commit/c1cdd9900b7b676fd1d1952125a5acd3435db5d7>
+- Linux kernel patch archive, `patch-2.4.4`, `Documentation/filesystems/ext2.txt`, 20 April 2001: <https://ftp.funet.fi/pub/Linux/kernel/v2.4/patch-html/patch-2.4.4/linux_Documentation_filesystems_ext2.txt.html>
+- Linux kernel patch archive, `patch-2.1.93`, `fs/ext2/super.c`, 4 April 1998: <https://ftp.csc.fi/pub/Linux/kernel/v2.1/patch-html/patch-2.1.93/linux_fs_ext2_super.c.html>
