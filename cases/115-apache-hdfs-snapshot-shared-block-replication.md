@@ -2,6 +2,8 @@
 
 **Status:** `grounded`
 
+Delete/rename completion-ordering deepening: [`../evidence/115-hadoop-241-snapshot-delete-rename-sync-ordering-deepening.md`](../evidence/115-hadoop-241-snapshot-delete-rename-sync-ordering-deepening.md). This release-bounded source slice closes the previously open `deleteSnapshot` / `renameSnapshot` completion-sync detail and separates synchronized namespace retirement from later block invalidation and physical reclamation.
+
 ## Scope
 
 This case asks a bounded distributed-retention question:
@@ -411,6 +413,59 @@ The released test uses orderly shutdown and ordinary restart. It does not inject
 
 > **normal restart replay != arbitrary crash/torn-log recovery != HA failover.**
 
+## Delete/rename completion-sync and retirement ordering deepening — Hadoop 2.4.1
+
+The companion evidence record [`evidence/115-hadoop-241-snapshot-delete-rename-sync-ordering-deepening.md`](../evidence/115-hadoop-241-snapshot-delete-rename-sync-ordering-deepening.md) closes the exact-operation completion debt intentionally left by the replay note.
+
+### H/P — successful rename and delete both cross the edit-log sync boundary before normal return
+
+The released `FSNamesystem.renameSnapshot(...)` path performs the namespace rename, calls `logRenameSnapshot(...)`, leaves the write-lock block, and then calls `logSync()` before audit/return. `deleteSnapshot(...)` likewise performs the namespace delete, calls `logDeleteSnapshot(...)`, unlocks, and calls `logSync()` before the method's later retirement work and normal return.
+
+Therefore, for the inspected paths:
+
+```text
+successful rename/delete mutation
+    -> snapshot-specific edit op
+    -> caller transaction covered by logSync
+    -> normal API return
+```
+
+This is a NameNode software persistence boundary. It is not promoted into a universal lower-device power-fail guarantee.
+
+### H/P + E — delete synchronizes the authority change before invoking collected-block retirement
+
+The delete path has a stricter ordering than the earlier retirement evidence alone established:
+
+```text
+snapshotManager.deleteSnapshot(..., collectedBlocks, ...)
+    -> logDeleteSnapshot(...)
+    -> logSync()
+    -> removeBlocks(collectedBlocks)
+    -> normal return
+```
+
+The synchronized edit records that the historical namespace relation has been withdrawn before the NameNode invokes the block-removal path for blocks that consequently became collectable.
+
+This yields two distinct completion relations:
+
+> **snapshot-deletion edit synchronized != DataNode invalidation completed.**
+
+> **NameNode `removeBlocks(...)` invoked before delete return != physical media overwritten before delete return.**
+
+Existing Evidence 115B remains authoritative for the later queued invalidation / heartbeat / DataNode path.
+
+### H/P + E — one snapshot API call need not imply one unique journal flush
+
+`FSEditLog.logSync()` tracks the calling thread's transaction ID against a `synctxid` frontier. If a concurrent sync already covers the caller's transaction, the call can be treated as already flushed. The relevant contract is therefore that the operation's transaction is covered by the synchronized frontier, not that each API call causes one dedicated lower-level flush.
+
+Hence:
+
+> **per-operation sync coverage != one physical/journal flush per operation.**
+
+### Remaining boundary after 115D
+
+Still open: fault injection between mutation, edit append, sync, and block retirement; torn/corrupt edit segments; exact recovery after a crash in the post-sync/pre-invalidation window; HA/shared-edits failover; later-release evolution; and lower filesystem/device discard, reuse, overwrite, or sanitize behavior.
+
 
 ## Prior art and genealogy boundary
 
@@ -502,6 +557,9 @@ This case does not establish:
 | effective block replication is max across current and snapshot file factors | `H/P` | HDFS-4078; `INodeFile.getBlockReplication()` | bounded to inspected design/release source |
 | after current-file deletion, snapshot replication can remain the effective block replication | `H/P/E` | `INodeFile.getBlockReplication()` | does not prove instant convergence of physical copies |
 | deleting a current file that remains in a snapshot does not take the ordinary destroy-and-collect path | `H/P` | `INodeFile.cleanSubtree()` | special UC cleanup exists; lower-layer reclamation not reconstructed |
+| successful snapshot rename/delete crosses the HDFS edit-log sync boundary before normal return | `H/P` | `FSNamesystem.renameSnapshot`; `FSNamesystem.deleteSnapshot`; `FSEditLog.logSync` | version/path bounded; lower-media durability not proved |
+| snapshot delete orders `logSync()` before `removeBlocks(collectedBlocks)` | `H/P` | `FSNamesystem.deleteSnapshot` | source ordering, not exhaustive crash proof |
+| one snapshot API operation requires one unique physical/journal flush | `X` | `FSEditLog.logSync` sync-frontier behavior | explicitly rejected |
 | snapshot retention is equivalent to independent backup | `X` | no supporting source | explicitly rejected |
 | snapshot deletion proves media sanitization | `X` | no supporting source | explicitly rejected |
 | HDFS snapshot mechanism is historically identical to ZFS/WAFL | `X/A` | no genealogy source | functional comparison only |
@@ -526,3 +584,11 @@ This case does not establish:
    - `getBlockReplication()` preserves the maximum replication requirement across current and snapshot diffs and uses the snapshot maximum when the current file is deleted.
    - `cleanSubtree(...)` distinguishes deleting a current file absent from snapshots from deleting one still retained by a snapshot.
    - <https://github.com/apache/hadoop/blob/release-2.4.1/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/INodeFile.java>
+
+6. Apache Hadoop source, `release-2.4.1`, **FSNamesystem.java**.
+   - `renameSnapshot(...)` and `deleteSnapshot(...)` establish the exact operation → edit → `logSync()` → return ordering; delete also orders `logSync()` before `removeBlocks(collectedBlocks)`.
+   - <https://github.com/apache/hadoop/blob/release-2.4.1/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSNamesystem.java>
+
+7. Apache Hadoop source, `release-2.4.1`, **FSEditLog.java**.
+   - snapshot-specific edit methods plus transaction-oriented `logSync()` / `txid` / `synctxid` behavior.
+   - <https://github.com/apache/hadoop/blob/release-2.4.1/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSEditLog.java>
