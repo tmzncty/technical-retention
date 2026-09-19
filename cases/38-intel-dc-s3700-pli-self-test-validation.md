@@ -2,16 +2,18 @@
 
 ## Scope
 
-- **Bounded period:** 2012–2015. The chronology now begins with Intel's October-2012 _Intel Solid-State Drive DC S3700 Product Specification_ (328171-001US), whose internal revision history records `June 2012 | 001 | Initial release`, and a dated Intel public S3700 fact sheet of 12 November 2012. The later explanatory witnesses remain Intel's 2014-era _Power Loss Imminent (PLI) Technology_ brief (330275-001US; references preserve sample pricing dated 28 February 2014) and the January-2015 S3700 Product Specification (328171-010US).
+- **Bounded Intel product period:** 2012–2015. The chronology begins with Intel's October-2012 _Intel Solid-State Drive DC S3700 Product Specification_ (328171-001US), whose internal revision history records `June 2012 | 001 | Initial release`, and a dated Intel public S3700 fact sheet of 12 November 2012. The later explanatory witnesses remain Intel's 2014-era _Power Loss Imminent (PLI) Technology_ brief (330275-001US; references preserve sample pricing dated 28 February 2014) and the January-2015 S3700 Product Specification (328171-010US). A later institutional comparison is bounded separately to the Open Compute Project _Datacenter SAS-SATA Device Specification_ v1.0 of 28 March 2023; it is not retroactive S3700 evidence or a genealogy claim.
 - **Named products:** Intel SSD DC S3700 Series and S3500 Series where the PLI brief addresses both; product-specification claims are restricted to the S3700 where that is the inspected source.
-- **Primary sources:** Intel manufacturer documentation, directly inspected as PDF text and rendered pages.
+- **Primary sources:** Intel manufacturer documentation, directly inspected as PDF text and rendered pages; the later OCP comparison is an institutional primary requirement, while the 2013 S3700 cache-disable witness is explicitly secondary period reporting.
 - **Research question:** when a future power-loss survival path depends on capacitors, switching, firmware, and NAND transfer, what state and verification work must itself be retained so that the protection mechanism is still trustworthy when the power-fail event arrives?
 
 Chronology deepening: [`../evidence/38-intel-s3700-2012-pli-self-test-control-surface-prior-art-deepening.md`](../evidence/38-intel-s3700-2012-pli-self-test-control-surface-prior-art-deepening.md) moves the named-product documentary floor earlier than the 2014-era explanatory brief. The October-2012 S3700 specification already exposes capacitor self-test, separate `AEh`/`AFh` event-vs-readiness state, and SCT feature `D000h` for the capacitor-test interval; the 12-November-2012 Intel fact sheet publicly advertises a `Power safe write cache with built in self-test`. The internal `June 2012` revision-history entry is kept distinct from independently dated public disclosure.
 
+Safe-degradation deepening: [`../evidence/38-s3700-2013-ocp-2023-pli-failure-write-cache-authority-deepening.md`](../evidence/38-s3700-2013-ocp-2023-pli-failure-write-cache-authority-deepening.md) asks what happens when readiness evidence becomes negative. The 2012 Intel specification directly establishes the separate AFh health surface, write-cache Feature Control, and D000h test-cadence surface, but does not itself say AFh failure automatically disables caching. A 31-January-2013 contemporary S3700 review reports capacitor failure/degradation causing a SMART event and cache disablement; the later OCP 2023 datacenter requirement makes the control topology explicit as `insufficient PLP -> flush existing cached writes -> disable volatile write cache -> SMART trip / WCE=0 -> reject host re-enable`. These are deliberately kept as different evidence classes, with no S3700-to-OCP genealogy claim.
+
 This case does **not** repeat Case 15's Intel SSD 320 mechanism history. Case 15 establishes the basic controller-mediated durability handoff: volatile temporary state can sit in front of nonvolatile NAND, and stored capacitor energy can fund emergency transfer after external power begins to disappear. The present case asks a later and narrower question:
 
-> **How is the health of that retention infrastructure itself made operationally visible, periodically tested, and qualified?**
+> **How is the health of that retention infrastructure itself made operationally visible, periodically tested, qualified, and—when qualification fails—allowed to constrain a durability-dependent operating mode?**
 
 It is also not independent fault-injection certification of Intel products. Intel's documents are first-party evidence for the product contract, telemetry, self-test, and validation method Intel described. The independent FAST '13 evidence already bounded in Case 15 remains the methodological warning that a manufacturer/interface claim and measured implementation compliance are different evidence classes.
 
@@ -48,9 +50,11 @@ The following are **project engineering terms**, not historical Intel vocabulary
 - `future-fault capability`;
 - `readiness state`;
 - `qualification closure`;
-- `maintenance-of-maintenance`.
+- `maintenance-of-maintenance`;
+- `write-cache authority`;
+- `safe degradation`.
 
-That distinction matters. Intel documents a capacitor test and PLI health telemetry. The repository may reconstruct those as retained state about the ability to retain other state, but it must not pretend Intel framed the feature philosophically as a system “remembering how to remember.”
+That distinction matters. Intel documents a capacitor test and PLI health telemetry. The repository may reconstruct those as retained state about the ability to retain other state, but it must not pretend Intel framed the feature philosophically as a system “remembering how to remember” or used the project's authority vocabulary.
 
 ---
 
@@ -286,10 +290,10 @@ AFh last-result + recency + lifetime-test state
         ↓
 operator / management interpretation
         ↓
-continue service, investigate, or replace
+continue service, investigate, replace, or restrict dependent operation
 ```
 
-The second path does not itself save the user payload during the outage. It preserves and updates evidence about whether the first path remains plausibly capable of doing so when needed.
+The second path does not itself save the user payload during the outage. It preserves and updates evidence about whether the first path remains plausibly capable of doing so when needed. The later safe-degradation evidence shows why such evidence can be operational rather than merely descriptive.
 
 ---
 
@@ -385,9 +389,39 @@ Distinct failures include:
 - NAND/controller failure despite adequate capacitor discharge capability;
 - a power-loss event during unusual controller operations such as firmware update or secure erase;
 - acknowledged-write data loss under a fault despite the intended contract;
-- operator failure to inspect or act on reported health state.
+- operator failure to inspect or act on reported health state;
+- retaining a risk-bearing volatile write-cache mode after the infrastructure that justifies it is no longer qualified.
 
 A failed AFh test is therefore not synonymous with user-data loss. Conversely, a passing capacitor self-test is not proof that every possible power-fault sequence will preserve every relevant higher-layer invariant.
+
+---
+
+## Safe-degradation deepening — negative readiness can constrain write-cache authority
+
+A bounded follow-up is available in [`../evidence/38-s3700-2013-ocp-2023-pli-failure-write-cache-authority-deepening.md`](../evidence/38-s3700-2013-ocp-2023-pli-failure-write-cache-authority-deepening.md).
+
+The October-2012 Intel S3700 product specification already exposes three separate surfaces relevant to this question: `AFh Power Loss Protection Failure` with a thresholded/pre-fail SMART presentation, SCT Feature Control `0001h` for write cache, and vendor feature `D000h` for the capacitor-test interval. Those manufacturer-primary pages establish **health evidence**, **cache control**, and **test cadence** as separate relations; they do not themselves say that AFh failure automatically disables write caching.
+
+A contemporary secondary named-product witness adds that missing coupling at a lower evidence grade. Tom's Hardware's 31-January-2013 S3700 review reports that periodic capacitor-health logic treats outright failure or degraded performance as grounds to trigger a SMART event and disable write caching. The repository therefore records this as **period S3700 reporting**, not as a manufacturer-primary command-level contract or an induced-fault firmware trace.
+
+A later institutional source makes the control topology explicit without being back-projected into 2012. The Open Compute Project _Datacenter SAS-SATA Device Specification_ v1.0, dated 28 March 2023, requires an SSD with PLP to test it periodically. If PLP can no longer guarantee enough stored charge to back cached user data/metadata, the device is required to flush cached writes to NAND, disable volatile write cache, generate a `Power Loss Protection Failure` SMART trip, clear host-visible `WCE`, and reject host attempts to re-enable the cache.
+
+The retention-specific relation is therefore:
+
+```text
+readiness evidence
+    !=
+passive telemetry only
+
+negative readiness evidence
+    -> settle already-admitted volatile obligations
+    -> withdraw future volatile-cache use
+    -> expose and enforce the degraded capability state
+```
+
+`flush existing cached writes` and `disable future volatile caching` are different obligations. The first retires state admitted under the old operating assumption; the second prevents the same unqualified dependency from immediately being recreated. SMART trip, `WCE=0`, and rejection of a re-enable request are likewise different interfaces: reporting, capability/configuration exposure, and enforcement.
+
+No genealogy is claimed from Intel S3700 to OCP. The later requirement is a controlled functional comparison showing that readiness evidence can become **authority-bearing** for a durability-dependent optimization. Direct S3700/S3500 transcripts across induced PLI failure, exact recovery/re-enable semantics, and a manufacturer-primary Intel statement of the cache-disable coupling remain evidence debt.
 
 ---
 
@@ -449,6 +483,22 @@ A persistence guarantee may depend not only on whether a failure occurs but on i
 
 The drive can generate and retain health state automatically, but Intel also exposes that state and test control so an administrator can decide whether investigation or replacement is required.
 
+### E — readiness evidence can gate a durability-dependent optimization
+
+The later safe-degradation sources add one bounded relation: a negative PLP-health result can do more than generate a warning. Contemporary S3700 reporting says cache use is disabled when the capacitor path fails or degrades; OCP 2023 later makes the sequence explicit by requiring already-cached writes to be flushed before volatile write cache is disabled and host re-enable is rejected.
+
+Thus:
+
+```text
+capability physically present
+    !=
+capability currently qualified
+    !=
+authority to continue depending on that capability
+```
+
+The exact S3700 firmware transition remains below manufacturer-primary proof in this case, so the engineering conclusion is stronger for the later OCP institutional contract than for the 2012 product itself.
+
 ### E — manufacturer validation ≠ independent compliance evidence
 
 Intel's 7000-repeat validation flow is meaningful first-party evidence for the test method Intel describes. It is not an independent field study of every shipped device, nor does it identify the anonymized FAST '13 devices from Case 15.
@@ -467,7 +517,19 @@ Nordeus requires at least five passes for a parameter combination and reports su
 
 ### A — comparison with Case 15 SSD 320
 
-Case 15 asks how stored energy funds an emergency transition from volatile controller state to NAND. Case 38 asks how a later data-center SSD architecture **checks and records the health of that emergency capability**. The 2012 product evidence additionally shows that a test cadence can be exposed as a control surface. The relation is a same-vendor product-family comparison across periods, not proof that all implementation details are identical.
+Case 15 asks how stored energy funds an emergency transition from volatile controller state to NAND. Case 38 asks how a later data-center SSD architecture **checks and records the health of that emergency capability**, and the new safe-degradation slice asks whether operation may continue to rely on that capability after negative evidence. The relation is a same-vendor product-family comparison across periods, not proof that all implementation details are identical.
+
+### A — comparison with Case 20 NVMe Flush/FUA
+
+Case 20 concerns a host asking for a persistence boundary through command semantics. The PLP-failure slice is different: the device withdraws a risk-bearing optimization when the physical infrastructure supporting that optimization is no longer qualified.
+
+```text
+host requests durable completion semantics
+    !=
+device revokes unsafe volatile-cache use after protection-path degradation
+```
+
+No protocol genealogy is claimed.
 
 ### A — comparison with DRAM refresh monitoring
 
@@ -494,6 +556,8 @@ A narrow conceptual result follows from the mechanism:
 
 > technical retention may depend on retaining evidence about the continued availability of the mechanism that is supposed to perform future retention work.
 
+The safe-degradation deepening sharpens this only operationally: evidence about capability can participate in deciding whether a mode that depends on that capability remains admissible. The relevant technical distinction is `capability installed != capability qualified != authority to depend on it`.
+
 That is stronger than saying “the device stores health metadata.” The health record has a temporal role: it links a past test to a future decision about whether the drive's failure-time protection should still be trusted. The 2012 test-interval control adds a further layer: the system can expose a policy for when this evidence should be refreshed.
 
 But the boundary is strict. A SMART attribute is not automatically human or cultural memory, and this case does not turn PLI telemetry into Stieglerian tertiary retention or Heideggerian `Bestand`. The engineering case only shows that **availability of future durability can itself become an addressable, updated, interpreted technical state**.
@@ -504,51 +568,59 @@ But the boundary is strict. A SMART attribute is not automatically human or cult
 
 This case does **not** establish:
 
-- that Intel invented power-loss protection, capacitor backup, SMART, self-test, or fault injection;
+- that Intel invented power-loss protection, capacitor backup, SMART, self-test, fault injection, or cache-disable-on-PLP-failure behavior;
 - that Intel invented a capacitor-health test in 2012;
 - that the internal `June 2012` revision-history row independently proves the exact public-web publication date of the surviving specification;
 - that the S3700 and S3500 are internally identical;
 - that the terse 2012 S3700 specification by itself establishes the later brief's partial-discharge mechanism or 25 µs explanatory minimum;
+- that the October-2012 Intel specification explicitly says AFh failure automatically disables write cache;
+- that the 31-January-2013 Tom's Hardware review is a manufacturer-primary or command-trace source;
+- that every S3700 firmware revision implements the exact cache-disable behavior reported in that review;
+- that the 2023 OCP specification is an ATA/SATA-IO/ANSI standard;
+- that OCP 2023 retroactively defines the S3700 contract or descends from the S3700 design;
 - that D000h is proven to persist across every power cycle, reset, or firmware update;
 - that a passing AFh result guarantees every future power-fault outcome;
 - that a failing AFh result means user payload has already been lost;
+- that flushing cached writes after PLP degradation proves every hidden FTL/controller metadata path is consistent;
 - that Intel's 7000-cycle validation flow is an industry-wide standard;
 - that the exact supply-fall requirement applies to all SSDs;
 - that the anonymous SSDs in FAST '13 included an S3700/S3500;
 - that filesystem/database durability follows automatically from drive-level PLI;
 - that controller metadata recovery under every interrupted operation has been independently characterized.
 
-The case is grounded for **manufacturer-described PLI health monitoring, capacitor self-test, retained test/event state, test-cadence control, and Intel's named validation procedure**, not for independent fleet-wide compliance or invention priority.
+The case is grounded for **manufacturer-described PLI health monitoring, capacitor self-test, retained test/event state, test-cadence control, and Intel's named validation procedure**, with a bounded later safe-degradation comparison. It is not grounded for S3700 invention priority, a complete firmware state machine, or fleet-wide compliance.
 
 ---
 
 ## Prior-art and related-repository boundary
 
-No invention-priority claim is needed. The historical terms are Intel's product/technology vocabulary in the directly inspected 2012–2015 documents.
+No invention-priority claim is needed. The historical Intel terms are product/technology vocabulary in the directly inspected 2012–2015 documents; OCP 2023 is kept as a later institutional requirement rather than used to rewrite that chronology.
 
-The 2012 chronology deepening supplies an earlier named-product documentary/public-product floor for this case without establishing industry priority:
+The source sequence now has two separate purposes:
 
 ```text
 2012 S3700 product specification
-    -> self-test + AFh/AEh + D000h control surface
+    -> self-test + AFh/AEh + write-cache control + D000h cadence surface
 
 12 Nov 2012 Intel public fact sheet
     -> power-safe write cache with built-in self-test
 
-2014-era PLI brief
+31 Jan 2013 contemporary S3700 secondary report
+    -> capacitor degradation/failure said to trigger SMART event + disable write caching
+
+2014-era Intel PLI brief
     -> detailed partial-discharge / health interpretation / validation narrative
 
 Jan 2015 S3700 specification
     -> later product-contract continuity
+
+28 Mar 2023 OCP datacenter SAS-SATA v1.0
+    -> explicit institutional safe-degradation requirement after insufficient PLP
 ```
 
-Before writing and again during the 2012 deepening, `tmzncty/computing-archaeology` was searched for dedicated material using combinations of:
+The sequence is not a genealogy. Broad enterprise-SSD capacitor-PLP history, ATA/SCT/SMART command genealogy, hyperscaler procurement history, and the provenance of the 2013 reviewer statement belong primarily in `tmzncty/computing-archaeology` rather than being duplicated here.
 
-- `S3700`;
-- `S3700 PLI power loss capacitor SSD`;
-- `power loss protection SSD capacitor`.
-
-No dedicated existing case was found in the current search surface. Generic SSD/Flash history remains outside this case; the retention-specific contribution is the **readiness/health/validation relation and its source chronology**.
+Fresh companion searches for `S3700`, `PLI`, `D000h`, and capacitor-test terms found no dedicated packet to reuse. Generic SSD/Flash history remains outside this case; the retention-specific contribution is the **readiness/health/validation relation, maintenance-policy horizon, and the bounded relation between negative readiness evidence and operating authority**.
 
 Internal links:
 
@@ -573,11 +645,11 @@ Directly inspected:
 
 - printed p. 5 — `Enhanced power-loss data protection` and `Power loss protection capacitor self-test` in the feature list;
 - printed p. 11 — three-month NAND data-retention specification at rated endurance / 40 °C, followed by §2.9 `Power Loss Capacitor Test` monitored through `AFh`;
-- printed p. 19 — `AEh` unclean-power history and `AFh` last discharge result / minutes since last test / lifetime test count;
-- printed p. 24 — SCT vendor feature D000h `Power Safe Write Cache capacitor test interval`;
+- printed p. 19 — `AEh` unclean-power history and `AFh` last discharge result / minutes since last test / lifetime test count, including threshold/pre-fail presentation;
+- printed p. 24 — SCT Feature Control `0001h` write cache and vendor feature D000h `Power Safe Write Cache capacitor test interval`;
 - printed p. 28 — revision-history row `June 2012 | 001 | Initial release`.
 
-The June date is reported as Intel's own internal revision-history statement; it is not silently upgraded into independently proven public-web availability.
+The June date is reported as Intel's own internal revision-history statement; it is not silently upgraded into independently proven public-web availability. The inspected 2012 pages also do not by themselves state that AFh failure automatically disables write caching.
 
 ### Primary — Intel S3700 public news fact sheet, 12 November 2012
 
@@ -589,6 +661,13 @@ Direct Intel-hosted PDF:
 Directly inspected first page: `newly unveiled Intel SSD DC S3700 Series`; under `Strong Data Protection`, `Power safe write cache with built in self-test`.
 
 This source anchors dated public product vocabulary. It does not itself expose the AFh/D000h field structure.
+
+### Contemporary secondary — Tom's Hardware S3700 review, 31 January 2013
+
+Drew Riley, **“Intel SSD DC S3700 Review: Benchmarking Consistency,”** Tom's Hardware, published 31 January 2013:
+<https://www.tomshardware.com/reviews/ssd-dc-s3700-enterprise-storage,3352-2.html>
+
+The named-product review reports that Intel periodically checks S3700 capacitor health and that outright capacitor failure or degraded performance triggers a SMART event and disables write caching. This is retained as **contemporary secondary product reporting**. It is not treated as a manufacturer-primary requirement, a firmware-version matrix, or an induced-fault command trace.
 
 ### Primary — Intel PLI technology brief
 
@@ -605,7 +684,7 @@ Directly inspected:
 - p. 6 — validation scope, acknowledged-complete command target, hot-unplug/LBA verification, Figure 6 7000-repeat flow;
 - p. 7 — S3700/S3500 identified as products with enabled PLI hardware/firmware.
 
-The brief is the stronger explanatory witness for the partial-discharge mechanism and wider validation narrative; the 2012 specification now supplies the earlier named-product control-surface chronology.
+The brief is the stronger explanatory witness for the partial-discharge mechanism and wider validation narrative; the 2012 specification supplies the earlier named-product control-surface chronology.
 
 ### Primary — Intel SSD DC S3700 Product Specification, 2015
 
@@ -639,12 +718,24 @@ Directly inspected:
 
 See the bounded evidence record for source-role and causality limits.
 
+### Institutional primary — OCP Datacenter SAS-SATA Device Specification v1.0, 28 March 2023
+
+Open Compute Project, **_Datacenter SAS-SATA Device Specification_**, Version 1.0 `(03282023)`, with listed authors/contributors from HPE, Meta, and Microsoft:
+<https://www.opencompute.org/documents/datacenter-sas-sata-device-specification-rev-1-0-pdf>
+
+Directly inspected:
+
+- p. 6, `WCH-4` — device responsibility to temporarily or permanently disable write caching when current operating conditions indicate normal writes are at risk;
+- rendered p. 14, `SATA-19` — periodic PLP testing for PLP-equipped SSDs and the insufficient-charge response: flush cached writes to NAND, disable volatile write cache, generate `Power Loss Protection Failure` SMART trip, clear `WCE`, and reject host attempts to enable write cache.
+
+This is a later **institutional/datacenter device requirement**, not an ATA/SATA-IO standard and not evidence that the same exact state machine existed in every S3700 firmware revision.
+
 ---
 
 ## Status
 
-**`grounded`** for the bounded PLI-health / self-test / manufacturer-validation relation, now with an **earlier 2012 named-product chronology** and an independent named-product **system-stack** power-cut witness.
+**`grounded`** for the bounded PLI-health / self-test / manufacturer-validation relation, now with an **earlier 2012 named-product chronology**, an independent named-product **system-stack** power-cut witness, and a bounded safe-degradation deepening connecting readiness evidence to the admissibility of a PLP-dependent volatile write-cache mode.
 
-The source chronology is now sharper: the October-2012 S3700 specification directly exposes capacitor self-test, AFh/AEh state and D000h test-interval control; the 12-November-2012 Intel fact sheet publicly advertises the built-in self-test; the 2014-era brief adds the detailed partial-discharge and validation explanation; the January-2015 specification supplies later product-contract continuity. The internal `June 2012` revision-history entry remains explicitly weaker than an independently archived public-disclosure date.
+The source roles remain deliberately asymmetric: October-2012 Intel documentation directly exposes capacitor self-test, AFh/AEh state, write-cache Feature Control and D000h test cadence; the 31-January-2013 S3700 review is secondary period evidence for capacitor degradation/failure causing a SMART event and cache disablement; the 2014-era Intel brief supplies the detailed partial-discharge and validation explanation; the January-2015 specification supplies later product-contract continuity; and OCP v1.0 on 28 March 2023 supplies an explicit later institutional safe-degradation sequence without being back-projected into Intel's 2012 product contract.
 
-This does not justify a maturity promotion beyond `grounded`. Remaining work is narrower: **an independently archived June-2012 public-document witness if exact disclosure chronology matters; earlier industry/controller prior art for capacitor-health self-test; controlled component-only S3500/S3700 power-waveform replication; lifetime/temperature coverage; and deeper controller-metadata recovery evidence**, not another repetition of the capacitor-transfer mechanism.
+This does not justify a maturity promotion beyond `grounded`, so `CASE_INDEX.md` should remain unchanged. Remaining work is narrower: **a manufacturer-primary S3700 cache-disable coupling witness; a direct S3700/S3500 command/telemetry transcript across induced PLI failure and recovery; device-specific D000h reset/power-cycle behavior; exact cache-transition atomicity and re-enable semantics; controlled component-only power-waveform replication; lifetime/temperature coverage; deeper controller-metadata recovery evidence; and pre-2023 OCP/hyperscaler lineage if that chronology becomes important**.
