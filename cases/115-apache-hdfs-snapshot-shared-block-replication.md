@@ -4,6 +4,8 @@
 
 Delete/rename completion-ordering deepening: [`../evidence/115-hadoop-241-snapshot-delete-rename-sync-ordering-deepening.md`](../evidence/115-hadoop-241-snapshot-delete-rename-sync-ordering-deepening.md). This release-bounded source slice closes the previously open `deleteSnapshot` / `renameSnapshot` completion-sync detail and separates synchronized namespace retirement from later block invalidation and physical reclamation.
 
+HA ambiguous-completion / retry-cache deepening: [`../evidence/115-hadoop-241-snapshot-ha-retrycache-failover-deepening.md`](../evidence/115-hadoop-241-snapshot-ha-retrycache-failover-deepening.md). This release-bounded source slice closes the narrow Hadoop 2.4.1 path in which a snapshot mutation takes effect on one active NameNode, the first usable client reply is lost, active authority fails over, and the retried RPC is recognized from edit-reconstructed retry state rather than treated as an unrelated fresh mutation.
+
 ## Scope
 
 This case asks a bounded distributed-retention question:
@@ -20,7 +22,7 @@ This case is not:
 - a second HDFS placement/decommission case (Case 80);
 - a second HDFS integrity-scanner case (Case 83);
 - a claim that deleting a snapshot securely erases DataNode media;
-- a full account of NameNode FSImage/edit-log persistence for snapshots beyond the bounded `saveNamespace` checkpoint + restart regression established below;
+- a full account of NameNode FSImage/edit-log persistence for snapshots beyond the bounded checkpoint, normal-replay, and HA retry-continuity paths established below;
 - evidence that HDFS and ZFS snapshots share one implementation or genealogy.
 
 A repository search found no dedicated HDFS-snapshot case in `tmzncty/computing-archaeology`. Broader snapshot genealogy and HDFS implementation history belong there if developed.
@@ -346,7 +348,7 @@ Mapped Flash Case 04 also separates authority/currentness retirement from later 
 
 ### Remaining bounded debt
 
-Still open: arbitrary-crash / torn-or-corrupt-edit-log recovery and HA-failover semantics for snapshots; lower `FSDataset`/filesystem reuse behavior; block-device remapping/discard/sanitize composition; fault-injected timing between retirement, invalidation dispatch, DataNode execution, and restart; and evolution of this path across later Hadoop releases. Normal non-format NameNode restart with snapshot edit-log application is now grounded separately below. Broader HDFS persistence/deletion history remains a `computing-archaeology` task.
+Still open: arbitrary-crash / torn-or-corrupt-edit-log recovery; exact JournalNode/shared-edits quorum-loss, fencing, and split-brain boundaries; lower `FSDataset`/filesystem reuse behavior; block-device remapping/discard/sanitize composition; fault-injected timing between retirement, invalidation dispatch, DataNode execution, and restart; and evolution of this path across later Hadoop releases. The narrow released HA lost-reply / retry-cache failover path is now grounded separately below. Normal non-format NameNode restart with snapshot edit-log application is also grounded separately below. Broader HDFS persistence/deletion history remains a `computing-archaeology` task.
 
 
 ## Normal edit-log replay deepening — Hadoop 2.4.1
@@ -409,9 +411,9 @@ Hence:
 
 ### Remaining boundary
 
-The released test uses orderly shutdown and ordinary restart. It does not inject failures at every edit-log write/sync instruction, prove torn/corrupt-log recovery, or exercise active/standby shared-edits failover. The new evidence therefore narrows the old debt rather than erasing it:
+The released normal-restart test uses orderly shutdown and ordinary restart. It does not inject failures at every edit-log write/sync instruction or prove torn/corrupt-log recovery. A separate 2.4.1 HA regression now grounds one active/standby lost-reply retry path below, but does not erase those broader shared-edits/crash debts:
 
-> **normal restart replay != arbitrary crash/torn-log recovery != HA failover.**
+> **normal restart replay != arbitrary crash/torn-log recovery != all HA failure semantics.**
 
 ## Delete/rename completion-sync and retirement ordering deepening — Hadoop 2.4.1
 
@@ -464,8 +466,77 @@ Hence:
 
 ### Remaining boundary after 115D
 
-Still open: fault injection between mutation, edit append, sync, and block retirement; torn/corrupt edit segments; exact recovery after a crash in the post-sync/pre-invalidation window; HA/shared-edits failover; later-release evolution; and lower filesystem/device discard, reuse, overwrite, or sanitize behavior.
+Still open: fault injection between mutation, edit append, sync, and block retirement; torn/corrupt edit segments; exact recovery after a crash in the post-sync/pre-invalidation window; JournalNode quorum loss and fencing/split-brain boundaries; later-release evolution; and lower filesystem/device discard, reuse, overwrite, or sanitize behavior. The narrow ambiguous-completion retry path is grounded by the next section; this does not make all shared-edits failover behavior closed.
 
+## HA ambiguous-completion and retry-cache reconstruction deepening — Hadoop 2.4.1
+
+The companion evidence record [`evidence/115-hadoop-241-snapshot-ha-retrycache-failover-deepening.md`](../evidence/115-hadoop-241-snapshot-ha-retrycache-failover-deepening.md) closes one narrow HA question that remained after the normal-restart and completion-sync work:
+
+> If a snapshot mutation has already taken effect on the active NameNode but the client loses the reply and retries after failover, can the new active recognize the original completed operation rather than treating the retry as an unrelated fresh mutation?
+
+### H/P — snapshot edit records can retain RPC identity
+
+In `release-2.4.1`, `FSEditLog.logCreateSnapshot`, `logDeleteSnapshot`, and `logRenameSnapshot` accept `toLogRpcIds`, attach the RPC `clientId` and `callId` through `logRpcIds(...)`, and then write the corresponding snapshot edit operation.
+
+That retained operation identity is distinct from the snapshot namespace state itself.
+
+### H/P — replay can reconstruct retry completion state, including create's prior result payload
+
+`FSEditLogLoader` applies snapshot edit operations and, when retry-cache reconstruction is enabled:
+
+- `OP_CREATE_SNAPSHOT` calls `addCacheEntryWithPayload(clientId, callId, path)`;
+- `OP_DELETE_SNAPSHOT` calls `addCacheEntry(clientId, callId)`;
+- `OP_RENAME_SNAPSHOT` calls `addCacheEntry(clientId, callId)`.
+
+`RetryCache` defines its purpose as recognizing successfully processed non-idempotent requests by unique client ID + call ID, and `CacheEntryWithPayload` retains the previous response or enough of it to generate the retried response.
+
+Thus the bounded state split is:
+
+```text
+snapshot namespace result
+    != RPC operation identity
+    != successful-completion / response knowledge
+```
+
+### H/P — released HA tests create exactly the lost-reply ambiguity
+
+`TestRetryCacheWithHA` defines snapshot create/delete/rename operations and runs all three through `testClientRetryWithFailover(...)`. The harness deliberately lets the server-side RPC invocation finish, then injects a fake network exception so the client cannot use that first response; it waits until the old active has actually applied the mutation, forces NN0 to standby and NN1 to active, permits the client retry, and then requires retry-cache participation. Its metrics assertions additionally note that NN1's cache update comes from applying the edit log.
+
+The safe release-bounded statement is therefore:
+
+> **A snapshot mutation can take effect on one active NameNode, lose its first client-visible reply, cross active-NameNode failover, and have the retried call recognized from edit-reconstructed retry state rather than treated as an unrelated fresh mutation.**
+
+### Engineering reconstruction
+
+The test makes a useful protocol-retention distinction explicit:
+
+```text
+server mutation has taken effect
+    + client did not receive the reply
+    -> client is uncertain
+
+retained edit + RPC identity
+    -> standby/new active reconstructs retry completion state
+    -> same RPC can be recognized after failover
+```
+
+Hence:
+
+> **client uncertainty about completion != server loss of completion evidence.**
+
+And the old active's Java heap need not survive as one object:
+
+> **runtime RetryCache continuity != operation-history continuity.**
+
+The edit record is also not snapshot payload. Shared DataNode blocks, namespace/diff authority, edit-log mutation history, RPC identity, and retry-completion state remain separate relations.
+
+### Functional comparison only — Case 80
+
+Case 80's NameNode-restart decommission path similarly permits a volatile control structure to disappear while more persistent evidence recreates a needed runtime relation. The resemblance stops at that abstraction: decommission intent/progress and RPC duplicate suppression are different HDFS state machines, and no broader genealogy is inferred.
+
+### Remaining boundary after 115E
+
+Still open are arbitrary crash/torn/corrupt shared-edit recovery, exact JournalNode quorum-loss boundaries, active/standby fencing and split-brain interleavings, longer-horizon retry-cache expiry/checkpoint behavior, later-release changes, and lower-storage persistence composition. The released regression closes a real HA path, not all HA semantics.
 
 ## Prior art and genealogy boundary
 
@@ -523,7 +594,9 @@ The analogy stops before implementation identity. HDFS's NameNode snapshot diffs
 
 `I` — This case sharpens the distinction between **retaining a past representation** and **retaining an obligation created by that past**. An old snapshot can preserve not only a historical path to payload but also metadata that continues to determine the physical redundancy owed to shared blocks.
 
-`I` — The past is therefore not merely passive residue. In this bounded system it can remain operationally normative: an older file attribute can still constrain present replication work after the current file has changed or disappeared.
+`I` — The HA retry slice adds a second bounded relation: continuity can also require retaining **which action already happened** and enough completion evidence to answer the same action after the process that first handled it is no longer active.
+
+`I` — The past is therefore not merely passive residue. In this bounded system it can remain operationally normative: an older file attribute can still constrain present replication work after the current file has changed or disappeared, and a prior completed RPC can constrain whether a later retry is admissible as new work.
 
 These are project interpretations. Apache engineers are not being credited with a philosophy of memory, and no historical source is rewritten into Stieglerian or Heideggerian vocabulary.
 
@@ -539,13 +612,15 @@ This case does not establish:
 - that replica presence implies checksum/integrity qualification;
 - that snapshot deletion immediately removes every DataNode replica;
 - that NameNode metadata loss leaves snapshot blocks interpretable merely because sectors remain;
+- that retry-cache state is the same state as snapshot namespace/diff state;
+- that the released lost-reply HA regression proves arbitrary torn/corrupt shared-edit or split-brain recovery;
 - that the exact 2.4.1 implementation is unchanged in every later Hadoop release;
 - that HDFS and ZFS share a direct snapshot genealogy.
 
 ## Related repositories
 
-- [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) — no dedicated HDFS-snapshot case was found during this slice. Broader HDFS snapshot implementation history and cross-filesystem snapshot genealogy should live there rather than being duplicated here.
-- [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) — useful if later work asks when `snapshot`, `copy-on-write`, `backup`, `replication`, and `recovery` became actors' own problem categories rather than present-day analytical labels.
+- [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) — no dedicated HDFS-snapshot case or HDFS snapshot/retry-cache packet was found during these slices. Broader HDFS snapshot implementation history, HA/retry-cache/edit-log genealogy, and cross-filesystem snapshot genealogy should live there rather than being duplicated here.
+- [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) — useful if later work asks when `snapshot`, `copy-on-write`, `backup`, `replication`, `recovery`, and at-most-once/retry vocabulary became actors' own problem categories rather than present-day analytical labels.
 
 ## Claim ledger
 
@@ -559,6 +634,10 @@ This case does not establish:
 | deleting a current file that remains in a snapshot does not take the ordinary destroy-and-collect path | `H/P` | `INodeFile.cleanSubtree()` | special UC cleanup exists; lower-layer reclamation not reconstructed |
 | successful snapshot rename/delete crosses the HDFS edit-log sync boundary before normal return | `H/P` | `FSNamesystem.renameSnapshot`; `FSNamesystem.deleteSnapshot`; `FSEditLog.logSync` | version/path bounded; lower-media durability not proved |
 | snapshot delete orders `logSync()` before `removeBlocks(collectedBlocks)` | `H/P` | `FSNamesystem.deleteSnapshot` | source ordering, not exhaustive crash proof |
+| snapshot create/delete/rename edit operations can retain RPC client ID + call ID | `H/P` | `FSEditLog.log*Snapshot`; `logRpcIds` | release/path bounded; not every HDFS RPC claimed |
+| snapshot edit replay can rebuild retry-cache completion state; create can also rebuild its result payload | `H/P` | `FSEditLogLoader` | bounded to inspected replay path |
+| released HA tests exercise create/delete/rename after server-side effect, lost first reply, failover, and retry-cache recognition | `H/P` | `TestRetryCacheWithHA` | regression path, not arbitrary HA fault proof |
+| mutation result, RPC identity, and completion/response knowledge are separate retention relations | `E` | edit/log/loader/test decomposition | project reconstruction |
 | one snapshot API operation requires one unique physical/journal flush | `X` | `FSEditLog.logSync` sync-frontier behavior | explicitly rejected |
 | snapshot retention is equivalent to independent backup | `X` | no supporting source | explicitly rejected |
 | snapshot deletion proves media sanitization | `X` | no supporting source | explicitly rejected |
@@ -590,5 +669,17 @@ This case does not establish:
    - <https://github.com/apache/hadoop/blob/release-2.4.1/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSNamesystem.java>
 
 7. Apache Hadoop source, `release-2.4.1`, **FSEditLog.java**.
-   - snapshot-specific edit methods plus transaction-oriented `logSync()` / `txid` / `synctxid` behavior.
+   - snapshot-specific edit methods plus transaction-oriented `logSync()` / `txid` / `synctxid` behavior; snapshot edit operations can carry RPC client/call IDs for retry reconstruction.
    - <https://github.com/apache/hadoop/blob/release-2.4.1/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSEditLog.java>
+
+8. Apache Hadoop source, `release-2.4.1`, **FSEditLogLoader.java**.
+   - snapshot replay applies create/delete/rename and reconstructs retry-cache entries, with a payload-bearing entry for `createSnapshot`.
+   - <https://github.com/apache/hadoop/blob/release-2.4.1/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSEditLogLoader.java>
+
+9. Apache Hadoop source, `release-2.4.1`, **RetryCache.java**.
+   - identifies retried non-idempotent RPCs by client ID + call ID and supports prior-response payload entries plus edit-log-loaded successful entries.
+   - <https://github.com/apache/hadoop/blob/release-2.4.1/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/ipc/RetryCache.java>
+
+10. Apache Hadoop source/test, `release-2.4.1`, **TestRetryCacheWithHA.java**.
+   - contains explicit create/delete/rename snapshot retry tests using an active-to-standby/new-active failover harness after server-side effect but before the client receives a usable response.
+   - <https://github.com/apache/hadoop/blob/release-2.4.1/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/server/namenode/ha/TestRetryCacheWithHA.java>
