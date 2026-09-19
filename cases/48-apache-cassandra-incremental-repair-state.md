@@ -570,3 +570,28 @@ The resulting retained-state decomposition is therefore stronger than `unrepaire
 Functional comparisons in the evidence file connect this only at the level of mechanism shape to Case 61's HDFS state-publication ordering, Case 141's PostgreSQL retained-control-state lifetime, and Case 24's representation handoff. No shared genealogy is claimed.
 
 **Case status remains `Grounded`.** The 2017–2018 durability/reference/overlap slice is boundedly deepened; post-4.0 stuck/zombie-session evolution, modern repair automation, and independent crash/fault-injection testing remain open.
+
+---
+
+## Deepening navigation — 2018–2024 repair-admin visibility, cleanup authority, and zombie-session residue
+
+See [`evidence/48-cassandra-2018-2024-repair-admin-zombie-session-deepening.md`](../evidence/48-cassandra-2018-2024-repair-admin-zombie-session-deepening.md) for the bounded operator-facing follow-up around CASSANDRA-14939, Apache commit `c34317526fc6dbe559beb36cf44e24278656bdf2`, the Cassandra 4.1 `repair_admin` contract, and the later CASSANDRA-19399 field defect report.
+
+The slice makes a fourth handoff explicit:
+
+```text
+repair outcome determined
+    -> terminal session state retained
+    -> SSTables may still carry pendingRepair affiliation
+    -> summarize-pending / cleanup expose and materialize release work
+    -> promotion or demotion completes
+    -> pending obligation retires
+```
+
+CASSANDRA-14939's 2020 implementation separates session listing, pending-data enumeration, repaired-history summaries, and cleanup rather than collapsing them into one repair-status bit. Its source/tests directly allow `FINALIZED` or `FAILED` session state to coexist temporarily with SSTables still counted in the corresponding pending bucket until release occurs. `cleanup --force` changes cleanup admission by cancelling conflicting compactions; it does not rewrite the historical outcome of the repair.
+
+CASSANDRA-19399 then supplies a bounded 4.1.3 counterexample: the reporter observed ordinary `repair_admin list` showing no active session while `list --all` showed an older session as `FAILED`, yet SSTable-side residue associated with that repair still blocked a later incremental repair. The issue remains open/unresolved in the inspected ASF record, so it is evidence for the reported boundary, not a universal 4.1 behavior or a solved root-cause claim.
+
+This closes the narrower open debt around **post-4.0 observability and administrative retirement of pending repair state**. It reframes rather than closes the broader stuck/zombie-session question: exact root causes, CASSANDRA-17172/19399 evolution, later fixes, modern auto-repair interaction, and independent crash/fault-injection validation remain open.
+
+**Case status remains `Grounded`.**
