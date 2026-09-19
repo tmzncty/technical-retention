@@ -21,14 +21,9 @@ jobs:
           git config user.email 'technical-retention-automation@users.noreply.github.com'
       - name: Integrate bounded Case 39 deepening
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path('cases/39-geckoftl-power-failure-metadata-recovery.md')
-          text = path.read_text(encoding='utf-8')
-          marker = '## 2007–2009 Pliant controller deepening — power-loss reconstruction and GC authority'
-          if marker in text:
-              raise SystemExit('canonical marker already present')
-          appendix = '''
+          test -f evidence/39-pliant-2007-2009-power-loss-metadata-gc-authority-deepening.md
+          ! grep -q '^## 2007–2009 Pliant controller deepening' cases/39-geckoftl-power-failure-metadata-recovery.md
+          cat >> cases/39-geckoftl-power-failure-metadata-recovery.md <<'EOF'
 
 ---
 
@@ -116,13 +111,11 @@ Case 39 remains **`grounded`**; this slice sharpens prior art and the controller
 
 - Aaron K. Olbrich and Douglas A. Prins, _Metadata rebuild in a flash memory controller following a loss of power_, `US20090172262A1`, priority 27 December 2007, filed 8 April 2008, published 2 July 2009: <https://patents.google.com/patent/US20090172262A1/en>.
 - Aaron K. Olbrich and Douglas A. Prins, _Flash memory controller garbage collection operations performed independently in multiple flash memory groups_, `US20090172258A1`, same priority/filing/publication dates: <https://patents.google.com/patent/US20090172258A1/en>.
-'''
-          path.write_text(text.rstrip() + appendix + '\n', encoding='utf-8')
-          PY
+EOF
       - name: Validate and commit
         run: |
           grep -q '39-pliant-2007-2009-power-loss-metadata-gc-authority-deepening.md' cases/39-geckoftl-power-failure-metadata-recovery.md
-          test -f evidence/39-pliant-2007-2009-power-loss-metadata-gc-authority-deepening.md
+          grep -q 'priority date != public availability' cases/39-geckoftl-power-failure-metadata-recovery.md
           git diff --check
           git add cases/39-geckoftl-power-failure-metadata-recovery.md
           git commit -m 'case39: integrate Pliant recovery authority boundary [skip ci]'
