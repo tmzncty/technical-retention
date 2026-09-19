@@ -2,7 +2,7 @@
 
 ## Status
 
-**`grounded`** — bounded to Toshiba's 1984-priority DRAM self-refresh control design disclosed in US4682306A.
+**`grounded`** — bounded to Toshiba's 1984-priority DRAM self-refresh control design disclosed in US4682306A, with later product/standards-era comparisons used only to test control-authority and proxy boundaries.
 
 Grounding record: [`../evidence/10-toshiba-1984-self-refresh-scheduling-grounding.md`](../evidence/10-toshiba-1984-self-refresh-scheduling-grounding.md).
 
@@ -11,6 +11,8 @@ Prior-art deepening: [`../evidence/10-hitachi-1982-1984-leakage-comparator-self-
 Named-product boundary deepening: [`../evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md`](../evidence/10-toshiba-1994-2001-pseudo-sram-product-self-refresh-deepening.md).
 
 Cross-vendor proxy-topology deepening: [`../evidence/10-sharp-1997-1998-array-coupled-leakage-refresh-deepening.md`](../evidence/10-sharp-1997-1998-array-coupled-leakage-refresh-deepening.md).
+
+2004 named-product TCSR authority deepening: [`../evidence/10-samsung-infineon-2004-tcsr-control-authority-product-deepening.md`](../evidence/10-samsung-infineon-2004-tcsr-control-authority-product-deepening.md).
 
 Standards-era TCSR control-boundary deepening: [`../evidence/10-micron-2005-2009-temperature-compensated-self-refresh-control-boundary.md`](../evidence/10-micron-2005-2009-temperature-compensated-self-refresh-control-boundary.md).
 
@@ -143,6 +145,56 @@ Finally, Toshiba's 2001 statement that a separate refresh controller/glue logic 
 
 The physical payload remains dynamic in the named product descriptions, and `Self Refresh` does not establish unpowered nonvolatility.
 
+## Named-product TCSR control-authority divergence — Samsung and Infineon, February 2004
+
+Detailed record: [`../evidence/10-samsung-infineon-2004-tcsr-control-authority-product-deepening.md`](../evidence/10-samsung-infineon-2004-tcsr-control-authority-product-deepening.md).
+
+Two February-2004 manufacturer product documents move the named-product control-boundary floor earlier than the existing Micron 2005–2009 technical-note comparison without turning product chronology into an invention-priority claim.
+
+Infineon's `HYB25L512160AC-7.5 / HYE25L512160AC-7.5` Mobile-RAM Rev. 1.2 exposes TCSR in Extended Mode Register bits A4:A3 and PASR separately in A2:A0. `TCSR=00` leaves the on-chip temperature sensor enabled, while the other three TCSR values select defined temperature assumptions and disable the sensor. The same datasheet says Extended Mode Register state lasts until reprogramming or power loss, and that PASR-excluded regions lose data after the relevant `tREF` interval.
+
+Samsung's `K4M56323LE` Mobile-SDRAM, also dated February 2004, documents `Internal TCSR`: internal temperature-sensor/control units automatically control self-refresh cadence, while a controller-issued external TCSR EMRS code is explicitly ignored. PASR remains separately selectable for the retained bank scope.
+
+The bounded comparison is therefore:
+
+```text
+Infineon:
+visible TCSR field
+    -> effective policy selection
+    -> automatic sensor OR programmed fixed-temperature assumption
+
+Samsung:
+internal temperature-sensor/control path
+    -> effective cadence
+
+external TCSR request
+    -> ignored
+```
+
+This establishes two sharper rules:
+
+```text
+same TCSR label
+    !=
+same control-authority semantics
+
+field causally effective
+    !=
+on-chip sensor necessarily active
+```
+
+The second rule is important because it prevents the inverse overclaim to the Micron/Samsung `ignored field` case. A visible field can be effective while deliberately switching the sensor out of the policy loop.
+
+Both product families keep temporal cadence policy distinct from PASR spatial coverage. That strengthens the Case-10 decomposition:
+
+```text
+when maintenance occurs
+    !=
+which array region remains under the retention obligation
+```
+
+The comparison is functional and product-specific. It does not establish that Samsung and Infineon used the same JEDEC revision, the same sensor circuit, or a shared genealogy. The controlling 2003–2005 normative JEDEC TCSR clause remains uninspected in this case.
+
 ## Standards-era temperature-proxy / control-authority deepening — Micron, 2005–2009
 
 Micron's Mobile DDR / low-power-DDR technical notes provide a deliberately later negative control for the earlier leakage-derived circuits. See [`../evidence/10-micron-2005-2009-temperature-compensated-self-refresh-control-boundary.md`](../evidence/10-micron-2005-2009-temperature-compensated-self-refresh-control-boundary.md).
@@ -176,6 +228,8 @@ maintenance coverage policy
 ```
 
 The comparison is functional. Nothing inspected here proves that Hitachi, Toshiba, or Sharp influenced Micron TCSR or the JEDEC field. Likewise, the actual 2005–2007 normative JEDEC TCSR clause was not directly inspected; the source supports only Micron's historical statement that the bits were JEDEC-standard and the documented implementation behavior in which they were ineffective.
+
+The Samsung/Infineon 2004 addendum now shows that this later Micron distinction was not the first inspected product-era evidence of divergent authority placement: by February 2004, one named Infineon product family exposed an effective field capable of switching between sensor-derived and fixed-temperature policy, while a named Samsung family documented internal cadence authority and ignored external TCSR requests.
 
 This later evidence changes the conceptual emphasis of Case 10. A preservation system need not derive its maintenance decision from a proxy that physically resembles the payload cell. Temperature can be used as a retention-relevant condition from which cadence is selected. And even when the interface retains a named policy field, the actual authority over preservation work can migrate behind that interface.
 
@@ -230,7 +284,7 @@ The slice deliberately does not claim to have inspected the controlling 2005–2
 
 ## Failure boundaries
 
-The sourced mechanism separates several failure classes. A monitor that is not conservative enough can initiate maintenance too late; an overly conservative monitor can cause needless refresh and power cost; an incorrect threshold can reduce safety margin; and correct triggering still does not guarantee correct row enumeration or correct row restoration. The Sharp deepening adds another boundary: an aggregate leakage proxy can smooth individual-source variation without proving that it captures the worst-retention cell. The Micron TCSR deepening adds a different class: a controller-sensed design can fail in temperature observation / policy programming, while an on-die automatic design moves the relevant authority and failure path behind the external TCSR field. The Xilinx/Micron integration adds a further separation: wrong controller `tREFI`, wrong device-internal SELF REFRESH cadence, wrong PASR coverage, and failed SELF REFRESH entry/exit are different failure surfaces. These are engineering implications of the documented partitions, not measured failure rates for commercial Toshiba, Sharp, Micron, or Xilinx systems.
+The sourced mechanism separates several failure classes. A monitor that is not conservative enough can initiate maintenance too late; an overly conservative monitor can cause needless refresh and power cost; an incorrect threshold can reduce safety margin; and correct triggering still does not guarantee correct row enumeration or correct row restoration. The Sharp deepening adds another boundary: an aggregate leakage proxy can smooth individual-source variation without proving that it captures the worst-retention cell. The Samsung/Infineon 2004 deepening adds that a bad sensor path, a wrong fixed-temperature code, and a controller assumption that an ignored field has authority are distinct failure surfaces. The Micron TCSR deepening adds a different class: a controller-sensed design can fail in temperature observation / policy programming, while an on-die automatic design moves the relevant authority and failure path behind the external TCSR field. The Xilinx/Micron integration adds a further separation: wrong controller `tREFI`, wrong device-internal SELF REFRESH cadence, wrong PASR coverage, and failed SELF REFRESH entry/exit are different failure surfaces. These are engineering implications of the documented partitions, not measured failure rates for commercial Toshiba, Sharp, Samsung, Infineon, Micron, or Xilinx systems.
 
 ## Functional analogy and anti-anachronism
 
@@ -238,11 +292,11 @@ The sourced mechanism separates several failure classes. A monitor that is not c
 
 US4682306A is a manufacturer-primary design disclosure, not proof that a named Toshiba DRAM or pseudo-SRAM used the exact preferred embodiment. It also cannot support a `first adaptive self-refresh` claim because the patent itself identifies earlier Hitachi work. Likewise, the Sharp family is design disclosure rather than proof of a named shipping part.
 
-Later SDRAM `AUTO REFRESH`, JEDEC self-refresh entry/exit, DDR per-bank refresh, and modern retention-aware policies remain separate regimes. The Micron addendum narrows one later bridge: standards-era TCSR can use temperature and can place effective cadence authority somewhere other than the host-visible TCSR field. The Xilinx/Micron integration narrows another: an external controller can own ordinary periodic-refresh timing and SELF REFRESH transitions without owning the internal cadence once the DRAM enters SELF REFRESH. Neither comparison turns the later regime into the same mechanism as the 1980s leakage-monitor designs.
+Later SDRAM `AUTO REFRESH`, JEDEC self-refresh entry/exit, DDR per-bank refresh, and modern retention-aware policies remain separate regimes. The Samsung/Infineon 2004 addendum narrows a product-level bridge: the same broad TCSR vocabulary can coexist with an effective field that switches sensor authority on one product and an ignored external TCSR request on another. The Micron addendum narrows a later bridge: standards-era TCSR can use temperature and can place effective cadence authority somewhere other than the host-visible TCSR field. The Xilinx/Micron integration narrows another: an external controller can own ordinary periodic-refresh timing and SELF REFRESH transitions without owning the internal cadence once the DRAM enters SELF REFRESH. None of these comparisons turns the later regime into the same mechanism as the 1980s leakage-monitor designs.
 
 ## Philosophical limit
 
-A bounded conceptual question follows from the mechanism: apparent persistence can be maintained by instrumenting an approaching loss condition and converting it into maintenance work. The Sharp comparison adds that the useful signal need not be a miniature copy of the payload state; it can be an aggregate signature emitted by surrounding infrastructure. The Micron comparison adds that a visible control representation need not exhaust the effective policy relation: a named field can remain present while the preservation decision has moved to an internal sensor/control path. The Xilinx/Micron integration adds that preservation authority itself can be distributed by dimension: the component that requests a preservation mode need not own its internal cadence, while another externally selected field can still govern the spatial scope of what is preserved. These are interpretations of engineering relations, not historical claims that Toshiba, Hitachi, Sharp, Micron, Xilinx, or JEDEC engineers formulated a philosophy of retention, representation, or authority.
+A bounded conceptual question follows from the mechanism: apparent persistence can be maintained by instrumenting an approaching loss condition and converting it into maintenance work. The Sharp comparison adds that the useful signal need not be a miniature copy of the payload state; it can be an aggregate signature emitted by surrounding infrastructure. The Samsung/Infineon comparison adds that preservation authority can switch between sensing and programmed assumption, or remain internal while an external request is ignored, without the broad interface vocabulary disappearing. The Micron comparison adds that a visible control representation need not exhaust the effective policy relation: a named field can remain present while the preservation decision has moved to an internal sensor/control path. The Xilinx/Micron integration adds that preservation authority itself can be distributed by dimension: the component that requests a preservation mode need not own its internal cadence, while another externally selected field can still govern the spatial scope of what is preserved. These are interpretations of engineering relations, not historical claims that Toshiba, Hitachi, Sharp, Samsung, Infineon, Micron, Xilinx, or JEDEC engineers formulated a philosophy of retention, representation, or authority.
 
 ## Cross-case result
 
@@ -261,6 +315,8 @@ maintenance-policy decision location
     !=
 control-field visibility
     !=
+control-field effectiveness / override semantics
+    !=
 effective cadence authority
     !=
 mode-entry / exit authority
@@ -278,7 +334,7 @@ row selection
 sense / restoration
 ```
 
-Case 09 grounds the separation between external trigger cadence and internal row enumeration. Case 10 grounds designs in which monitored physical conditions participate in generating refresh timing while showing that the monitored proxy, aggregation topology, sensor location, effective policy authority, mode-transition authority, and coverage authority can vary materially across manufacturer disclosures and controller/device boundaries.
+Case 09 grounds the separation between external trigger cadence and internal row enumeration. Case 10 grounds designs in which monitored physical conditions participate in generating refresh timing while showing that the monitored proxy, aggregation topology, sensor location, field effectiveness, effective policy authority, mode-transition authority, and coverage authority can vary materially across manufacturer disclosures and controller/device boundaries.
 
 ## Claim ledger
 
@@ -301,13 +357,18 @@ Case 09 grounds the separation between external trigger cadence and internal row
 | Toshiba publicly announced a named `TC51W3216XB` pseudo-SRAM with a one-transistor DRAM-like cell, SRAM interface, and self refresh in 2001 | H/P | Toshiba corporate release, 18-Jun-2001 |
 | Named-product self refresh proves deployment of the US4682306A leak-monitor threshold path | X | product evidence does not expose the patent's monitor/threshold mechanism |
 | A named Toshiba commercial part is proven to use this exact leakage-tracked circuit | X | still unsupported; broad self-refresh productization is now grounded, exact circuit identity is not |
+| Infineon Rev. 1.2 documents TCSR and PASR as separate Extended Mode Register controls by Feb. 2004 | H/P | HYB/HYE25L512160AC Rev. 1.2 |
+| Infineon `TCSR=00` enables the on-chip temperature sensor, while other TCSR codes use defined temperatures and disable it | H/P | HYB/HYE25L512160AC Rev. 1.2 §3.2.2.2 |
+| Samsung K4M56323LE documents internal sensor/control cadence and says controller-issued external TCSR EMRS is ignored in Feb. 2004 | H/P | K4M56323LE manufacturer datasheet |
+| Same `TCSR` label implies the same effective authority semantics across named products | X | contradicted by Samsung/Infineon 2004 comparison |
+| An effective TCSR field necessarily means the on-chip sensor is active | X | contradicted by Infineon nondefault TCSR settings |
 | Micron documented TCSR as a JEDEC-member mobile-DRAM power-saving feature by Oct. 2005 | H/P | TN-46-12 revision history + text |
 | TN-46-12 permits either on-DRAM automatic temperature sensing or controller-side sensing + programmed DRAM control bits | H/P | TN-46-12 |
 | Micron TN-46-15 states that an on-chip temperature sensor controls the LPDDR self-refresh interval | H/P | TN-46-15, Jan. 2007 |
 | TN-46-15 calls the TCSR fields JEDEC-standard but says programming them has no effect on the documented device | H/P | TN-46-15 text + extended-mode-register note |
-| A standards-visible maintenance field necessarily has effective policy authority on every implementation | X | directly contradicted by TN-46-15 |
+| A standards-visible maintenance field necessarily has effective policy authority on every implementation | X | directly contradicted by Samsung 2004 and Micron TN-46-15 |
 | Temperature-derived TCSR is electrically the same mechanism as the 1980s leakage-monitor patents | X | different observed condition; genealogy not established |
-| The exact 2005–2007 normative JEDEC TCSR clause is established by this case | X | normative standard text not directly inspected in this slice |
+| The exact 2003–2007 normative JEDEC TCSR clause is established by this case | X | normative standard text not directly inspected in these slices |
 | Xilinx UG388 v2.3 supports LPDDR and lists Micron `MT46H32M16xxxx-5` as a supported 512Mb ×16 family | H/P | UG388 supported-device table |
 | Xilinx `C_MEM_TREFI` is the MCB periodic-refresh interval and explicitly not the self-refresh interval | H/P | UG388 memory-device attributes |
 | Xilinx exposes LPDDR Partial Array Self-Refresh coverage with `C_MEM_MOBILE_PA_SR` | H/P | UG388 memory-device attributes |
@@ -318,12 +379,13 @@ Case 09 grounds the separation between external trigger cadence and internal row
 | Internal refresh addressing automatically implies internal refresh scheduling | X | contradicted by the Case-09/Case-10 comparison |
 | A deliberately decaying proxy can trigger payload-preservation work | E | bounded reconstruction from the monitor role |
 | Leakage-derived refresh can use materially different proxy and aggregation topologies | E | bounded cross-vendor reconstruction from Hitachi, Toshiba, and Sharp records |
-| Sensor location, control-field visibility, and effective refresh-cadence authority are separable | E | bounded reconstruction from Micron TN-46-12 / TN-46-15 |
+| Sensor location, control-field visibility, field effectiveness, and effective refresh-cadence authority are separable | E | bounded reconstruction from Samsung/Infineon 2004 plus Micron TN-46-12 / TN-46-15 |
+| Cadence authority and PASR coverage authority can remain separately allocated in named Mobile-SDRAM products | E | bounded Samsung/Infineon 2004 comparison |
 | Mode-transition authority, cadence authority, and coverage authority are separable at a named controller/device boundary | E | bounded reconstruction from Xilinx UG388 + Micron Rev. I 12/09 |
 
 ## Related repositories
 
-Current searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for the Toshiba leak-monitor mechanism, `US6075739`, `TN-46-15`, `temperature compensated self refresh`, `UG388`, `MT46H32M16`, and related self-refresh leakage terms found no dedicated treatment to reuse. A broader history of DRAM generations, pseudo-SRAM, LPDDR standardization, FPGA memory controllers, oscillator and back-bias design, temperature sensing, process leakage, manufacturer competition, and later standards belongs there rather than being duplicated here.
+Current searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for the Toshiba leak-monitor mechanism, `US6075739`, `TCSR Mobile SDRAM`, `K4M56323LE`, `HYB25L512160AC`, `TN-46-15`, `temperature compensated self refresh`, `UG388`, `MT46H32M16`, and related self-refresh leakage terms found no dedicated treatment to reuse. A broader history of DRAM generations, pseudo-SRAM, Mobile-SDRAM/LPDDR standardization, Samsung/Infineon product genealogy, FPGA memory controllers, oscillator and back-bias design, temperature sensing, process leakage, manufacturer competition, and later standards belongs there rather than being duplicated here.
 
 `tmzncty/problem-history` remains the methodological guard against projecting later `adaptive refresh`, `refresh authority`, or JEDEC terminology backward.
 
@@ -342,3 +404,6 @@ Current searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty
 11. Freescale Semiconductor, **_MPC5121e DRAM Controller_**, Rev. 2 (2009), surviving copy preserving TN-46-15's legacy Micron URL and separately referencing JESD209: <https://manuals.plus/m/fd2a88e34742801074da475b621e1bec8a57e5b296ebe5e29d01ecf797b92919>.
 12. Xilinx, **_Spartan-6 FPGA Memory Controller User Guide (UG388)_**, v2.3, 9 Aug. 2010, official AMD/Xilinx archive: <https://docs.amd.com/v/u/en-US/ug388>.
 13. Micron Technology, Inc., **_512Mb: x16, x32 Mobile LPDDR SDRAM_**, Rev. I, Dec. 2009, PDF identifier `09005aef82d5d305`, device families including `MT46H32M16LF` / `MT46H16M32LF`; preserved document index: <https://datasheet.eeworld.com.cn/view/7768840.html>.
+14. Infineon Technologies AG, **_HYB25L512160AC-7.5 / HYE25L512160AC-7.5, 512MBit Mobile-RAM_**, Data Sheet Rev. 1.2, Feb. 2004, preserved page-stable PDF: <https://docs.ampnuts.ru/eevblog.docs/_Datasheets/RAM.SDRAM/Mobile/1-HYB25L512160AC_Rev.1.2.pdf>.
+15. Samsung Semiconductor, **_K4M56323LE - M(E)E/N/S/C/L/R, 2M × 32Bit × 4 Banks Mobile-SDRAM_**, Feb. 2004, preserved manufacturer-datasheet text: <https://dtsheet.com/doc/304110/samsung-k4m56323le-en80>.
+16. Samsung Semiconductor, **_K4S56163PF Mobile-SDRAM_**, Sept. 2004, preserved manufacturer-datasheet text used only as a same-manufacturer continuity witness: <https://manualmachine.com/datasheet/k4s56163pf/8448986-datasheet-samsung/>.
