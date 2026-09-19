@@ -1,0 +1,129 @@
+name: Integrate Case 39 Pliant recovery deepening
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Configure git
+        run: |
+          git config user.name 'technical-retention automation'
+          git config user.email 'technical-retention-automation@users.noreply.github.com'
+      - name: Integrate bounded Case 39 deepening
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('cases/39-geckoftl-power-failure-metadata-recovery.md')
+          text = path.read_text(encoding='utf-8')
+          marker = '## 2007–2009 Pliant controller deepening — power-loss reconstruction and GC authority'
+          if marker in text:
+              raise SystemExit('canonical marker already present')
+          appendix = '''
+
+---
+
+## 2007–2009 Pliant controller deepening — power-loss reconstruction and GC authority
+
+A bounded follow-on adds a controller-architecture witness earlier than the existing 2011 ITRI filing and more directly tied to validity/free-space relations consumed by garbage collection:
+
+- [`evidence/39-pliant-2007-2009-power-loss-metadata-gc-authority-deepening.md`](../evidence/39-pliant-2007-2009-power-loss-metadata-gc-authority-deepening.md)
+
+The evidence is a Pliant Technology patent family with **27 December 2007 priority**, filed **8 April 2008**, and published as U.S. applications on **2 July 2009**. It is a controller-design disclosure, not proof of a named shipping product.
+
+### H/P — volatile working tables and retained Flash recovery evidence are different state
+
+The disclosure stores `Forward` and `Reverse Tables` in Data Path DRAM for performance. Because that DRAM is volatile, unexpected power loss requires those tables, plus the currently open SuperBlock metadata, to be rebuilt. The reconstruction substrate is Flash-resident SuperBlock/SuperPage metadata, state flags, timestamps, and erase/defect state.
+
+```text
+nonvolatile payload
+    != volatile mapping / validity working tables
+    != Flash-resident evidence from which those tables can be rebuilt
+```
+
+### H/P — restart reconstructs currentness, validity, and free-space authority
+
+For closed SuperBlocks, duplicate LBAs are resolved by timestamp comparisons: older embodiments are marked invalid in the Reverse Table and the newer location repopulates the Forward Table. For a still-open block, the closed-block summary is explicitly insufficient, so recovery descends to per-SuperPage metadata.
+
+The same retained state flags classify blocks that were already erased at power loss. Such blocks are placed on the reconstructed `SuperBlock Freelist`.
+
+```text
+surviving physical page != current logical embodiment
+
+erased physical block != volatile free-list membership already present after restart
+
+retained ordering / state witnesses
+    -> reconstructed currentness + validity + reuse authority
+```
+
+The recovery step re-establishes Freelist membership for a block identified as already erased; it is not itself the physical erase operation.
+
+### H/P — recovered metadata is later maintenance authority
+
+The paired Pliant garbage-collection disclosure uses Reverse-Table invalid-page counts when selecting GC victims and Freelist count to decide whether GC is unnecessary, non-critical, or critical. After GC relocation/erase, Freelist admission and counter increment are explicit completion steps.
+
+```text
+Flash-resident state witnesses
+    -> restart mapping/currentness reconstruction
+    -> restart validity/free-space reconstruction
+    -> renewed allocation and GC decision authority
+```
+
+The inspected material does **not** show an interrupted GC execution cursor being journaled and resumed at the exact interrupted program step. Therefore `reconstructed GC authority != resumed interrupted GC transaction`.
+
+### Prior-art chronology — priority date and public availability remain separate
+
+```text
+27 Dec 2007   Pliant provisional priority
+08 Apr 2008   Pliant nonprovisional filing
+10 Apr 2009   Park et al. public paper
+02 Jul 2009   Pliant applications publicly published
+05 Dec 2011   ITRI filing
+Jun 2014      DCR publication
+2015–2017     Logarithmic Gecko / GeckoFTL sequence
+```
+
+Pliant supplies an earlier **design/priority** floor than Park, while Park remains the earlier inspected **public publication**. `priority date != public availability` is an explicit guardrail. No arrow implies a Pliant → Park, Pliant → GeckoFTL, or Pliant → later commercial-controller genealogy.
+
+### Engineering boundary added by this slice
+
+The new evidence supports `payload survival != translation-state survival`, `translation-state loss != permanent relation loss`, `surviving duplicate embodiments != self-evident currentness`, `erased state != reconstructed Freelist membership`, `recovered validity/free-space authority != payload integrity validation`, and `reconstructed GC authority != interrupted-GC replay`.
+
+### Functional comparison — Case 150 managed-SSD garbage collection
+
+Case 150 separately shows that managed-SSD GC depends on controller-side invalid/stale/free-space relations rather than host-visible bytes alone. Pliant supplies an earlier controller-design witness that those relations can disappear with volatile working state and must be rebuilt before later maintenance can rely on them. This is a functional bridge only; it does **not** establish that Crucial/Micron M550 used Pliant firmware, table formats, GC scheduling, or recovery code.
+
+### Philosophical interpretation
+
+The exact technical point is limited: retained material traces can outlive the volatile relation that previously made them operationally current, valid, or reusable. Restart reconstructs that authority from surviving evidence. This disciplines a distinction between **material survival** and **renewed operational authority** without turning controller metadata into a general philosophical model of memory.
+
+### Revised remaining debt
+
+This deepening partially closes the earlier generic `controller metadata recovery` debt by adding a concrete late-2000s controller-architecture disclosure. It does **not** close the commercial evidence gap. Remaining work includes named **shipping-product/controller** documentation, independent power-cut/fault-injection validation, exact behavior when power fails mid-GC relocation/erase, cross-vendor comparison, and any host-visible reporting of reconstruction failure.
+
+Case 39 remains **`grounded`**; this slice sharpens prior art and the controller-maintenance boundary rather than changing maturity.
+
+### Primary sources for this deepening
+
+- Aaron K. Olbrich and Douglas A. Prins, _Metadata rebuild in a flash memory controller following a loss of power_, `US20090172262A1`, priority 27 December 2007, filed 8 April 2008, published 2 July 2009: <https://patents.google.com/patent/US20090172262A1/en>.
+- Aaron K. Olbrich and Douglas A. Prins, _Flash memory controller garbage collection operations performed independently in multiple flash memory groups_, `US20090172258A1`, same priority/filing/publication dates: <https://patents.google.com/patent/US20090172258A1/en>.
+'''
+          path.write_text(text.rstrip() + appendix + '\n', encoding='utf-8')
+          PY
+      - name: Validate and commit
+        run: |
+          grep -q '39-pliant-2007-2009-power-loss-metadata-gc-authority-deepening.md' cases/39-geckoftl-power-failure-metadata-recovery.md
+          test -f evidence/39-pliant-2007-2009-power-loss-metadata-gc-authority-deepening.md
+          git diff --check
+          git add cases/39-geckoftl-power-failure-metadata-recovery.md
+          git commit -m 'case39: integrate Pliant recovery authority boundary [skip ci]'
+          git push origin HEAD:main
