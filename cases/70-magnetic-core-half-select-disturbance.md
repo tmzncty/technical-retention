@@ -3,8 +3,8 @@
 ## Scope
 
 - **Object / system:** early coincident-current ferrite-core memory arrays, treated as a bounded deepening of Case 02 rather than a second general history of magnetic core memory;
-- **Date range:** 1951–1959 for the principal mechanism evidence, with bounded 1970–1973 named-machine production/service witnesses for operating-margin qualification;
-- **Principal sources:** Jay W. Forrester's 1951-filed multicoordinate-storage patent, William N. Papian's April 1952 IRE paper as preserved by MIT, Edwin W. Bauer / Munro K. Haynes's 1954-filed IBM disturbance-cancellation patent, plus IBM 1800 and DEC MM11-S / PDP-8/E field and maintenance manuals for later production/service margin evidence;
+- **Date range:** 1951–1959 for the principal mechanism evidence, with bounded 1970–1974 named-machine production/service witnesses for operating-margin qualification;
+- **Principal sources:** Jay W. Forrester's 1951-filed multicoordinate-storage patent, William N. Papian's April 1952 IRE paper as preserved by MIT, Edwin W. Bauer / Munro K. Haynes's 1954-filed IBM disturbance-cancellation patent, plus IBM 1800 and DEC MM11-S / PDP-8/E MM8-E / MF11-U/UP field and maintenance manuals for later production/service margin evidence;
 - **Research question:** what must remain stable in the *non-target* cores and in the shared sensing path when one address is selected?
 
 Case 02 already establishes remanent magnetic state, coincident-current selection, destructive read, and rewrite. The broader engineering history, including manufacturing and the systems logic of half selection, is already developed in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md). This case therefore isolates a narrower retention problem:
@@ -343,12 +343,13 @@ DEC also divides adjustment authority: strobe and field select can be set by fac
 
 Papian and DEC should not be collapsed. Papian measures material/pulse-regime disturbance and signal ratios; DEC qualifies an installed system's service operating region. They are complementary layers, and no direct procedural genealogy is asserted.
 
-## Cross-machine production/service margin deepening (1970–1973)
+## Cross-machine production/service margin deepening (1970–1974)
 
-Two follow-on evidence records now keep the MM8-E from becoming a stand-in for installed magnetic-core memory as a whole:
+Three follow-on evidence records now keep the MM8-E from becoming a stand-in for installed magnetic-core memory as a whole:
 
 - [`../evidence/70-ibm1800-1970-temperature-sense-margin-deepening.md`](../evidence/70-ibm1800-1970-temperature-sense-margin-deepening.md) — IBM 1800 field-engineering material with temperature-compensated `VRef`, temperature-dependent signal-peak motion relative to fixed strobe timing, a `<7 mV at strobe time` half-select `delta noise` criterion in the documented two-microsecond waveform, and a closed-cover requirement while preserving the temperature-tracking relation.
 - [`../evidence/70-dec-mm11s-1972-temperature-margin-noise-test-deepening.md`](../evidence/70-dec-mm11s-1972-temperature-margin-noise-test-deepening.md) — DEC MM11-S product/service documentation with X/Y-current margins of `±6% @ 0°C`, `±7% @ 25°C`, `±6% @ 50°C`, strobe-pulse margins of `±30 ns`, `±40 ns`, `±30 ns` at the same temperatures, a factory-set `410 ±5 mA` current pulse, a narrower `20–30°C` service-adjustment condition inside the `0–50°C` product operating range, midpoint strobe adjustment under worst-case patterns, and a named worst-case plane-noise diagnostic.
+- [`../evidence/70-dec-mf11u-1974-verification-calibration-authority-deepening.md`](../evidence/70-dec-mf11u-1974-verification-calibration-authority-deepening.md) — DEC MF11-U/UP documentation adds a different service boundary: six-month current/strobe/diagnostic checks, deliberate high/low-current and early/late-strobe margining, field-observable G235 timing/current criteria, factory-cut calibration jumpers that are not to be changed in the field, and a replace-module / return-to-factory path when correction would require jumper reconfiguration.
 
 These witnesses support a stronger but still bounded engineering distinction:
 
@@ -360,21 +361,29 @@ same exposed calibration variables
 same service qualification procedure
 !=
 same quantitative margin limits
+!=
+same distribution of verification and calibration authority
 ```
 
-The MM11-S evidence also adds a useful control that should not be lost in later comparison:
+The MM11-S and MF11-U/UP evidence also add controls that should not be lost in later comparison:
 
 ```text
 published product operating envelope
 !=
-field adjustment environment
+field test / adjustment environment
 !=
-observed per-unit error boundary
+observed per-unit acceptance evidence
 !=
 chosen service operating point
+
+and
+
+field observability
+!=
+field calibration authority
 ```
 
-Three named machines still do **not** constitute a statistical production distribution. The records establish recurrence and variation of the margin problem, not a universal ferrite-memory tolerance curve or a direct IBM↔DEC genealogy.
+Four named machines still do **not** constitute a statistical production distribution. The records establish recurrence and variation of the margin problem and its service organization, not a universal ferrite-memory tolerance curve or a direct IBM↔DEC genealogy.
 
 ---
 
@@ -390,7 +399,7 @@ Three named machines still do **not** constitute a statistical production distri
 
 4. **Digital Equipment Corporation, _PDP-8/E, PDP-8/F & PDP-8/M Maintenance Manual, Volume 1: Processor_, DEC-8E-HMM1A-D-D, 7th Printing (Rev), September 1973.** Sections 4.7.2–4.7.9 give MM8-E current, slice, temperature-tracking, and strobe-setting controls plus a checkerboard-based working-window procedure.[^dec]
 
-5. **IBM 1800 and DEC MM11-S production/service evidence.** Their source anchors, inspection limits, and exact quantitative claims are kept in the two bounded follow-on evidence records linked above rather than duplicated here.
+5. **IBM 1800, DEC MM11-S, and DEC MF11-U/UP production/service evidence.** Their source anchors, inspection limits, exact quantitative claims, and service-authority boundaries are kept in the bounded follow-on evidence records linked above rather than duplicated here.
 
 ### Reused engineering history
 
@@ -442,6 +451,20 @@ In the bounded IBM arrangement, X/Y chooses the word while Z inhibit decides whe
 
 The project should therefore avoid treating `selected` as one indivisible relation when the hardware itself separates location selection from transition authorization.
 
+### Finding 6 — service observability does not imply calibration authority
+
+The MF11-U/UP deepening adds a maintenance-control distinction beyond the physical margin itself. DEC gives field personnel checks and deliberate margin perturbations for the G235 path, but directs them not to reconfigure the relevant calibration jumpers when that would be required to correct a failure. The documented field repair path is module replacement plus factory return.
+
+Therefore, for this bounded product:
+
+```text
+margin state is field-observable
+!=
+calibration state is field-mutable
+```
+
+and the six-month preventive-maintenance cadence is a diagnostic/service schedule, not a ferrite payload-refresh clock.
+
 ---
 
 ## Functional analogies
@@ -470,7 +493,9 @@ This case supports one narrow project-level interpretation:
 
 The retained bit does not survive because the rest of the machine leaves it untouched. It survives because the array is designed so that ordinary non-target traffic may act on it **without crossing the boundary that changes what counts as its stored state**, while the readout path suppresses effects that would otherwise make the state unavailable.
 
-This is not a historical claim that Forrester, Papian, Bauer, or Haynes formulated a philosophy of retention. It is a later interpretation disciplined by their engineering evidence.
+The MF11-U/UP service record adds another bounded layer: continued recoverability can also depend on an institutional distribution of who may observe, perturb, replace, and recalibrate the apparatus that maintains the operating region.
+
+This is not a historical claim that Forrester, Papian, Bauer, Haynes, or DEC formulated a philosophy of retention. It is a later interpretation disciplined by their engineering evidence.
 
 It also limits a common intuition about `storage`: the past state may remain available not by being sealed away from present operations, but by being engineered to tolerate and discriminate among them.
 
@@ -486,13 +511,17 @@ The IBM patent is centrally about sense disturbance from partially excited cores
 
 Core materials, geometry, pulse amplitude, temperature, winding organization, and sense circuitry varied. Papian establishes that repetitive nonselecting disturbance was measured and materially discriminating; this case does not infer one universal pulse count or margin.
 
-### Three production/service witnesses are not a statistical distribution
+### Four production/service witnesses are not a statistical distribution
 
-IBM 1800, DEC MM11-S, and DEC MM8-E expose different current, timing, noise, temperature, and maintenance-control surfaces. Their agreement that margin matters does not establish a population distribution across magnetic-core machines, deployed material lots, or vendors. The MM11-S three-temperature specification is a product contract, not a measurement of every shipped unit.
+IBM 1800, DEC MM11-S, DEC MM8-E, and DEC MF11-U/UP expose different current, timing, noise, temperature, maintenance-control, and service-authority surfaces. Their agreement that margin matters does not establish a population distribution across magnetic-core machines, deployed material lots, or vendors. Product specifications are not measurements of every shipped unit.
 
 ### The PDP-8/E maintenance numbers are not universal core constants
 
 The MM8-E's `370 mA` nominal X/Y current, `340 mA` nominal inhibit current, discrete slice levels, and 10-ns strobe taps are settings of this bounded DEC design. The checkerboard working window qualifies service operation; it is not a universal material-switching curve, a continuous symmetric timing tolerance, or a remanent shelf-life measurement.
+
+### MF11-U/UP preventive maintenance is not payload refresh
+
+DEC's six-month schedule checks operating conditions, margins, and diagnostics. It does not imply that ferrite payload must be rewritten every six months, nor does a clean two-pass diagnostic constitute a lifetime guarantee. Likewise, permission to measure a G235 timing/current condition is not permission to reproduce factory jumper calibration.
 
 ### The IBM cancellation circuit is not claimed as universal production practice
 
@@ -500,11 +529,11 @@ The 1954-filed patent proves an engineering problem and a proposed/claimed solut
 
 ### This is not a new invention-priority claim
 
-The early history of magnetic memory includes parallel and contested work. This case makes no claim that the sources used here settle the invention of magnetic core memory, coincident-current selection, destructive read, inhibit writing, or disturbance cancellation.
+The early history of magnetic memory includes parallel and contested work. This case makes no claim that the sources used here settle the invention of magnetic core memory, coincident-current selection, destructive read, inhibit writing, disturbance cancellation, margining, or maintenance organization.
 
 ### Full-core history belongs elsewhere
 
-Manufacturing, economics, Whirlwind chronology, and the broader reason core displaced earlier memories remain in `computing-archaeology`. This file exists only because the retention-specific split among neighbor state, sense output, and write authorization changes the cross-case comparison.
+Manufacturing, economics, Whirlwind chronology, and the broader reason core displaced earlier memories remain in `computing-archaeology`. This file exists only because the retention-specific split among neighbor state, sense output, write authorization, and bounded service authority changes the cross-case comparison.
 
 ---
 
@@ -530,6 +559,9 @@ Manufacturing, economics, Whirlwind chronology, and the broader reason core disp
 | MM11-S publishes different X/Y-current and strobe margins at 0°C, 25°C, and 50°C | H/P | direct in DEC MM11-S Table 1-1; detailed in linked evidence |
 | MM11-S operating range and field-adjustment temperature are distinct documented conditions | H/P + E | Table 1-1 plus §3.2.1; detailed in linked evidence |
 | MM11-S worst-case-noise traffic is an installed-system qualification, not Papian's material pulse characterization | FA | bounded cross-source comparison; no genealogy asserted |
+| MF11-U/UP field maintenance can check and deliberately margin G235 drive/strobe behavior while correction requiring jumper reconfiguration is explicitly redirected to module replacement/factory repair | H/P | direct in DEC §§5.2.3, 5.3.3–5.4.2; detailed in linked evidence |
+| MF11-U/UP six-month preventive maintenance is a service/diagnostic cadence, not a ferrite payload-refresh interval | E | bounded reconstruction from DEC §5.3 |
+| Field observability of an operating-margin condition does not imply field calibration authority in the bounded MF11-U/UP path | E | bounded reconstruction from DEC field checks + §5.4.2 restriction |
 | Papian material disturbance testing and installed-system margin qualification are complementary but not identical evidence layers | FA | bounded cross-source comparison; no genealogy asserted |
 | Core half-select disturbance is functionally comparable to RowHammer/NAND neighbor stress | A | bounded analogy only |
 | Core half-select disturbance is the ancestor of RowHammer or NAND disturb | X | unsupported and rejected |
@@ -539,8 +571,8 @@ Manufacturing, economics, Whirlwind chronology, and the broader reason core disp
 
 ## Related repositories
 
-- [`tmzncty/computing-archaeology/docs/memory/why-core-memory-was-worth-weaving.md`](https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md) — the reusable engineering/history account; this case adds the retention-specific state-disturbance / sense-disturbance split and bounded service-margin witnesses.
-- [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) — relevant to the priority and vocabulary caution: modern `retention burden` is not projected backward as the historical actors' own general problem category.
+- [`tmzncty/computing-archaeology/docs/memory/why-core-memory-was-worth-weaving.md`](https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md) — the reusable engineering/history account; this case adds the retention-specific state-disturbance / sense-disturbance split and bounded service-margin witnesses. A fresh search found no dedicated MF11-U margin/calibration-authority packet to reuse, so broader MF11-U hardware genealogy and manufacturing/calibration history remain routed there.
+- [`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) — relevant to the priority and vocabulary caution: modern `retention burden` and `calibration authority` are not projected backward as the historical actors' own general problem categories.
 
 ---
 
@@ -571,8 +603,9 @@ Production/service deepening is now explicitly connected rather than left as det
 - direct Papian facsimile inspection: [`../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md`](../evidence/70-papian-1952-half-select-disturbance-facsimile-deepening.md);
 - IBM 1800 (1970) temperature/sense-margin witness: [`../evidence/70-ibm1800-1970-temperature-sense-margin-deepening.md`](../evidence/70-ibm1800-1970-temperature-sense-margin-deepening.md);
 - DEC MM11-S (1972) temperature-indexed current/strobe margin plus worst-case-noise witness: [`../evidence/70-dec-mm11s-1972-temperature-margin-noise-test-deepening.md`](../evidence/70-dec-mm11s-1972-temperature-margin-noise-test-deepening.md);
-- DEC PDP-8/E MM8-E (1973) installed-system strobe/current/service witness: [`../evidence/70-dec-pdp8e-1973-operating-margin-deepening.md`](../evidence/70-dec-pdp8e-1973-operating-margin-deepening.md).
+- DEC PDP-8/E MM8-E (1973) installed-system strobe/current/service witness: [`../evidence/70-dec-pdp8e-1973-operating-margin-deepening.md`](../evidence/70-dec-pdp8e-1973-operating-margin-deepening.md);
+- DEC MF11-U/UP (1973–1974) field-verification / factory-calibration-authority witness: [`../evidence/70-dec-mf11u-1974-verification-calibration-authority-deepening.md`](../evidence/70-dec-mf11u-1974-verification-calibration-authority-deepening.md).
 
-The earlier `cross-machine margin` and `quantitative temperature dependence` debt is therefore **partially closed**, not eliminated. Three named machines establish recurrence and variation, but they do not provide a statistically meaningful production distribution or material law.
+The earlier `cross-machine margin` and `quantitative temperature dependence` debt is therefore **partially closed**, not eliminated. Four named machines establish recurrence and variation, and the MF11-U/UP adds a bounded service-authority dimension; together they still do not provide a statistically meaningful production distribution or material law.
 
-Remaining work is narrower archival/production deepening: deployed-material/vendor-lot distributions, measured unit-to-unit margin distributions, continuous material/environment curves, earlier production correspondence/field-return records, and invention-priority genealogy if later synthesis requires them.
+Remaining work is narrower archival/production deepening: deployed-material/vendor-lot distributions, measured unit-to-unit margin distributions, continuous material/environment curves, factory calibration worksheets, earlier production correspondence/field-return records, and invention-priority genealogy if later synthesis requires them.
