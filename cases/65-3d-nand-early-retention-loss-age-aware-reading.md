@@ -2,15 +2,16 @@
 
 ## Status
 
-**`grounded`** — bounded to the retention-specific transition from earlier charge-trapping NAND fast-initial-charge-loss evidence (2010), through a 2016 tube-type 3D NAND early-retention study, to Luo et al.'s 2018 experimental characterization of real 3D NAND MLC chips and their **Retention Model Aware Reading (ReMAR)** proposal. A follow-on deepening isolates the same 2018 paper's **retention interference** measurements and **Retention Interference Aware Neighbor-Cell Assisted Correction (ReNAC)** proposal. A new manufacturer-design deepening now adds Toshiba / Toshiba Memory patent evidence for adaptive and elapsed-time-conditioned NAND read-voltage tracking, including nonvolatile reference-time/control records loaded into volatile controller working state after power-on.
+**`grounded`** — bounded to the retention-specific transition from earlier charge-trapping NAND fast-initial-charge-loss evidence (2010), through a 2016 tube-type 3D NAND early-retention study, to Luo et al.'s 2018 experimental characterization of real 3D NAND MLC chips and their **Retention Model Aware Reading (ReMAR)** proposal. A follow-on deepening isolates the same 2018 paper's **retention interference** measurements and **Retention Interference Aware Neighbor-Cell Assisted Correction (ReNAC)** proposal. A manufacturer-design deepening adds Toshiba / Toshiba Memory patent evidence for adaptive and elapsed-time-conditioned NAND read-voltage tracking, including nonvolatile reference-time/control records loaded into volatile controller working state after power-on. A 2022–2024 TLC deepening now adds direct peer-reviewed TLC retention/read-voltage evidence rather than carrying the 2018 MLC result forward by projection.
 
-The manufacturer material closes only a **patent/design-witness** portion of the open deployment question. It does not establish that a named retail SSD shipped ReMAR, ReNAC, or the exact Toshiba disclosed mechanism.
+The manufacturer material closes only a **patent/design-witness** portion of the open deployment question. It does not establish that a named retail SSD shipped ReMAR, ReNAC, or the exact Toshiba disclosed mechanism. The later TLC evidence closes the direct-TLC measurement gap only; direct QLC measurement and named-controller deployment remain open.
 
 Evidence navigation:
 
 - grounding: [`../evidence/65-3d-nand-2010-2018-early-retention-grounding.md`](../evidence/65-3d-nand-2010-2018-early-retention-grounding.md)
 - retention-interference / ReNAC deepening: [`../evidence/65-luo-2018-retention-interference-renac-deepening.md`](../evidence/65-luo-2018-retention-interference-renac-deepening.md)
 - Toshiba / Toshiba Memory age-aware read-tracking and metadata deepening: [`../evidence/65-toshiba-2014-2018-age-aware-read-tracking-metadata-deepening.md`](../evidence/65-toshiba-2014-2018-age-aware-read-tracking-metadata-deepening.md)
+- direct TLC retention/read-voltage deepening: [`../evidence/65-2022-2024-tlc-retention-read-voltage-deepening.md`](../evidence/65-2022-2024-tlc-retention-read-voltage-deepening.md)
 
 ## Scope
 
@@ -22,8 +23,9 @@ The bounded object is **early retention loss / fast initial charge loss** in cha
 
 1. the 2018 extended-duration characterization of real 3D NAND MLC chips;
 2. its age-aware ReMAR proposal;
-3. its separately measured neighbor-conditioned **retention interference** phenomenon and ReNAC proposal; and
-4. Toshiba / Toshiba Memory manufacturer design records showing that adaptive read-voltage tracking and later elapsed-time-conditioned tracking can depend on retained controller metadata whose durable and runtime representations have different persistence horizons.
+3. its separately measured neighbor-conditioned **retention interference** phenomenon and ReNAC proposal;
+4. Toshiba / Toshiba Memory manufacturer design records showing that adaptive read-voltage tracking and later elapsed-time-conditioned tracking can depend on retained controller metadata whose durable and runtime representations have different persistence horizons; and
+5. direct 2022–2024 3D-TLC evidence showing retention-after-cycling read-voltage adaptation and history-conditioned later retention results without assuming quantitative portability from the 2018 MLC population.
 
 This is **not**:
 
@@ -37,9 +39,10 @@ This is **not**:
 - a modern device-specific `read reclaim` case;
 - the same mechanism as Case 36's planar-NAND Flash Correct-and-Refresh (FCR), Case 52's read disturb, or Case 59's program interference;
 - a claim that retention interference, layer-to-layer process variation, early retention loss, and read disturb are one phenomenon;
-- a claim that the 2018 paper demonstrated a meaningful ReNAC lifetime improvement on its tested generation; the paper explicitly says it did not.
+- a claim that the 2018 paper demonstrated a meaningful ReNAC lifetime improvement on its tested generation; the paper explicitly says it did not;
+- direct QLC evidence merely because later papers discuss TLC/QLC as neighboring multi-bit regimes.
 
-The 2018 authors characterize chips from a major vendor but do not identify the vendor/product. Numerical results remain bounded to their test population and model assumptions. The Toshiba material is used as manufacturer-primary **design disclosure**, not as measured product deployment evidence.
+The 2018 authors characterize chips from a major vendor but do not identify the vendor/product. Numerical results remain bounded to their test population and model assumptions. The Toshiba material is used as manufacturer-primary **design disclosure**, not as measured product deployment evidence. The 2022/2024 TLC sources are research-device evidence, not proof of a named shipping controller policy.
 
 ## Historical vocabulary and chronology
 
@@ -118,12 +121,22 @@ The paper uses historical/technical vocabulary including:
 
 The Toshiba source vocabulary adds `tracking parameter`, `write reference time`, `reference time data`, and read/write/access-count management. `front-loaded retention hazard`, `read-interpretation state`, `controller time continuity`, `relational retention trajectory`, and `persistence horizon` remain project analytical terms.
 
+### Direct TLC evidence in 2022–2024
+
+Hongzhe Lin and colleagues' 2022 IEEE SNW paper directly characterizes **TLC 3D NAND** threshold-voltage distributions and optimal read voltages under `retention-after-cycling`, then proposes a mathematical model for predicting optimal-read-voltage shift (`ORVS`) rather than relying only on search-based read retry. Its abstract reports 96.6% prediction accuracy for one bounded condition: blocks at 8k P/E cycles after 335 hours at 55 °C.
+
+Xuesong Zheng and colleagues' 2024 *Micromachines* paper supplies a more inspectable raw-device witness: a 128-Gbit, 64-layer charge-trap TLC NAND device tested with an FPGA raw-NAND platform from 25 °C to 85 °C. The study follows fresh blocks through 10k P/E cycles and includes a 24-hour data-retention path after deliberately different preceding P/E timing and temperature histories. The later retention fail-bit counts depend on those prior histories in the bounded experiment.
+
+These sources close only the former **direct TLC measurement** debt. They do not prove that the 2018 MLC curve is quantitatively portable, do not establish QLC behavior, and do not prove commercial-controller deployment of any one adaptive-read policy.
+
+Dedicated record: [`../evidence/65-2022-2024-tlc-retention-read-voltage-deepening.md`](../evidence/65-2022-2024-tlc-retention-read-voltage-deepening.md).
+
 ## Retained state and constitutive control state
 
 The bounded regime contains several separable relations:
 
 1. **cell charge / threshold-voltage state** — charge retained in a 3D charge-trap transistor and expressed through its threshold voltage;
-2. **logical MLC value** — the bit value inferred from which voltage interval the cell is classified into;
+2. **logical MLC/TLC value** — the bit value inferred from which voltage interval the cell is classified into;
 3. **retention age** — elapsed time since the current data embodiment was programmed or since another controller-defined reference event;
 4. **P/E-cycle history** — wear state that changes error behavior/model parameters;
 5. **read-reference policy** — voltage boundaries or tracking-search parameters used to interpret the current threshold distribution;
@@ -135,9 +148,11 @@ The bounded regime contains several separable relations:
 11. **word-line / process-location context** — Toshiba's design conditions tracking on target word-line identity in addition to elapsed time;
 12. **read/write/access-count state** — further context used by some disclosed tracking variants;
 13. **vertically adjacent neighbor state** — in the measured retention-interference relation, a conditioning variable for the victim's threshold-voltage evolution;
-14. **neighbor-aware recovery policy** — in ReNAC, an additional read-offset selection relation used after the ordinary read path fails.
+14. **neighbor-aware recovery policy** — in ReNAC, an additional read-offset selection relation used after the ordinary read path fails;
+15. **preceding operation/temperature history** — in the 2024 TLC experiment, controlled P/E timing and temperature conditions that change the later observed error population;
+16. **model-predicted optimal-read-voltage shift** — in the 2022 TLC work, an interpretation/control result rather than payload or physical renewal.
 
-The timestamps, counters, word-line identity, and neighbor value are not user payload. They are different kinds of control/context state that can change how an existing physical embodiment is interpreted.
+The timestamps, counters, word-line identity, neighbor value, prior-history conditions, and read-voltage model are not user payload. They are different kinds of control/context state or experimental conditioning that can change how an existing physical embodiment is interpreted.
 
 ## Engineering reconstruction
 
@@ -229,6 +244,8 @@ The Toshiba Memory design combines elapsed time with word-line identity and, in 
 
 This complements Case 65's existing neighbor-conditioned result: future legibility can depend on temporal, spatial/process, use-history, and relational context without those variables becoming one physical failure mechanism.
 
+The 2024 TLC experiment strengthens the same boundary from a different evidence class. Its later retention result depends on deliberately controlled preceding P/E timing and temperature history. That does **not** prove that a shipping controller stores a literal history log, but it does show that equal elapsed retention time need not imply equal physical/read margin.
+
 ### Trigger evidence is not tracking context or recovery verdict
 
 In Toshiba's disclosed flows, ECC failure or a high correctable-error count can cause the tracking path to be entered. Retained reference-time, word-line, and count context then bound the tracking search.
@@ -261,11 +278,11 @@ Losing a clock relation and losing charge state are different failures. The form
 
 ### Read-reference adaptation is not physical refresh
 
-ReMAR changes the voltage boundary used to interpret an aged distribution. Toshiba's tracking design changes the read-voltage search/selection process. Neither operation, by itself, puts leaked charge back into the cell.
+ReMAR changes the voltage boundary used to interpret an aged distribution. Toshiba's tracking design changes the read-voltage search/selection process. The 2022 TLC work adds another read-side form: predicting an optimal-read-voltage shift under retention-after-cycling. None of these operations, by itself, puts leaked charge back into the cell.
 
 Therefore:
 
-> **read-reference adaptation / tracking ≠ physical refresh or restoration.**
+> **read-reference adaptation / tracking / prediction ≠ physical refresh or restoration.**
 
 This is the central boundary against Case 36. A later system could compose read adaptation with a rewrite/remap path, but functional composability does not make them one operation.
 
@@ -279,7 +296,7 @@ Therefore:
 
 And:
 
-> **RBER growth ≠ immediate logical forgetting.**
+> **RBER/FBC growth ≠ immediate logical forgetting.**
 
 Forgetting occurs only when available interpretation/correction/recovery resources can no longer recover an admissible logical value under the relevant service contract.
 
@@ -344,7 +361,7 @@ Therefore:
 
 And:
 
-> **projected future TLC/QLC importance ≠ measured TLC/QLC result.**
+> **projected future TLC/QLC importance ≠ measured TLC/QLC result in the 2018 paper.**
 
 Dedicated record: [`../evidence/65-luo-2018-retention-interference-renac-deepening.md`](../evidence/65-luo-2018-retention-interference-renac-deepening.md).
 
@@ -362,6 +379,7 @@ But the evidence types and mechanisms differ.
 
 - **ReMAR** is a scholarly proposal motivated by measured 3D-NAND early-retention behavior and explicitly models retention-age-dependent optimal read reference.
 - **Toshiba Memory's design** is a manufacturer patent disclosure in which elapsed time, word-line identity, and other state can select a tracking search pattern.
+- **2022 TLC ORVS work** is a later scholarly measurement/model record for retention-after-cycling in TLC; it does not establish either ReMAR or Toshiba genealogy.
 
 Therefore:
 
@@ -369,7 +387,7 @@ Therefore:
 
 > **same broad function ≠ historical genealogy.**
 
-> **patent embodiment ≠ shipped controller.**
+> **patent embodiment or research model ≠ shipped controller.**
 
 The Toshiba age-aware patent's earlier 2017 priority filing also cannot be used as if it were an earlier public disclosure than ReMAR.
 
@@ -416,7 +434,15 @@ retention time + neighbor state
     -> reread of existing embodiment
 ```
 
-Safe functional analogy: all can preserve logical availability against retention-related error growth.
+Case 65 later TLC evidence:
+
+```text
+retention + cycling / prior-history condition
+    -> changed threshold/error regime
+    -> measured or predicted optimal read-voltage condition
+```
+
+Safe functional analogy: all can preserve or characterize logical availability against retention-related error growth.
 
 Stop condition: **physical renewal is not read-boundary adaptation**, and these sources do not establish one common implementation lineage.
 
@@ -424,7 +450,7 @@ Stop condition: **physical renewal is not read-boundary adaptation**, and these 
 
 Case 52 is **access-induced**: repeated reads apply pass-through stress to other cells, so read count can become a maintenance clock.
 
-Case 65 early retention is **post-program time dependent**. Toshiba's disclosed controller may also use read/access count as an input, which is useful precisely because it shows that one controller can carry multiple distinct degradation clocks.
+Case 65 early retention is **post-program time dependent**. Toshiba's disclosed controller may also use read/access count as an input, which is useful precisely because it shows that one controller can carry multiple distinct degradation clocks. The 2024 TLC experiment studies read-disturb and retention in the same research program but keeps them as separate processes.
 
 Therefore:
 
@@ -438,7 +464,7 @@ And:
 
 Case 59 is **write-event-induced neighbor coupling**. A neighboring program event shifts a previously programmed victim, and program order matters.
 
-Case 65 retention interference is **retention-time evolution conditioned by neighbor stored state** in a 3D charge-trap structure. ReNAC reuses a neighbor-aware recovery form but the physical mechanism remains different.
+Case 65 retention interference is **retention-time evolution conditioned by neighbor stored state** in a 3D charge-trap structure. ReNAC reuses a neighbor-aware recovery form but the physical mechanism remains different. The 2024 TLC experiment's prior operation timing is another history variable and does not collapse into Case 59's program-interference mechanism.
 
 Therefore:
 
@@ -472,6 +498,7 @@ Distinct failure modes include:
 
 - fast post-program charge loss shifts threshold distributions;
 - P/E wear changes applicable error behavior;
+- prior operation interval / temperature history can condition a later TLC error population;
 - a fixed read-reference voltage becomes increasingly mismatched to the aged distribution;
 - ECC margin can be consumed even while reads still succeed;
 - program/reference-time metadata can be missing, stale, or associated with the wrong current physical embodiment;
@@ -502,15 +529,21 @@ Forgetting here is neither “power was removed” nor “a certain wall-clock d
 | Luo et al. measure victim retention shift correlated with vertically adjacent neighbor state | `H/P` | 2018 retention-interference experiment |
 | ReNAC models retention interference using retention time and neighbor state | `H/P` | 2018 ReNAC proposal |
 | ReNAC shows meaningful lifetime improvement on the tested current generation | `X` | 2018 explicitly reports that it does not |
+| 2022 peer-reviewed work directly characterizes retention-after-cycling threshold distributions / optimal read voltages in TLC 3D NAND | `H/P` | IEEE SNW publisher record/abstract |
+| 2022 work reports 96.6% ORVS prediction accuracy for 8k-P/E blocks after 335 h at 55 °C | `H/P` | bounded abstract-level result; not a retention success probability |
+| 2024 raw-device work tests 128-Gbit 64-layer charge-trap TLC through a 24 h retention path after controlled P/E timing/temperature histories | `H/P` | directly inspectable methods/results |
+| later TLC retention FBC can differ with prior operation/temperature history in the bounded 2024 experiment | `H/P` | source-bounded experiment; not universal product law |
 | a retained timestamp/reference-time record can become constitutive read-interpretation state | `E` | reconstruction from ReMAR + Toshiba mechanism |
 | persistent control record and runtime working copy can have different persistence horizons | `E` | reconstruction from Toshiba power-on load path |
 | boot reconstruction proves atomic metadata updates | `X` | not established by patent disclosure |
 | time continuity can be retention infrastructure without being payload | `E` | reconstruction from RTC/reference-time requirements |
 | neighbor state can become recovery side information without becoming victim payload | `E` | reconstruction from retention-interference/ReNAC mechanism |
-| age-aware or neighbor-aware reference selection physically restores lost charge | `X` | read-boundary adaptation is not charge rewrite |
-| Toshiba age-aware tracking is ReMAR | `X/A` | functional similarity only; algorithm/genealogy identity not established |
+| same elapsed retention time fully determines TLC recovery margin | `X` | 2024 controlled-history evidence blocks this shortcut |
+| age-aware, neighbor-aware, or model-predicted reference selection physically restores lost charge | `X` | read-boundary adaptation is not charge rewrite |
+| Toshiba age-aware tracking or 2022 ORVS prediction is ReMAR | `X/A` | functional similarity only; algorithm/genealogy identity not established |
 | 2017 Toshiba priority filing is proof of public disclosure before ReMAR | `X` | filing chronology != public-publication chronology |
-| ReMAR, ReNAC, or Toshiba's exact patent embodiment is proven deployed in a named commercial controller | `X` | deployment remains open |
+| ReMAR, ReNAC, Toshiba's exact patent embodiment, or the 2022 model is proven deployed in a named commercial controller | `X` | deployment remains open |
+| direct QLC behavior is established by the 2022/2024 TLC records | `X` | QLC remains open |
 | every later 3D NAND/TLC/QLC generation has the same early-retention curve/interference magnitude | `X` | outside bounded population |
 | early retention / retention interference is identical to read disturb or program interference | `X/A` | only higher-level comparison is allowed |
 | nonvolatile media can require time-sensitive and relational interpretation policy | `I` | bounded philosophical pressure; not historical actor vocabulary |
@@ -529,9 +562,13 @@ The Toshiba deepening adds a third bounded pressure:
 
 > **The metadata that makes persistent matter legible can itself require persistence across one interval and reconstruction into a different working representation across another.**
 
-These are useful to a philosophy of technical retention because they separate `remaining` from `remaining equally legible under one fixed interpretation`, and persistent control relations from their runtime embodiments. They do not imply that the engineers were making philosophical claims about memory, nor do they make every controller timestamp or neighbor read a form of cultural or tertiary retention.
+The TLC deepening adds a fourth:
 
-The engineering result comes first: a nonvolatile charge-trap state can age nonlinearly, and a controller can use retained temporal, spatial/process, count, and neighbor evidence to adapt how it reads the state.
+> **The same elapsed retention age does not exhaust technical history: prior wear, operation timing, and temperature can condition the later recovery margin.**
+
+These are useful to a philosophy of technical retention because they separate `remaining` from `remaining equally legible under one fixed interpretation`, and persistent control relations from their runtime embodiments. They do not imply that the engineers were making philosophical claims about memory, nor do they make every controller timestamp, model, or neighbor read a form of cultural or tertiary retention.
+
+The engineering result comes first: a nonvolatile charge-trap state can age nonlinearly, and a controller can use retained temporal, spatial/process, count, neighbor, and model/context evidence to adapt how it reads the state.
 
 ## Cross-case result
 
@@ -544,6 +581,8 @@ retention/reference age
     !=
 front-loaded threshold/RBER evolution
     !=
+P/E / operation / temperature history
+    !=
 nonvolatile reference-time/control record
     !=
 volatile runtime working copy
@@ -554,6 +593,8 @@ vertically adjacent neighbor state
     !=
 optimal / recovery read-reference or tracking search
     !=
+model-predicted read-voltage shift
+    !=
 ECC-correctable logical payload
     !=
 age-aware / neighbor-aware controller interpretation
@@ -561,22 +602,23 @@ age-aware / neighbor-aware controller interpretation
 physical refresh or rewrite
 ```
 
-The strongest result remains that **retention policy can move from “renew the physical state on a schedule” toward “retain enough temporal and contextual evidence to reinterpret the same aged physical state more accurately.”** The manufacturer-design evidence now shows one concrete way such context can itself cross a power-cycle boundary through persistent metadata and runtime reconstruction. This remains a functional/engineering comparison, not a claim of universal SSD practice or one historical lineage.
+The strongest result remains that **retention policy can move from “renew the physical state on a schedule” toward “retain or infer enough temporal and contextual evidence to reinterpret the same aged physical state more accurately.”** The manufacturer-design evidence shows one concrete way such context can itself cross a power-cycle boundary through persistent metadata and runtime reconstruction; the TLC evidence shows that later measured read/error conditions can also depend on wear and preceding operation/temperature history. This remains a functional/engineering comparison, not a claim of universal SSD practice or one historical lineage.
 
 ## Related repositories
 
-A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `early retention` found no dedicated reusable case. A broader history of BiCS/V-NAND/charge-trap process architecture, Toshiba/Kioxia controller genealogy, and patent-family evolution belongs there. This repository keeps only the retention-specific relation among front-loaded aging, read tracking, persistent reference-time state, runtime reconstruction, neighbor-conditioned drift, ECC margin, and physical renewal.
+Fresh searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `early retention`, `TLC 3D NAND`, and the exact 2022 TLC paper title found no dedicated reusable case. A broader history of BiCS/V-NAND/charge-trap process architecture, TLC/QLC product generations, Toshiba/Kioxia controller genealogy, and patent-family evolution belongs there. This repository keeps only the retention-specific relation among front-loaded aging, read tracking, persistent reference-time state, runtime reconstruction, history-conditioned TLC evidence, neighbor-conditioned drift, ECC margin, and physical renewal.
 
 Case 59 remains the local home for the earlier program-interference/NAC genealogy; this case links that work instead of duplicating it.
 
-[`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) supplies the anti-anachronism discipline. `fast initial charge loss`, `early retention`, `ReMAR`, `retention interference`, `ReNAC`, `tracking parameter`, and `reference time` are source vocabulary where cited; `front-loaded retention hazard`, `read-interpretation state`, `relational retention trajectory`, and `persistence horizon` are modern analytical terms.
+[`tmzncty/problem-history`](https://github.com/tmzncty/problem-history) supplies the anti-anachronism discipline. `fast initial charge loss`, `early retention`, `ReMAR`, `retention interference`, `ReNAC`, `tracking parameter`, `reference time`, `retention-after-cycling`, and `optimal read voltage shift` are source vocabulary where cited; `front-loaded retention hazard`, `read-interpretation state`, `relational retention trajectory`, and `persistence horizon` are modern analytical terms.
 
 ## Remaining work
 
-The early-retention/ReMAR case, retention-interference/ReNAC slice, and manufacturer patent/design witness are grounded, but stronger evidence remains open:
+The early-retention/ReMAR case, retention-interference/ReNAC slice, manufacturer patent/design witness, and direct TLC measurement slice are grounded, but stronger evidence remains open:
 
 - independent replication of retention interference in later **named** 3D NAND generations/vendors;
-- direct TLC/QLC measurements rather than carrying forward the 2018 projection;
+- direct **QLC** measurements rather than carrying forward a TLC/MLC projection;
+- direct later-generation TLC/QLC measurements specifically testing whether the 2018 front-loaded early-retention curve shape and neighbor-conditioned effect recur quantitatively;
 - **named shipped controller/product** evidence for ReMAR-like age-aware tracking — the patent/design level is now partially closed, deployment is not;
 - named shipped controller/product evidence for ReNAC-like neighbor-state recovery;
 - firmware/command traces showing when a real controller reads neighbor state after ECC failure;
@@ -596,3 +638,5 @@ The early-retention/ReMAR case, retention-interference/ReNAC slice, and manufact
 5. **“Reliability of NAND Flash Memories: Planar Cells and Emerging Issues in 3D Devices,”** *Computers* 6(2):16, 2017, DOI `10.3390/computers6020016`, used as scholarly chronology/cross-check rather than as a substitute for primary evidence where mechanism claims are decisive.
 6. Toshiba Corp, Shohei Asami, Toshikatsu Hida, Tokumasa Hara, Riki Suzuki, **_Memory system and method of controlling nonvolatile memory_**, US9251892B1, priority 11 September 2014, published/granted 2 February 2016. <https://patents.google.com/patent/US9251892B1/en>.
 7. Toshiba Memory Corporation, **_Semiconductor memory device and read control method thereof_**, US20180277227A1, claiming priority to Japanese Patent Application 2017-058897 filed 24 March 2017, US publication 27 September 2018; later US10586601B2 granted 10 March 2020. <https://patents.justia.com/patent/20180277227>.
+8. Hongzhe Lin, Yifan Guo, Yifang Xi, Yachen Kong, Xuepeng Zhan, Jiezhi Chen, **“Optimal Read Voltages of Retention-after-Cycling in Triple-level-cell (TLC) 3D NAND Flash Memory and its High-precision Modeling Method,”** 2022 IEEE Silicon Nanoelectronics Workshop (SNW), 11–12 June 2022, DOI `10.1109/SNW56633.2022.9889070`; publisher record: <https://ieeexplore.ieee.org/document/9889070/>.
+9. Xuesong Zheng, Yifan Wu, Haitao Dong, Yizhi Liu, Pengpeng Sang, Liyi Xiao, Xuepeng Zhan, **“Impact of Program–Erase Operation Intervals at Different Temperatures on 3D Charge-Trapping Triple-Level-Cell NAND Flash Memory Reliability,”** *Micromachines* 15(9):1060, 23 August 2024, DOI `10.3390/mi15091060`; <https://www.mdpi.com/2072-666X/15/9/1060>.
