@@ -631,3 +631,15 @@ Therefore:
 - **mapping reconstruction ≠ payload reconstruction**;
 - **mapping recovered ≠ payload integrity validated**;
 - **retained recovery evidence ≠ zero restart work**.
+
+---
+
+## 2007–2009 Pliant controller deepening — power-loss reconstruction and GC authority
+
+Detailed evidence: [`evidence/39-pliant-2007-2009-power-loss-metadata-gc-authority-deepening.md`](../evidence/39-pliant-2007-2009-power-loss-metadata-gc-authority-deepening.md).
+
+The 2007-priority / 2009-public Pliant controller family separates volatile Forward/Reverse working tables from Flash-resident SuperBlock/SuperPage recovery evidence, then reconstructs mapping currentness, validity, and SuperBlock Freelist membership after power loss. A paired garbage-collection disclosure consumes Reverse-Table invalid counts and Freelist state, so the bounded retention seam is `retained state witnesses -> reconstructed currentness/validity/free-space authority -> later allocation and GC authority`.
+
+Two limits are now explicit: `priority date != public availability` (Park et al. was publicly released 10 April 2009; the Pliant applications were published 2 July 2009), and `reconstructed GC authority != resumed interrupted GC transaction`. No Pliant→GeckoFTL or Pliant→Crucial/Micron genealogy is claimed.
+
+Case 39 remains **`grounded`**. The generic controller-metadata-recovery debt is narrowed, while named shipping-controller behavior, independent power-cut validation, and exact mid-GC interruption semantics remain open.
