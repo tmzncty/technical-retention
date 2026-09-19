@@ -2,7 +2,7 @@
 
 **Status:** grounded  
 **Claim layer:** historical record + engineering reconstruction + bounded functional analogy + bounded philosophical interpretation  
-**Primary regime:** PostgreSQL public logical-slot / replication-slot development (2012–2014), PostgreSQL 9.4 replication-slot introduction/release (2014), PostgreSQL 13 resource-bound evolution (2020), and PostgreSQL 17 logical failover-slot synchronization (2024)
+**Primary regime:** PostgreSQL pre-slot archive-backed standby operation (9.1, 2011), public logical-slot / replication-slot development (2012–2014), PostgreSQL 9.4 replication-slot release (2014), PostgreSQL 13 resource-bound evolution (2020), and PostgreSQL 17 logical failover-slot synchronization (2024)  
 **Evidence records:**
 
 - [`../evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md`](../evidence/141-postgresql-2014-2020-replication-slot-wal-retention-grounding.md)
@@ -10,6 +10,7 @@
 - [`../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md`](../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md)
 - [`../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md`](../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md)
 - [`../evidence/141-postgresql-2018-2020-physical-slot-advance-persistence-deepening.md`](../evidence/141-postgresql-2018-2020-physical-slot-advance-persistence-deepening.md)
+- [`../evidence/141-postgresql-2011-2020-wal-archive-alternate-continuation-deepening.md`](../evidence/141-postgresql-2011-2020-wal-archive-alternate-continuation-deepening.md)
 
 ## Summary
 
@@ -19,30 +20,45 @@ This case asks a narrow distributed-log retention question:
 
 PostgreSQL 9.4 supplies a clean mechanism. A **replication slot** is persistent control state. Its `restart_lsn` records the oldest WAL position that might still be required by the slot's consumer. PostgreSQL aggregates slot requirements into the WAL-removal horizon, so old WAL remains available even while the consumer is not currently connected.
 
-The relevant retained objects are therefore not one thing:
+But Case 141 now also records an important pre-slot and cross-carrier boundary: PostgreSQL 9.1 already documented physical standby catch-up through an independently accessible WAL archive. Consequently, a primary-local slot protection failure and global disappearance of the corresponding history are not the same proposition.
+
+The retained objects and paths are therefore not one thing:
 
 ```text
 primary current database state
         != replication-slot control state
         != consumer-need frontier (`restart_lsn`)
-        != retained WAL history governed by that frontier
+        != primary-local WAL history governed by that frontier
+        != archived WAL copies retained elsewhere
+        != base-backup materialized state
         != current connection/activity state
 ```
 
-The released 9.4 documentation also exposes a cost: replication slots retain only history known to be needed, but the original design had no built-in way to bound the disk space that slot-retained `pg_xlog` could consume.
+The released 9.4 documentation exposes a cost: replication slots retain only history known to be needed, but the original design had no built-in way to bound the disk space that slot-retained `pg_xlog` could consume.
 
-PostgreSQL 13 makes that conflict explicit. `max_slot_wal_keep_size` can cap how much WAL a slot is allowed to protect. The later `wal_status` state machine distinguishes `reserved`, `extended`, `unreserved`, and `lost`. In particular, `unreserved` means required WAL is no longer protected although it may still physically exist until checkpoint removal; `lost` means required WAL has actually disappeared and the slot is no longer usable.
+PostgreSQL 13 makes that conflict explicit. `max_slot_wal_keep_size` can cap how much WAL a slot is allowed to protect. The later `wal_status` state machine distinguishes `reserved`, `extended`, `unreserved`, and `lost`. In particular, `unreserved` means required WAL is no longer protected although some segments may still physically exist until checkpoint removal; `lost` means required WAL for that slot has been removed and the slot is no longer usable.
 
-That gives the case's central decomposition:
+The archive deepening prevents a stronger but unsupported inference:
+
+```text
+slot is `lost`
+    != every copy of the required WAL is globally absent
+```
+
+For a physical standby, an accessible archive can independently supply the replay interval if it retained enough segments. If no usable replay path remains, PostgreSQL documents reinitialization from a new base backup.
+
+The case's central decomposition is now:
 
 ```text
 history still needed by consumer
-    != history currently protected from reclamation
-    != history physically present right now
-    != history sufficient for future continuation
+    != history currently protected on the primary
+    != history physically present on the primary
+    != equivalent history present in another carrier
+    != slot usable for continuation
+    != standby recoverable through some alternate path
 ```
 
-The 2020 policy is later history and must not be projected back into 2014 vocabulary or semantics.
+The 2020 policy is later history and must not be projected back into 2014 vocabulary or semantics; likewise, physical-standby archive recovery must not be projected onto logical decoding without direct evidence.
 
 ## Research questions
 
@@ -51,40 +67,60 @@ The 2020 policy is later history and must not be projected back into 2014 vocabu
 3. Does a disconnected consumer stop constraining retention? No — under the 9.4 slot relation, disconnection and retention obligation are separate.
 4. Does crash-safe slot state imply all required WAL necessarily survives forever? No — PostgreSQL 13 provides a direct counterexample.
 5. What is the difference among `reserved`, `unreserved`, physically present, and `lost` WAL?
-6. Is slot invalidation technical erasure? No — it changes continuation/reclamation authority, not media sanitization.
-7. How does this differ from Raft snapshot transfer, Bigtable redo-point recovery, and LevelDB file liveness?
-8. What belongs here versus broader PostgreSQL/WAL history in `computing-archaeology`?
+6. Can WAL needed by a physical standby survive outside the primary's slot-governed local corpus? Yes — the documented WAL archive is an independent carrier, provided it retains a sufficient replay interval.
+7. Is slot invalidation or local WAL removal technical erasure? No — both are weaker than media sanitization and weaker than global absence of all copies.
+8. How does this differ from Raft snapshot transfer, Bigtable redo-point recovery, and LevelDB file liveness?
+9. What belongs here versus broader PostgreSQL/WAL history in `computing-archaeology`?
 
 ## Source ladder
 
 | Evidence | Date | Strength | Use here |
 |---|---:|---|---|
+| PostgreSQL 9.1 warm-standby docs | 2011 release series | `H/P` | pre-slot archive/local/stream fallback, base-backup reinitialization, archive cleanup |
 | PostgreSQL pgsql-hackers, `logical changeset generation v3` | 2012-11-15 | `H/P` | public `max_logical_slots` / logical-slot floor |
 | PostgreSQL pgsql-hackers v3 review reply | 2012-12-13 | `H/P` | slot-id reused across separate walsender sessions; explicit restart-persistence gap |
 | PostgreSQL pgsql-hackers, `logical changeset generation v4` | 2013-01-15 | `H/P` | crash/restart persistence work and permanent slot lifecycle |
 | PostgreSQL pgsql-hackers, `logical changeset generation v5` | 2013-06-14 | `H/P` | explicit plan to generalize `logical slot` into replication slots usable by streaming replication |
 | PostgreSQL `858ec118...`, “Introduce replication slots” | 2014-02-01 | `H/P` | crash-safe slot purpose and initial WAL-retention relation |
-| PostgreSQL 9.4 release notes | 2014-12-18 | `H/P` | released-feature chronology |
+| PostgreSQL 9.4 release/docs | 2014-12-18 release | `H/P` | released slot contract plus archive as an alternate physical-standby continuation carrier |
 | PostgreSQL 9.4 `REL9_4_0` `slot.c` / `slot.h` | 2014 | `H/P` | persistent slot fields, save/checkpoint/startup reconstitution, minimum required LSN |
-| PostgreSQL 9.4 official replication-slot docs | 9.4 release series | `H/P` | `restart_lsn`, disconnected standby, old-WAL retention, no slot-space bound |
 | PostgreSQL `c6550776...` | 2020-04-07 | `H/P` | `max_slot_wal_keep_size`, checkpoint invalidation, disk-exhaustion motivation |
 | PostgreSQL `b8fd4e02...` | 2020-06-24 | `H/P` | `reserved` / `extended` / `unreserved` / `lost` state refinement |
-| PostgreSQL 13 release/docs | 2020-09-24 release | `H/P` | released resource-bound contract |
+| PostgreSQL 13 release/docs | 2020-09-24 release | `H/P` | released resource-bound contract and continued archive/local retention separation |
+| PostgreSQL 17 failover-slot commits/docs | 2024 | `H/P` | cross-node persistence/admission of logical slot state |
 
-The complete source ledger and claim ledger are in the evidence files.
+The complete source and claim ledgers are in the evidence files.
 
 ## Historical record
 
-### 0. 2012–2014 public genealogy: a logical-decoding slot is made persistent and then generalized
+### 0. 2011 pre-slot boundary: archive-backed standby catch-up already exists
 
-The bounded pre-2014 genealogy is now source-controlled in [`../evidence/141-postgresql-2012-2014-replication-slot-public-genealogy-deepening.md`](../evidence/141-postgresql-2012-2014-replication-slot-public-genealogy-deepening.md).
+PostgreSQL 9.1, released **12 September 2011**, documents physical standby operation as able to recover WAL from an archive via `restore_command`, from WAL already present on the standby, or by streaming from the primary.
+
+The 9.1 streaming-replication section states that without file-based continuous archiving, `wal_keep_segments` must be large enough to stop the primary recycling WAL too early; otherwise an excessively lagging standby must be reinitialized from a new base backup. If an archive accessible to the standby exists, the standby can instead use that archive to catch up.
+
+This is earlier than PostgreSQL replication slots and establishes a strict novelty boundary:
+
+```text
+archive-backed physical-standby continuation
+    predates
+replication-slot WAL-retention control
+```
+
+The archive is also documented as operationally separate from the live primary: PostgreSQL recommends placing it where the standby can still reach it even when the primary is down.
+
+This does not claim PostgreSQL invented log shipping or archive-based recovery in 2011.
+
+### 1. 2012–2014 public genealogy: a logical-decoding slot is made persistent and then generalized
+
+The bounded pre-2014 genealogy is source-controlled in [`../evidence/141-postgresql-2012-2014-replication-slot-public-genealogy-deepening.md`](../evidence/141-postgresql-2012-2014-replication-slot-public-genealogy-deepening.md).
 
 The public sequence matters because the February-2014 mainline commit was not the first public appearance of slot vocabulary or of the problem that a replication consumer's continuation state must outlive one connection:
 
 - **15 November 2012:** the `logical changeset generation v3` patch series already exposes `max_logical_slots`.
-- **13 December 2012:** the author describes `INIT_LOGICAL_REPLICATION` as a one-time setup followed by later `START_LOGICAL_REPLICATION 'slot-id' ...` use, potentially in another walsender and after restart, while explicitly admitting that the then-current patch **did not yet persist enough between restarts**.
-- **15 January 2013:** v4 explicitly lists crash/restart persistence of in-memory structures and exposes a `permanent replication slot` create/start/free lifecycle.
-- **14 June 2013:** v5 explicitly lists as TODO the move from a `logical slot` interface to generic `replication slots` that can also be used by streaming replication.
+- **13 December 2012:** the author describes one-time slot setup followed by later use in another walsender and after restart, while explicitly admitting that the then-current patch **did not yet persist enough between restarts**.
+- **15 January 2013:** v4 explicitly lists crash/restart persistence work and exposes a permanent replication-slot lifecycle.
+- **14 June 2013:** v5 explicitly plans to move from a `logical slot` interface to generic `replication slots` usable by streaming replication.
 - **1 February 2014:** mainline `858ec118...` introduces crash-safe replication slots, calls the initially landed form `physical`, and anticipates logical slots with somewhat different properties.
 
 That gives a bounded chronology without turning it into a priority claim:
@@ -97,33 +133,29 @@ public logical-slot prototype/design
     != invention date
 ```
 
-The December-2012 persistence admission is especially useful for this repository:
+The December-2012 persistence admission is especially useful:
 
 ```text
 object is intended to survive restart
     != implementation already persists enough state to do so
 ```
 
-Likewise, the shared noun `slot` must not erase type differences:
+Likewise:
 
 ```text
 generic slot identity/lifecycle machinery
     != identical physical-slot and logical-slot retained state
 ```
 
-The public-development debt is therefore narrowed rather than erased. Earlier/private precursors, exact patch-by-patch ancestry into mainline, and the subsequent logical-slot landing sequence remain open.
+Earlier/private precursors, exact patch-by-patch ancestry into mainline, and the later 9.4 logical-slot landing sequence remain open.
 
-### 1. Replication slots enter PostgreSQL as crash-safe continuation state
+### 2. Replication slots enter PostgreSQL as crash-safe continuation state
 
-PostgreSQL commit `858ec11858a914d4c380971985709b6d6b7dd6fc`, committed on **1 February 2014**, explicitly introduces replication slots as a **crash-safe data structure** that can prevent premature removal of WAL needed by a standby. The patch's wording is historical evidence, not a modern reconstruction.
-
-The final PostgreSQL 9.4 release followed on **18 December 2014**. The distinction matters:
+PostgreSQL commit `858ec11858a914d4c380971985709b6d6b7dd6fc`, committed on **1 February 2014**, explicitly introduces replication slots as a **crash-safe data structure** that can prevent premature removal of WAL needed by a standby. The final PostgreSQL 9.4 release followed on **18 December 2014**.
 
 `mainline implementation date != release date != first proposal/invention date`
 
-The newly grounded public genealogy reaches back to November 2012, but does not establish private origins, invention priority, or exact line-by-line descent from every logical-decoding patch into the 2014 mainline implementation.
-
-### 2. Slot state is not the WAL corpus
+### 3. Slot state is not the WAL corpus
 
 In PostgreSQL 9.4 source, a slot has persistent state on disk under `pg_replslot` and an in-memory cache while the server is running. `ReplicationSlotPersistentData` includes `restart_lsn`, described as the oldest LSN that might still be required by the slot.
 
@@ -131,125 +163,86 @@ The slot therefore does not preserve downstream continuity by storing another co
 
 `slot metadata != protected WAL history`
 
-### 3. One retained frontier can extend the lifetime of many WAL segments
+### 4. One retained frontier can extend the lifetime of many WAL segments
 
 The 9.4 `pg_replication_slots` documentation describes `restart_lsn` as the oldest WAL position that might still be required by the consumer and therefore will not be automatically removed during checkpoints.
 
 The 9.4 implementation computes the oldest valid `restart_lsn` across slots and publishes that requirement to the WAL subsystem. A single sufficiently lagging slot can therefore hold the effective retention floor farther in the past than newer slots.
 
-This is not a claim that `restart_lsn` contains the log. It is a compact retained relation whose value governs the liveness of many separate WAL files.
+`small retained frontier != small retention consequence`
 
-### 4. Current inactivity does not erase a future continuation claim
+### 5. Current inactivity does not erase a future continuation claim
 
-PostgreSQL 9.4 documentation explicitly motivates slots as retaining required WAL even when a standby is disconnected. The user-visible slot view separately reports whether a slot is currently `active`.
-
-Therefore:
+PostgreSQL 9.4 explicitly motivates slots as retaining required WAL even when a standby is disconnected. The user-visible slot view separately reports whether a slot is currently `active`.
 
 `active connection lifetime != slot lifetime != retained-history obligation lifetime`
 
-A disconnected standby can be absent from current service while still shaping what the primary is allowed to reclaim.
-
-### 5. The slot's own retention relation has a crash boundary
+### 6. The slot's own retention relation has a crash boundary
 
 The 9.4 implementation distinguishes in-memory dirty state from saved state. `ReplicationSlotSave()` serializes slot state to disk; checkpoints save slots; startup restores on-disk slots and recomputes retention constraints. Slot creation uses a temporary path plus synchronization and rename steps.
 
-This provides direct implementation evidence that the project treated the **retention policy state itself** as something that must survive crash/restart.
-
-It also supplies a lower-layer stop condition:
-
 `PostgreSQL performs persistence operations != every filesystem/controller/device empirically satisfies them under every fault`
 
-No lower-device conformance claim is made here.
+### 7. The original precise retention relation could grow without a built-in slot-space bound
 
-### 6. The original precise retention relation could grow without a built-in slot-space bound
-
-The PostgreSQL 9.4 warm-standby documentation contrasts replication slots with fixed WAL-keeping and archive strategies. Slots can retain only what is known to be needed, but the same text says that the alternatives can bound `pg_xlog` space while replication slots at that time could not.
-
-This is an important counterexample to a common optimization intuition:
+The PostgreSQL 9.4 warm-standby documentation contrasts slots with fixed WAL-keeping and archive strategies. Slots can retain only what is known to be needed, but the original design had no built-in slot-space limit.
 
 `retention precision != retention cheapness`
 
-The mechanism can be very precise about **why** old history is still live and still allow the required history to grow until local storage itself becomes the problem.
+### 8. PostgreSQL 13 makes resource survival capable of defeating continuation preservation
 
-### 7. PostgreSQL 13 makes resource survival capable of defeating continuation preservation
-
-On **7 April 2020**, commit `c6550776394e25c1620bc8258427c8f1d448080d` added `max_slot_wal_keep_size`. Its commit message states the operational motive plainly: experience showed that excessive slot-retained WAL could make the primary fail by exhausting space. Over-limit slots can be invalidated at checkpoint, allowing old WAL storage to be released.
+On **7 April 2020**, commit `c6550776394e25c1620bc8258427c8f1d448080d` added `max_slot_wal_keep_size`. Its commit message states the operational motive: excessive slot-retained WAL could make the primary fail by exhausting space. Over-limit slots can be invalidated at checkpoint, allowing old WAL storage to be released.
 
 PostgreSQL 13, released **24 September 2020**, includes this behavior.
-
-This changes the retention authority relation:
 
 ```text
 consumer says: this history is still needed for continuation
 primary policy says: only up to this resource budget remains protected
 ```
 
-Neither claim makes the other conceptually disappear. The system resolves the conflict by allowing protection to end and downstream continuation to fail.
+The system resolves the conflict by allowing protection to end and downstream continuation to fail.
 
-### 8. `unreserved` proves physical presence and retention authority can diverge
+### 9. `unreserved` proves physical presence and retention authority can diverge
 
-Before PostgreSQL 13 released, commit `b8fd4e02c6d01183bf6def5897ad6cf7766bfff4` refined WAL availability into four user-visible states:
+Commit `b8fd4e02c6d01183bf6def5897ad6cf7766bfff4` refined WAL availability into `reserved`, `extended`, `unreserved`, and `lost`.
 
-- `reserved`;
-- `extended`;
-- `unreserved`;
-- `lost`.
-
-For this case, `unreserved` is the crucial state. Required WAL is no longer protected under the configured retention rules, yet the segments may not have been removed by the next checkpoint and the consumer can still sometimes catch up. `lost` is stronger: required WAL has been removed and the slot can no longer resume replication.
-
-So the system itself exposes this sequence:
+For this case, `unreserved` is crucial. Required WAL is no longer protected under the configured slot-retention rules, yet some segments may still exist until checkpoint removal and the consumer can sometimes catch up. `lost` is stronger: some required WAL has been removed and the slot is no longer usable.
 
 ```text
 needed + protected
-    -> needed + no longer protected + still physically present
-    -> needed + removed
+    -> needed + no longer protected + still present locally
+    -> needed + removed from the slot's required local path
     -> old slot continuation inadmissible
 ```
 
-The intermediate state blocks two collapses at once:
+Thus:
 
 `physical survival != current retention protection`
 
-and
+and:
 
 `protection withdrawal != completed physical disappearance`
 
 ## 2014–2015 deepening — logical consumer acknowledgement and WAL restart are distinct frontiers
 
-The released PostgreSQL 9.4 logical-slot implementation already persists **two different positions**. `ReplicationSlotPersistentData` contains both `confirmed_flush`, tied to client acknowledgement, and `restart_lsn`, the oldest WAL position that the slot may still require. The same 9.4 header retains `candidate_restart_valid` / `candidate_restart_lsn` as logical-slot working state.
+The released PostgreSQL 9.4 logical-slot implementation persists both `confirmed_flush`, tied to client acknowledgement, and `restart_lsn`, the oldest WAL position the slot may still require. The same source retains candidate restart working state.
 
-`LogicalConfirmReceivedLocation()` makes the distinction operational rather than nominal. Consumer confirmation directly advances `confirmed_flush`; `restart_lsn` moves only when a prepared restart candidate exists and its validity position has been reached by confirmed progress. The neighboring source comment describes the restart candidate as the minimal LSN needed to replay transactions that had not yet committed at the candidate's point.
-
-Thus:
+`LogicalConfirmReceivedLocation()` makes the distinction operational: consumer confirmation directly advances `confirmed_flush`; `restart_lsn` moves only when a prepared restart candidate exists and its validity position has been reached by confirmed progress.
 
 ```text
 consumer acknowledgement frontier (`confirmed_flush`)
     != WAL restart/reclamation frontier (`restart_lsn`)
 ```
 
-and, more specifically:
+PostgreSQL's 10-August-2015 commit `3f811c2d6f51b13b71adff99e82894dd48cee055`, exposing `confirmed_flush_lsn` in `pg_replication_slots`, explicitly says the two positions have distinct meanings and that `restart_lsn` will commonly be older than the confirmed position.
 
-`confirmed progress advanced != every older WAL record immediately reclaimable`
-
-PostgreSQL's own 10-August-2015 commit `3f811c2d6f51b13b71adff99e82894dd48cee055`, which exposes `confirmed_flush_lsn` in `pg_replication_slots`, states that the two positions have “rather distinct meanings” and notes that `restart_lsn` will commonly be older than the confirmed position. PostgreSQL 9.5 then documents `confirmed_flush_lsn` as logical-slot consumer receipt progress while `restart_lsn` remains the oldest possibly required WAL.
-
-There is also an observability chronology. PostgreSQL 9.4 source already persists `confirmed_flush`, but the documented 9.4 `pg_replication_slots` view exposes only `restart_lsn`; the separate `confirmed_flush_lsn` view column arrives with the 2015 commit. Therefore:
+There is also an observability chronology: 9.4 source already persists `confirmed_flush`, while the separate view column arrives in 2015.
 
 `persistent internal control state != operator-visible telemetry surface`
 
-and:
+`2015 view-column introduction != 2015 invention of the underlying persisted state`
 
-`2015 view-column introduction != 2015 invention of the underlying persisted state`.
-
-### Engineering reconstruction — acknowledgement is permission input, not completed reclamation
-
-Consumer acknowledgement can make a candidate restart position admissible, but acknowledgement is not itself WAL deletion and the two positions need not coincide. “Consumer has seen through X” and “server may forget every WAL byte before X” are different propositions.
-
-### Functional analogy and stop condition
-
-Other repository log cases also separate progress evidence from history liveness, but this is only a functional analogy. PostgreSQL's candidate restart logic is not Kafka high-watermark logic, Raft snapshot compaction, or LSM obsolete-file reclamation, and no genealogy is claimed.
-
-Neither frontier is a sanitization witness. Moving either value says nothing by itself about filesystem remnants, archived WAL, backups, device overprovisioning, or forensic recoverability.
+Consumer acknowledgement can make a candidate restart position admissible, but acknowledgement is not itself WAL deletion.
 
 Full source/claim separation is recorded in [`../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md`](../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md).
 
@@ -265,104 +258,148 @@ new restart_lsn returned / visible in memory
     != older WAL physically reclaimed
 ```
 
-### Engineering reconstruction — the claimant on WAL has a delayed persistence boundary
+A physical slot's `restart_lsn` is a compact claimant on history. Advancing it can narrow the WAL prefix the slot still requires, but the claimant itself first crosses an in-memory-to-checkpoint persistence boundary. Only separately can WAL-removal machinery later reclaim files.
 
-A physical slot's `restart_lsn` is a compact claimant on history. Advancing it can narrow the WAL prefix that the slot still requires, but the claimant itself first crosses an in-memory-to-checkpoint persistence boundary. Only separately can WAL-removal machinery use the newer frontier and later reclaim files.
-
-This closes `function returned != checkpoint-durable slot frontier`, `clean-restart persistence != arbitrary-crash persistence immediately after return`, and `restart_lsn advanced != old WAL already removed`. The physical/logical discrepancy also supplies a direct counterexample to assuming that one SQL interface means one internal persistence path.
-
-### Functional analogy and stop condition
-
-The bounded analogy is to other checkpointed control-state cases; it is not mechanism identity with Kafka, HDFS, or DRAM maintenance state. Slot advancement is also not sanitization: it changes a replay-history retention relation without proving secure erasure of local WAL remnants, archives, backups, or lower-layer embodiments.
+This closes `function returned != checkpoint-durable slot frontier`, `clean-restart persistence != arbitrary-crash persistence immediately after return`, and `restart_lsn advanced != old WAL already removed`.
 
 Full source/claim separation is recorded in [`../evidence/141-postgresql-2018-2020-physical-slot-advance-persistence-deepening.md`](../evidence/141-postgresql-2018-2020-physical-slot-advance-persistence-deepening.md).
 
+## 2011–2020 deepening — archive retention is an alternate physical-standby continuation carrier
+
+PostgreSQL 9.1 already documents a physical standby trying WAL from an archive, then standby-local WAL, then streaming from the primary. Without an archive, a standby that falls behind beyond `wal_keep_segments` can require a new base backup; with an accessible archive retaining enough segments, it can instead catch up from that archive.
+
+PostgreSQL 9.4 keeps this architecture when replication slots arrive. Its documentation says that `wal_keep_segments` or a replication slot can keep primary-local WAL from recycling too early, but those local retention solutions are not required for catch-up when an accessible archive retains the necessary WAL.
+
+PostgreSQL 13 preserves the same structure using `wal_keep_size`, while separately exposing bounded slot states including `lost`.
+
+This yields a crucial carrier separation:
+
+```text
+slot-local protection of primary WAL
+    != archive retention of copied WAL
+    != standby-local WAL already received
+    != slot usability
+```
+
+Therefore:
+
+```text
+slot is `lost`
+    -> the slot is no longer usable
+
+slot is `lost`
+    != no equivalent WAL exists in an archive or backup
+```
+
+The reverse inference is also blocked:
+
+```text
+archive still contains required WAL
+    != the old lost slot is automatically resurrected
+```
+
+The inspected docs establish an alternate physical-standby replay path, not a procedure for repairing a lost slot in place.
+
+### Base-backup reinitialization is a change of recovery starting point
+
+If required WAL is no longer available through the usable replay path, PostgreSQL documents reinitializing the standby from a new base backup.
+
+```text
+old base image + missing WAL interval
+    -> old continuation path fails
+
+newer base image
+    -> new materialized starting point
+    -> only later WAL must be replayed
+```
+
+This substitutes newer materialized state for an unavailable historical replay interval. It does **not** reconstruct the missing WAL bytes.
+
+### Archive cleanup is a separate retirement authority
+
+PostgreSQL documents `archive_cleanup_command` / `pg_archivecleanup` for removing archive files no longer required by a standby, while warning that an archive used for backup must still retain files needed to recover from at least the latest base backup.
+
+```text
+not needed by one standby
+    != not needed by backup recovery
+    != safe to retire for every consumer
+```
+
+And PostgreSQL 13 WAL-configuration documentation states that when archiving is enabled, a WAL segment must be archived before local recycling/removal.
+
+```text
+checkpoint crash-recovery need ended
+    != archive handoff obligation already satisfied
+    != archive copy retained forever
+```
+
+This section is intentionally scoped to physical warm-standby continuation. No logical-slot archive/rebootstrap equivalence is claimed.
+
+Full source/claim separation is recorded in [`../evidence/141-postgresql-2011-2020-wal-archive-alternate-continuation-deepening.md`](../evidence/141-postgresql-2011-2020-wal-archive-alternate-continuation-deepening.md).
+
 ## 2024 deepening — failover-slot synchronization makes the retention frontier itself cross-node state
 
-PostgreSQL 17, released **26 September 2024**, adds an explicit logical-slot failover regime. The implementation history usefully separates several steps that the final feature can otherwise make look like one operation.
+PostgreSQL 17, released **26 September 2024**, adds an explicit logical-slot failover regime. The implementation history separates several steps that the final feature can otherwise make look like one operation.
 
-On **25 January 2024**, commit `c393308b69d229b664391ac583b9e07418d411b6` added the logical-slot `failover` property. Its own commit message explicitly says that this property indicates a slot is intended to be synchronized to standbys while the commit **does not yet contain the synchronization capability**. Commit `93db6cbda037f1be9544932bd9a785dabf3ff712` on **22 February 2024** then added the periodic slot sync worker and `sync_replication_slots` on the standby. A separate **8 March 2024** commit, `bf279ddd1c28ce0251446ee90043a4cb96e5db0f`, added the wait relation that keeps logical subscribers from outrunning selected physical failover candidates; its development name `standby_slot_names` was renamed `synchronized_standby_slots` on **1 July 2024** by `0f934b0739ad28e8e20d8ad22ca80538544ce28a`.
+On **25 January 2024**, commit `c393308b69d229b664391ac583b9e07418d411b6` added the logical-slot `failover` property and explicitly stated that synchronization capability was not yet present. Commit `93db6cbda037f1be9544932bd9a785dabf3ff712` on **22 February 2024** then added the periodic slot sync worker and `sync_replication_slots` on the standby. A separate **8 March 2024** commit, `bf279ddd1c28ce0251446ee90043a4cb96e5db0f`, added the wait relation for selected physical failover candidates; its development name `standby_slot_names` was renamed `synchronized_standby_slots` on **1 July 2024** by `0f934b0739ad28e8e20d8ad22ca80538544ce28a`.
 
-The released documentation then adds the admission boundary. A standby can persist a synchronized logical slot only if the WAL and system-catalog rows required by the primary slot are still available on that standby; otherwise synchronization is refused because persisting the slot could admit a continuation state with missing history. At failover time, resumability depends on a **persistent** synchronized slot whose `pg_replication_slots.synced` value reached true before promotion.
-
-That yields a new decomposition for this case:
+Released documentation adds an admission boundary. A standby can persist a synchronized logical slot only if the WAL and system-catalog rows required by the primary slot are still available there. At failover time, resumability depends on a **persistent** synchronized slot whose `pg_replication_slots.synced` value reached true before promotion.
 
 ```text
 slot exists on primary
     != `failover = true`
-    != standby copy/update mechanism enabled
+    != standby synchronization enabled
     != synchronized slot admitted/persisted on standby
     != required WAL/catalog substrate available there
     != subscriber state/currentness
     != successful post-promotion continuation
 ```
 
-### Engineering reconstruction — the claimant on history becomes history-bearing distributed control state
+The original 9.4 case showed a compact retained claimant constraining reclamation of a much larger WAL corpus. PostgreSQL 17 adds a second-order requirement: if another node may inherit publisher authority, the **claimant itself must survive and remain admissibly current on that future primary**.
 
-The original 9.4 case showed a compact retained claimant (`restart_lsn` and related slot state) constraining reclamation of a much larger WAL corpus. PostgreSQL 17 adds a second-order retention requirement: if another node may inherit publisher authority, the **claimant itself must survive and remain admissibly current on that future primary**.
+`replicated retention frontier != replicated replay substrate`
 
-So:
+`failover = true != synced = true != guaranteed subscriber currentness`
 
-> **replicated retention frontier != replicated replay substrate**
+When `synchronized_standby_slots` is configured, future failover readiness can also constrain present logical-sender progress. This is a configured relation, not a claim that all PostgreSQL logical replication is synchronous.
 
-and:
+EDB's open-source `pg_failover_slots` extension was publicly announced on **18 April 2023** and provides earlier PostgreSQL-ecosystem functional prior art for slot-copy/synchronization behavior. No extension→core code ancestry is asserted.
 
-> **`failover = true` != `synced = true` != guaranteed subscriber currentness**.
-
-The second distinction is directly bounded by PostgreSQL's own documentation: a logical slot knows nothing about receiver state. Slot synchronization preserves/qualifies the server-side continuation relation; it is not a complete subscriber-application checkpoint.
-
-### Future failover readiness can constrain present progress
-
-When `synchronized_standby_slots` is configured, logical WAL senders wait until the named physical standby slots confirm receipt/flush before exposing corresponding changes. The possible **future** role of a standby therefore creates a **present** scheduling constraint on logical replication.
-
-This is a configured relation, not an assertion that all PostgreSQL logical replication is synchronous or that it shares the same semantics as synchronous transaction commit.
-
-### Earlier ecosystem prior-art boundary
-
-EDB's open-source `pg_failover_slots` extension was publicly announced on **18 April 2023** and already described copying logical slots to standbys, periodically synchronizing positions, and preventing logical consumers from advancing beyond selected failover standbys. This is earlier PostgreSQL-ecosystem **functional prior art** for the bounded failover-continuation problem.
-
-No direct extension→core code ancestry or invention claim is made. Establishing such genealogy would require separate patch/mailing-list/source-history evidence.
-
-### Philosophical interpretation — bounded
-
-Project interpretation only: sometimes retaining old history is not enough; the system must also retain and transfer the **claim that says which old history remains live**, then revalidate that claim against the substrate available at a new authority node. Once that claim can move, it acquires its own persistence/currentness problem.
-
-This is not PostgreSQL historical vocabulary and does not equate replication slots with human memory, archival promises, or tertiary retention.
-
-### Forgetting stop condition
-
-Failure to synchronize a slot, refusal to persist it, slot invalidation, slot drop, or WAL reclamation changes replay/continuation authority. None of these protocol events proves secure erasure of all old filesystem, device, backup, or forensic embodiments.
-
-`continuation no longer admissible != media sanitization`
-
-The source-controlled evidence and claim ledger are in [`../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md`](../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md).
+Full source/claim separation is recorded in [`../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md`](../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md).
 
 ## Retained state and mechanism
 
-The bounded regime contains at least six distinct relations:
+The bounded regime contains at least nine distinct relations:
 
 1. **primary current database state** — what the primary currently serves;
-2. **WAL history** — older change records that can support downstream continuation;
+2. **WAL history on the primary** — older change records supporting downstream continuation;
 3. **slot identity and persistent control state** — the retained replication-stream object;
-4. **consumer-need frontier** — especially `restart_lsn`, delimiting oldest possibly needed WAL;
+4. **consumer-need frontier** — especially `restart_lsn`;
 5. **current activity state** — whether a consumer is presently using the slot;
-6. **WAL retention/admissibility state** — whether required history is protected, merely still present, or already lost under the later bounded policy.
+6. **WAL retention/admissibility state** — whether required local history is protected, merely present, or lost under the later bounded policy;
+7. **archived WAL copies** — another carrier with separate placement and cleanup authority;
+8. **standby-local WAL already received** — another possible replay source;
+9. **base-backup materialized state** — the bootstrap point that can be replaced when an old replay path is irreparable.
 
 The central lifecycle is:
 
 ```text
 consumer falls behind or disconnects
-    -> persistent slot remains
+    -> persistent slot may remain
     -> restart_lsn stays behind primary progress
-    -> older WAL remains protected
+    -> primary-local WAL remains protected
     -> retained-history volume grows
 
 PostgreSQL 13, if a finite cap is configured:
     -> retention budget can be exceeded
     -> WAL may become unreserved
-    -> consumer can still catch up while bytes remain
-    -> checkpoint can remove required WAL
-    -> slot becomes lost / unusable for continuation
+    -> checkpoint can remove required local WAL
+    -> slot becomes lost / unusable
+
+independently, for a physical standby:
+    -> archive may still contain required replay history
+    -> standby may catch up from archive if the interval is sufficient
+    -> otherwise standby must be reinitialized from a new base backup
 ```
 
 ## Engineering reconstruction
@@ -371,35 +408,27 @@ PostgreSQL 13, if a finite cap is configured:
 
 The primary may have everything required to serve its own current database state while an older WAL segment is still indispensable to a lagging downstream consumer.
 
-Therefore:
-
 `primary can continue serving != old WAL is reclaimable`
-
-The reclaimability question depends on other retained relations, not only local currentness.
 
 ### B. A frontier can retain history without being history
 
-A `restart_lsn` is a compact piece of second-order state. It says something about which earlier history remains possibly necessary. Its semantic weight is larger than its storage size because it governs reclamation of a potentially large log prefix.
+A `restart_lsn` is compact second-order state. It says which earlier history remains possibly necessary. Its semantic weight is larger than its storage size because it governs reclamation of a potentially large log prefix.
 
 `small metadata footprint != small retention consequence`
 
 ### C. Downstream absence can remain operationally present as an obligation
 
-The disconnected consumer is not currently executing on the primary, yet the slot makes its future need operationally effective in the present by withholding WAL reclamation.
-
-This is an engineering description of control flow, not a claim that the consumer is “virtually present” in any metaphysical sense.
+A disconnected consumer is not currently executing on the primary, yet the slot makes its future need operationally effective in the present by withholding WAL reclamation.
 
 ### D. Retention obligation and retention capacity can conflict
 
-PostgreSQL 9.4 privileges the continuation relation strongly enough that slot-held WAL lacks a built-in space cap. PostgreSQL 13 adds a policy that can withdraw protection rather than let that relation consume unlimited primary storage.
-
-So:
+PostgreSQL 9.4 privileges continuation strongly enough that slot-held WAL lacks a built-in space cap. PostgreSQL 13 adds a policy that can withdraw protection rather than let that relation consume unlimited primary storage.
 
 `history still useful != infrastructure will preserve it without limit`
 
 ### E. Slot persistence does not imply continuation persistence
 
-The 2020 bounded regime provides a direct counterexample to treating retained metadata as sufficient recovery evidence. The slot can still exist while its required WAL is `lost` and the slot is unusable.
+The 2020 regime gives a direct counterexample. The slot can still exist while its required WAL is `lost` and the slot unusable.
 
 `slot presence != replay-substrate presence != continuation admissibility`
 
@@ -407,174 +436,192 @@ The 2020 bounded regime provides a direct counterexample to treating retained me
 
 When WAL becomes `unreserved`, it has crossed a policy boundary before it has necessarily crossed a physical removal boundary.
 
-This mirrors a recurring repository distinction:
-
 `retirement authority != completed retirement`
 
-But the comparison remains functional; PostgreSQL WAL removal is not Flash block erase, filesystem secure deletion, or distributed tombstone garbage collection.
+### G. One continuation need can be served by multiple carriers
+
+For the physical standby path, a needed WAL range can be available on the primary, in standby-local WAL, or in an accessible archive. The logical replay dependency is therefore distinct from any single physical carrier.
+
+`local carrier loss != global history loss`
+
+But:
+
+`history survives somewhere != current slot/configuration can consume it`
+
+### H. Rebootstrap substitutes materialized state for unavailable history
+
+A new base backup can establish a later materialized starting point after the old replay interval has become unavailable. This is a new continuation basis, not a reconstruction of the missing history.
+
+`new materialized state != recovered missing WAL`
 
 ## Cross-case comparison
 
 ### Case 58 — Raft snapshotting
 
-Raft's bounded 2014 snapshot mechanism permits committed log history to become dispensable after equivalent stable state plus boundary/membership metadata exists. A follower that needs compacted history can receive `InstallSnapshot`.
+Raft permits committed log history to become dispensable after equivalent stable state plus boundary/membership metadata exists; a follower that needs compacted history can receive `InstallSnapshot`.
 
-PostgreSQL 9.4 replication slots instead preserve the needed WAL history for the lagging consumer. PostgreSQL 13 can later allow that guarantee to fail under a configured space budget.
-
-Functional contrast:
+PostgreSQL slots normally preserve replay history for a lagging consumer, but the newly grounded base-backup path shows a bounded functional analogue when that history is unavailable: a newer materialized state can replace the old replay starting point.
 
 ```text
 Raft:
-retire old command history -> preserve state equivalent -> transfer snapshot if follower is too far behind
+old log unavailable/compacted -> transfer snapshot -> resume from snapshot boundary
 
-PostgreSQL slot:
-retain old WAL because consumer still needs replay -> optionally cap retention -> continuation can become impossible
+PostgreSQL physical standby:
+required WAL unavailable -> obtain newer base backup -> resume with later WAL
 ```
 
 This is not a genealogy and does not imply the protocols solve the same consistency problem.
 
 ### Case 57 — Bigtable redo/materialization
 
-Case 57's redo points delimit history needed to reconstruct a tablet's own volatile/current materialization after failure. PostgreSQL `restart_lsn` can delimit history needed by another replication consumer.
+Case 57's redo points delimit history needed to reconstruct a tablet's volatile/current materialization. PostgreSQL `restart_lsn` can delimit history needed by another replication consumer, while base backup plus later WAL gives a separate materialization-plus-redo decomposition.
 
 `local recovery frontier != remote-consumer continuation frontier`
 
 ### Case 137 — LevelDB obsolete-file liveness
 
-LevelDB can keep a superseded SSTable because a still-live `Version`/iterator references it. PostgreSQL can keep otherwise old WAL because a persistent replication slot still claims a downstream need.
-
-The useful analogy is only:
+LevelDB can keep a superseded SSTable because a still-live `Version`/iterator references it. PostgreSQL can keep otherwise old WAL because a persistent slot still claims a downstream need.
 
 `locally superseded/old != reclaimable while another live relation still depends on it`
 
-LevelDB reader liveness and PostgreSQL replication continuation are different mechanisms and histories.
-
 ### Case 41 / distributed deletion cases
 
-Cassandra tombstones and similar negative evidence can remain because a disconnected/stale replica may later reappear. PostgreSQL slots likewise show future distributed reconciliation/continuation needs extending the life of otherwise old state.
+Cassandra tombstones and similar negative evidence can remain because a disconnected/stale replica may later reappear. PostgreSQL slots likewise show future distributed continuation needs extending the life of otherwise old state.
 
-The analogy stops at **future participant need constraining reclamation**. A WAL replay frontier is not a tombstone grace period, and the failure of either mechanism has different consequences.
+The analogy stops at **future participant need constraining reclamation**.
+
+### Case 130 — LTO access-path survival
+
+Case 130 distinguishes surviving media from an actually usable reader path. The archive deepening supplies a distributed counterpart:
+
+`history survives in some carrier != the current continuation path is usable`
+
+The media, software, and protocol mechanisms are otherwise unrelated.
 
 ## Terminology and anti-anachronism
 
+### PostgreSQL 9.1 vocabulary
+
+Relevant pre-slot terms include:
+
+- WAL archive;
+- `restore_command`;
+- `wal_keep_segments`;
+- streaming replication;
+- base backup;
+- `archive_cleanup_command`.
+
+Do not rewrite this 2011 behavior in later replication-slot vocabulary.
+
 ### PostgreSQL 2012–2013 public development vocabulary
 
-The bounded pre-mainline terms include:
-
-- `logical slot`;
-- `max_logical_slots`;
-- `slot-id` / `slotname`;
-- `permanent replication slot`;
-- `INIT_LOGICAL_REPLICATION` / `START_LOGICAL_REPLICATION` / `FREE_LOGICAL_REPLICATION` in the evolving patch interface.
-
-These terms document an evolving development series. They must not be silently rewritten as if every one were already the final PostgreSQL 9.4 API or contract.
+The bounded development terms include `logical slot`, `max_logical_slots`, `slot-id` / `slotname`, `permanent replication slot`, and evolving logical-replication commands. These terms document a development series and must not be silently rewritten as the final 9.4 API.
 
 ### PostgreSQL 9.4 vocabulary
 
-The bounded historical terms include:
-
-- `replication slot`;
-- `physical` / `logical` slot;
-- `restart_lsn`;
-- `active`;
-- `pg_replslot`;
-- WAL segments;
-- checkpoints.
+Relevant released terms include `replication slot`, physical/logical slot, `restart_lsn`, `active`, `pg_replslot`, WAL segments, checkpoints, archive, and base backup.
 
 ### PostgreSQL 13 additions
 
-The bounded later terms include:
+Relevant later terms include `max_slot_wal_keep_size`, `wal_status`, `reserved`, `extended`, `unreserved`, and `lost`.
 
-- `max_slot_wal_keep_size`;
-- `wal_status`;
-- `reserved`;
-- `extended`;
-- `unreserved`;
-- `lost`.
+Do not rewrite the 2014 design as though it already had the 2020 cap or four-state availability model.
 
-Do not rewrite the 2014 design as though it already had the 2020 cap or the later four-state availability model.
-
-Likewise, project terms such as `continuation admission`, `retention frontier`, `history liveness claimant`, and `retirement authority` are **engineering reconstruction vocabulary**, not PostgreSQL historical vocabulary.
+Likewise, project terms such as `continuation admission`, `retention frontier`, `history-liveness claimant`, `alternate carrier`, and `retirement authority` are **engineering reconstruction vocabulary**, not PostgreSQL historical vocabulary.
 
 ## Philosophical interpretation — bounded
 
-The case contributes one modest temporal observation.
+The case contributes two modest temporal observations.
 
-A WAL segment's technical future can depend on a participant that is currently absent. The past segment remains because another process may need to resume from it later. The slot makes that **future-oriented claim on the past** durable across disconnection and restart.
+First, a WAL segment's technical future can depend on a participant that is currently absent. The slot makes that future-oriented claim on the past durable across disconnection and restart.
 
-PostgreSQL 13 then supplies the counterweight: the claim is institutionally/technically bounded by the primary's configured resource policy. A future continuation can remain meaningful and nevertheless lose preservation priority.
+Second, the archive deepening shows that “forgotten here” and “forgotten everywhere” are different propositions. One retained past can have several carriers with different custodians and retirement rules. A system can also abandon one continuity path and establish another by choosing a newer materialized starting point, without reconstructing the missing past.
 
-That is enough for the conceptual comparison. It does not justify equating a replication slot with human memory, archival obligation, promise, debt, or Stieglerian retention.
+PostgreSQL 13 supplies the counterweight: any one retention relation can still be bounded by resource policy.
+
+These are project interpretations, not PostgreSQL historical vocabulary and not equations with human memory, archival promises, or tertiary retention.
 
 ## Failure and forgetting
 
 - **Consumer lag grows:** more historical WAL can remain live because the frontier stays old.
 - **Consumer disconnects:** the slot can continue retaining history; connection loss is not automatically continuation loss.
-- **Primary crashes/restarts:** persistent slot state is restored so the retention relation can survive process lifetime.
-- **Slot persistence write is not yet saved:** in-memory changed control state and crash-surviving control state are distinct in the implementation.
-- **9.4 slot retained indefinitely:** local WAL space can become the failure resource because there is no built-in slot-space cap.
+- **Primary crashes/restarts:** persistent slot state can restore the retention relation.
+- **Changed slot state not yet saved:** in-memory and crash-surviving control state are distinct.
+- **9.4 slot retained indefinitely:** local WAL space can become the failure resource.
 - **v13 configured cap exceeded:** protection can be withdrawn to protect primary capacity.
-- **`unreserved`:** required WAL may still exist but is no longer protected from checkpoint removal.
-- **`lost`:** required WAL is gone and old slot continuation is no longer usable.
-- **Slot dropped/invalidated:** this changes retention/replay authority; it does not prove underlying media erasure.
-- **Underlying storage violates persistence assumptions:** slot crash safety is then outside the contract directly established by PostgreSQL source alone.
+- **`unreserved`:** required local WAL may still exist but is no longer protected from checkpoint removal.
+- **`lost`:** the slot's required WAL has been removed from the relevant local path and the slot is no longer usable.
+- **Archive survives:** a physical standby may still have an alternate catch-up carrier if the needed interval is complete and accessible.
+- **Archive gap / cleanup removes needed WAL:** that alternate replay path can fail independently of slot state.
+- **All usable replay paths missing:** physical standby reinitialization from a new base backup is required by the documented warm-standby path.
+- **Slot dropped/invalidated or local WAL removed:** this changes continuation/replay authority; it does not prove secure media erasure or global absence of all copies.
+- **Underlying storage violates persistence assumptions:** slot/archive guarantees are then outside the contract directly established by PostgreSQL source/docs alone.
 
 ## Counterexamples and stop conditions
 
-- **Public prototype != released contract.** The 2012–2013 logical-decoding patch series is historical development evidence, not a silent substitute for PostgreSQL 9.4 documentation.
+- **Public prototype != released contract.** The 2012–2013 patch series is historical-development evidence, not a substitute for PostgreSQL 9.4 documentation.
 - **Persistence intent != implemented crash safety.** The December-2012 author reply explicitly says the patch did not yet persist enough across restart.
-- **Generic slot abstraction != identical slot types.** The 2014 mainline message explicitly anticipates physical and logical slots with different properties.
-- **Public chronology != invention priority.** November 2012 is only the bounded public floor located in this slice.
-- **Replication slot != replica.** The slot is control state about a replication stream, not another full database copy.
+- **Generic slot abstraction != identical slot types.** Physical and logical slots have different retained-state and recovery semantics.
+- **Public chronology != invention priority.** The dates establish bounded PostgreSQL floors only.
+- **Replication slot != replica.** The slot is control state about a stream, not another full database copy.
 - **Replication slot != WAL corpus.** It governs retention of WAL stored elsewhere.
+- **Replication slot != WAL archive.** The archive is a separate copy carrier with separate cleanup policy.
 - **`restart_lsn` != full replay history.** It is a frontier, not the retained records themselves.
-- **`confirmed_flush_lsn` != `restart_lsn`.** Logical consumer acknowledgement and the oldest WAL still needed for decoding are distinct frontiers.
-- **Consumer acknowledgement != completed WAL reclamation.** Confirmation can permit a restart candidate to advance; it is not itself a checkpoint/removal event.
+- **`confirmed_flush_lsn` != `restart_lsn`.** Logical consumer acknowledgement and oldest-needed WAL are distinct frontiers.
+- **Consumer acknowledgement != completed WAL reclamation.** Confirmation can permit frontier movement; it is not deletion.
 - **Current primary state != sufficient downstream replay history.** A remote consumer can still need old WAL.
-- **Inactive != no retention obligation.** Disconnected consumers are a core use case.
-- **Crash-safe slot != immortal slot.** Administrative drop and later resource-bounded invalidation remain possible.
-- **Precise retention != bounded storage cost.** PostgreSQL 9.4 explicitly demonstrates the contrary.
+- **Inactive != no retention obligation.** Disconnected consumers are a core slot use case.
+- **Crash-safe slot != immortal slot.** Administrative drop and resource-bounded invalidation remain possible.
+- **Precise retention != bounded storage cost.** PostgreSQL 9.4 demonstrates the contrary.
 - **WAL present != WAL protected.** PostgreSQL 13 `unreserved` is a direct counterexample.
 - **WAL unprotected != WAL already removed.** The consumer may still catch up before removal.
-- **Slot exists != slot usable.** A `lost` slot can remain observable while required replay history is gone.
+- **Slot exists != slot usable.** A `lost` slot can remain observable while its required replay history is gone from the protected local path.
+- **Slot `lost` != WAL globally nonexistent.** An independent archive/backup may still contain equivalent history.
+- **Archived WAL exists != lost slot automatically usable again.** No such repair procedure is established here.
+- **Physical-standby archive recovery != logical-slot archive recovery.** Do not generalize across slot types without evidence.
+- **Archive handoff != indefinite archive retention.** Cleanup and external lifecycle policy remain separate.
+- **Safe to clean for one standby != safe for backup recovery.** PostgreSQL explicitly distinguishes the claims.
+- **New base backup != reconstruction of missing WAL.** It establishes a later materialized starting point.
 - **WAL removal != secure deletion.** No media sanitization claim follows.
-- **PostgreSQL replication retention != Raft snapshotting.** Retaining replay history and substituting materialized state are different future-repair strategies.
+- **PostgreSQL replication retention != Raft snapshotting.** The comparison is functional only.
 - **2020 resource-bound semantics != 2014 design vocabulary.** Later evolution remains later.
 
 ## Prior art and novelty boundary
 
-This case does not claim PostgreSQL invented log retention, replication progress, replay positions, or keeping history for lagging replicas. Consensus systems, database logs, replication protocols, and archival logs provide extensive earlier history.
+This case does not claim PostgreSQL invented log retention, replication progress, replay positions, log shipping, WAL archiving, base-backup recovery, or keeping history for lagging replicas.
 
-The newly grounded 2012–2014 public genealogy narrows a local historical gap without changing that broader novelty boundary. It shows an evolving logical-slot mechanism, an explicit persistence shortfall, explicit crash/restart-persistence work, an explicit plan to generalize the abstraction, and then the mainline physical-slot landing. It does **not** establish first invention, private origins, or non-PostgreSQL ancestry.
+The 2011 archive deepening strengthens the local anti-novelty boundary: archive-backed physical-standby catch-up and base-backup reinitialization were already released PostgreSQL behavior before replication slots existed.
 
-The contribution remains narrower and source-controlled:
+The 2012–2014 public genealogy then shows an evolving logical-slot mechanism, an explicit persistence shortfall, crash/restart-persistence work, genericization intent, and the mainline physical-slot landing. It does **not** establish first invention, private origins, or non-PostgreSQL ancestry.
 
-> **PostgreSQL 9.4 gives a particularly explicit crash-safe implementation in which a retained consumer-need frontier directly constrains WAL reclamation even across disconnection; PostgreSQL 13 then gives an equally explicit later counterexample in which primary resource protection can withdraw that history-retention guarantee, and the software distinguishes “no longer protected but still present” from “actually lost and no longer usable.”**
+The source-controlled contribution is therefore narrower:
 
-A complete genealogy belongs in `tmzncty/computing-archaeology`, not here. A fresh companion-repository search during this slice found no dedicated PostgreSQL replication-slot study to reuse.
+> **PostgreSQL 9.4 gives a particularly explicit crash-safe mechanism in which a retained consumer-need frontier constrains primary-local WAL reclamation even across disconnection; PostgreSQL 13 gives an explicit later counterexample in which resource protection can withdraw that guarantee, while the older WAL-archive path demonstrates that loss of primary-local protection or even loss of slot usability is not equivalent to global disappearance of every possible replay carrier.**
+
+A complete genealogy belongs in `tmzncty/computing-archaeology`, not here.
 
 ## Uncertainty and next evidence
 
 The bounded case is grounded, while these remain open:
 
-1. pre-November-2012 private/public precursors plus exact patch-by-patch ancestry from the 2012–2013 logical-slot work into the February-2014 generic/physical mainline implementation and the later 9.4 logical-slot landing;
-2. physical-slot advancement and release-by-release semantics beyond the now-grounded logical `confirmed_flush` / `restart_lsn` split;
-3. the interaction with WAL archiving, base backup, and reinitialization when required slot WAL is lost;
+1. pre-November-2012 private/public slot precursors plus exact patch-by-patch ancestry from the 2012–2013 logical-slot work into the February-2014 generic/physical implementation and later 9.4 logical-slot landing;
+2. physical-slot advancement and release-by-release semantics beyond the grounded logical `confirmed_flush` / `restart_lsn` split and 2018–2020 persistence fix;
+3. **narrowed archive/rebootstrap debt:** exact supported behavior if a physical slot is `lost` while an independent archive still holds the nominally required WAL, whether any supported sequence can reuse that archive without dropping/recreating the slot, logical-slot-specific archive/rebootstrap semantics, and archive-gap fault injection;
 4. post-17 failover-slot fixes, multi-standby/cascading evolution, promotion fault injection, and production failover traces;
 5. named production incidents or measurements of WAL accumulation and primary disk-pressure failure;
-6. controlled checkpoint/slot-loss fault injection;
-7. lower-layer filesystem and device persistence testing for the slot save/rename/fsync protocol;
-8. full replication/log-retention genealogy, which should be coordinated with `computing-archaeology`.
+6. controlled checkpoint/slot-loss/archive-gap fault injection;
+7. lower-layer filesystem/device/archive persistence testing for slot save, WAL removal, archive handoff, and external retention;
+8. full replication/log-retention/archive genealogy, coordinated with `computing-archaeology`.
 
 ## Related repository boundary
 
-`tmzncty/computing-archaeology` was searched for `PostgreSQL replication slot`, `restart_lsn`, and related WAL-retention terms during this pass; no dedicated overlapping study was found.
+`tmzncty/computing-archaeology` was freshly searched for `PostgreSQL replication slot`, `restart_lsn`, `WAL archive`, and `restore_command`; no dedicated overlapping study was found.
 
-If the broad history of PostgreSQL WAL, streaming replication, logical decoding, replication slots, failover slots, or related protocols is developed there later, this case should link to it rather than reproduce the history.
+If the broad history of PostgreSQL WAL, log shipping, streaming replication, backup tooling, logical decoding, replication slots, failover slots, or archive implementations is developed there later, this case should link to it rather than reproduce it.
 
 `technical-retention` keeps the narrower question:
 
-> **Which retained relation makes otherwise old history continue to count as live, what event or policy ends that protection, and does loss of replay authority coincide with physical disappearance?**
+> **Which retained relation makes otherwise old history continue to count as live, which carrier currently embodies that history, what event or policy ends each carrier's protection, and does loss of one continuation path coincide with physical disappearance everywhere?**
 
 ## Evidence links
 
@@ -582,11 +629,15 @@ If the broad history of PostgreSQL WAL, streaming replication, logical decoding,
 - [Evidence 141 deepening — PostgreSQL 2012–2014 replication-slot public genealogy](../evidence/141-postgresql-2012-2014-replication-slot-public-genealogy-deepening.md)
 - [Evidence 141 deepening — PostgreSQL 17 failover-slot synchronization](../evidence/141-postgresql-2024-failover-slot-synchronization-deepening.md)
 - [Evidence 141B — logical-slot `confirmed_flush` vs `restart_lsn` dual frontier](../evidence/141-postgresql-logical-slot-confirmed-flush-restart-frontier-deepening.md)
+- [Evidence 141 deepening — physical-slot manual-advance persistence](../evidence/141-postgresql-2018-2020-physical-slot-advance-persistence-deepening.md)
+- [Evidence 141 deepening — 2011–2020 WAL archive alternate continuation](../evidence/141-postgresql-2011-2020-wal-archive-alternate-continuation-deepening.md)
 - [Case 58 — Raft snapshot/log compaction](58-raft-snapshot-log-compaction.md)
 - [Case 57 — Bigtable tablet log/memtable recovery](57-google-bigtable-tablet-log-memtable-recovery.md)
 - [Case 137 — LevelDB MANIFEST/CURRENT](137-leveldb-v17-manifest-current-recovery.md)
+- [PostgreSQL 9.1 warm-standby documentation](https://www.postgresql.org/docs/9.1/warm-standby.html)
 - [PostgreSQL commit `858ec118...`](https://github.com/postgres/postgres/commit/858ec11858a914d4c380971985709b6d6b7dd6fc)
-- [PostgreSQL 9.4 replication-slot docs](https://www.postgresql.org/docs/9.4/warm-standby.html#STREAMING-REPLICATION-SLOTS)
+- [PostgreSQL 9.4 warm-standby / replication-slot documentation](https://www.postgresql.org/docs/9.4/warm-standby.html)
 - [PostgreSQL commit `c6550776...`](https://github.com/postgres/postgres/commit/c6550776394e25c1620bc8258427c8f1d448080d)
 - [PostgreSQL commit `b8fd4e02...`](https://github.com/postgres/postgres/commit/b8fd4e02c6d01183bf6def5897ad6cf7766bfff4)
 - [PostgreSQL 13 replication-slot view](https://www.postgresql.org/docs/13/view-pg-replication-slots.html)
+- [PostgreSQL 13 WAL configuration](https://www.postgresql.org/docs/13/wal-configuration.html)
