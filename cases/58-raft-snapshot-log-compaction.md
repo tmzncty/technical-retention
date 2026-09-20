@@ -2,15 +2,16 @@
 
 ## Status
 
-**`grounded`** — historically bounded to the snapshot/log-compaction mechanism described by Diego Ongaro and John Ousterhout in the May 20, 2014 extended Raft paper, with later exact-version implementation deepenings for etcd v3.5.15.
+**`grounded`** — historically bounded to the snapshot/log-compaction mechanism described by Diego Ongaro and John Ousterhout in the May 20, 2014 extended Raft paper, with later exact-version implementation deepenings for etcd v3.5.15 and a source-bounded 2026 correction to received-snapshot directory durability.
 
 Evidence navigation:
 
 - grounding: [`../evidence/58-raft-2014-snapshot-log-compaction-grounding.md`](../evidence/58-raft-2014-snapshot-log-compaction-grounding.md)
 - later implementation deepening: [`../evidence/58-etcd-3515-ready-snapshot-persistence-publication-deepening.md`](../evidence/58-etcd-3515-ready-snapshot-persistence-publication-deepening.md)
 - WAL snapshot-marker sync / restart-admission deepening: [`../evidence/58-etcd-3515-wal-snapshot-marker-sync-boundary-deepening.md`](../evidence/58-etcd-3515-wal-snapshot-marker-sync-boundary-deepening.md)
+- 2026 received-snapshot directory-durability deepening: [`../evidence/58-etcd-2026-received-snapshot-directory-fsync-deepening.md`](../evidence/58-etcd-2026-received-snapshot-directory-fsync-deepening.md)
 
-The etcd material does **not** replace the 2014 historical record or raise the case maturity beyond `grounded`; it is a bounded witness for local persistence/publication ordering that the Raft paper intentionally leaves below the protocol level.
+The etcd material does **not** replace the 2014 historical record or raise the case maturity beyond `grounded`; it is a bounded witness for local persistence/publication ordering that the Raft paper intentionally leaves below the protocol level. The 2026 fix is also kept separate from the v3.5.15 baseline: it documents a later correction to the received snapshot-database path rather than behavior silently projected backward into that release.
 
 ## Scope
 
@@ -45,15 +46,15 @@ The retention-specific historical claim is narrower:
 
 > **In the 2014 Raft design, a committed decision need not remain forever as its original replicated log entry. Once a server has materialized the committed state into a stable snapshot and retained the protocol boundary needed to reconnect that state to the remaining log, the covered prefix becomes dispensable. If a follower later needs history the leader has compacted away, repair changes from entry replay to snapshot state transfer.**
 
-The later etcd v3.5.15 deepenings ask separate questions: how one production implementation stages stable snapshot bytes, a WAL-side snapshot record, in-memory Raft storage, application/server publication, and release of older recovery resources; and, more narrowly, where the WAL snapshot record crosses its explicit sync boundary and how restart admission joins snapshot files to WAL evidence. These are not projected backward into 2014.
+The later etcd v3.5.15 deepenings ask separate questions: how one production implementation stages stable snapshot bytes, a WAL-side snapshot record, in-memory Raft storage, application/server publication, and release of older recovery resources; and, more narrowly, where the WAL snapshot record crosses its explicit sync boundary and how restart admission joins snapshot files to WAL evidence. The 2026 received-snapshot slice asks an even lower-level filesystem-publication question: whether syncing incoming snapshot bytes before `rename` also establishes durable publication of the final directory entry before the receiver permits later Raft/WAL progress. None of these later implementation details are projected backward into 2014.
 
-`history-retention obligation`, `state-equivalence handoff`, `recovery-representation substitution`, `publication seam`, and `restart anchor` below are project engineering terms, not period Raft vocabulary.
+`history-retention obligation`, `state-equivalence handoff`, `recovery-representation substitution`, `publication seam`, `restart anchor`, and `locatability relation` below are project engineering terms, not period Raft vocabulary.
 
 ## Historical vocabulary
 
 The paper directly uses `replicated log`, `committed`, `state machine`, `stable storage`, `snapshot`, `snapshotting`, `log compaction`, `last included index`, `last included term`, `configuration`, `InstallSnapshot RPC`, `AppendEntries`, `log cleaning`, and `log-structured merge trees`.
 
-The later etcd source directly uses `Ready`, `HardState`, `Entries`, `Snapshot`, `SaveSnap`, `SaveSnapshot`, `ApplySnapshot`, `publishSnapshot`, `Release`, `WAL`, `Snapshotter`, `ValidSnapshotEntries`, `LoadNewestAvailable`, and `Advance`.
+The later etcd source directly uses `Ready`, `HardState`, `Entries`, `Snapshot`, `SaveSnap`, `SaveSnapshot`, `ApplySnapshot`, `publishSnapshot`, `Release`, `WAL`, `Snapshotter`, `ValidSnapshotEntries`, `LoadNewestAvailable`, `Advance`, and on the received-snapshot path `SaveDBFrom`, `Rename`, `Fsync`, and snapshot-directory synchronization.
 
 Do not silently normalize either vocabulary into unrelated monotonically changing metadata such as HDFS generation stamps, QJM epochs, Kafka high watermarks, database LSNs, or generic `checkpoint IDs`.
 
@@ -227,6 +228,67 @@ This is a local implementation example of replacement-before-retirement. It is n
 
 **Deepening record:** [`../evidence/58-etcd-3515-ready-snapshot-persistence-publication-deepening.md`](../evidence/58-etcd-3515-ready-snapshot-persistence-publication-deepening.md).
 
+## 2026 received-snapshot directory-durability deepening
+
+This later slice concerns **incoming `.snap.db` publication through `SaveDBFrom`**, not the ordinary local `SaveSnap` path above. It therefore adds a filesystem-publication boundary without merging the two call paths.
+
+**Deepening record:** [`../evidence/58-etcd-2026-received-snapshot-directory-fsync-deepening.md`](../evidence/58-etcd-2026-received-snapshot-directory-fsync-deepening.md).
+
+### H/P — v3.5.15 synced incoming snapshot bytes, then renamed without an explicit directory fsync
+
+In tagged `v3.5.15`, `SaveDBFrom` writes the received database snapshot into a temporary file, calls `fileutil.Fsync(f)`, closes it, and then renames it to the final `<index>.snap.db` pathname. The function contains no explicit `fsync` of the containing snapshot directory after that rename.
+
+This blocks the inaccurate summary `the old code never fsynced snapshots`. The narrower boundary is:
+
+```text
+file contents explicitly synced
+    != final directory entry explicitly synced
+```
+
+### H/P — the receiver already ordered `SaveDBFrom` before normal Raft-message processing
+
+The v3.5.15 snapshot HTTP handler returns an error if `SaveDBFrom` fails and only calls `h.r.Process(...)` after the save succeeds.
+
+The 2026 fix therefore strengthens an existing admission order: it makes directory-sync success part of what `SaveDBFrom` must establish before later Raft processing is allowed to continue.
+
+### H/P — PR #22314 adds directory sync after rename and on the existing-file retry path
+
+Upstream PR #22314 was created on 20 August 2026 and merged to `main` on 3 September 2026. Its fix states that file `fsync` does not necessarily persist the containing directory entry and adds an explicit snapshot-directory `fsync` after rename.
+
+The same fix also handles a subtler retry case. If the final snapshot pathname already exists, the new code still syncs the directory before reporting success because an earlier attempt could have renamed the file and crashed before syncing the directory.
+
+Thus:
+
+```text
+final pathname observable now
+    != proof that prior namespace publication crossed the intended durability boundary
+```
+
+### H/P — directory-sync failure now blocks later processing
+
+The post-fix code returns directory-sync errors from `SaveDBFrom`. Because the receiver treats that as snapshot-save failure, it stops before `h.r.Process(...)`.
+
+The commit message states the intended relation explicitly: the received snapshot database should have its file and directory publication established before Raft-message processing can later lead to a WAL snapshot record.
+
+### H/P — tests explicitly reject a stronger power-loss claim
+
+The new unit test covers both new-file and existing-file paths and verifies that directory-sync failures propagate.
+
+The added E2E test file is unusually explicit about its evidence boundary: its tests cover failure/retry and crash-before-return control flow but **do not simulate loss of an unsynced directory entry**. The crash-window test pauses after rename and before directory sync, kills the member, and verifies later recovery, while its own comment states that `SIGKILL` does **not** test directory-entry durability.
+
+Therefore:
+
+```text
+process-crash control-flow test
+    != sudden-power-loss directory-durability proof
+```
+
+### H/P — the fix was carried into the 3.7 and 3.6 release branches
+
+The mainline change was subsequently merged through PR #22378 to `release-3.7` on 9 September 2026 and PR #22401 to `release-3.6` on 10 September 2026.
+
+This is branch-maintenance evidence. It is not evidence that every deployed binary was upgraded, and this slice makes no claim of a `release-3.5` backport.
+
 ## Retained state and mechanism
 
 The historical Raft mechanism retains several different state classes:
@@ -249,6 +311,10 @@ The etcd v3.5.15 implementation deepenings add local representation classes that
 13. **old-recovery-resource retention state** — WAL locks and older snapshot DB material not yet released;
 14. **snapshot admission evidence** — decoding/CRC plus valid-WAL `(term,index)` matching used when selecting a usable snapshot.
 
+The 2026 received-snapshot deepening adds another local relation that should not be confused with payload:
+
+15. **durable namespace publication** — the filesystem directory relation by which already-synced received snapshot bytes remain locatable under the intended final `.snap.db` pathname across the documented crash model.
+
 The historical representation change is:
 
 ```text
@@ -269,6 +335,18 @@ Ready snapshot candidate
     -> older recovery resources become releasable
 ```
 
+The separately analyzed received-snapshot path now has its own publication sequence:
+
+```text
+received snapshot bytes
+    -> temporary-file fsync
+    -> rename to final .snap.db pathname
+    -> snapshot-directory fsync
+    -> received snapshot save accepted locally
+    -> Raft message may progress
+    -> later WAL snapshot evidence may be persisted
+```
+
 A lagging-replica repair remains a different protocol relation:
 
 ```text
@@ -283,7 +361,7 @@ needed next entry already compacted
     -> resume AppendEntries after boundary
 ```
 
-Local etcd `SaveSnap` publication and network `InstallSnapshot` must not be merged merely because both involve snapshots.
+Local etcd `SaveSnap` publication, received-database `SaveDBFrom`, and network `InstallSnapshot` must not be merged merely because all involve snapshots.
 
 ## Engineering reconstruction
 
@@ -335,6 +413,33 @@ The v3.5.15 Ready loop makes these separate calls in order. Treating `SaveSnap`,
 
 The source explicitly prefers one possible partial state—an orphan snapshot file—over the inverse partial state of a WAL marker without its corresponding file. That is a failure-policy choice, not evidence of transaction atomicity.
 
+### E — file-content durability ≠ namespace durability
+
+The 2026 `SaveDBFrom` fix supplies a particularly clean lower-layer split. Incoming snapshot bytes can cross a file `fsync` boundary before the later rename is itself durably represented in the containing directory.
+
+Thus:
+
+```text
+bytes survive in a file object
+    != future restart can necessarily locate them under the intended final pathname
+```
+
+The pathname relation is retention infrastructure, not payload.
+
+### E — currently visible pathname ≠ retrospective durability certificate
+
+The post-fix existing-file path intentionally re-syncs the directory. Its own comment contemplates a previous rename followed by crash before directory sync.
+
+So observation that the final name exists now does not by itself certify that the earlier publication crossed the intended persistence boundary before the crash. The retry can re-establish that boundary.
+
+### E — persistence operation attempted ≠ persistence operation succeeded ≠ later progression authorized
+
+The fix propagates directory-sync failure out of `SaveDBFrom`; the receiver then stops before normal Raft-message processing. Error handling is therefore part of the retention mechanism rather than mere logging around it.
+
+### E — process-crash exercise ≠ storage power-loss validation
+
+The 2026 tests themselves impose this boundary. A `SIGKILL` after rename can exercise control-flow retry and recovery, but it does not directly cause or verify the filesystem behavior associated with an unsynced directory entry under sudden power loss.
+
 ### E — replacement handoff ≠ physical deletion
 
 `Release` makes older local recovery resources releasable/removable only after the newer snapshot has crossed earlier steps. Releasing locks or deleting older files is not proof of secure media sanitization.
@@ -363,6 +468,19 @@ Case 71's ZooKeeper deepening likewise shows that snapshot artifact existence do
 
 The mechanisms differ: ZooKeeper 3.4.14 uses its own completion/checksum and transaction-log replay rules; etcd v3.5.15 uses a checksummed synced snapshot file, a synced WAL snapshot record, and Raft-specific metadata/Ready handling. This is a functional comparison only, not a shared implementation or genealogy claim.
 
+### A — etcd directory durability and Kafka checkpoint coverage
+
+Case 56's KAFKA-1647 deepening shows that a checkpoint file can be successfully rewritten while semantically omitting a still-relevant high-watermark relation. The 2026 etcd slice exposes a different axis: snapshot bytes can be file-synced while final namespace-publication durability is not yet closed.
+
+Therefore:
+
+```text
+semantic completeness of represented state
+    != filesystem publication durability of the artifact
+```
+
+This is a functional comparison only, not a shared failure mechanism or genealogy.
+
 ## Failure and forgetting
 
 - **Snapshot creation fails before completion:** the paper's deletion permission is after completion; the old prefix remains the safe source representation.
@@ -375,8 +493,11 @@ The mechanisms differ: ZooKeeper 3.4.14 uses its own completion/checksum and tra
 - **etcd v3.5.15 fails after WAL record encode but before normal WAL sync returns:** the file and in-process encoded marker can be ahead of the persistence frontier required for successful `SaveSnapshot`; source ordering alone does not license treating the call as completed.
 - **etcd v3.5.15 restart sees a file without a valid matching WAL record:** file existence alone does not make it an admissible restart snapshot.
 - **etcd v3.5.15 stable representations advance before live process-memory/publication state:** the Ready-loop ordering exposes separate seams rather than one atomic transition.
+- **pre-fix received snapshot reaches file fsync and rename but not a directory-sync boundary:** source-level file persistence and final namespace-publication persistence are not the same evidence.
+- **post-fix directory sync fails:** received-snapshot save fails and normal Raft-message processing is not authorized through this path.
+- **retry observes an already-existing final snapshot file:** the current code still syncs the directory rather than treating present visibility as proof of prior durable publication.
 - **Older recovery resources survive after newer publication:** this is expected until `Release`; coexistence does not mean equal currentness.
-- **Lower-layer failure:** `stable storage` in the Raft paper and successful file/WAL sync requests in etcd are not proofs of every filesystem, directory-entry, controller, SSD, or power-loss behavior.
+- **Lower-layer failure:** `stable storage` in the Raft paper and successful file/WAL/directory sync requests in etcd are not proofs of every filesystem, directory-entry, controller, SSD, or power-loss behavior.
 
 Raft log deletion and etcd local file release are therefore **logical/protocol/storage-lifecycle forgetting**, not raw-media sanitization or forensic erasure.
 
@@ -422,13 +543,19 @@ The historically safe relation is:
     exact local snapshot-file/WAL/publication/release ordering
     + WAL snapshot-record sync and restart-admission filtering
         -> later implementation deepening, not historical origin evidence
+
+2026 upstream correction
+    received snapshot file already fsynced before rename
+    + containing-directory fsync added before receiver progression
+    + release-3.7 / release-3.6 backports
+        -> later filesystem-publication correction, not Raft-2014 protocol history
 ```
 
 The arrows above mean **chronological/mechanism comparison only**. They do not assert source-code descent, exclusive influence, invention priority, or an uninterrupted Birrell → Chubby → Raft → etcd implementation lineage.
 
 The defensible project contribution is therefore:
 
-> **Raft 2014 supplies a particularly explicit primary-source case in which consensus-ordered committed history is replaceable by stable current state plus boundary/membership metadata, and in which that representation change alters the repair path for lagging replicas. Earlier checkpoint/log-replay and Chubby WAL/snapshot evidence constrain novelty claims without erasing Raft's distinct protocol contract; etcd v3.5.15 later shows that an actual local implementation can further decompose “stable snapshot” into multiple ordered, non-atomic embodiments, synced control records, restart-admission relations, and publication stages.**
+> **Raft 2014 supplies a particularly explicit primary-source case in which consensus-ordered committed history is replaceable by stable current state plus boundary/membership metadata, and in which that representation change alters the repair path for lagging replicas. Earlier checkpoint/log-replay and Chubby WAL/snapshot evidence constrain novelty claims without erasing Raft's distinct protocol contract; etcd v3.5.15 later shows that an actual local implementation can further decompose “stable snapshot” into multiple ordered, non-atomic embodiments, synced control records, restart-admission relations, and publication stages; the 2026 received-snapshot fix further shows that even a synced file can still have a separate namespace-durability obligation before later control-state progression is admitted.**
 
 ## Source ledger
 
@@ -457,8 +584,18 @@ The defensible project contribution is therefore:
    - `SaveSnapshot` record encoding, normal flush + `fdatasync` path, `ValidSnapshotEntries`, and restart-boundary validation behavior.
 12. etcd v3.5.15 server restart path, `server/etcdserver/server.go`: <https://github.com/etcd-io/etcd/blob/v3.5.15/server/etcdserver/server.go>.
    - obtains valid WAL snapshot entries before `LoadNewestAvailable` and explicitly documents orphan snapshot files.
+13. etcd v3.5.15 received-database snapshot path, `server/etcdserver/api/snap/db.go`: <https://github.com/etcd-io/etcd/blob/v3.5.15/server/etcdserver/api/snap/db.go>.
+   - temporary-file write + file fsync + close + rename, with no explicit containing-directory fsync in this function.
+14. etcd v3.5.15 received-snapshot HTTP handler, `server/etcdserver/api/rafthttp/http.go`: <https://github.com/etcd-io/etcd/blob/v3.5.15/server/etcdserver/api/rafthttp/http.go>.
+   - `SaveDBFrom` succeeds before `h.r.Process` is called.
+15. etcd commit `cf31e1f6033f0752f0c55d2456a0771be0c5ba80`, **“fix: fsync snap directory when saving a received snapshot db”**, 25 August 2026: <https://github.com/etcd-io/etcd/commit/cf31e1f6033f0752f0c55d2456a0771be0c5ba80>.
+16. etcd PR #22314, created 20 August 2026, merged to `main` 3 September 2026: <https://github.com/etcd-io/etcd/pull/22314>.
+17. Linux man-pages, `fsync(2)`: <https://man7.org/linux/man-pages/man2/fsync.2.html>.
+   - file fsync does not necessarily persist the containing directory entry; explicit directory fsync is needed for that relation.
+18. etcd PR #22378, automated cherry-pick to `release-3.7`, merged 9 September 2026: <https://github.com/etcd-io/etcd/pull/22378>.
+19. etcd PR #22401, backport to `release-3.6`, merged 10 September 2026: <https://github.com/etcd-io/etcd/pull/22401>.
 
-A search of `tmzncty/computing-archaeology` for Raft/snapshot/WAL and etcd found no dedicated case to reuse. Broader consensus/checkpoint or etcd implementation genealogy should still be routed there if later needed; this repository keeps only the retention-specific mechanism, implementation boundary, and novelty constraint.
+Fresh searches of `tmzncty/computing-archaeology` for `Raft`, `snapshot`, `WAL`, `SaveDBFrom`, and `etcd snapshot fsync` found no dedicated packet to reuse. Broader consensus/checkpoint, etcd implementation, filesystem crash-consistency, or release genealogy should still be routed there if later needed; this repository keeps only the retention-specific mechanism, implementation boundary, and novelty constraint.
 
 ## Claim ledger
 
@@ -481,9 +618,17 @@ A search of `tmzncty/computing-archaeology` for Raft/snapshot/WAL and etcd found
 | a snapshot can be admitted only when `(term,index)` matches valid WAL snapshot history in `LoadNewestAvailable` | H/P | `server.go`, `snapshotter.go` | supported |
 | Ready-loop stable save, in-memory apply, publication, and release are distinct stages | H/P/E | `raft.go`, `storage.go` | supported |
 | durable snapshot file and durable WAL restart marker are distinct persistence frontiers | E | `storage.go`, `wal.go`, restart path | supported |
+| v3.5.15 `SaveDBFrom` file-fsyncs the received snapshot before rename | H/P | tagged `db.go` | supported |
+| v3.5.15 `SaveDBFrom` has no explicit containing-directory fsync after that rename | H/P | tagged `db.go` | supported |
+| v3.5.15 receiver calls `SaveDBFrom` before normal Raft-message processing | H/P | tagged `rafthttp/http.go` | supported |
+| PR #22314 adds snapshot-directory fsync after rename and on the existing-file retry path | H/P | 2026 fix commit / current `db.go` | supported |
+| directory-sync failure propagates and blocks receiver progression through this path | H/P/E | fix + receiver ordering | supported |
+| Linux file fsync alone does not necessarily persist the containing directory entry | H/P | Linux `fsync(2)` | supported |
+| the 2026 E2E crash-window test proves sudden-power-loss directory durability | X | test explicitly says SIGKILL does not test it | rejected |
+| currently visible final pathname proves prior publication crossed the intended durability frontier | X | fixed retry path deliberately re-syncs directory | rejected |
 | ordered file/WAL writes are an atomic transaction | X | explicit orphan allowance | rejected |
-| successful file/WAL sync calls prove every physical power-loss outcome | X | lower-layer evidence absent | rejected |
-| local etcd `SaveSnap` is identical to network `InstallSnapshot` | X | distinct code/roles | rejected |
+| successful file/WAL/directory sync calls prove every physical power-loss outcome | X | lower-layer evidence absent | rejected |
+| local etcd `SaveSnap` is identical to received `SaveDBFrom` or network `InstallSnapshot` | X | distinct code/roles | rejected |
 | Raft snapshotting is identical to GFS checkpointing or Bigtable compaction | X | comparison above | rejected |
 | Raft invented snapshotting/log compaction | X | §7 prior-art discussion | rejected |
 | deleting a Raft prefix or old etcd file proves secure media erasure | X | no lower-layer sanitization evidence | rejected |
@@ -522,7 +667,17 @@ A search of `tmzncty/computing-archaeology` for Raft/snapshot/WAL and etcd found
 30. **release of old WAL/snapshot resources ≠ physical secure erasure.**
 31. **local etcd snapshot publication ≠ Raft `InstallSnapshot` network state transfer.**
 32. **source-level `fdatasync` boundary ≠ universal lower-layer power-loss proof.**
+33. **received snapshot file-content fsync ≠ durable final directory entry.**
+34. **rename visibility ≠ rename-directory durability across the documented crash model.**
+35. **namespace publication durability ≠ WAL snapshot-marker durability.**
+36. **present final-file observation ≠ retrospective proof that prior publication was durable.**
+37. **persistence operation attempted ≠ persistence operation succeeded ≠ later progression authorized.**
+38. **received `SaveDBFrom` ≠ ordinary local `SaveSnap` ≠ network `InstallSnapshot`.**
+39. **SIGKILL crash-window exercise ≠ sudden-power-loss directory-entry validation.**
+40. **branch backport ≠ deployed-fleet adoption.**
 
 ## Next evidence
 
-The broad protocol mechanism is already grounded, and the exact v3.5.15 WAL `SaveSnapshot` sync ordering is now source-grounded. The next useful work should be implementation fault injection rather than another generic Raft summary: inject failure after snapshot-file sync, immediately before/after WAL snapshot-record sync, after in-memory `ApplySnapshot`, after `publishSnapshot`, and before/after `Release`; then observe restart snapshot admission and old-resource retention. A separate storage-layer pass can test actual filesystem/controller sudden-power-loss behavior rather than inferring it from `fsync`/`fdatasync` source calls. Later membership variants, named snapshot formats, cross-version etcd changes, and the release/backport chronology of the 2026 received-snapshot directory-fsync fix should remain separate slices rather than being silently folded into the 2014 historical case.
+The broad protocol mechanism is already grounded, the exact v3.5.15 WAL `SaveSnapshot` sync ordering is source-grounded, and the previously explicit 2026 received-snapshot directory-fsync / release-backport chronology debt is now closed at the source level.
+
+The next useful work should be fault injection rather than another generic Raft summary: inject failure after snapshot-file sync, immediately before/after WAL snapshot-record sync, after in-memory `ApplySnapshot`, after `publishSnapshot`, and before/after `Release`; then observe restart snapshot admission and old-resource retention. A separate storage-layer pass can test actual filesystem/controller sudden-power-loss behavior for the rename-before-directory-sync window rather than inferring it from `fsync` documentation or `SIGKILL`. Later membership variants, named snapshot formats, additional downstream release adoption, and filesystem-specific behavior should remain separate slices rather than being silently folded into the 2014 historical case.
