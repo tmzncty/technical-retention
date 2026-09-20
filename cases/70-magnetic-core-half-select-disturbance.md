@@ -609,3 +609,37 @@ Production/service deepening is now explicitly connected rather than left as det
 The earlier `cross-machine margin` and `quantitative temperature dependence` debt is therefore **partially closed**, not eliminated. Four named machines establish recurrence and variation, and the MF11-U/UP adds a bounded service-authority dimension; together they still do not provide a statistically meaningful production distribution or material law.
 
 Remaining work is narrower archival/production deepening: deployed-material/vendor-lot distributions, measured unit-to-unit margin distributions, continuous material/environment curves, factory calibration worksheets, earlier production correspondence/field-return records, and invention-priority genealogy if later synthesis requires them.
+
+---
+
+## Pattern-dependent delta-noise discrimination deepening (1968–1972)
+
+A new bounded evidence packet now extends the sense-disturbance side of this case without changing its `grounded` maturity:
+
+- [`../evidence/70-1968-1972-pattern-dependent-delta-noise-discrimination-deepening.md`](../evidence/70-1968-1972-pattern-dependent-delta-noise-discrimination-deepening.md) — General Motors' 1968-filed US 3,564,517 and Core Memories Inc.'s 1969-filed US 3,646,531 make the **stored-pattern dependence, aggregate partial-select noise, and discriminator-control response** explicit.
+
+The new primary records tighten an earlier claim. Shared sensing is not merely nonlocal because many half-selected cores contribute *some* signal. In the disclosed arrangements, the **values/presence pattern of other cores can change how much uncancelled interference reaches the same sense path**. Thus, for these bounded architectures:
+
+```text
+retained target state
+    !=
+neighbor payload pattern
+    !=
+aggregate sense-line waveform
+    !=
+discriminator threshold/timing state
+    !=
+successful symbolic read
+```
+
+US 3,646,531 calls out a `worst-case` stored pattern and gives a bounded 64 × 64 example in which 63 delta-noise contributions can add to or subtract from the selected-core signal. It also exploits the temporal separation between an earlier delta-noise peak and a later turnover signal by proposing a time-dependent discrimination threshold. US 3,564,517 supplies a different bounded response: stagger/reshape X/Y drive timing and partition the sense winding so aggregate shuttle noise remains within the disclosed sense-amplifier tolerance.
+
+These numbers and circuits are **not universal ferrite constants or proof of broad deployment**. The new packet explicitly rejects `64 × 64 -> 63` as a universal scaling law and rejects the GM embodiment's `12 uncancelled shuttles` tolerance as a general production limit.
+
+The retention-specific finding is narrower and more durable:
+
+> **neighbor payload can become read context without becoming metadata, and correct remanent state can coexist with failed symbolic classification.**
+
+This also adds a controlled comparison to later adaptive read-reference systems: changing an interpretation/discrimination boundary can improve recoverability without itself restoring the payload. That is a functional analogy only; ferrite time-dependent discrimination is not NAND read-reference optimization, ECC, refresh, or a claimed ancestor of those mechanisms.
+
+A fresh `computing-archaeology` search found no dedicated packet for these two patents. Broader patent genealogy, commercial deployment, core-vendor sorting/yield history, and the history of sense-amplifier design therefore remain routed to the companion repository rather than being reconstructed here.
