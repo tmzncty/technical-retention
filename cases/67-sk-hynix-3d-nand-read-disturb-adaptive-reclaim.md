@@ -2,13 +2,15 @@
 
 ## Status
 
-**`grounded`** — bounded to the manufacturer-primary controller design documented in SK hynix / SK hynix Memory Solutions America patent publication **US20190066809A1**, with priority dated 31 August 2017 and publication dated 28 February 2019. Earlier manufacturer-primary evidence now includes a MegaChips 2007-priority / 2008-public thresholded read-disturb repair design plus Samsung 2009- and 2013-priority families, blocking false invention claims for proactive corrected rewrite, ECC-margin-triggered read reclaim, and relocation.
+**`grounded`** — bounded to the manufacturer-primary controller design documented in SK hynix / SK hynix Memory Solutions America patent publication **US20190066809A1**, with priority dated 31 August 2017 and publication dated 28 February 2019. Earlier manufacturer-primary evidence includes a MegaChips 2007-priority / 2008-public thresholded read-disturb repair design plus Samsung 2009- and 2013-priority families. Named-product evidence now spans a 2018 PM963 `Lifetime read Reclaim count` witness and a 2024 PM9D3a telemetry schema that separately exposes `Lifetime read Reclaim count`, `Patrol Read Reclaim Count`, and `Refresh Counts`.
 
 Grounding record: [`../evidence/67-sk-hynix-2009-2019-read-reclaim-grounding.md`](../evidence/67-sk-hynix-2009-2019-read-reclaim-grounding.md).
 
 Pre-2009 prior-art deepening: [`../evidence/67-megachips-2007-2008-read-disturb-rewrite-prior-art-deepening.md`](../evidence/67-megachips-2007-2008-read-disturb-rewrite-prior-art-deepening.md).
 
-Named-product telemetry deepening: [`../evidence/67-samsung-pm963-2016-2018-read-reclaim-telemetry-deepening.md`](../evidence/67-samsung-pm963-2016-2018-read-reclaim-telemetry-deepening.md).
+PM963 named-product telemetry deepening: [`../evidence/67-samsung-pm963-2016-2018-read-reclaim-telemetry-deepening.md`](../evidence/67-samsung-pm963-2016-2018-read-reclaim-telemetry-deepening.md).
+
+PM9D3a maintenance-telemetry taxonomy deepening: [`../evidence/67-samsung-pm9d3a-maintenance-telemetry-boundary-deepening.md`](../evidence/67-samsung-pm9d3a-maintenance-telemetry-boundary-deepening.md).
 
 ## Scope
 
@@ -16,7 +18,7 @@ This case asks a narrow question left open by Cases 52 and 65:
 
 > What changes when a 3-D NAND controller treats **read activity and measured error margin as maintenance evidence**, adapts how often it tests potentially disturbed regions, and can preserve the logical payload by copying valid values into a new physical population before the old embodiment becomes uncorrectable?
 
-The bounded object is the read-disturb detection/recovery composition in US20190066809A1:
+The bounded object in US20190066809A1 is a composition of:
 
 - a read-count proxy associated with a block/group of blocks;
 - a read threshold that determines when to perform read-disturb checking;
@@ -27,177 +29,165 @@ The bounded object is the read-disturb detection/recovery composition in US20190
 - clearing/resetting the read-count proxy after reclaim and, in the disclosed design, after power-off;
 - 3-D neighborhood sampling that can include wordlines above and below the original read location.
 
+This case additionally tracks **named-product maintenance telemetry** when it can be separated from the patent algorithm itself.
+
 This is **not**:
 
-- proof that a named commercial SK hynix SSD shipped this exact algorithm, threshold table, counter width, or persistence behavior;
+- proof that a named commercial SK hynix SSD shipped the exact patented algorithm, threshold table, counter width, or persistence behavior;
 - a generic history of NAND read disturb;
 - a claim that SK hynix invented read reclaim, ECC-margin-triggered relocation, garbage collection, wear leveling, ECC, or 3-D NAND;
-- evidence that the controller counter is a direct physical measurement of trapped charge or threshold-voltage shift;
+- evidence that a controller counter directly measures trapped charge or threshold-voltage shift;
 - a claim that power-off physically resets read-disturb damage;
-- a claim that read reclaim securely erases the superseded physical cells;
+- a claim that read reclaim securely erases superseded physical cells;
+- a claim that Samsung PM963 or PM9D3a implements the SK hynix patent;
+- a claim that a PM9D3a field named `Refresh Counts` is physically identical to read reclaim, DRAM refresh, or Case 36 correct-and-refresh;
 - a substitute for Case 52's physical read-disturb characterization or Case 65's retention-age-aware read-reference adaptation.
 
 ## Historical record
 
-### A repeated read can create a future retention obligation outside the logical read target
+### Successful reads can create a future retention obligation outside the logical target
 
-US20190066809A1 describes the familiar NAND read-disturb mechanism: pass bias applied while reading can unintentionally change charge/threshold state in nonselected cells. It then frames a controller workload in which repeated reads of a single page can cause read disturb across a larger block.
-
-The source therefore supports a bounded historical/engineering distinction:
-
-> **successful logical read ≠ absence of future retention debt**.
-
-A read can return correct data now while contributing to a physical condition that makes later reads less reliable.
-
-It also supports:
-
-> **logical read target ≠ complete physically stressed neighborhood**.
-
-The operation named by the host/controller and the set of cells whose reliability margin is affected need not have the same geometry.
-
-### The design retains a read-count proxy rather than one counter for every physical victim
-
-The patent explains that an idealized implementation could maintain a read counter for every page, but that counter storage is expensive, particularly under mobile-product memory constraints. The disclosed approach groups blocks/counters and chooses counter length and check frequency together.
-
-The controller therefore retains a compressed workload-history state:
-
-> **read-count proxy ≠ physical read-disturb state**.
-
-The count records selected read activity under one policy. It is not the victim cells' threshold-voltage distribution and is not a complete history of every electrically relevant event.
-
-### Threshold crossing triggers qualification, not necessarily immediate relocation
-
-The disclosed flow increments the relevant read count. When a threshold or a multiple of the threshold is reached, the controller performs a read-disturb test. The test obtains bit-error evidence from associated blocks/pages and compares it with an error threshold. The error threshold may be expressed as a percentage of the system's ECC capability.
-
-This yields two distinct boundaries:
-
-> **read-count threshold crossing ≠ uncorrectable payload**.
-
-and:
-
-> **read-count threshold crossing ≠ automatic proof that relocation is required**.
-
-The count schedules/qualifies further checking; measured error state can decide whether reclaim should occur.
-
-### Error evidence can change the future maintenance cadence
-
-The patent describes an adaptive target read threshold selected according to bit errors, including a lookup-table form in which higher bit-error counts can correspond to lower subsequent read thresholds. It also describes more aggressive checking after conditions such as counter refresh/power-off when conservative treatment is warranted.
-
-Thus:
-
-> **adaptive read threshold ≠ fixed physical failure limit**.
-
-The threshold is retained/derived **policy state**: a controller decision about when to inspect again, informed by observed error evidence and expected workload risk.
-
-### Read reclaim re-embodies valid values
-
-The claims explicitly define a read-reclaim operation that can copy valid values from one plurality of cells to another. Other passages describe triggering garbage-collection/reclaim work when the test indicates sufficient error pressure.
+US20190066809A1 describes pass-bias read disturb: a read can succeed for the requested page while repeated accesses contribute stress to other cells in a larger physical region.
 
 Therefore:
 
-> **ECC-correctable logical data ≠ data that must remain in the same cells**.
+> **successful logical read ≠ absence of future retention debt**.
 
 and:
 
+> **logical read target ≠ complete physically stressed neighborhood**.
+
+### The design retains a workload proxy rather than the physical condition itself
+
+The patent discusses the storage cost of per-page counters and instead groups read activity under compressed counters/proxies. The read count records selected workload history under one policy; it is not the threshold-voltage distribution of the victim cells.
+
+> **read-count proxy ≠ physical read-disturb state**.
+
+### Threshold crossing qualifies inspection; it does not by itself prove failure or relocation need
+
+The disclosed flow increments the relevant read count. At a threshold or multiple of a threshold, the controller performs a read-disturb test and derives bit-error evidence that can be compared with an error threshold.
+
+Thus:
+
+> **read-count threshold crossing ≠ uncorrectable payload**.
+
+> **read-count threshold crossing ≠ automatic proof that relocation is required**.
+
+The count schedules/qualifies further observation; the measured error state can decide whether reclaim should occur.
+
+### Error evidence can change future maintenance cadence
+
+The patent describes target read thresholds selected from bit-error evidence, including lookup-table forms in which higher error counts can lead to lower future read thresholds.
+
+> **adaptive read threshold ≠ fixed physical failure limit**.
+
+The threshold is controller policy about when to inspect again.
+
+### Read reclaim can re-embody valid values
+
+The claims define a read-reclaim operation capable of copying valid values from one plurality of cells to another. Other passages describe invoking reclaim/GC-like movement when read-disturb evidence warrants it.
+
+> **ECC-correctable logical data ≠ data that must remain in the same cells**.
+
 > **read reclaim relocation ≠ logical payload change**.
 
-The same logical value can be preserved precisely by ending its dependence on the more-disturbed physical embodiment.
+### The disclosed read-count proxy may be cleared at power-off
 
-### The disclosed counter can be cleared at power-off
+The patent explicitly permits clearing a read-count proxy after power-off and discusses avoiding NAND persistence for shorter counters when conservative post-reset checking compensates.
 
-One of the most useful details for retention comparison is explicit: the first read count can be set to zero after a power-off as well as after read reclaim. The description argues that shorter counters and sufficiently conservative checking can avoid having to store the counters in NAND across sudden power loss.
-
-This establishes a strong counterexample:
+This establishes:
 
 > **controller counter continuity ≠ medium damage continuity**.
 
-and, more specifically:
+and:
 
 > **power-off-cleared maintenance proxy ≠ power-off-cleared read disturb**.
 
-The controller is allowed to forget one compressed history variable while the physical cells do not thereby return to their earlier threshold-voltage state. The design must compensate through conservative post-reset checking policy rather than by pretending the physical history disappeared.
+The controller may forget one compressed history variable while the physical cell state persists.
 
-### 3-D geometry changes what should be sampled
+### 3-D geometry affects what should be sampled
 
-For a 3-D NAND embodiment, the patent's expanded-block test can include pages associated with wordlines at higher and lower levels than the first block/read location. The description also discusses sampling top/bottom and neighboring wordline positions.
-
-This does not establish one universal 3-D NAND disturb geometry. It does establish that the controller design treats physical vertical adjacency as relevant maintenance information beyond the logical page originally requested.
+The disclosed 3-D embodiment can test pages/wordlines above and below an original read location. This does not establish universal 3-D disturb geometry, but it does establish that maintenance sampling may be driven by physical adjacency beyond the host-visible page.
 
 ## Retained states and control state
 
-The bounded regime contains at least seven separable states:
+At least seven separable states appear in the bounded design:
 
 1. **logical payload** — the value the host expects to remain recoverable;
-2. **physical cell state** — threshold/charge distributions whose margin can be altered by read disturb;
-3. **logical-to-physical mapping** — needed if reclaim relocates the current payload;
+2. **physical cell state** — charge/threshold distributions whose margin can be altered by read disturb;
+3. **logical-to-physical mapping** — needed if reclaim relocates current data;
 4. **read-count proxy** — compressed workload-history state used to schedule checks;
-5. **last-read / grouping information** — controller state used by some disclosed counter/sampling variants;
-6. **bit-error / ECC evidence** — a measured qualification of current recoverability margin;
-7. **adaptive policy state** — target read threshold, error threshold, sampling factor, or lookup-table relation that determines future maintenance.
+5. **last-read / grouping information** — state used by some counter/sampling variants;
+6. **bit-error / ECC evidence** — observed qualification of current recoverability margin;
+7. **adaptive policy state** — target read threshold, error threshold, sampling factor, or lookup relation governing future maintenance.
 
-These states do not share one lifetime. In the disclosed design, the medium condition survives power-off while the read-count proxy may not.
+These states do not share one lifetime. In the disclosed SK hynix design, the physical condition survives power-off while a read-count proxy may not.
+
+Product telemetry adds another class:
+
+8. **maintenance summaries** — cumulative or category-specific counters exposed to management software, such as Samsung's `Lifetime read Reclaim count`, `Patrol Read Reclaim Count`, and `Refresh Counts`.
+
+A management counter is not automatically the same state used internally to trigger maintenance.
 
 ## Engineering reconstruction
 
 ### A maintenance proxy may intentionally be less durable than the condition it protects against
 
-Most retention discussions assume that if a controller remembers a risk history, longer persistence of that history is automatically better. Case 67 provides a counterexample. The patent explicitly trades counter-storage persistence against check frequency and conservative threshold selection.
-
-So:
+Case 67 is a useful counterexample to the assumption that every risk-history variable must persist as long as the physical risk. The patented design trades counter-storage persistence against conservative checking and threshold policy.
 
 > **maintenance-proxy lifetime can be shorter than physical-condition lifetime**.
 
-This is not permission to discard arbitrary metadata. It is a design-specific statement that a lossy proxy can still be safe if its reset boundary is composed with a conservative requalification policy.
+This is design-specific, not permission to discard arbitrary metadata.
 
 ### ECC correction and physical renewal are separate acts
 
-ECC can make a current read logically successful even while bit-error count indicates shrinking margin. Read reclaim then copies valid values to other cells.
-
-Therefore:
+ECC can make the current read logically successful while error count indicates shrinking future margin. Reclaim can then copy valid values elsewhere.
 
 > **current ECC correction ≠ future margin restoration**.
 
-and:
-
 > **read reclaim ≠ ECC correction**.
 
-One recovers/qualifies a value from the current embodiment; the other changes the embodiment carrying the value into the future.
+### Read-reference adaptation and reclaim are different recovery loci
 
-### Read retry / read-reference adaptation and reclaim are different recovery loci
-
-Case 65 shows that a controller can adapt read interpretation according to retention age, and Case 59 shows read-reference adaptation after interference. Earlier Samsung read-reclaim prior art also explicitly distinguishes changing read voltage from copying data to another block.
-
-Thus:
+Case 65 shows read interpretation can be adapted according to retention age; Case 59 shows reference adaptation after interference. Those operations can recover a value from the same physical cells. Reclaim instead changes which cells carry the current value.
 
 > **read-reference adaptation ≠ read-reclaim relocation**.
 
-A successful retry can recover the current logical value without moving it. Reclaim uses a recovered/valid value to create a new physical copy and then changes which embodiment should carry currentness.
+### Reliability-triggered reclaim is not the same as capacity-triggered garbage collection
 
-### Reliability-triggered reclaim and capacity-triggered garbage collection should not be collapsed
-
-The SK hynix design may invoke garbage-collection-like movement when read-disturb evidence warrants relocation. That does not make its trigger identical to ordinary space reclamation.
+The copy/erase machinery may overlap, but the reason for selecting work and the evidence authorizing it can differ.
 
 > **reliability-triggered reclaim ≠ capacity-triggered garbage collection**.
 
-The physical copy/erase machinery may overlap while the reason for selecting a block and the retained evidence that authorizes the work differ.
-
 ### Relocation is not sanitization
 
-Copying valid values elsewhere and retiring the old location preserves logical continuity. Nothing in the bounded source proves immediate physical removal of all superseded charge states or forensic remnants.
-
-Therefore:
+Preserving a value by copying it elsewhere does not prove physical removal of all superseded charge states.
 
 > **read-reclaim relocation ≠ secure erase / sanitization**.
 
-Cases 44 and 47 remain the relevant forgetting/sanitization boundary.
+Cases 44 and 47 remain the forgetting/sanitization boundary.
+
+### Maintenance telemetry is an accounting surface, not a recovered firmware state machine
+
+The Samsung product evidence supports a further distinction:
+
+```text
+maintenance work
+    !=
+maintenance trigger state
+    !=
+maintenance accounting counter
+    !=
+complete maintenance history
+```
+
+A cumulative field can summarize completed work without exposing which blocks were involved, why an event was admitted, what ECC margin existed, or how currentness changed during relocation.
 
 ## Cross-case boundaries
 
 ### Versus Case 52 — NAND read disturb
 
-Case 52 establishes the physical/access-induced regime: repeated reads can apply pass-voltage stress to unread same-block cells; cumulative reads become a maintenance clock; mitigation may include voltage tuning, relocation, or probabilistic recovery.
-
-Case 67 adds a **manufacturer-primary controller-policy slice**:
+Case 52 establishes the physical/access-induced regime. Case 67 adds a manufacturer-primary controller-policy slice:
 
 ```text
 read activity
@@ -208,7 +198,7 @@ read activity
     -> conditional reclaim / relocation
 ```
 
-The two are complementary. Case 67 does not replace Case 52's characterization evidence, and the patent does not prove a shipped commercial implementation.
+The patent does not replace Case 52's characterization evidence or prove a shipped commercial implementation.
 
 ### Versus Case 65 — 3-D NAND early retention loss
 
@@ -228,68 +218,114 @@ read-count proxy + measured bit errors
     -> conditional physical relocation
 ```
 
-Elapsed-time retention loss and access-induced read disturb can coexist, but they are different maintenance clocks and failure mechanisms.
+The two clocks can coexist but are not the same mechanism.
 
 ### Versus Case 36 — Flash Correct-and-Refresh
 
-Case 36 studies retention-error correction and refresh/reprogram policy using retention/wear information. Case 67 studies read-disturb pressure caused by access history and a distinct trigger path into reclaim. Both can end in re-embodiment; the trigger and diagnostic relation are not the same.
+Case 36 studies retention-error correction and refresh/reprogram policy. Case 67 studies read-disturb pressure plus reclaim. Both can lead to renewed physical embodiment, but trigger and diagnostic relations differ.
+
+The later PM9D3a field named `Refresh Counts` is only a product-interface label in the inspected datasheet. It must not be back-filled with Case 36's mechanism without stronger evidence.
 
 ### Versus Case 04 — mapped Flash
 
-Case 04 establishes that logical identity can survive physical relocation under an FTL-style mapping relation. Case 67 supplies a later **reason** for relocation: not only erase/reclaim geometry, but proactive reliability maintenance after access-induced stress.
+Case 04 establishes logical identity surviving physical relocation under a mapping relation. Case 67 supplies a reliability-maintenance reason for relocation.
 
 ### Versus Case 59 — program interference
 
-Program interference is write-induced neighbor coupling. Read disturb is read-induced pass-voltage stress. The shared relation is only functional:
+Program interference is write-induced neighbor coupling; read disturb is read-induced pass-voltage stress. Their commonality is functional only:
 
 > an operation that succeeds for its logical target can alter the future reliability margin of another retained state.
-
-The physical mechanisms and histories remain distinct.
 
 ## Failure and forgetting boundaries
 
 Distinct failure or policy-failure modes include:
 
-- the read-count proxy underestimates relevant stress;
+- read-count proxy underestimates relevant stress;
 - grouping/sampling misses the most disturbed victim region;
-- a threshold is too lax for the actual error-growth regime;
-- power-off resets volatile counter state and requalification policy is not conservative enough;
+- a threshold is too lax for actual error growth;
+- power-off resets volatile proxy state and post-reset qualification is not conservative enough;
 - ECC margin falls faster than scheduled checking anticipates;
 - valid data cannot be recovered well enough to seed relocation;
 - relocation/GC is interrupted or mapping/currentness handoff fails;
-- reclaim consumes additional program/erase endurance;
-- a controller confuses a successful retry with sufficient future retention margin;
-- a physical old embodiment survives after logical relocation, creating no implication of secure erasure.
+- reclaim consumes extra program/erase endurance;
+- a controller confuses successful retry with sufficient future retention margin;
+- a physical old embodiment survives logical relocation, so no secure-erasure implication follows;
+- management counters lose or reset state in ways not disclosed by the telemetry table;
+- host tooling collapses distinct reclaim / patrol / refresh counters into one category and thereby obscures the maintenance contract.
 
-These are not one generic `bit rot` mechanism. Some concern the medium, others the adequacy and lifetime of controller-side maintenance evidence.
+These are not one generic `bit rot` mechanism.
 
 ## Named-product deepening — Samsung PM963 read-reclaim telemetry
 
-A later manufacturer-primary product witness now narrows one of this case's explicit evidence gaps. Samsung's *DC Toolkit 2.1 User Guide* (initial release October 2018) lists PM963 as a supported SSD and shows a PM963 reference output (`SAMSUNGNVMeSSDPM963`, firmware `CXV83M1Q`) whose Extended SMART fields include `Lifetime read Reclaim count`. Samsung separately describes PM963 as a data-center TLC V-NAND NVMe SSD and later states that the family launched in 2016.
+Samsung's *DC Toolkit 2.1 User Guide* (initial release October 2018) lists PM963 as a supported SSD and shows PM963 reference output (`SAMSUNGNVMeSSDPM963`, firmware `CXV83M1Q`) whose Extended SMART fields include `Lifetime read Reclaim count`. Samsung separately identifies PM963 as a datacenter TLC V-NAND NVMe SSD and later states that the family launched in 2016.
 
-This establishes **named-product telemetry**, not identity with the SK hynix patent implementation. The inspected Samsung material does not disclose whether PM963 uses Case 67's grouped read-count proxy, adaptive threshold table, 3-D victim sampling, or power-off reset/requalification scheme.
+This establishes named-product telemetry, not identity with the SK hynix patent implementation.
 
-The evidence therefore adds three boundaries:
+The evidence adds three boundaries:
 
-> **`named product exposes read-reclaim telemetry != named product implements this patented reclaim algorithm`.**
+> **named product exposes read-reclaim telemetry ≠ named product implements this patented reclaim algorithm**.
 
-> **`lifetime read-reclaim count != per-block read-count proxy`.**
+> **lifetime read-reclaim count ≠ per-block read-count proxy**.
 
-> **`cumulative maintenance count != complete maintenance history`.**
+> **cumulative maintenance count ≠ complete maintenance history**.
 
-The PM963 field appears in Samsung's Extended SMART path and should not be silently normalized into the base NVMe SMART/Health log. Its example value is zero; that is one reference-output state, not proof that the operation/category is unsupported. Likewise, Samsung's later statement that PM963 launched in 2016 does not backdate the inspected telemetry field to launch day; the public field floor grounded here is October 2018.
-
-The result partially closes the earlier `named shipping product` gap at the **maintenance-vocabulary/telemetry** level. Exact shipped trigger logic, threshold values, counter persistence, relocation atomicity, and independent product validation remain open.
+The inspected PM963 example value is zero; that is one reference-output state, not proof that the field/category is unsupported. The public field floor grounded by the inspected Toolkit source is October 2018, not the 2016 product-launch date.
 
 See [`../evidence/67-samsung-pm963-2016-2018-read-reclaim-telemetry-deepening.md`](../evidence/67-samsung-pm963-2016-2018-read-reclaim-telemetry-deepening.md).
 
+## Later named-product deepening — Samsung PM9D3a telemetry separates reclaim, patrol-reclaim, and refresh
+
+A later Samsung-authored PM9D3a U.2 datasheet, **Rev. 1.3 dated May 2024**, is publicly reachable through an xFusion-hosted mirror. Its source custody is weaker than an official Samsung-hosted document, so the repository treats it as a **publicly reachable Samsung-authored datasheet mirror**, not as proof that Samsung itself publicly distributed that exact PDF URL.
+
+Within that document:
+
+- Enhanced SMART `0xC4`, bytes `331:324`: `Lifetime read Reclaim count`;
+- Enhanced SMART `0xD0`, bytes `114:111`: `Patrol Read Reclaim Count`;
+- OCP Cloud Attribute `0xC0`, bytes `87:81`: `Refresh Counts`.
+
+This yields an interface-level distinction:
+
+```text
+Lifetime read Reclaim count
+    !=
+Patrol Read Reclaim Count
+    !=
+Refresh Counts
+```
+
+The three fields are separately named and located. That is enough to prevent the repository from collapsing them into one generic maintenance count. It is **not** enough to prove that their underlying event sets are disjoint, overlapping, or causally ordered.
+
+The comparison with PM963 also establishes a schema guardrail:
+
+```text
+same-looking maintenance label across products
+    !=
+stable telemetry byte layout
+    !=
+same controller algorithm
+    !=
+same persistence/reset semantics
+```
+
+The word `Lifetime` likewise does not disclose checkpointing, sudden-power-loss atomicity, format/sanitize behavior, overflow semantics, or firmware-update handling.
+
+`Patrol Read Reclaim Count` is suggestive of a background/proactive inspection regime, but the table does not prove a full-media scrub, scan cursor, cadence, or deterministic `patrol read -> reclaim` state machine.
+
+`Refresh Counts` is an even stronger terminology warning:
+
+> **same word `refresh` ≠ same mechanism, trigger, scheduler, or payload transformation**.
+
+The inspected table does not establish whether this means retention-driven rewrite, disturb-driven repair, metadata refresh, or another firmware category. It must therefore remain distinct from Case 36 and from DRAM refresh until implementation evidence joins them.
+
+See [`../evidence/67-samsung-pm9d3a-maintenance-telemetry-boundary-deepening.md`](../evidence/67-samsung-pm9d3a-maintenance-telemetry-boundary-deepening.md).
+
 ## Pre-2009 prior-art deepening — MegaChips thresholded repair / rewrite
 
-The 2007-02-07-priority MegaChips family `JP2008192267A / US20080189588A1` moves the inspected functional floor earlier than the previously cited 2009-priority Samsung `read reclaim` family. The public application texts appeared in August 2008, so the chronology must preserve the distinction between priority and public availability.
+The 2007-02-07-priority MegaChips family `JP2008192267A / US20080189588A1` moves the inspected functional floor earlier than the previously cited 2009-priority Samsung `read reclaim` family. Public application texts appeared in August 2008, so priority and public availability remain distinct.
 
-The family explicitly treats read disturb as a case where repeated reads can create a repair obligation. Its repair condition can be driven by a read count, current bit-error count, or accumulated occurrences of bit errors. It also gives an ECC-margin example in which repair is triggered below the maximum correctable error count.
+The family treats read disturb as a condition where repeated reads can create a repair obligation. Repair can be driven by read count, current bit-error count, or accumulated occurrences of bit errors, including an ECC-margin example below maximum correction capability.
 
-Most importantly, it separates three acts that should not be collapsed:
+It separates:
 
 ```text
 ECC-correct current value
@@ -299,9 +335,9 @@ recognize repair condition
 rewrite / renew the physical embodiment
 ```
 
-The description includes block- and page-level paths that write replacement data into unused physical space and update storage-management information to make the new pages current. It also contemplates same-location rewrite, so the older term `rewrite` is broader than physical relocation.
+The description includes block- and page-level paths that write replacement data into unused physical space and update storage-management information. It also contemplates same-location rewrite, so the older term `rewrite` is broader than physical relocation.
 
-The preferred embodiment stores threshold policy in Flash redundant-area metadata and can read it at power-on. That does **not** prove the running read-count comparison value is itself retained across power loss:
+The preferred embodiment stores threshold policy in Flash redundant-area metadata and can read it at power-on. That does **not** prove the running read-count comparison value itself persists:
 
 ```text
 retained repair-policy threshold
@@ -309,13 +345,13 @@ retained repair-policy threshold
 proven retained read-history counter
 ```
 
-Maintenance admission is also separable from the repair condition. The family permits work inline with host reads or at power-on/off, idle, sleep, charging, periodic, and externally instructed opportunities, and it recognizes separately stored area/coverage information for partial scans.
+Maintenance admission is also separable from the repair condition. The family permits work inline with host reads or at power-on/off, idle, sleep, charging, periodic, and externally instructed opportunities.
 
-The resulting terminology guardrail is:
+The terminology guardrail is:
 
 > **first inspected `read reclaim` terminology ≠ first inspected proactive read-disturb rewrite / re-embodiment mechanism**.
 
-This is a functional-prior-art conclusion only. No genealogy from MegaChips to Samsung or SK hynix is asserted, and no named shipping MegaChips controller/product is established.
+No genealogy from MegaChips to Samsung or SK hynix is asserted.
 
 See [`../evidence/67-megachips-2007-2008-read-disturb-rewrite-prior-art-deepening.md`](../evidence/67-megachips-2007-2008-read-disturb-rewrite-prior-art-deepening.md).
 
@@ -327,34 +363,45 @@ See [`../evidence/67-megachips-2007-2008-read-disturb-rewrite-prior-art-deepenin
 | --- | --- | --- |
 | US20190066809A1 has 2017-08-31 priority, 2019-02-28 publication, and SK hynix assignees | `H/P` | patent bibliographic record |
 | repeated single-page reads are treated as capable of disturbing a larger block | `H/P` | patent background/description |
-| controller increments read-count state and schedules test reads at threshold/multiple conditions | `H/P` | patent abstract, description, and claims |
-| bit-error evidence can select an adaptive target read threshold and error threshold | `H/P` | patent description/claims |
+| controller increments read-count state and schedules test reads at threshold/multiple conditions | `H/P` | patent abstract, description, claims |
+| bit-error evidence can select adaptive target read/error thresholds | `H/P` | patent description/claims |
 | read reclaim can copy valid values into another plurality of cells | `H/P` | explicit claims |
 | the disclosed read count may be reset at power-off without storing it in NAND | `H/P` | explicit description/claims |
-| MegaChips's read-disturb repair family has 2007-02-07 priority and August 2008 public application texts | `H/P` | patent-family bibliographic record |
+| MegaChips read-disturb repair family has 2007-02-07 priority and August 2008 public application texts | `H/P` | patent-family bibliographic record |
 | MegaChips permits read-count, bit-error-count, or accumulated-error thresholds to trigger corrected rewrite | `H/P` | patent abstract/description/claims |
 | a MegaChips repair path can write into unused physical space and update storage-management information | `H/P` | patent description |
-| MegaChips retained threshold metadata proves the running read-count history survives power loss | `X` | threshold storage is explicit; counter persistence is not |
-| physical read-disturb state therefore resets at power-off | `X` | contradicted by the distinction between a controller proxy and cell condition |
-| SK hynix invented read reclaim or ECC-margin-triggered relocation in 2017 | `X` | earlier MegaChips 2007 and Samsung 2009/2013 patent evidence |
-| this patent proves a named commercial SK hynix SSD shipped the exact algorithm | `X` | patent/design evidence is not product deployment evidence |
-| logical payload can survive a controller-authorized change of physical embodiment | `E` | follows from valid-value copy + mapping/currentness handoff |
-| a volatile/lossy maintenance proxy may still support retention if reset is paired with conservative requalification | `E` | bounded reconstruction of the disclosed power-off/counter/check-frequency composition |
-| this is equivalent to human memory, forgetting, or recollection | `X/I` | unsupported philosophical anthropomorphism |
+| Samsung PM963 reference output exposes `Lifetime read Reclaim count` | `H/P` | Samsung DC Toolkit 2.1 product output |
+| PM9D3a Rev. 1.3 mirrored datasheet exposes `Lifetime read Reclaim count` at `0xC4` bytes `331:324` | `H/P` | Table 148; mirror custody caveat |
+| PM9D3a exposes `Patrol Read Reclaim Count` at `0xD0` bytes `114:111` | `H/P` | Table 149; mirror custody caveat |
+| PM9D3a OCP `0xC0` page exposes `Refresh Counts` at bytes `87:81` | `H/P` | Table 150; mirror custody caveat |
+| separate PM9D3a fields prove disjoint physical maintenance mechanisms | `X` | interface separation does not recover event-set relation |
+| `Lifetime` proves crash-consistent counter persistence | `X` | persistence/update protocol not disclosed |
+| `Refresh Counts` proves Case 36 or DRAM-refresh mechanism identity | `X` | terminology alone is insufficient |
+| physical read-disturb state resets at power-off | `X` | controller proxy and cell condition are distinct |
+| SK hynix invented read reclaim or ECC-margin-triggered relocation in 2017 | `X` | earlier MegaChips and Samsung evidence |
+| patent evidence proves a named commercial SK hynix SSD shipped the exact algorithm | `X` | design evidence is not deployment evidence |
+| logical payload can survive a controller-authorized change of physical embodiment | `E` | valid-value copy + mapping/currentness handoff |
+| a lossy maintenance proxy may support retention when reset is paired with conservative requalification | `E` | bounded reconstruction of disclosed composition |
+| cumulative maintenance telemetry is a summary rather than a complete causal history | `E` | counter interface does not encode full event trace |
+| this is equivalent to human memory, forgetting, or recollection | `X/I` | unsupported anthropomorphism |
 
 ## Philosophical interpretation — bounded
 
-This case adds one narrow pressure to the repository's vocabulary of technical retention:
+Case 67 supports a narrow systems statement:
 
-> **A system does not need to retain every causal trace in order to retain a usable object. It may preserve a deliberately compressed, even resettable maintenance proxy, provided that later requalification and repair work re-establish enough confidence before the physical margin is exhausted.**
+> **A system does not need to retain every causal trace in order to retain a usable object. It may preserve a deliberately compressed, even resettable maintenance proxy, provided that later requalification and repair re-establish enough confidence before physical margin is exhausted.**
 
-The MegaChips prior-art slice adds a related but separate point: a system may also retain **repair policy itself** — thresholds and coverage information that tell later observations when maintenance becomes actionable.
+The MegaChips evidence adds that a system may retain **repair policy itself** — thresholds and coverage information used to interpret later observations.
 
-That is an engineering relation, not a claim about human memory. It is useful because it separates **retaining the payload**, **retaining the physical condition**, **retaining evidence about what maintenance the payload may soon need**, and **retaining policy about how that evidence should be interpreted**.
+The PM9D3a product telemetry adds another downstream observation:
+
+> **What a system chooses to count is itself part of the control boundary. Separate summaries can preserve distinctions among maintenance regimes without preserving the full physical history or full firmware decision trace.**
+
+These are engineering interpretations, not claims about human memory or historical designer intent.
 
 ## Cross-case result
 
-Case 67 adds this chain:
+Case 67 now supports this chain:
 
 ```text
 correct read now
@@ -371,31 +418,37 @@ reclaim decision
     !=
 new physical embodiment
     !=
+management telemetry counter
+    !=
+complete maintenance history
+    !=
 secure erasure of the old embodiment
 ```
 
-Its strongest result remains that **controller-maintained risk history can be intentionally less durable than the medium state it approximates**, while still participating in a safe retention regime through conservative re-testing and relocation. The 2007-priority MegaChips evidence additionally shows that repair-policy metadata, repair evidence, scheduling opportunity, and physical rewrite were already separable controller concerns before the inspected `read reclaim` vocabulary appeared.
+Its strongest result remains that **controller-maintained risk history can be intentionally less durable than the medium state it approximates**, while safe retention can be rebuilt through conservative re-testing and relocation. The later Samsung telemetry evidence shows that management-visible maintenance accounting is another state layer and may distinguish reclaim, patrol-associated reclaim, and refresh without disclosing the mechanism relation among them.
 
 ## Prior art and anti-anachronism
 
 The 2017-priority SK hynix design is not the origin of read reclaim or proactive read-disturb repair.
 
-MegaChips's JP2008192267A / US20080189588A1 family, with **2007-02-07 priority** and public application texts in **August 2008**, already describes read-disturb / bit-error repair conditions based on read count or error evidence, ECC correction before rewrite, and block/page repair paths that can move data into unused physical space while updating storage-management information. It uses `repair`, `recovery`, and `rewrite` language rather than the later inspected `read reclaim` term.
+MegaChips `JP2008192267A / US20080189588A1`, with **2007-02-07 priority** and public application texts in **August 2008**, already describes read-disturb / bit-error repair conditions based on read count or error evidence, ECC correction before rewrite, and block/page repair paths that can move data into unused physical space while updating storage-management information. It uses `repair`, `recovery`, and `rewrite` rather than the later inspected `read reclaim` term.
 
-Samsung's US20100235713A1, with 2009 priority and 2010 publication, then explicitly describes an ECC circuit counting read-data error bits, a minimum threshold below the maximum correctable-error count, a `read reclaim` indication, and reassignment/change of the affected block before the data exceeds ECC capability.
+Samsung `US20100235713A1`, with 2009 priority and 2010 publication, explicitly describes an ECC circuit counting read-data error bits, a threshold below maximum correctable-error count, a `read reclaim` indication, and reassignment/change of the affected block before ECC capability is exceeded.
 
-Samsung's US20140237165A1, with 2013 priority and 2014 publication, separately describes controller read reclaim as copying data to another block, compares bit-error rate with a threshold, uses read voltage/retry state in the reclaim decision, and explicitly notes that reclaim adds erase/write work and can shorten device lifetime.
+Samsung `US20140237165A1`, with 2013 priority and 2014 publication, separately describes controller read reclaim as copying data to another block, compares bit-error rate with a threshold, uses read voltage/retry state in the decision, and notes that reclaim adds erase/write work and can shorten device life.
 
-Therefore the defensible chronology is narrower than an invention story:
+Therefore:
 
 ```text
 2007 priority / 2008 public   MegaChips: thresholded read-disturb repair + corrected rewrite / optional relocation
 2009 priority / 2010 public   Samsung: explicit read-reclaim indication below ECC limit + block reassignment
 2013 priority / 2014 public   Samsung: BER/read-voltage-qualified reclaim + endurance cost
 2017 priority / 2019 public   SK hynix: compressed proxy + adaptive test cadence + 3-D sampling + reclaim
+2018 product documentation    Samsung PM963: lifetime read-reclaim telemetry witness
+2024 product documentation    Samsung PM9D3a: lifetime reclaim + patrol-reclaim + refresh telemetry categories
 ```
 
-The key guardrails are:
+Guardrails:
 
 > **priority date ≠ public availability date**.
 
@@ -403,11 +456,27 @@ The key guardrails are:
 
 > **functional similarity ≠ demonstrated genealogy**.
 
-The source-supported SK hynix contribution remains narrower:
+> **telemetry label continuity ≠ algorithm continuity**.
 
-> **By the 2017-priority SK hynix design, 3-D NAND read-disturb maintenance was being formulated as a composition of compressed read-count tracking, adaptive test thresholds based on error evidence, 3-D neighborhood sampling, and conditional relocation/reclaim.**
+> **same word `refresh` ≠ same mechanism**.
 
-That is enough to deepen the retention comparison without an invention-priority or shipped-product claim.
+## Remaining evidence debt
+
+The case remains `grounded`; this round does not justify a maturity increase. Important open work includes:
+
+- exact shipped read-reclaim trigger logic in named products;
+- threshold values and ECC-margin criteria;
+- PM9D3a `Patrol Read Reclaim` firmware meaning and scan/cadence/coverage state;
+- PM9D3a `Refresh Counts` firmware meaning;
+- whether PM9D3a maintenance events increment more than one counter;
+- counter persistence/reset/format/sanitize/firmware-update/overflow semantics;
+- relocation atomicity and mapping/currentness handoff;
+- physical victim geometry in named products;
+- independent workload-to-telemetry validation;
+- an official Samsung-hosted PM9D3a detailed datasheet carrying the same tables;
+- firmware/product genealogy across PM963, PM9A3, and PM9D3a.
+
+A high-value next experiment would read PM9D3a `0xC4`, `0xD0`, and `0xC0` telemetry together across bounded sustained-read, idle/patrol, and power-cycle phases to see which counters move and what state survives reset.
 
 ## Sources
 
@@ -416,7 +485,10 @@ That is enough to deepen the retention comparison without an invention-priority 
 3. MegaChips family, **JP2008192267A, “Method of preventing bit error, and information processing device,”** filed/priority 7 February 2007, published 21 August 2008: <https://patents.google.com/patent/JP2008192267A/en>
 4. Samsung Electronics Co., Ltd., **US20100235713A1, “Non-volatile memory generating read reclaim signal and memory system,”** priority 12 March 2009, published 16 September 2010: <https://patents.google.com/patent/US20100235713A1/en>
 5. Samsung Electronics Co., Ltd., **US20140237165A1, “Memory controller, method of operating the same and memory system including the same,”** priority 19 February 2013, published 21 August 2014: <https://patents.google.com/patent/US20140237165A1/en>
+6. Samsung Electronics, **Samsung DC Toolkit 2.1 User Guide**, October 2018, PM963 reference output with `Lifetime read Reclaim count`: <https://download.semiconductor.samsung.com/resources/user-manual/Samsung_DCToolkit_V2.1_User_Guide.pdf>
+7. Samsung Electronics, **Samsung SSD PM9D3a Specification (PCIe NVMe U.2), Rev. 1.3, May 2024**, publicly reachable xFusion-hosted mirror; relevant Tables 148–150: <https://www.xfusion.com/wp-content/uploads/2025/11/PM9D3a-NVMe-U.2-Datasheet.pdf>. Source-custody caveat applies.
+8. Samsung Semiconductor, **Samsung's PM9D3a Solid State Drive**, manufacturer product/technical context: <https://semiconductor.samsung.com/news-events/tech-blog/samsung-pm9d3a-solid-state-drive/>.
 
 ## Related repositories
 
-A current repository search found no `JP2008192267`, `US8214720`, or `MegaChips read disturb` packet in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology). A broader history of MegaChips controller products, game-cartridge deployments, commercial controller families, product deployment, patent genealogy, and 3-D NAND generations belongs there if pursued; this case keeps the retention-specific relation between workload/error evidence, repair policy, maintenance scheduling, and re-embodiment here.
+A current search found no dedicated PM9D3a read-reclaim / patrol-reclaim packet in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology). Keep the retention-specific relation among workload/error evidence, reclaim/refresh maintenance categories, maintenance-counter persistence horizons, and re-embodiment here. Broader Samsung enterprise-SSD genealogy, controller-generation history, V-NAND generations, OCP/NVMe telemetry history, commercial deployment, and product-line archaeology belong in `computing-archaeology` rather than being duplicated here.
