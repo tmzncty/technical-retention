@@ -5,6 +5,7 @@
 - **Bounded primary system:** Amir Ban / M-Systems, U.S. Patent 5,404,485, **“Flash file system,”** filed 8 March 1993 and issued 4 April 1995.
 - **Earlier device context:** Fujio Masuoka et al., 1987 IEDM NAND-structure Flash EEPROM paper, used only to establish the emergence of dense NAND-structured nonvolatile Flash—not to project later SSD controller behavior backward into that device paper.
 - **Later boundary evidence:** ONFI 2.1 and a Samsung SSD technical white paper, used to show that program/erase endurance and page-write/block-erase asymmetry remain explicit engineering constraints in later NAND systems.
+- **Crash-recovery deepening:** 2008 PORCE and the directly inspected 2014 DCR paper are used to separate volatile working maps, durable recovery evidence, and reconstructed post-crash mapping authority. See [`evidence/04-2008-2014-ftl-power-off-crash-recovery-deepening.md`](../evidence/04-2008-2014-ftl-power-off-crash-recovery-deepening.md).
 - **Why this case matters for technical retention:** it is the first case in this repository where the identity presented to the user or operating system can remain stable **while the physical location embodying that identity changes deliberately**.
 
 This is **not** a general history of Flash memory, NAND, SSDs, wear leveling, TRIM, secure erase, or modern Flash Translation Layers. `computing-archaeology` already identifies ROM → PROM → EPROM → EEPROM → Flash and SSD/FTL history as technical bridges that should be built there.
@@ -194,6 +195,22 @@ This is **not** evidence that Ban's transfer-unit algorithm is identical to a mo
 - free erase units must be recreated;
 - maintenance itself causes additional physical writes.
 
+### H/P — DCR 2014 directly separates the volatile working map from durable recovery evidence
+
+The 2014 DAC paper **“Deterministic Crash Recovery for NAND Flash Based Storage Systems”** treats address mappings and related FTL metadata as direct crash-recovery objects. Its motivational example says FTL metadata is cached in RAM during normal processing and periodically flushed to a reserved area in flash. At power failure the newer in-RAM metadata can disappear, while restart begins from the last durable checkpoint.
+
+DCR then reconstructs the post-checkpoint mapping by combining that checkpoint with inspection of physical blocks/page spare metadata that could have changed after it. The implementation is a particular block-level FTL and should not be universalized to every SSD, but it directly closes the previous minimum evidence gap:
+
+```text
+latest volatile mapping state
+    !=
+latest durable checkpoint
+    !=
+final reconstructed mapping after restart
+```
+
+The physical payload and mapping/currentness evidence therefore have separable persistence paths. See the dedicated [2008–2014 power-off/crash-recovery deepening](../evidence/04-2008-2014-ftl-power-off-crash-recovery-deepening.md).
+
 ---
 
 ## Retained state
@@ -228,6 +245,8 @@ For this case, the retained user object is therefore not adequately described as
 A better bounded description is:
 
 > **data + a retained mapping relation that identifies which physical embodiment currently counts.**
+
+The crash-recovery deepening further separates the mapping relation's **volatile working representation** from durable checkpoint/on-flash evidence capable of reconstructing a new working map after restart. Exact survival of the old RAM data structure is therefore not required for logical-address continuity.
 
 ---
 
@@ -275,11 +294,25 @@ Thus some current state survives precisely because the system recreates it elsew
 
 The mapping and block-status information must itself survive or be reconstructible so the system can recover logical identity after restart.
 
+### Retention through recovery evidence
+
+The 2014 DCR evidence shows a later concrete arrangement in which the exact latest RAM map need not survive. A durable checkpoint plus newer on-flash evidence can be interpreted after restart to construct a fresh authoritative mapping.
+
+This means:
+
+```text
+runtime-state continuity
+    !=
+logical-identity continuity
+```
+
+provided that sufficient recovery evidence survives and the recovery algorithm can re-establish a consistent relation.
+
 The resulting persistence is not well described by a single adjective such as `nonvolatile`.
 
 It is:
 
-> **nonvolatile physical state + metadata-governed identity + relocation and reclamation procedures.**
+> **nonvolatile physical state + metadata-governed identity + relocation/reclamation procedures + crash-recoverable evidence.**
 
 ---
 
@@ -400,15 +433,17 @@ Old invalid physical locations need not be erased immediately after each logical
 
 Later NAND interfaces explicitly report finite program/erase endurance. Physical rewriting therefore has a cumulative lifetime cost even though individual retained states are nonvolatile.
 
+### Crash-recovery interval
+
+Power loss introduces another timescale: recovery begins from retained evidence that may lag the last in-RAM state. The work needed to re-establish current mappings is distinct from both long-term cell retention and ordinary reclaim cadence.
+
 The case therefore adds a new temporal pattern:
 
-> **maintenance can be deferred until space and erase constraints make it necessary.**
+> **maintenance can be deferred until space and erase constraints make it necessary, while crash recovery can be triggered abruptly by loss of volatile control state.**
 
 This is neither continuous maintenance, access-triggered restore, nor deadline-driven refresh.
 
-It is closer to **capacity-pressure / reclaim-triggered maintenance**.
-
-That term remains provisional until more Flash and SSD cases test it.
+Capacity-pressure / reclaim-triggered maintenance and failure-triggered reconstruction should therefore remain separate categories.
 
 ---
 
@@ -454,7 +489,7 @@ This case adds new, mechanism-specific failure modes.
 
 If data remain physically present but the metadata that identifies their current virtual address is lost or inconsistent, the system can lose **logical availability without immediate material destruction**.
 
-This is an engineering reconstruction from the patent's dependence on maps; the patent's startup-reconstruction procedure is itself evidence that mapping state is operationally necessary.
+The Ban patent makes mapping operationally necessary; the 2014 DCR paper now adds direct crash-recovery evidence that newer in-RAM FTL metadata can be lost on power failure while the system must reconstruct from a durable checkpoint and surviving on-flash state. This is no longer only a hypothetical reconstruction from the patent architecture.
 
 ### Logical invalidation without physical erasure
 
@@ -532,6 +567,32 @@ This suggests a useful cross-system question for later SSD and distributed-stora
 
 > how much apparently “unused” capacity is actually required to keep a changing retained state safely maintainable?
 
+### E — exact runtime-map continuity is not required for mapping continuity
+
+The DCR packet adds a distinct failure/recovery shape:
+
+```text
+old volatile map disappears
+    +
+last durable checkpoint survives
+    +
+newer on-flash traces survive
+    +
+recovery re-observes/replays bounded state
+        ->
+new authoritative runtime map
+```
+
+Therefore `mapping state persists` should not be read as “the same DRAM table survives power loss.” A stronger formulation is that **sufficient evidence for the mapping relation survives or is reconstructible**.
+
+It also follows that a checkpoint can be authoritative as a recovery base while still being older than the final recovered state:
+
+```text
+recovery starting authority
+    !=
+final current-state authority
+```
+
 ---
 
 ## Philosophical / media-theoretical interpretation
@@ -569,6 +630,12 @@ This may later sharpen discussions of technical availability, but it should **no
 
 Likewise, this machine-operational mapping layer should not automatically be called Stieglerian tertiary retention.
 
+### I — continuity can be recoverable rather than uninterrupted
+
+The crash-recovery evidence permits one additional, explicitly downstream interpretation: continuity of logical identity need not require uninterrupted survival of one control representation. It can instead depend on enough evidence surviving for a successor representation to be reconstructed under the system's rules.
+
+This is a project-level interpretation, not language attributed to the FTL researchers and not a universal theory of identity.
+
 ---
 
 ## Functional analogies and limits
@@ -590,6 +657,21 @@ But this case does **not** claim:
 The update sequence resembles copy-on-write in the limited sense that changed state is written to a new location before the reference is switched.
 
 But this is not a claim of genealogy or identical crash-consistency semantics.
+
+### A — checkpoint/replay patterns elsewhere
+
+The DCR arrangement has a controlled functional resemblance to journals, WALs, and other recovery systems that combine a durable recovery base with newer evidence and restart-time reconstruction.
+
+The safe comparison is only:
+
+```text
+stable recovery base
+    + newer durable evidence
+    + reconstruction work
+        -> restored operational state
+```
+
+This does **not** establish common genealogy, identical transaction semantics, or equivalent durability contracts across FTLs, filesystems, and databases.
 
 ### Limit — Flash is not one erase geometry
 
@@ -613,6 +695,10 @@ TRIM / DEALLOCATE / dataset-management semantics are not covered here. A future 
 - garbage collection;
 - media erase;
 - crypto-erase.
+
+### Limit — DCR is not a universal SSD firmware model
+
+The 2014 DCR prototype uses a specific block-level FTL and deterministic allocation assumptions. Its recovery structure is direct evidence that volatile mapping state and durable recovery evidence can be different objects; it is not evidence that every commercial SSD reconstructs mappings in the same way.
 
 ---
 
@@ -641,6 +727,10 @@ The new result is:
 
 > **retained identity can migrate while remaining current.**
 
+The crash-recovery deepening adds:
+
+> **retained identity can also survive loss of its exact volatile control representation when sufficient persistent recovery evidence can reconstruct a successor mapping.**
+
 The case also adds a distinct form of technical forgetting:
 
 > **logical invalidation can occur before physical erasure.**
@@ -666,7 +756,13 @@ These are engineering conclusions. Their philosophical significance should be te
 | Reclamation preserves active blocks by copying them before erasing the old unit | H/P | FIGS. 7–8 discussion + claim 1 |
 | Mapping metadata is itself retained / reconstructed system state | H/P/E | patent map-storage and startup-reconstruction discussion |
 | Later ONFI NAND reports finite program/erase endurance and ECC requirements | H/P | ONFI 2.1 parameter-page specification |
+| DCR 2014 explicitly caches FTL metadata in RAM and periodically flushes it to reserved flash | H/P | directly inspected DAC paper §2.3 |
+| DCR restart can begin from a durable checkpoint after newer in-RAM metadata is lost | H/P | DAC Figure 2 discussion |
+| DCR reconstructs newer mapping state by combining checkpoint state with bounded inspection of surviving on-flash evidence | H/P | DAC §2.3–§3.1 |
+| Exact survival of the old RAM mapping table is required for logical-address continuity | X | contradicted by DCR reconstruction path |
 | Stable logical identity can therefore survive deliberate physical relocation | E | direct reconstruction from mapping mechanism |
+| Physical payload survival automatically proves logical currentness after a crash | X | contradicted by mapping/currentness dependency |
+| FTL crash recovery is identical to NAND cell-retention physics | X | explicit category boundary |
 | Logical deletion is identical to physical erasure | X | contradicted by bounded patent sequence |
 | US 5,404,485 is identical to every modern SSD FTL | X | explicitly unsupported |
 | Flash mapping is automatically equivalent to Stieglerian tertiary retention or Heideggerian `Bestand` | X | explicitly unsupported |
@@ -684,7 +780,7 @@ Relevant entry points:
 - <https://github.com/tmzncty/computing-archaeology/tree/main/docs/memory>
 - <https://github.com/tmzncty/computing-archaeology/blob/main/AUDIT.md>
 
-This case should reuse that future work rather than become a duplicate SSD encyclopedia.
+A fresh search for `flash translation layer` and `NAND FTL power recovery` found no dedicated companion packet to reuse in this pass. The broader FTL/controller genealogy should still be built there rather than duplicated in this case.
 
 ### `tmzncty/problem-history`
 
@@ -706,17 +802,25 @@ The anti-anachronism rule is especially useful here. `FTL`, `garbage collection`
    - claim 1: unwritten-block write, remap, transfer, erase, remap sequence.
 2. Fujio Masuoka, Masaki Momodomi, Yoshihisa Iwata, Riichiro Shirota, **“New ultra high density EPROM and Flash EEPROM with NAND structure cell,”** *Technical Digest — International Electron Devices Meeting*, 1987, pp. 552–555. DOI: <https://doi.org/10.1109/IEDM.1987.191485>.
 3. Open NAND Flash Interface Working Group, **Open NAND Flash Interface Specification 2.1**, especially §5.6.1.21 `Block endurance`: <https://onfi.org/files/onfi_2_1_gold.pdf>.
+4. Tae-Sun Chung, Myungho Lee, Yeonseung Ryu, Kangsun Lee, **“PORCE: An efficient power off recovery scheme for flash memory,”** *Journal of Systems Architecture* 54(10), 2008, pp. 935–943. DOI: <https://doi.org/10.1016/j.sysarc.2008.03.007>. This pass inspected public metadata/abstract but not the original full article.
+5. Chi Zhang, Yi Wang, Tianzheng Wang, Renhai Chen, Duo Liu, Zili Shao, **“Deterministic Crash Recovery for NAND Flash Based Storage Systems,”** DAC 2014, 148:1–148:6. DOI: <https://doi.org/10.1145/2593069.2593124>. Institutional metadata: <https://research.polyu.edu.hk/en/publications/deterministic-crash-recovery-for-nand-flash-based-storage-systems/>. Public full-text mirror inspected: <https://picture.iczhiku.com/resource/ieee/wYiSoORpWfslrvmm.pdf>.
 
-### Later vendor boundary / engineering context
+### Later vendor / engineering boundary context
 
-4. Samsung Electronics, **“Over-Provisioning White Paper,”** 2019. Vendor explanation of page write / block erase asymmetry, migration of valid pages, garbage collection, and reserved free space: <https://download.semiconductor.samsung.com/resources/white-paper/S190311-SAMSUNG-Memory-Over-Provisioning-White-paper.pdf>.
+6. Samsung Electronics, **“Over-Provisioning White Paper,”** 2019. Vendor explanation of page write / block erase asymmetry, migration of valid pages, garbage collection, and reserved free space: <https://download.semiconductor.samsung.com/resources/white-paper/S190311-SAMSUNG-Memory-Over-Provisioning-White-paper.pdf>.
+7. Jong-Hyeok Park, Dong-Joo Park, Tae-Sun Chung, Sang-Won Lee, **“A Crash Recovery Scheme for a Hybrid Mapping FTL in NAND Flash Storage Devices,”** *Electronics* 10(3), 2021, 327. DOI: <https://doi.org/10.3390/electronics10030327>. Used as later peer-reviewed boundary evidence for PORCE protocol details and mapping-specific recovery differences.
 
-## Evidence gaps before `grounded`
+## Remaining evidence debt
+
+Case 04 remains `grounded`; this deepening closes the previous **minimum direct power-failure/reconstruction evidence gap** without promoting the case to a stronger maturity level.
+
+Still open:
 
 - inspect the official patent PDF directly and record printed page / figure / column anchors rather than relying only on HTML transcription;
 - obtain and inspect the full 1987 Masuoka IEDM paper rather than relying on bibliographic abstract text;
 - add an early manufacturer Flash / NAND datasheet that documents concrete page/program/block-erase semantics and endurance;
-- add a primary historical source that explicitly uses `Flash Translation Layer` terminology, so the vocabulary transition from Ban's `virtual map` to later FTL can be dated rather than inferred;
 - add a bounded early wear-leveling source instead of assuming reclamation equals wear leveling;
 - treat TRIM / deallocation / secure erase as a separate later case with standards-level evidence;
-- add power-failure / atomicity evidence before making claims about mapping-update crash consistency.
+- inspect the original PORCE 2008 full text so later-reported reclamation start/commit logging can be upgraded from H/S to page-anchored H/P evidence;
+- add a named shipping controller/SSD source for persistent mapping format or unsafe-power-loss rebuild behavior;
+- keep host FLUSH/FUA semantics, controller PLP, torn NAND program boundaries, and exact data-vs-map ordering as separate atomicity slices rather than pretending DCR proves a universal power-fail contract.
