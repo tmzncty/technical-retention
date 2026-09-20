@@ -11,6 +11,12 @@ This packet closes that narrow evidence gap with two generation-specific scholar
 
 It does **not** establish a universal QLC retention law, a named commercial SSD/controller policy, a direct replication of Luo et al.'s 2018 early-retention curve, or a QLC analogue of every TLC/MLC mechanism already covered by Case 65.
 
+### Follow-on navigation
+
+A 2025 follow-on now isolates a different QLC retention layer: the validity of the **accelerated-test time-conversion model** itself. See [`65-2025-qlc-retention-acceleration-model-boundary.md`](65-2025-qlc-retention-acceleration-model-boundary.md). That packet separates measured physical retention state from apparent-activation-energy calibration and inferred equivalent retention time. It is abstract-bounded and therefore does **not** close the full-text quantitative QLC debt listed below.
+
+Canonical Case 65 remains **`grounded`**; this follow-on changes the evidence decomposition, not the maturity label.
+
 ## Scope
 
 The question is deliberately narrow:
@@ -357,11 +363,17 @@ can now be narrowed to:
 
 > direct **QLC measurement exists** for retention-conditioned threshold/error/read-voltage behavior, but stronger cross-generation comparability, longer-horizon device-specific retention studies, named product/controller behavior, and direct testing of the 2018 early-retention / neighbor-conditioned curve in QLC remain open.
 
+The 2025 acceleration-model follow-on adds a separate conclusion:
+
+> **physical QLC retention behavior != accelerated-test time-conversion model != inferred equivalent retention lifetime.**
+
+It does not change the conclusion above or turn an abstract-level evidence base into full-text quantitative inspection.
+
 That distinction matters. It closes a minimal evidence-class gap without pretending the broader QLC problem is solved.
 
 ## Related-repository routing
 
-A fresh search of `tmzncty/computing-archaeology` for QLC NAND retention found no dedicated reusable packet.
+A fresh search of `tmzncty/computing-archaeology` for QLC NAND retention and the 2025 acceleration-model title found no dedicated reusable packet.
 
 The following broader topics should therefore remain there rather than being duplicated here:
 
@@ -369,16 +381,21 @@ The following broader topics should therefore remain there rather than being dup
 - vendor/process genealogy;
 - charge-trap versus floating-gate QLC product history;
 - SSD-controller adoption history;
-- BiCS / V-NAND / other product-line evolution; and
+- BiCS / V-NAND / other product-line evolution;
+- Arrhenius / multiple-activation-energy test-model genealogy; and
 - commercial deployment chronology for read-reference algorithms.
 
-This repository keeps only the retention-specific seam:
+This repository keeps only the retention-specific seams:
 
 ```text
 QLC retention/cycling condition
     -> threshold/error distribution
     -> best read boundary / offset
     -> logical recoverability relation
+
+physical retention observation
+    -> acceleration-model parameterization
+    -> inferred equivalent retention interval
 ```
 
 ## Remaining evidence debt
@@ -387,6 +404,7 @@ Direct QLC measurement is no longer the minimal open gap, but stronger evidence 
 
 - full-text inspection of the 2019 IMW experiment and exact device/test details;
 - full-text inspection of the 2024 EDTM experiment and exact numerical retention/read-offset curves;
+- full-text inspection of Yang et al. 2025, including the exact device/test population, temperature/cycle bins, apparent-`Ea` parameterization, error definition, and validation procedure;
 - directly comparable MLC/TLC/QLC experiments on the same platform and protocol;
 - named QLC device/vendor studies with long retention horizons;
 - QLC-specific early-retention curve measurements directly comparable with Luo et al. 2018;
@@ -401,3 +419,4 @@ Direct QLC measurement is no longer the minimal open gap, but stronger evidence 
 
 1. Kunliang Wang, Gang Du, Zhiyuan Lun, Xiaoyan Liu, **“The Method of Predicting Retention Threshold Voltage Distribution for NAND Flash Memory Based on Back-Propagation Neural Network,”** *2019 IEEE 11th International Memory Workshop (IMW)*, 2019, DOI `10.1109/IMW.2019.8739277`. Peking University institutional repository record: <https://ir.pku.edu.cn/handle/20.500.11897/544481>; IEEE record: <https://ieeexplore.ieee.org/document/8739277/>.
 2. M. Dean Sciacca, Trinadhachari Kosuru, Nikolaos Papandreou, **“Cycling Condition Impacts on 3D QLC NAND Reliability,”** *2024 8th IEEE Electron Devices Technology & Manufacturing Conference (EDTM)*, 3 March 2024, DOI `10.1109/EDTM58488.2024.10511536`. IBM Research publication record: <https://research.ibm.com/publications/cycling-condition-impacts-on-3d-qlc-nand-reliability>.
+3. Shaoqi Yang, Meng Zhang, Xuepeng Zhan, Peng Guo, Xiaohuan Zhao, Guangkuo Yang, Xinyi Guo, Jixuan Wu, Fei Wu, Jiezhi Chen, **“Retention Accelerated Testing for 3-D QLC NAND Flash Memory: Characterization, Analysis, and Modeling,”** *IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems* 44(7), 2025, pp. 2779–2788, DOI `10.1109/TCAD.2025.3526055`; follow-on evidence: [`65-2025-qlc-retention-acceleration-model-boundary.md`](65-2025-qlc-retention-acceleration-model-boundary.md).
