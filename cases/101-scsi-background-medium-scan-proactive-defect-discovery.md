@@ -2,7 +2,7 @@
 
 ## Scope
 
-- **Object / system:** T10 SCSI Background Medium Scan (BMS) and related Background Pre-Scan controls, now bounded backward by an IBM 2001-filed / 2002-published controller-level media-scanner disclosure and a Seagate December-2003 drive-side BGMS/pre-scan filing, then through the March 2005 T10 approval, January 2006 clarification work, an April 2005 Dell PERC controller-level `Patrol Read` witness, February/March 2006 generic LSI MegaRAID documentation, a February 2007 Seagate Cheetah 15K.5 FC product witness, and later bounded vendor/controller comparisons.
+- **Object / system:** T10 SCSI Background Medium Scan (BMS) and related Background Pre-Scan controls, now bounded backward by the 1986 SCSI `VERIFY` command, a 1995 named-drive implementation, a June-1996 Adaptec host-adapter media-scan workflow, an IBM 2001-filed / 2002-published controller-level media-scanner disclosure, and a Seagate December-2003 drive-side BGMS/pre-scan filing, then through the March 2005 T10 approval, January 2006 clarification work, an April 2005 Dell PERC controller-level `Patrol Read` witness, February/March 2006 generic LSI MegaRAID documentation, a February 2007 Seagate Cheetah 15K.5 FC product witness, and later bounded vendor/controller comparisons.
 - **Retention question:** what work is required when a disk sector may still physically exist and remain addressable, yet its future readability has become uncertain before any application happens to request it?
 - **Status:** `grounded`.
 
@@ -10,10 +10,11 @@ This is **not** a general history of disk scrubbing, SCSI VERIFY, SMART, RAID-co
 
 > **How can a storage device proactively discover that a still-present block has become difficult or impossible to read, retain evidence of that discovery, and condition later repair without confusing detection with repair?**
 
-The project terms `readability qualification`, `coverage age`, `repair admissibility`, and `maintenance evidence` below are **engineering reconstructions**, not T10, Seagate, Dell, LSI, or IBM historical vocabulary.
+The project terms `readability qualification`, `coverage age`, `repair admissibility`, and `maintenance evidence` below are **engineering reconstructions**, not T10, Seagate, Dell, LSI, IBM, or Adaptec historical vocabulary.
 
 Bounded deepenings:
 
+- [`../evidence/101-1986-1996-scsi-verify-host-sweep-prior-art-deepening.md`](../evidence/101-1986-1996-scsi-verify-host-sweep-prior-art-deepening.md) — pre-BMS command/host-sweep floor: 1986 SCSI `VERIFY`, a 1995 Seagate named-drive implementation, and June-1996 Adaptec `Verify Disk Media`; separates a verification primitive, host/operator scan policy, durable coverage/history state, and repair authority without claiming genealogy into later BMS/Patrol Read;
 - [`../evidence/101-ibm-2001-seagate-2003-background-media-scan-prior-art-deepening.md`](../evidence/101-ibm-2001-seagate-2003-background-media-scan-prior-art-deepening.md) — direct pre-2005 primary prior-art floor: IBM controller/RAID-controller background scanner publicly disclosed by December 2002, plus a December-2003 Seagate drive-side BGMS/pre-scan design record; filing/publication/standardization and functional-similarity/genealogy boundaries are kept separate;
 - [`../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md`](../evidence/101-dell-2005-2006-perc-patrol-read-controller-deepening.md) — Dell PERC controller-level maintenance locus, RAID-state-dependent repair, and NVRAM maintenance-state horizons;
 - [`../evidence/101-lsi-dell-2003-2006-patrol-read-documentation-lineage-deepening.md`](../evidence/101-lsi-dell-2003-2006-patrol-read-documentation-lineage-deepening.md) — 2003–2006 documentation chronology, April-2005 public-floor tightening, generic LSI witness, and Dell/LSI source-lineage weighting.
@@ -40,15 +41,42 @@ The inspected T10 and Seagate sources directly use terms including:
 - `unreadable` / `medium error`;
 - `P-list` / `G-list` in the Seagate product manual.
 
+The earlier SCSI/host-utility witnesses add period terms including `VERIFY`, `BytChk`, and Adaptec `Verify Disk Media`. A 1995 Seagate product manual uses `Verify command (2FH)` for a drive-side operation that can check ECC syndromes without initiator-data comparison. These are not silently renamed `Background Medium Scan`.
+
 The earlier IBM patent uses `background media surface scanner`, `predictive media failure analysis`, `proactive media defect management`, and written-region indicators. The December-2003 Seagate filing explicitly uses `background media scan (BGMS)`, `pre-scan`, `LOG SENSE`, `LOG SELECT`, and `WRITE AND VERIFY`. These terms are historical vocabulary in those particular records; similarity to later T10 vocabulary does not by itself prove textual or implementation genealogy.
 
 The bounded Dell/LSI controller witnesses add period vendor terms including `Background Patrol Read`, `Patrol Read`, `Patrol Read Mode`, `Patrol Read Status`, `Patrol Read Control`, `Auto`, `Manual`, `Manual Halt`, `Disable`, `Consistency Check`, `SMART alerts`, and the `MegaPR` utility. Later Dell support documentation additionally exposes `PR completed Bitmap`, `Last complete Bitmap`, scheduling state, and NVRAM-held error information for the legacy implementation family.
 
-Do not silently normalize IBM `media surface scanner`, Seagate `BGMS`, T10 `Background Medium Scan`, Dell/LSI `Patrol Read`, later vendor-specific patrol terminology, filesystem `scrub`, or distributed `scanner` vocabulary into one historical term. Those terms can be compared functionally but do not establish one lineage.
+Do not silently normalize SCSI `VERIFY`, Adaptec `Verify Disk Media`, IBM `media surface scanner`, Seagate `BGMS`, T10 `Background Medium Scan`, Dell/LSI `Patrol Read`, later vendor-specific patrol terminology, filesystem `scrub`, or distributed `scanner` vocabulary into one historical term. Those terms can be compared functionally but do not establish one lineage.
 
 ---
 
 ## Historical record
+
+### H/P — SCSI VERIFY and a 1996 host-adapter utility establish an earlier command-driven verification floor
+
+ANSI X3.131-1986 already defines an optional direct-access `VERIFY` command (`2Fh`) that asks a target to verify a specified logical-block range. The indexed standard text distinguishes medium verification such as CRC/ECC (`BytChk=0`) from initiator-data comparison (`BytChk=1`). A named Seagate Medalist 1080sl product manual from August 1995 documents the same command and explicitly says its no-byte-compare path verifies data by checking ECC syndromes.
+
+Adaptec's AHA-1520B Installation Guide, Rev. A / June 1996, then exposes a human-invoked `Verify Disk Media` workflow in `SCSISelect`: the operator selects a SCSI disk, the utility scans the medium for defects, and if bad blocks are found the operator is prompted whether to reassign them.
+
+This closes a bounded pre-BMS command/host-sweep gap without turning the earlier interface into an autonomous background scanner:
+
+```text
+verification primitive / operator sweep
+    != autonomous background scheduler
+    != retained progress or maintenance history
+    != automatic repair
+```
+
+It also preserves a content boundary:
+
+```text
+medium / ECC verification
+    != independent application-level proof
+       that the payload is semantically current
+```
+
+Detailed record: [`../evidence/101-1986-1996-scsi-verify-host-sweep-prior-art-deepening.md`](../evidence/101-1986-1996-scsi-verify-host-sweep-prior-art-deepening.md).
 
 ### H/P — T10 standardized an already-existing function rather than claiming to invent background scanning
 
@@ -86,31 +114,32 @@ Detailed record: [`../evidence/101-ibm-2001-seagate-2003-background-media-scan-p
 
 ### H/P — maintenance locus was already plural before T10 BMS
 
-The IBM disclosure explicitly permits controller/RAID-controller/host-side scanning, while the 2003 Seagate filing describes self-initiated drive-side BGMS. These are direct early counterexamples to the assumption that `background media scanning` names one fixed system locus.
+The earlier `VERIFY`/SCSISelect witnesses show host/operator-triggered verification; the IBM disclosure explicitly permits controller/RAID-controller/host-side scanning; and the 2003 Seagate filing describes self-initiated drive-side BGMS. These are direct counterexamples to the assumption that proactive media verification names one fixed system locus.
 
 ```text
-host / software maintenance
+host / operator-triggered maintenance
     != controller / RAID-controller maintenance
-    != drive-internal maintenance
+    != drive-internal autonomous maintenance
 ```
 
 The shared function does not imply identical traffic, redundancy knowledge, repair authority, state persistence, or scheduling.
 
 ### H/P — early records already separate traversal progress, maintenance metadata, and repair
 
-IBM describes written-region indicators, scan selection, error/reallocation tracking, and optional RAID reconstruction; Seagate separately exposes current scan progress plus finite error-log state through `LOG SENSE` / `LOG SELECT`.
+The 1996 Adaptec utility already separates defect discovery from an operator decision to reassign. IBM later describes written-region indicators, scan selection, error/reallocation tracking, and optional RAID reconstruction; Seagate separately exposes current scan progress plus finite error-log state through `LOG SENSE` / `LOG SELECT`.
 
-Thus before the 2005 T10 interface, primary records already support:
+Thus before the 2005 T10 interface, primary records support several distinct layers:
 
 ```text
 user payload
+    != verification request / coverage action
     != coverage / traversal state
     != maintenance metadata / error evidence
     != repair authority
     != repair completion
 ```
 
-Seagate's finite log may wrap, so retained maintenance evidence is not automatically a complete lifetime history. Clearing that log is not physical sanitization.
+The 1986 `VERIFY` primitive by itself does not establish durable traversal/history state. Seagate's later finite log may wrap, so retained maintenance evidence is not automatically a complete lifetime history. Clearing that log is not physical sanitization.
 
 ### H/P — device-side BMS relocates maintenance work without consuming ordinary SCSI-interface bandwidth
 
@@ -303,6 +332,8 @@ Enable bits, interval, idle-time policy, pre-scan controls, suspend/resume state
 
 This state is not user payload.
 
+The earlier SCSI `VERIFY` command is a useful counterexample: the target can provide a verification primitive without retaining the higher-level decision that a scan is due or a durable whole-device traversal frontier. Adaptec's 1996 utility keeps that invocation policy on the host/operator side.
+
 ### 4. Readability / defect evidence
 
 Recovered errors, unreadable blocks, suspected-bad-block entries, and reassignment status record what a scan learned and whether additional action may be required.
@@ -315,7 +346,7 @@ The earlier Seagate filing strengthens this boundary by showing a finite log tha
 
 `ARRE/AWRE` determine whether certain automatic relocation paths are permitted. The actual availability of replacement capacity, the ability to recover the old payload, and successful completion of reassignment remain distinct from those permission bits.
 
-The earlier IBM RAID-controller embodiment further shows that redundancy-assisted reconstruction can be a separate repair authority from drive-local read recovery.
+The earlier IBM RAID-controller embodiment further shows that redundancy-assisted reconstruction can be a separate repair authority from drive-local read recovery. The 1996 Adaptec utility supplies an earlier host-operator version of the same separation: discovery can produce a prompt to reassign rather than silently implying that reassignment already happened.
 
 ### 6. Controller-level maintenance summary and recurrence state
 
@@ -357,7 +388,7 @@ A medium error discovered at time `t2` may have been created at some unknown ear
 
 > **scan completion ≠ timeless readability certificate.**
 
-Likewise, a retained schedule or recent completion bitmap does not necessarily retain the exact LBA/frontier required to continue an interrupted controller scan without repeating work. A patent filing date does not by itself establish public availability or shipment, and a host utility published at one date does not date the underlying controller capability to that same day.
+Likewise, a successful host-issued `VERIFY` range says nothing by itself about when some other range was last checked, when a full-device sweep is due, or whether a whole-device completion record exists. A retained schedule or recent completion bitmap does not necessarily retain the exact LBA/frontier required to continue an interrupted controller scan without repeating work. A patent filing date does not by itself establish public availability or shipment, and a host utility published at one date does not date the underlying controller capability to that same day.
 
 ---
 
@@ -368,6 +399,8 @@ Keep these separate:
 - sector remains physically present but becomes harder to read;
 - a recovered error is observed;
 - a sector becomes unreadable;
+- host/operator never invokes an available verification utility;
+- a selected `VERIFY` range succeeds while unverified ranges remain unknown;
 - BMS is disabled, delayed, or repeatedly preempted;
 - scan-result logging fills or is unavailable;
 - a finite earlier error log wraps and overwrites older maintenance evidence;
@@ -393,9 +426,9 @@ Calling all of these `disk failure` or `feature history` would lose the relation
 Case 101 is upstream of Case 14 in one possible maintenance path:
 
 ```text
-proactive read
+proactive read / VERIFY
     -> difficult/unreadable evidence
-    -> logged / qualified defect
+    -> logged / qualified defect or host prompt
     -> optional repair or later write-time relocation
     -> reassignment / replacement embodiment
 ```
@@ -408,10 +441,11 @@ The IBM and Dell controller witnesses add controller-level branches in which red
 
 ### Case 18 — ZFS scrub
 
-BMS/PERC Patrol Read and ZFS scrub proactively read state before ordinary demand exposes a fault, but they qualify different relations.
+SCSI VERIFY/BMS/PERC Patrol Read and ZFS scrub proactively read state before ordinary demand exposes a fault, but they qualify different relations.
 
-- BMS is device-local medium readability/recovery work under a SCSI drive interface.
-- PERC/MegaRAID Patrol Read is controller-orchestrated media verification with RAID-aware repair context.
+- host-initiated SCSI `VERIFY` qualifies a bounded target-selected medium range without itself supplying a recurring maintenance policy;
+- BMS is device-local medium readability/recovery work under a SCSI drive interface;
+- PERC/MegaRAID Patrol Read is controller-orchestrated media verification with RAID-aware repair context;
 - ZFS scrub is filesystem/pool-level checksum and redundancy verification with end-to-end block identity and repair semantics.
 
 A disk sector can be readable while the filesystem block is semantically/checksum wrong; a filesystem checksum can also identify bad content without explaining the physical-sector defect mechanism.
@@ -430,9 +464,9 @@ A warning/counter may indicate risk without proving which particular block is un
 
 ### Case 83 / Synthesis 08 — HDFS and distributed integrity maintenance
 
-HDFS BlockScanner and GFS idle checking show proactive integrity discovery at the distributed replica layer. BMS shows a device-local function; PERC/MegaRAID Patrol Read adds a controller-level array function between that layer and a filesystem/distributed checker.
+HDFS BlockScanner and GFS idle checking show proactive integrity discovery at the distributed replica layer. BMS shows a device-local function; PERC/MegaRAID Patrol Read adds a controller-level array function between that layer and a filesystem/distributed checker. Earlier SCSI VERIFY adds a lower-policy primitive in which the host can request testing without the target necessarily retaining a recurrence obligation.
 
-The shared functional pattern is `background verification before demand`. It does not establish an IBM/T10/PERC/MegaRAID→HDFS/GFS genealogy, identical integrity semantics, or identical repair authority.
+The shared functional pattern is `verification before ordinary demand`. It does not establish an ANSI/Adaptec/IBM/T10/PERC/MegaRAID→HDFS/GFS genealogy, identical integrity semantics, or identical repair authority.
 
 ### Case 111 — evidence/source-lineage weighting
 
@@ -450,7 +484,7 @@ The Dell PERC evidence provides a bounded controller example in which NVRAM-held
 
 > **maintenance-control persistence horizon ≠ maintenance-execution persistence horizon.**
 
-The earlier IBM disclosure shows nonvolatile placement as an architectural option for scanner program/metadata, while the Seagate filing shows traversal and finite log state as distinct objects. Neither earlier patent proves the Dell PERC exact restart behavior, and the comparison remains functional rather than genealogical.
+The earlier `VERIFY` witness adds the opposite limiting case: a verification operation can exist without the inspected interface itself retaining a recurrence schedule or whole-device progress history. The IBM disclosure shows nonvolatile placement as an architectural option for scanner program/metadata, while the Seagate filing shows traversal and finite log state as distinct objects. None of these earlier records proves the Dell PERC exact restart behavior, and the comparison remains functional rather than genealogical.
 
 ---
 
@@ -466,23 +500,24 @@ This case makes **no invention-priority claim** for:
 - filesystem scrub;
 - distributed checksum scanning.
 
-`04-198r5` itself says proprietary drive methods and operating-system scanning already existed. That statement is now backed by direct earlier primary evidence: IBM's controller/host-capable media scanner was publicly disclosed in December 2002, and Seagate had filed a drive-side BGMS/pre-scan design by December 2003. The latter filing became public only in August 2005, so it is a pre-standardization design record rather than a pre-vote public-document floor.
+The prior-art floor is now layered rather than one date. ANSI X3.131-1986 provides an early standardized **host-initiated verification primitive**; a 1995 Seagate manual provides a named-drive implementation witness; and Adaptec's June-1996 `Verify Disk Media` utility gives a named operator-invoked media-scan workflow with a separate reassignment decision. IBM's controller/host-capable autonomous scanner was publicly disclosed in December 2002, and Seagate had filed a drive-side BGMS/pre-scan design by December 2003. The latter filing became public only in August 2005, so it is a pre-standardization design record rather than a pre-vote public-document floor.
 
-These records close the bounded debt `obtain direct pre-2005 primary evidence for proactive media scanning`, but they do not identify the first-ever implementation, first shipment, or one proven genealogy into T10.
+`04-198r5` itself says proprietary drive methods and operating-system scanning already existed. The 1986–1996 witnesses directly support the broader proposition that host-triggered verification predates BMS, while the 2001–2003 records directly support richer controller/drive background-scan state machines. None identifies the first-ever implementation, first shipment, or one proven genealogy into T10.
 
 The March 2005 plenary evidence establishes a standards-inclusion decision, not invention. The April 2005 Dell manual moves the named PERC public-document floor earlier than the June MegaPR utility release, but neither artifact establishes first firmware implementation or invention. IBM's 2002 disclosure provides an earlier generic controller-level mechanism floor without back-dating the specific term `Patrol Read`. The 2007 Seagate manual establishes one drive-side product witness, not universal adoption.
 
-The broader ROADMAP phrase `controller patrol-read history` therefore remains partly open, but three bounded gaps are now closed:
+The broader ROADMAP phrase `controller patrol-read history` therefore remains partly open, but four bounded gaps are now closed:
 
+- **standardized host-initiated SCSI medium verification exists by ANSI X3.131-1986, with a named Seagate implementation by August 1995 and a named Adaptec whole-disk verification utility by June 1996**;
 - **generic controller/RAID-controller proactive media scanning is directly public in the IBM record by December 2002**;
 - **named Dell PERC 4/Di/Si-family Patrol Read documentation exists by April 2005**;
 - **generic LSI MegaRAID Patrol Read documentation exists in the February/March 2006 Version 2.0 manual**, while the inspected February 2003 Version 1.0 manual documents Consistency Check but contains no Patrol Read text match.
 
-The second and third statements are documentation chronologies, not implementation chronologies. Dell and LSI should also not be counted naively as independent vendor lineages because period Dell records explicitly expose LSI Logic / MegaRAID provenance around the relevant controller family.
+The latter two statements are documentation chronologies, not implementation chronologies. Dell and LSI should also not be counted naively as independent vendor lineages because period Dell records explicitly expose LSI Logic / MegaRAID provenance around the relevant controller family.
 
-A full history still needs earlier SCSI VERIFY/host sweep evidence, named IBM product/firmware evidence practicing the 2001 patent family, Seagate product/release evidence between the December 2003 filing and T10 work, pre-April-2005 Dell/LSI firmware/release-note chronology, model-specific OEM/retail controller lineage, IBM ServeRAID and genuinely independent controller vendors, cross-vendor parity consistency-check distinctions, and evidence about how `patrol read` terminology moved across vendors.
+The bounded `earlier SCSI VERIFY / host-sweep evidence` debt is now closed at a minimum-evidence level. A full history still needs SASI/pre-SCSI verification genealogy, first SCSI-drive implementation, any earlier 1980s host sweep utilities, exact Adaptec SCSISelect command traces, named IBM product/firmware evidence practicing the 2001 patent family, Seagate product/release evidence between the December 2003 filing and T10 work, pre-April-2005 Dell/LSI firmware/release-note chronology, model-specific OEM/retail controller lineage, IBM ServeRAID and genuinely independent controller vendors, cross-vendor parity consistency-check distinctions, and evidence about how `verify`, `scrub`, `patrol read`, and `scan` terminology moved across vendors.
 
-A fresh repository search found no dedicated `US6922801` / SCSI BMS / patrol-read history in `tmzncty/computing-archaeology`. If that broader engineering genealogy is built later, it should live there and Case 101 should remain the retention-specific prior-art/BMS/controller boundary.
+Fresh companion-repository searches found no dedicated `VERIFY`, `US6922801`, SCSI BMS, or patrol-read history in `tmzncty/computing-archaeology`. If that broader engineering genealogy is built later, it should live there and Case 101 should remain the retention-specific command/policy/BMS/controller boundary.
 
 ---
 
@@ -605,9 +640,13 @@ Case 101 adds these controlled relations:
 26. `patent filing date ≠ patent publication date ≠ standards approval date ≠ product shipment date`;
 27. `generic controller-level scan mechanism ≠ named-product Patrol Read terminology`;
 28. `finite maintenance log ≠ complete lifetime maintenance history`;
-29. `maintenance locus ≠ maintenance function` — host, controller, and drive can perform functionally similar pre-demand verification without sharing implementation or authority.
+29. `maintenance locus ≠ maintenance function` — host, controller, and drive can perform functionally similar pre-demand verification without sharing implementation or authority;
+30. `verification primitive ≠ maintenance scheduler`;
+31. `operator-selected host sweep ≠ autonomous background scan`;
+32. `successful range verification ≠ durable whole-device coverage certificate`;
+33. `medium/ECC verification ≠ independent semantic payload comparison`.
 
-These are project analytical statements unless a distinction is explicitly marked above as historical vocabulary. They are not assertions that IBM, T10, Dell, LSI, Seagate, or Western Digital engineers used this ontology.
+These are project analytical statements unless a distinction is explicitly marked above as historical vocabulary. They are not assertions that ANSI, Adaptec, IBM, T10, Dell, LSI, Seagate, or Western Digital engineers used this ontology.
 
 ---
 
@@ -615,7 +654,9 @@ These are project analytical statements unless a distinction is explicitly marke
 
 Case 101 strengthens a narrow theme already visible in Synthesis 08: some retention work is **epistemic maintenance**. A physical embodiment can remain present while the system's justified confidence in its future readability decays because no recent operation has exercised it. A background scan creates new evidence by deliberately reading before application demand forces the question.
 
-The IBM/Seagate prior-art deepening shows that this epistemic relation was already coupled to concrete control structures before T10 standardization: workload gates, selected coverage, traversal position, written-region metadata, finite error logs, redundancy-aware reconstruction, and pre-scan-dependent write semantics. That does not make the patents a single genealogy; it shows that `verification` was already an engineered state machine rather than an abstract idea.
+The pre-BMS slice adds a limiting case: a machine can possess the **ability to generate fresh verification evidence** without itself retaining an autonomous obligation to perform that work or durable proof that a whole-device pass occurred. Thus `ability to test != retained schedule to test != retained evidence that testing occurred`.
+
+The IBM/Seagate prior-art deepening shows that this epistemic relation was later coupled to richer control structures before T10 standardization: workload gates, selected coverage, traversal position, written-region metadata, finite error logs, redundancy-aware reconstruction, and pre-scan-dependent write semantics. That does not make the witnesses a single genealogy; it shows that `verification` can be distributed across command primitives, host policy, controller state, and drive-internal state machines.
 
 The Dell controller comparison adds another bounded point: a system can retain evidence that maintenance is due, recently completed, or encountered errors without retaining an exact continuation point for the interrupted act itself. The `obligation/history` relation and the `execution frontier` are different retained objects.
 
@@ -631,8 +672,9 @@ Still open:
 
 - full archival reconstruction of `04-198r0` through `r4` and every CAP change;
 - exact final SBC-3/SPC-4 publication wording and later revision genealogy;
-- host-initiated SCSI VERIFY scrub history before device-side BMS;
-- pre-2001 controller/vendor proactive-scan implementation evidence;
+- SASI / pre-SCSI verification genealogy and first product implementation of SCSI `VERIFY`;
+- earlier 1980s host utilities that systematically swept disks, if any, plus exact Adaptec SCSISelect CDB traces across device families;
+- pre-2001 **autonomous** controller/vendor proactive-scan implementation evidence beyond the now-grounded host-invoked verification floor;
 - named IBM product/firmware evidence tying US09/872,386 to a shipped controller;
 - Seagate product/release evidence between the December 2003 filing and the 2005 T10 process;
 - direct T10 contribution/prosecution evidence for or against patent-to-standard clause genealogy;
@@ -648,7 +690,7 @@ Still open:
 - exact persistence of legacy PERC NVRAM Patrol Read fields across controller replacement, NVRAM loss/corruption, and firmware transition;
 - lower-layer forensic persistence after reassignment or logical retirement.
 
-The direct pre-2005 mechanism floor is now partially closed by IBM 2001/2002 and Seagate 2003 evidence; earliest-ever practice, shipping implementations, and detailed genealogy remain open.
+The direct pre-2005 mechanism floor is now layered: 1986–1996 evidence closes host-initiated verification at a minimum-evidence level; IBM 2001/2002 and Seagate 2003 separately close richer controller/drive background-scan mechanisms. Earliest-ever practice, exact implementation genealogy, and broad shipping chronology remain open.
 
 These limits do not block the bounded result.
 
@@ -658,11 +700,11 @@ These limits do not block the bounded result.
 
 ### `tmzncty/computing-archaeology`
 
-Repository search found no dedicated `US6922801`, SCSI BMS, or patrol-read case at the time of this slice. Case 101 therefore keeps only the retention-specific historical boundary, maintenance-state decomposition, and source-provenance warning. A broader history of IBM/Seagate controller and drive development, host scrubbing, SCSI VERIFY, LSI/MegaRAID/PERC/ServeRAID genealogy, patent lineage, and consistency checking should be developed there and linked back rather than duplicated here.
+Fresh repository searches found no dedicated SCSI `VERIFY`, `US6922801`, SCSI BMS, or patrol-read case at the time of this slice. Case 101 therefore keeps only the retention-specific historical boundary, maintenance-state decomposition, and source-provenance warning. A broader history of SASI/SCSI command evolution, Adaptec host-adapter diagnostics, IBM/Seagate controller and drive development, host scrubbing, LSI/MegaRAID/PERC/ServeRAID genealogy, patent lineage, and consistency checking should be developed there and linked back rather than duplicated here.
 
 ### `tmzncty/problem-history`
 
-Useful anti-anachronism guardrail: `readability qualification`, `coverage age`, `maintenance evidence`, `maintenance-control persistence horizon`, `documentation floor`, and `source-lineage independence` are project reconstructions. Historical actors in the bounded sources spoke of background media surface scanner, proactive media defect management, BGMS, pre-scan, BMS, Patrol Read, Patrol Read Mode/Status/Control, Auto/Manual/Manual Halt/Disable, Consistency Check, SMART, recovered/unreadable errors, ARRE/AWRE, log pages, reassignment status, NVRAM, and completion bitmaps.
+Useful anti-anachronism guardrail: `readability qualification`, `coverage age`, `maintenance evidence`, `maintenance-control persistence horizon`, `documentation floor`, and `source-lineage independence` are project reconstructions. Historical actors in the bounded sources spoke of `VERIFY`, `BytChk`, `Verify Disk Media`, background media surface scanner, proactive media defect management, BGMS, pre-scan, BMS, Patrol Read, Patrol Read Mode/Status/Control, Auto/Manual/Manual Halt/Disable, Consistency Check, SMART, recovered/unreadable errors, ARRE/AWRE, log pages, reassignment status, NVRAM, and completion bitmaps.
 
 ---
 
@@ -670,6 +712,10 @@ Useful anti-anachronism guardrail: `readability qualification`, `coverage age`, 
 
 ### Primary / contemporary
 
+- National Bureau of Standards, **NBS FIPS 131 — Small Computer System Interface (SCSI)**, 1986, reproducing ANSI X3.131-1986; NIST bibliographic record and DOI `10.6028/NBS.FIPS.131`: <https://pages.nist.gov/NIST-Tech-Pubs/bib/NBS.FIPS.131.ris>
+- T10/X3T9.2, **SCSI history / standards archive**, identifying SCSI-1 as X3.131:1986 and the later SCSI-2 revision chronology: <https://www.t10.org/x3t9_2.htm>
+- Seagate, **_Medalist 1080sl SCSI Product Manual_**, August 1995, §3.5.6 `Verify command (2FH)`. Surviving searchable vendor-manual transcription: <https://manualzilla.com/doc/7322090/seagate-medalist-1080sl-product-manual>
+- Adaptec, **_AHA-1520B Installation Guide_**, Part `511162-00`, Rev. A, June 1996; `Verify Disk Media` on p. 9 and publication metadata on p. 16. Surviving page transcriptions: <https://adaptec.manymanuals.com/camera-accessories/1520b-aha-storage-controller-fast-scsi-10-mbps/installation-guide-42358/9> and <https://adaptec.manymanuals.com/camera-accessories/1520b-aha-storage-controller-fast-scsi-10-mbps/installation-guide-42358/16>
 - IBM / John Edward Archibald, Jr. and Brian Dennis McKean, **_Storage media scanner apparatus and method providing media predictive failure analysis and proactive media surface defect management_**, US09/872,386, filed 1 June 2001; published as US20020184580A1 on 5 December 2002; later US6922801B2: <https://patents.google.com/patent/US6922801B2/en>
 - LSI Logic, **_MegaRAID Configuration Software User's Guide_**, DB15-000269-00, Version 1.0 / First Edition, February 2003. Surviving searchable PDF mirror: <https://www.manuallib.com/download/pdf0/LSILOGIC-MEGARAID-CONFIGURATION-SOFTWARE-USER-GUIDE.PDF>
 - Seagate / Mark Gaertner, Xiaoying Li, David A. Anderson, **_Background media scan for recovery of data errors_**, US10/740,886, filed 18 December 2003; published as US20050188238A1 on 25 August 2005; later US7490261B2: <https://patents.google.com/patent/US7490261B2/en>
@@ -685,6 +731,7 @@ Useful anti-anachronism guardrail: `readability qualification`, `coverage age`, 
 
 ### Later vendor continuity / implementation detail
 
+- IBM, **Adaptec SCSI adapter / SCSISelect support record**, later institutional corroboration of `Verify Disk Media` utility vocabulary: <https://www.ibm.com/support/pages/node/844896>
 - Dell, **Patrol ReadによるRAIDアレイのメンテナンス**, document `000129145`, version 7, last updated 24 February 2026: <https://www.dell.com/support/kbdoc/ja-jp/000129145/patrol-read%E3%81%AB%E3%82%88%E3%82%8Braid%E3%82%A2%E3%83%AC%E3%82%A4%E3%81%AE%E3%83%A1%E3%83%B3%E3%83%86%E3%83%8A%E3%83%B3%E3%82%B9>
 
 ### Independent scholarly context
@@ -707,8 +754,8 @@ Useful anti-anachronism guardrail: `readability qualification`, `coverage age`, 
 
 **Grounded bounded case.**
 
-The core drive-side mechanism and historical boundary remain supported by T10 proposal/committee records plus a named Seagate product manual; the SIGMETRICS field study is used only as independent latent-error context. The prior-art floor is now materially stronger: IBM's controller/RAID-controller/host-capable media scanner was publicly disclosed by 5 December 2002, and Seagate's December-2003 filing already records drive-side BGMS, power-up pre-scan, idle/interval gating, error logs, and conditional WRITE AND VERIFY before the March 2005 T10 approval, while publication of that Seagate application occurred only in August 2005. This closes a bounded `direct pre-2005 mechanism evidence` gap without making an earliest-invention or patent-to-standard genealogy claim.
+The prior-art floor is now explicitly layered. ANSI X3.131-1986 supplies a host-initiated SCSI `VERIFY` primitive; an August-1995 Seagate manual supplies a named-drive implementation witness; and Adaptec's June-1996 `SCSISelect` exposes an operator-invoked media scan whose bad-block discovery is followed by a separate reassignment decision. Those records close the bounded `earlier SCSI VERIFY / host sweep` debt without back-projecting autonomous scheduling, durable progress/history, or later `BMS` vocabulary into the 1980s/1990s. IBM's controller/RAID-controller/host-capable media scanner was then publicly disclosed by 5 December 2002, and Seagate's December-2003 filing records a richer drive-side BGMS/pre-scan state machine before the March 2005 T10 approval, while publication of that Seagate application occurred only in August 2005.
 
 The controller branch still has a tighter named-product documentation chronology: the inspected LSI 2003 First Edition documents Consistency Check but not Patrol Read; Dell PERC 4/Di/Si-family documentation exposes Patrol Read by April 2005; Dell's MegaPR Linux utility follows on 7 June 2005 and presupposes supporting firmware; and generic LSI MegaRAID Version 2.0 documentation exposes Patrol Read by its February/March 2006 edition. The Dell deepening still supplies the stronger controller-state counterexample in which maintenance schedule/completion/error evidence can persist while an interrupted Auto pass does not retain an exact restart frontier.
 
-Case 101 still does not claim invention of scrubbing, a direct IBM/Seagate-patent→T10 genealogy, a direct T10→PERC/MegaRAID genealogy, complete cross-vendor patrol-read history, or equivalence with higher-layer integrity verification; Dell/LSI documents remain explicitly weighted as overlapping source/engineering lineage rather than naively independent vendor witnesses.
+Case 101 remains `grounded`; no maturity promotion is warranted. It still does not claim invention of scrubbing, a direct SCSI VERIFY→IBM/Seagate/T10 genealogy, a direct IBM/Seagate-patent→T10 genealogy, a direct T10→PERC/MegaRAID genealogy, complete cross-vendor patrol-read history, or equivalence with higher-layer integrity verification; Dell/LSI documents remain explicitly weighted as overlapping source/engineering lineage rather than naively independent vendor witnesses.
