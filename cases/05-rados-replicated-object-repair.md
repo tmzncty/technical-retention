@@ -30,6 +30,9 @@ That makes RADOS a useful transition from **location-independent identity inside
 
 - [`evidence/05-rados-2005-2007-peering-pg-metadata-retention-deepening.md`](../evidence/05-rados-2005-2007-peering-pg-metadata-retention-deepening.md) — contemporaneous August 2005 source plus the mature 2007 RADOS presentation, separating payload completeness, peering/currentness knowledge, PG logs, missing-state metadata, and repair completion.
 - [`evidence/05-crush-2006-map-epoch-placement-currentness-deepening.md`](../evidence/05-crush-2006-map-epoch-placement-currentness-deepening.md) — direct 2006 CRUSH/OSDI inspection separating current map/epoch placement relation from replica-content currentness, and fixing `physical replica survival != current placement membership` and `deterministic recomputation != no retained resolver state`.
+- [`evidence/05-ceph-2007-osdmap-restart-persistence-deepening.md`](../evidence/05-ceph-2007-osdmap-restart-persistence-deepening.md) — September-2007 source-level restart witness separating persisted map bytes, persisted `current_epoch`, PG metadata/logs, restart-local placement context, later map reconciliation, and distributed peering admission.
+- [`evidence/05-ceph-2007-ebofs-journal-persistence-boundary-deepening.md`](../evidence/05-ceph-2007-ebofs-journal-persistence-boundary-deepening.md) — lower-layer EBOFS/journal boundary showing why receipt/application, replay-qualified local evidence, epoch checkpoint, and OSD-level currentness must not be collapsed into one durability event.
+- [`evidence/05-2005-2006-rg-rush-to-pg-crush-boundary-deepening.md`](../evidence/05-2005-2006-rg-rush-to-pg-crush-boundary-deepening.md) — bounded implementation bridge from the August-2005 `RG` / RUSH endpoint through the OSDI 2006 architecture to a December-2006 `PG` / CRUSH source endpoint, explicitly rejecting `RG = PG`, `RUSH = CRUSH`, and unchanged-state-machine shortcuts while preserving the narrower continuity of the currentness-requalification problem.
 
 ---
 
@@ -257,6 +260,27 @@ local data completeness
 persistent group state
     != live peer-session state
 ```
+
+### 2005 → 2006 implementation boundary
+
+The new bounded bridge now makes the predecessor/endpoint distinction source-visible rather than leaving `RG/RUSH-era` as a warning label. At the August-2005 revision, `OSDMap.h` includes `rush.h`, stores RUSH disk groups, maps `repgroup_t` values through `Rush::GetServersByKey`, and filters that result into nonfailed/acting replica sets.[^ceph-2005-osdmap]
+
+By the peer-reviewed OSDI 2006 architecture, the visible chain is object → `PG` → CRUSH → ordered OSD list; and a December-2006 source endpoint has both a `PG` implementation with explicit `last_update`, `last_complete`, log/history and `Missing` state and an `OSDMap` path that actually calls CRUSH for PG placement.[^ceph-2006-pg-crush][^ceph-2006-pgh]
+
+The historical bridge therefore supports only this controlled statement:
+
+```text
+same retention problem:
+placement/membership change can invalidate prior currentness knowledge
+
+but
+
+RG != automatically PG
+RUSH != automatically CRUSH
+2005 peering state machine != automatically 2006 PG recovery state machine
+```
+
+See [`../evidence/05-2005-2006-rg-rush-to-pg-crush-boundary-deepening.md`](../evidence/05-2005-2006-rg-rush-to-pg-crush-boundary-deepening.md). The exact commit-by-commit transition remains broader source genealogy rather than a prerequisite for this retention case.
 
 ### Map changes invalidate knowledge before they erase payload
 
@@ -595,7 +619,8 @@ The primary sources directly establish that the bounded systems/designs:
 - compare replica state/history before accepting a reconstructed PG;
 - preserve PG logs/currentness metadata even while some payload replicas are missing;
 - recover missing/stale payload after currentness history has been established;
-- contain a 2005 implementation predecessor that already separates completeness, peering knowledge, clean replication, persisted group attributes, and soft peer-session state.
+- contain a 2005 implementation predecessor that already separates completeness, peering knowledge, clean replication, persisted group attributes, and soft peer-session state;
+- expose a documented 2005→2006 boundary in which `RG`/RUSH and `PG`/CRUSH are visibly different implementation vocabularies/structures even though both address the narrower problem of requalifying replica currentness after placement or membership change.
 
 ### Engineering reconstruction (`E`)
 
@@ -606,7 +631,8 @@ From those mechanisms, this repository infers that:
 - peering is an admission/currentness-reconstruction procedure, not merely copying;
 - expected-state metadata can retain repair debt before the corresponding payload is restored;
 - negative state (`missing`) can be constitutive of recoverability;
-- distributed write success can have multiple protocol-defined retention thresholds.
+- distributed write success can have multiple protocol-defined retention thresholds;
+- a retention problem can remain recognizable across revisions even while the vocabulary, placement resolver, and recovery state structures change substantially.
 
 ### Functional analogy (`A`)
 
@@ -641,6 +667,8 @@ The 2007 design can establish enough PG history for service while background rec
 
 Commit `88086b83...` says peering is still incomplete, uses RG/RUSH-era structures, and does not prove that every 2007 PG-log/prior-set mechanism already existed unchanged.
 
+The new bridge strengthens, rather than removes, that warning: the inspected December-2006 endpoint contains visibly different `PG`/CRUSH structures, but this packet does not identify a single rename/refactor event or reconstruct every intermediate revision.
+
 ### Replication is not generic consensus
 
 This case is not a generic explanation of Paxos, Raft, Byzantine agreement, or quorum databases.
@@ -661,7 +689,7 @@ Replica count, correlated failures, placement rules, media failures, detection t
 
 ## Cross-case result
 
-Case 05 now adds seven distinctions to the repository:
+Case 05 now adds eight distinctions to the repository:
 
 > **replica multiplicity ≠ retained currentness**
 
@@ -691,6 +719,10 @@ Redundancy can degrade after failure and be restored by copying current state on
 
 A distributed write can pass through protocol-defined stages with different retention guarantees.
 
+> **same retention problem ≠ same historical mechanism**
+
+The 2005 and 2006 endpoints preserve a recognizable need to requalify currentness after placement/membership change, but their `RG`/RUSH and `PG`/CRUSH vocabulary and recovery structures must not be silently collapsed.
+
 Together with Cases 00–04, the maintenance regimes include:
 
 ```text
@@ -708,9 +740,11 @@ The sequence is comparative, not evolutionary.
 
 ## Related repositories
 
-Fresh searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated RADOS/CRUSH treatment during the 2005–2007 peering and 2006 placement deepening slices.
+Fresh searches of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) found no dedicated packet for `RADOS` / `CRUSH` / `EBOFS` or for the narrower `RUSH CRUSH Ceph` transition terms during these deepening slices.
 
-A broader history of RUSH → CRUSH, EBOFS, peering implementation evolution, monitor/Paxos development, algorithmic distributed placement, bucket evolution, object storage, RAID, erasure coding, or storage networking belongs there if later developed. `technical-retention` should link to that work instead of expanding this case into a general distributed-storage history.
+This repository therefore keeps only bounded retention seams: placement/currentness, restart-legible map/history state, local persistence boundaries, and the source-backed predecessor/endpoint distinction needed to prevent anachronistic `RG = PG` / `RUSH = CRUSH` collapse.
+
+A broader history of RUSH → CRUSH, the exact `RG`→`PG` commit sequence, EBOFS/FileStore evolution, peering implementation evolution, monitor/Paxos development, algorithmic distributed placement, bucket evolution, object storage, RAID, erasure coding, or storage networking belongs in `computing-archaeology` if later developed. `technical-retention` should link to that work instead of expanding this case into a general distributed-storage history.
 
 ---
 
@@ -718,7 +752,7 @@ A broader history of RUSH → CRUSH, EBOFS, peering implementation evolution, mo
 
 **Status: `grounded`.**
 
-The repository roadmap and case-maturity ledger treat Case 05 as grounded. The canonical text is now aligned with that established repository state rather than retaining its older pre-promotion `first-pass candidate` wording.
+The repository roadmap and case-maturity ledger treat Case 05 as grounded. The canonical text is aligned with that established repository state.
 
 Strong points include:
 
@@ -727,21 +761,25 @@ Strong points include:
 - direct 2006 OSDI evidence for cluster-map epochs and map-triggered responsibility recomputation;
 - direct 2007 RADOS/dissertation evidence for PG logs, `last_update`, `last_complete`, missing state, prior-set peering, and guarded metadata;
 - a dated contemporaneous implementation artifact from August 2005 showing explicit peering/currentness state and persistent-vs-soft control-state separation;
+- a source-backed 2005→2006 endpoint comparison showing actual RUSH-backed `repgroup_t/RG` code on one side and actual CRUSH-backed `PG` plus richer PG history/log/missing structures on the other, without converting temporal succession into an unproven genealogy;
+- a 2007 source-level OSDMap restart packet separating locally persisted map/history state from cluster-currentness reconciliation;
+- a bounded EBOFS journal packet separating local replay-qualified evidence/checkpoint from higher-layer distributed currentness;
 - explicit historical vocabulary;
 - a retained-state decomposition separating payload, placement currentness, content currentness, expected state, repair debt, and transient peer sessions.
 
-The two bounded source debts previously named in this file are now materially closed:
+The bounded source debts previously named in this file are now materially closed:
 
 - **inspect the 2007 RADOS presentation / add a peering implementation witness** — closed by [`../evidence/05-rados-2005-2007-peering-pg-metadata-retention-deepening.md`](../evidence/05-rados-2005-2007-peering-pg-metadata-retention-deepening.md);
-- **inspect the 2006 CRUSH paper directly for placement-specific claims** — closed by [`../evidence/05-crush-2006-map-epoch-placement-currentness-deepening.md`](../evidence/05-crush-2006-map-epoch-placement-currentness-deepening.md).
+- **inspect the 2006 CRUSH paper directly for placement-specific claims** — closed by [`../evidence/05-crush-2006-map-epoch-placement-currentness-deepening.md`](../evidence/05-crush-2006-map-epoch-placement-currentness-deepening.md);
+- **bridge the August-2005 RG/RUSH-era code to the 2006–2007 PG/CRUSH implementation without assuming continuity** — closed at the bounded endpoint-comparison level by [`../evidence/05-2005-2006-rg-rush-to-pg-crush-boundary-deepening.md`](../evidence/05-2005-2006-rg-rush-to-pg-crush-boundary-deepening.md); exact commit-by-commit genealogy is intentionally routed to `computing-archaeology`;
+- **inspect historically appropriate cluster-map persistence and OSD restart behavior** — closed for the bounded September-2007 implementation by [`../evidence/05-ceph-2007-osdmap-restart-persistence-deepening.md`](../evidence/05-ceph-2007-osdmap-restart-persistence-deepening.md), with lower-layer ordering/durability separately bounded by [`../evidence/05-ceph-2007-ebofs-journal-persistence-boundary-deepening.md`](../evidence/05-ceph-2007-ebofs-journal-persistence-boundary-deepening.md).
 
-Remaining work is narrower archival/implementation archaeology rather than a maturity blocker:
+Remaining work is narrower archival/experimental archaeology rather than a maturity blocker:
 
 1. record printed page / figure anchors from a directly rendered 2006 OSDI PDF if later wording needs page-exact citation beyond the USENIX HTML;
-2. bridge the August-2005 RG/RUSH-era code to the 2006–2007 CRUSH/PG implementation without assuming continuity;
-3. inspect historically appropriate source for exact cluster-map serialization/persistence and OSD restart behavior;
-4. optionally add a bounded historical-revision CRUSH mapping reconstruction or fault-injection experiment if buildability permits;
-5. keep later `up`/`acting`/backfill semantics separate unless explicitly version-bounded.
+2. optionally add a bounded historical-revision CRUSH mapping reconstruction or fault-injection experiment if buildability permits and it answers a new retention question;
+3. keep later `up`/`acting`/backfill semantics separate unless explicitly version-bounded;
+4. pursue exact RUSH→CRUSH / `RG`→`PG` source genealogy only in `computing-archaeology` unless it exposes a new retention-specific seam.
 
 ---
 
@@ -774,3 +812,9 @@ Remaining work is narrower archival/implementation archaeology rather than a mat
 [^ceph-2005-osdh]: `ceph/osd/OSD.h` at `88086b83...`, including `RGReplicaInfo`, `RGPeer`, `RG_STATE_COMPLETE`, `RG_STATE_PEERED`, `RG_STATE_CLEAN`, and `RG::store/fetch`. https://github.com/ceph/ceph/blob/88086b83b7dcb0eb5c092e30fde8570475173f5e/ceph/osd/OSD.h
 
 [^ceph-2005-osdcc]: `ceph/osd/OSD.cc` at `88086b83...`, especially map handling, `scan_rg`, `handle_rg_peer`, and `handle_rg_peer_ack`. https://github.com/ceph/ceph/blob/88086b83b7dcb0eb5c092e30fde8570475173f5e/ceph/osd/OSD.cc
+
+[^ceph-2005-osdmap]: `ceph/osd/OSDMap.h` at `88086b83...`, including `rush.h`, `OSDGroup`, `repgroup_t`, `repgroup_to_raw_osds()`, `Rush::GetServersByKey`, and down/failed filtering. https://github.com/ceph/ceph/blob/88086b83b7dcb0eb5c092e30fde8570475173f5e/ceph/osd/OSDMap.h
+
+[^ceph-2006-pg-crush]: Ceph historical commit `283b68e12a9847ca7ea7adb16d9a9b45af138ef3`, 2006-12-06, `improved support for forcing the first element of a crush result`; the patch modifies `ceph/crush/crush.h` and the `PG_LAYOUT_CRUSH` path in `ceph/osd/OSDMap.h`. https://github.com/ceph/ceph/commit/283b68e12a9847ca7ea7adb16d9a9b45af138ef3
+
+[^ceph-2006-pgh]: `ceph/osd/PG.h` at `283b68e...`, including `PG::Info`, `last_update`, `last_complete`, epoch-history fields, versioned `PG::Log`, and `PG::Missing`. https://github.com/ceph/ceph/blob/283b68e12a9847ca7ea7adb16d9a9b45af138ef3/ceph/osd/PG.h
