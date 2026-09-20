@@ -511,3 +511,85 @@ This case is `grounded` for the bounded 2006 mechanism, but several questions re
 A repository search for `Bigtable`, `memtable`, `SSTable`, and the commit-log/recovery mechanism found **no dedicated Bigtable case in `tmzncty/computing-archaeology`** at the time of this slice.
 
 Therefore this file keeps the historical account narrowly retention-specific. If a broader Bigtable engineering history is later added to `computing-archaeology`, this case should link to it and retain only the recovery/representation comparison needed here.
+
+---
+
+## 2006 bounded deepening — master re-observation and lost split notification
+
+**Evidence navigation:** [`evidence/57-2006-bigtable-master-reobservation-split-notification-deepening.md`](../evidence/57-2006-bigtable-master-reobservation-split-notification-deepening.md) — direct OSDI 2006 evidence for rebuilding master assignment knowledge from retained external relations and for a committed tablet split surviving loss of its notification.
+
+### Historical record
+
+The same 2006 paper explicitly states that failure of the Bigtable master does **not** change the assignment of tablets to tablet servers. On startup, a new master acquires the unique master lock in Chubby, scans Chubby's servers directory for live tablet servers, asks those servers which tablets they currently serve, and then scans `METADATA` to learn the complete tablet set; tablets present in metadata but not already observed as assigned are added to the unassigned set. The metadata scan itself is bootstrapped through assignment/discovery of the root tablet.
+
+The split path supplies an even sharper retention boundary. A tablet server initiates a split, **commits it by recording information for the new tablet in `METADATA`**, and then notifies the master. The paper says that this notification can be lost if the tablet server or master dies. If it is lost, the master can later discover the split when it asks a tablet server to load the tablet: the tablet server sees from `METADATA` that the requested tablet description covers only part of the prior tablet and reports the split then.
+
+The documented ordering is therefore:
+
+```text
+split committed in METADATA
+    -> notification attempted
+    -> notification may disappear
+    -> master may temporarily retain an older view
+    -> later load path re-observes retained METADATA
+    -> master learns the committed split
+```
+
+### Engineering reconstruction
+
+This supports a bounded project decomposition:
+
+```text
+durable tablet-topology relation
+    !=
+master's current in-memory knowledge
+    !=
+notification that attempts to update that knowledge
+```
+
+A transient observer can therefore disappear, or miss the event that changed the topology, without requiring the authoritative topology change itself to disappear. The old master RAM image is not required to survive bit-for-bit; current knowledge can be reconstructed from Chubby coordination state, live tablet-server reports, and `METADATA`, each of which answers a different question.
+
+The root-tablet bootstrap also prevents an overly simple claim that durable metadata is automatically usable merely because its bytes survive:
+
+```text
+state survives
+    !=
+state is immediately observable
+    !=
+observer has incorporated it
+```
+
+For the split path specifically, the useful retention pattern is:
+
+```text
+preserve authoritative result
+    + preserve a future observation path
+```
+
+rather than “preserve every notification forever.” This statement is limited to the source-described Bigtable mechanism; it is not a general claim that event messages are disposable.
+
+### Controlled functional comparison
+
+This control-plane reconstruction is related to the earlier data-plane result in this case only at the functional level:
+
+```text
+SSTables + redo points + committed log suffix
+    -> reconstruct volatile memtable
+
+Chubby/live-server observations + METADATA
+    -> reconstruct volatile master assignment knowledge
+```
+
+The retained objects, authority scopes, triggers, and recovery procedures are different. Master re-observation is not redo-log replay, replica repair, erasure repair, or proof of a general exactly-once messaging protocol.
+
+Case 56's Kafka high-watermark checkpoint omission is a useful opposite failure mode, again only as a controlled functional comparison: Bigtable can lose a notification while the authoritative split relation remains re-observable; KAFKA-1647 can preserve a checkpoint artifact while omitting a still-relevant recovery relation. Similarity at the level of retained relations does not establish genealogy.
+
+### Philosophical boundary
+
+A narrow downstream interpretation is permissible: a technical fact can outlive the event by which one observer first learns it, provided authoritative state and a trustworthy future observation path remain. This is a project interpretation, not vocabulary attributed to Chang et al.
+
+### Status and remaining debt
+
+The new evidence packet is **`bounded deepening complete`**. The parent Case 57 remains **`grounded`**; this slice closes the minimum direct-evidence gap for master-view reconstruction and lost split-notification recovery but does not justify a maturity promotion.
+
+Still open are the exact transaction/atomicity details of the `METADATA` mutation that commits a split, retry/idempotence mechanics of the notification RPC, any numeric time bound on re-discovery, proprietary implementation crash windows beyond the paper, later Cloud Bigtable control-plane changes, and the broader genealogy of metadata-reconciliation techniques. Those should not be inferred from the 2006 paper.
