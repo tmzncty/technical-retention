@@ -16,10 +16,13 @@ Seagate Pulsar.2 2012 powered retention-refresh prior-art deepening: [`../eviden
 
 Seagate Pulsar XT.2 2011 powered-retention prior-art / revision-history deepening: [`../evidence/111-seagate-xt2-2011-powered-retention-refresh-prior-art-deepening.md`](../evidence/111-seagate-xt2-2011-powered-retention-refresh-prior-art-deepening.md).
 
+Seagate first-generation Pulsar 2010 powered-retention prior-art deepening: [`../evidence/111-seagate-pulsar-2010-powered-retention-refresh-prior-art-deepening.md`](../evidence/111-seagate-pulsar-2010-powered-retention-refresh-prior-art-deepening.md).
+
 ## Scope
 
 - **Object / system:** enterprise SSD/NVMe storage kept powered off for extended periods, as addressed by IBM storage-system support guidance and Dell PowerEdge support guidance.
-- **Earlier product-level prior-art witness:** Seagate's Pulsar XT.2 SAS Product Manual, Rev. B, June 2011, directly documents powered controller-local cell monitoring / refresh and conditional rewrite while separately stating that no routine scheduled preventive maintenance is required. Its revision table supports a weaker continuity inference to the March-2011 Rev. A lineage; direct Rev. A text remains uninspected.
+- **Earlier product-level prior-art witness:** Seagate's first-generation Pulsar SATA Product Manual, Rev. A, dated **5 April 2010**, directly documents powered firmware/hardware cell monitoring / refresh while separately specifying typical one-year power-off retention at 25 °C and saying preventive maintenance is not required. A September-2009 shipment date from Seagate is commercialization chronology only and is not used to back-project the April-2010 maintenance wording.
+- **Later, more explicit product-level witness:** Seagate's Pulsar XT.2 SAS Product Manual, Rev. B, June 2011, directly documents powered cell monitoring / refresh and conditional rewrite. Its revision table supports a weaker continuity inference to the March-2011 Rev. A lineage; direct Rev. A text remains uninspected.
 - **Historical anchor for the operator-runbook layer:** an IBM support-content mirror records the extended-shutdown guidance as created on **16 December 2020**; the current IBM support page is marked modified **28 March 2023**.
 - **Later continuity / cross-vendor witness:** Dell support article **000198930**, version 3, marked last modified **14 May 2026**.
 - **Research question:** what changes when a standards-level power-off retention interval becomes an operator scheduling problem involving backup, environment, powered maintenance opportunity, recommissioning time, and sometimes an explicit read sweep?
@@ -38,7 +41,7 @@ This case is a bounded continuation of Case 76's JESD218 SSD endurance/retention
 
 The bounded retention claim is:
 
-> **A power-off retention qualification interval can be operationalized as a maintenance schedule without becoming the same thing as that schedule. A Seagate enterprise-SSD manual directly documented powered controller-local monitoring / refresh by June 2011 while requiring no routine scheduled preventive maintenance; the same document's revision table supports, at a lower evidential level, continuity to its March-2011 initial release. IBM and Dell later turned extended shutdown into explicit operator-facing powered-run policies. The surviving record therefore separates passive offline survival, autonomous device maintenance, maintenance opportunity, maintenance completion, operator policy, standards qualification, and the source-critical difference between direct wording and revision-history inference.**
+> **A power-off retention qualification interval can be operationalized as a maintenance schedule without becoming the same thing as that schedule. A directly inspected Seagate enterprise-SSD product manual documented powered firmware/hardware monitoring / refresh by 5 April 2010 while separately specifying unpowered retention and requiring no routine preventive maintenance from the operator. Later Seagate manuals expose a more explicit conditional-rewrite relation, while IBM and Dell later turn extended shutdown into operator-facing powered-run policies. The surviving record therefore separates passive offline survival, autonomous device maintenance, maintenance opportunity, maintenance completion, operator policy, standards qualification, and the source-critical difference among commercialization date, documentation date, revision-history inference, and implementation/invention date.**
 
 `maintenance opportunity`, `operator scheduling`, `offline survival`, and `recommissioning window` are project engineering terms unless explicitly attributed to a source.
 
@@ -214,19 +217,7 @@ A fourth bounded follow-up is now grounded in [`evidence/111-seagate-xt2-2011-po
 
 Seagate's **Pulsar XT.2 SAS Product Manual, Rev. B, June 2011** identifies the product's media as SLC NAND Flash. The same first-party manual gives a typical powered-off retention figure of three months at 40 °C, says that powered firmware / hardware can monitor and refresh cells, and states in its dedicated `Data Retention` subsection that powered cells are monitored and conditionally rewritten when their levels decay unexpectedly. It also says no routine scheduled preventive maintenance is required.
 
-This moves the **directly inspected named-product powered-retention-maintenance floor** in Case 111 from April 2012 to June 2011:
-
-```text
-power removed
-    -> product-level retention condition
-
-power applied
-    -> controller-local monitoring / conditional rewrite available
-
-no routine scheduled preventive maintenance
-    !=
-no controller-local maintenance
-```
+This moved the directly inspected named-product powered-retention-maintenance floor in Case 111 from April 2012 to June 2011 before the first-generation Pulsar source below moved it earlier again.
 
 The XT.2 revision table adds a deliberately different evidence category. It records Rev. A on **16 March 2011** as the initial release and says the **1 June 2011** Rev. B changed only sheet 34 for a 7 mm weight correction. The retention passages inspected in Rev. B are on printed pp. 14 and 16. This supports a **revision-history continuity inference** to the March-2011 lineage, but a direct Rev. A facsimile was not inspected, so March 2011 is not treated as direct wording evidence or as an invention date.
 
@@ -243,6 +234,32 @@ feature invention / implementation priority
 The product comparison is also bounded. XT.2 documents SLC NAND; Pulsar.2 documents MLC NAND. Similar broad powered-monitor / conditional-rewrite language across both products supports documentation-level continuity, not proof of one controller, firmware, sensing metric, threshold, scheduler, rewrite geometry, or genealogy.
 
 Neither Seagate manual establishes an IBM/Dell-style operator cadence. The earlier product-level maintenance witness therefore does **not** move the explicit operator-runbook floor back to 2011.
+
+## Seagate first-generation Pulsar follow-up — direct April-2010 floor
+
+A fifth bounded follow-up is grounded in [`evidence/111-seagate-pulsar-2010-powered-retention-refresh-prior-art-deepening.md`](../evidence/111-seagate-pulsar-2010-powered-retention-refresh-prior-art-deepening.md).
+
+Seagate's first-generation **Pulsar Product Manual**, publication `100596473`, Rev. A, is dated April 2010 and its revision history records **5 April 2010** as the initial release. It identifies SLC NAND Flash and gives a typical powered-off retention value of **one year at 25 °C**. The same reliability material says retention degrades with NAND use and temperature, but that when power is applied the SSD contains firmware and hardware features able to **monitor and refresh memory cells**. In the same table, `Preventive maintenance` is `None required`.
+
+This moves Case 111's directly inspected named-enterprise-SSD documentation floor from June 2011 to **5 April 2010**:
+
+```text
+offline retention specification
+    + powered firmware/hardware monitor-refresh capability
+    + no operator preventive-maintenance requirement
+```
+
+A Seagate corporate announcement from 7 December 2009 says Pulsar revenue shipments to selected OEMs began in **September 2009**. That date is retained only as commercialization chronology. The April-2010 maintenance wording is not back-projected into 2009:
+
+```text
+commercialization date
+    != documentation date
+    != implementation / invention date
+```
+
+The 2010 wording is also less specific than XT.2/Pulsar.2. It does **not** directly establish the later explicit conditional rewrite when cell levels decay unexpectedly, nor a page/block relocation primitive, host-read trigger, whole-device sweep, cadence, or completion signal. The later manuals remain stronger witnesses for those narrower claims.
+
+Finally, the product numbers cannot be compared naively: the first-generation Pulsar's `1 year @ 25 °C` and XT.2/Pulsar.2's `3 months @ 40 °C` are specified under different temperatures and product/media contexts. They do not support a claim that the earlier product intrinsically retained data longer.
 
 ## Engineering reconstruction
 
@@ -262,7 +279,7 @@ The schedule can be earlier than the qualification boundary without contradictin
 
 The IBM / Lenovo cadence deepening makes the same distinction stronger: even one vendor's surviving 2020 documentation maps the same standards-level background onto different schedules for different system contexts. `operator cadence` is therefore a system-policy relation, not a universal NAND physical constant.
 
-The Seagate follow-ups add a separate product layer: a named SSD can expose powered autonomous monitoring / conditional rewrite without exposing any operator cadence at all. Thus `device-local maintenance capability != field runbook`.
+The Seagate follow-ups add a separate product layer: by April 2010 a named SSD manual already exposed powered autonomous monitoring / refresh without exposing any operator cadence at all. Thus `device-local maintenance capability != field runbook`.
 
 ### E — passive offline survival and active powered maintenance must be separated
 
@@ -280,7 +297,7 @@ and:
 
 > **powered state ≠ proved maintenance completion**.
 
-The Seagate 2011/2012 records give direct named-product support for the first distinction: cell monitoring / refresh is explicitly conditioned on power being applied. The second remains newly sharp at the operator-policy level because Dell assigns a minimum powered duration and IBM exposes a separate system-level scrub completion witness.
+The Seagate 2010–2012 records give direct named-product support for the first distinction: cell monitoring / refresh is explicitly conditioned on power being applied. The second remains newly sharp at the operator-policy level because Dell assigns a minimum powered duration and IBM exposes a separate system-level scrub completion witness.
 
 ### E — a read sweep can be maintenance-triggering without becoming universal “refresh” semantics
 
@@ -310,7 +327,9 @@ This is a retention issue that has migrated above the NAND cell: rack power, ope
 
 ### E — “three months” is a risk/qualification boundary, not a deterministic failure clock
 
-Neither the standard-level relation grounded in Case 76 nor the vendor support wording proves that one particular drive becomes unreadable exactly when a clock reaches three months. IBM says there is **potential** for data loss/failure after extended shutdown; Dell says systems powered off for more than three months **may** exhibit errors or faults. The Seagate Pulsar XT.2 and Pulsar.2 manuals likewise present three months at 40 °C as a typical product retention specification, not a deterministic individual-unit failure timestamp.
+Neither the standard-level relation grounded in Case 76 nor the vendor support wording proves that one particular drive becomes unreadable exactly when a clock reaches three months. IBM says there is **potential** for data loss/failure after extended shutdown; Dell says systems powered off for more than three months **may** exhibit errors or faults. The later Seagate Pulsar XT.2 and Pulsar.2 manuals likewise present three months at 40 °C as a typical product retention specification, not a deterministic individual-unit failure timestamp.
+
+The first-generation Pulsar's one-year-at-25 °C figure is a different bounded product condition, not evidence against the later three-month-at-40 °C relation and not a universal shelf-life guarantee.
 
 Therefore:
 
@@ -354,28 +373,43 @@ The field policy can cite the standard while adding earlier intervention, backup
 
 Case 37 gives a named commercial product episode in which Samsung described a powered periodic refresh feature for **old-data read performance** and explicitly said it did not operate while power was off.
 
-The Seagate XT.2/Pulsar.2 witnesses are earlier and enterprise-oriented, but they are not evidence that XT.2, Pulsar.2, and 840 EVO use the same mechanism. The shared functional statement is only that powered controller work can renew or protect NAND-resident state. The product class, NAND class, symptom framing, thresholds, schedule, and genealogy differ or remain undisclosed.
+The Seagate Pulsar / XT.2 / Pulsar.2 witnesses are earlier and enterprise-oriented, but they are not evidence that these Seagate products and 840 EVO use the same mechanism. The shared functional statement is only that powered controller work can renew or protect NAND-resident state. The product class, NAND class, symptom framing, thresholds, schedule, and genealogy differ or remain undisclosed.
 
 Case 111 then moves the comparison one level outward: IBM and Dell document **operator-facing shutdown schedules** for enterprise SSD/NVMe systems. Powered device maintenance and human scheduling can therefore occupy different responsibility layers.
 
 ### Case 36 — Flash Correct-and-Refresh
 
-Case 36 is a research algorithm/evaluation for maintaining NAND recoverability within ECC margin. Neither the Seagate XT.2/Pulsar.2 manuals nor the IBM/Dell field guidance establishes that those products implement that algorithm. `monitor and refresh memory cells`, `background retention task`, `read-triggered task`, `background scrub`, and academic `FCR` are not synonyms and no genealogy is asserted.
+Case 36 is a research algorithm/evaluation for maintaining NAND recoverability within ECC margin. Neither the Seagate Pulsar-family manuals nor the IBM/Dell field guidance establishes that those products implement that algorithm. `monitor and refresh memory cells`, `background retention task`, `read-triggered task`, `background scrub`, and academic `FCR` are not synonyms and no genealogy is asserted.
+
+### Case 67 — OCP Refresh Counts terminology boundary
+
+Case 67 grounds OCP `Refresh Counts` as an integrity-maintenance block-reallocation accounting category. The first-generation Pulsar manual's `refresh memory cells` wording is a product-level retention-maintenance description, not a telemetry definition.
+
+Therefore:
+
+```text
+same label “refresh”
+    != same unit of work
+    != same controller primitive
+    != same telemetry semantics
+```
+
+No genealogy is asserted between the 2010 product wording and later OCP accounting vocabulary.
 
 ## Prior art and anti-anachronism
 
-No invention-priority claim is made for any of these product or support documents. The standards relation predates the later operator runbooks, and the Seagate record now supplies a **directly inspected named enterprise-SSD product-level powered-maintenance witness by June 2011**. XT.2's own revision table supports a weaker continuity inference to its 16-March-2011 initial-release lineage, but direct Rev. A wording remains uninspected. Case 37 separately grounds a 2014–2015 commercial client-SSD maintenance episode in which powered time mattered. The 2020–2026 sources remain valuable for a different historical object: **operator-facing policy** that tells administrators how to manage an extended shutdown once nonvolatile media cannot simply be treated as indefinitely passive shelf storage.
+No invention-priority claim is made for any of these product or support documents. The standards relation predates the later operator runbooks, and the Seagate record now supplies a **directly inspected named enterprise-SSD product-level powered-maintenance witness by 5 April 2010**. Seagate's 7-December-2009 product announcement separately says revenue shipments began in September 2009, but that commercialization chronology does not make the April-2010 maintenance wording a 2009 direct-documentation fact. The XT.2 record remains useful because it supplies stronger conditional-rewrite wording and a separate revision-history lesson. Case 37 separately grounds a 2014–2015 commercial client-SSD maintenance episode in which powered time mattered. The 2020–2026 sources remain valuable for a different historical object: **operator-facing policy** that tells administrators how to manage an extended shutdown once nonvolatile media cannot simply be treated as indefinitely passive shelf storage.
 
-The Seagate chronology does not prove direct ancestry to Samsung, IBM, Dell, or NetApp. It also illustrates why revision metadata must be handled case by case: XT.2 Rev. B says only sheet 34 changed from Rev. A, while Pulsar.2 Rev. B explicitly changed its retention-bearing p. 14. `Revision exists` is therefore not itself evidence of unchanged wording. Likewise, the Lenovo deepening adds a source-critical caution: a second corporate masthead is not automatically a second independent technical witness. Lenovo HT511702 closely follows the IBM generic support wording and sits inside an explicit IBM Storwize-for-Lenovo product/document lineage. It is useful historical evidence of policy propagation, but should not be double-counted as independent validation unless a separate engineering basis is recovered.
+The Seagate chronology does not prove direct ancestry to Samsung, IBM, Dell, NetApp, or OCP. It also illustrates why document dates must be handled case by case: shipment date, public announcement, surviving manual date, revision-history inference, and invention/implementation date are separate categories. The Lenovo deepening adds a parallel source-critical caution: a second corporate masthead is not automatically a second independent technical witness. Lenovo HT511702 closely follows the IBM generic support wording and sits inside an explicit IBM Storwize-for-Lenovo product/document lineage. It is useful historical evidence of policy propagation, but should not be double-counted as independent validation unless a separate engineering basis is recovered.
 
-A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `Pulsar XT.2`, `Pulsar.2`, `Seagate data retention SSD`, and the existing extended-shutdown terms found no dedicated packet to reuse. A generic history of Seagate enterprise SSDs, SSD retention-management firmware, SLC/MLC product evolution, or the IBM Storwize / ESS / TS7700 platform genealogy belongs there; this case keeps only the retention-specific distinctions among qualification, offline survival, powered controller maintenance, maintenance opportunity, maintenance admission, operator scheduling, recommissioning, and source-chronology evidence strength.
+A current search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `Pulsar`, publication `100596473`, `Pulsar XT.2`, and the existing extended-shutdown terms found no dedicated packet to reuse. A generic history of Seagate enterprise SSDs, SSD retention-management firmware, SLC/MLC product evolution, or the IBM Storwize / ESS / TS7700 platform genealogy belongs there; this case keeps only the retention-specific distinctions among qualification, offline survival, powered controller maintenance, maintenance opportunity, maintenance admission, operator scheduling, recommissioning, and source-chronology evidence strength.
 
 ## Failure and forgetting boundaries
 
 For this bounded case, distinguish:
 
 - **extended power-off:** controller background work is unavailable;
-- **powered autonomous-maintenance capability:** in the Seagate product witnesses, controller monitoring / conditional rewrite becomes available without a routine operator maintenance schedule;
+- **powered autonomous-maintenance capability:** in the Seagate product witnesses, controller monitoring / refresh becomes available without a routine operator maintenance schedule;
 - **short offline-history trigger:** in the named ESS alert, more than seven days off after installation admits an automatic background scrub on return;
 - **approaching a vendor risk window:** policy calls for backup/environment checks and a powered maintenance interval;
 - **power restored:** maintenance becomes possible but is not thereby proved complete;
@@ -390,13 +424,20 @@ None of these states proves physical sanitization, permanent archival safety, or
 
 A limited functional analogy is useful: a supposedly “passive” nonvolatile storage system can contain **autonomous powered maintenance** below the user-visible interface and, under long shutdown conditions, can later impose **periodic human scheduling work** because that maintenance machinery cannot operate while unpowered. Retention work can therefore cross an organizational boundary: from cell physics and controller firmware into power planning, backup policy, rack/system availability, and operator time.
 
-The Seagate witnesses make the interface boundary especially visible: `No routine scheduled preventive maintenance` can coexist with explicit powered monitoring / conditional rewrite inside the device. The later cadence evidence then shows that institutions can place several clocks around one material risk: qualification horizon, scrub-admission threshold, operator intervention point, powered dwell, and completion evidence. The XT.2/Pulsar.2 revision-history comparison adds another historiographical clock: the date of a surviving text, the date of an inferred prior revision, and the date of invention/implementation are not interchangeable. This is a project interpretation, not Seagate, IBM, Lenovo, Dell, or NetApp's philosophical vocabulary. It must not be generalized into the claim that every act of powering a system is “memory maintenance,” or that operational runbooks are the same mechanism as NAND refresh.
+The Seagate witnesses make the interface boundary especially visible: `Preventive maintenance: None required` or `No routine scheduled preventive maintenance` can coexist with explicit powered monitoring / refresh inside the device. The 2010 source now shows this relation directly before the later manuals' more explicit conditional-rewrite wording. The later cadence evidence then shows that institutions can place several clocks around one material risk: qualification horizon, scrub-admission threshold, operator intervention point, powered dwell, and completion evidence. The source chronology adds another historiographical clock: commercialization, surviving text, inferred prior revision, and invention/implementation dates are not interchangeable. This is a project interpretation, not Seagate, IBM, Lenovo, Dell, NetApp, or OCP's philosophical vocabulary. It must not be generalized into the claim that every act of powering a system is “memory maintenance,” or that operational runbooks are the same mechanism as NAND refresh.
 
 ## Claim ledger
 
 | Claim | Type | Evidence strength | Boundary |
 | --- | --- | --- | --- |
-| Seagate Pulsar XT.2 Rev. B is a June 2011 named enterprise-SSD product witness | H/P | strong | directly inspected first-party document; documented-by boundary, not invention date |
+| Seagate first-generation Pulsar Rev. A is directly dated April 2010 and records 5 April 2010 as initial release | H/P | strong | first-party Seagate manual; documentation date only |
+| First-generation Pulsar uses SLC NAND Flash | H/P | strong | named 2010 product family only |
+| 2010 Pulsar specifies typical one-year power-off retention at 25 °C | H/P | strong | bounded product condition; not directly comparable with later 3mo@40°C figures |
+| 2010 Pulsar says powered firmware/hardware can monitor and refresh memory cells | H/P | strong | exact trigger, geometry, scheduler and primitive undisclosed |
+| 2010 Pulsar says preventive maintenance is not required | H/P | strong | operator-facing requirement; does not negate controller-local maintenance |
+| Seagate says Pulsar revenue shipments to selected OEMs began in September 2009 | H/P | strong | commercialization chronology only |
+| September-2009 shipment date proves April-2010 maintenance wording already existed | X | rejected | no inspected 2009 source establishes the wording |
+| Seagate Pulsar XT.2 Rev. B is a June 2011 named enterprise-SSD product witness | H/P | strong | directly inspected first-party document; later, more explicit wording |
 | Pulsar XT.2 uses SLC NAND Flash | H/P | strong | named product only |
 | XT.2 says powered firmware / hardware can monitor and refresh memory cells and §6.2.5 describes conditional rewrite | H/P | strong | exact sensing metric, threshold, cadence, and geometry undisclosed |
 | XT.2 says no routine scheduled preventive maintenance is required | H/P | strong | operator requirement; does not negate controller-local maintenance |
@@ -431,6 +472,7 @@ The Seagate witnesses make the interface boundary especially visible: `No routin
 | NetApp `Rated Life Used >99` means endurance estimate consumed but not necessarily device failure | H/P | strong | directly documented CLI semantic boundary |
 | readable now ≠ qualified for long powered-off retention | E | strong | current service and future-offline admission are distinct |
 | Seagate / IBM / Dell guidance demonstrates FCR or Samsung's exact refresh algorithm | X | rejected | no genealogy or implementation identity established |
+| `refresh memory cells` in 2010 Pulsar == OCP `Refresh Counts` telemetry semantics | X | rejected | product maintenance wording and telemetry accounting are different evidence objects |
 | three months is a deterministic failure instant for every drive | X | rejected | product/vendor wording is qualification/risk-bounded |
 
 ## Open questions
@@ -444,12 +486,16 @@ The Seagate witnesses make the interface boundary especially visible: `No routin
 - Was Lenovo HT511702 mechanically syndicated, contractually inherited, or separately reissued from a shared Storwize support corpus?
 - Can a direct Pulsar XT.2 Rev. A (16 March 2011) facsimile verify the retention-bearing pp. 14/16 wording that Rev. B's sheet-34-only change record implies was already present?
 - What exactly changed on Pulsar.2's retention-bearing p. 14 between the uninspected August-2011 Rev. A and April-2012 Rev. B?
-- Which pre-March-2011 named enterprise-SSD manuals, if any, publish a comparable powered retention-monitoring / conditional-rewrite contract?
+- Which **pre-5-April-2010** named enterprise-SSD manuals, if any, publish comparable powered retention-monitoring / refresh behavior?
+- Can September–December 2009 Pulsar engineering or product documentation directly establish the powered maintenance wording without back-projecting the 2010 manual?
+- What exact monitoring signal, trigger, coverage policy, and rewrite primitive sat behind first-generation Pulsar's `monitor and refresh memory cells` statement?
 - Beyond the now-grounded Seagate product-level powered-refresh capability and NetApp wear-state relation, which vendors publish explicit long-offline operator cadences or completion telemetry?
 - How do these runbooks change across later NAND generations and controller ECC/refresh policies?
 
 ## Sources
 
+- Seagate Technology LLC, **_Pulsar Product Manual_**, publication 100596473, Rev. A, April 2010: <https://www.seagate.com/content/dam/seagate/migrated-assets/staticfiles/support/disc/manuals/ssd/100596473a.pdf>.
+- Seagate, **“Seagate introduces its First Solid State Drive: Pulsar,”** 7 December 2009: <https://investors.seagate.com/news/news-details/2009/Seagate-introduces-its-First-Solid-State-Drive-Pulsar/default.aspx>.
 - Seagate Technology, **_Pulsar XT.2 SAS Product Manual_**, publication 100647497, Rev. B, June 2011: <https://www.seagate.com/staticfiles/support/docs/manual/sas/100647497b.pdf>.
 - Seagate Technology, **_Pulsar.2 SAS Product Manual_**, publication 100666271, Rev. B, April 2012: <https://www.seagate.com/files/www-content/product-content/pulsar-fam/pulsar/pulsar-2/en-us/docs/100666271b.pdf>.
 - Seagate Technology, **_Pulsar.2 SAS Product Manual_**, publication 100666271, Rev. C, March 2013 (revision-history comparator): <https://www.seagate.com/files/www-content/product-content/pulsar-fam/pulsar/pulsar-2/en-us/docs/100666271c.pdf>.
