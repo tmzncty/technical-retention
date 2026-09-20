@@ -2,8 +2,8 @@
 
 ## Scope
 
-- **Object / system:** Robert H. Dennard's one-transistor / one-capacitor field-effect-transistor memory, with the Intel 1103 used only as a bounded commercial comparison and the Intel 2164A/8203 used as a later bounded refresh-control comparison.
-- **Date range:** 1967–1975 for the central grounding, with a bounded 1982–1984 deepening for hidden refresh and external refresh-control state.
+- **Object / system:** Robert H. Dennard's one-transistor / one-capacitor field-effect-transistor memory, with the Intel 1103 used only as a bounded commercial comparison, the Intel 2164A/8203 used as a bounded external refresh-control comparison, and later TI/NEC evidence used only to separate on-chip refresh-address state from autonomous self-refresh cadence.
+- **Date range:** 1967–1975 for the central grounding, with a bounded 1982–1984 deepening for hidden refresh and external refresh-control state, plus a bounded 1984-filed/1986–1988 deepening for CAS-before-RAS on-chip coverage state versus self-refresh timing control.
 - **Why this case matters for technical retention:** it separates two obligations that magnetic core had partially joined: **restoration caused by access** and **restoration caused merely by the passage of time**.
 
 This case does **not** attempt a general history of DRAM, SDRAM, DDR, sense amplifiers, row-buffer organization, or modern refresh policy. Those belong primarily in `computing-archaeology` when that repository fills its identified semiconductor-memory gap.
@@ -15,7 +15,8 @@ The question here is narrower:
 ### Evidence navigation
 
 - grounding record: [`../evidence/03-dram-1967-1982-grounding.md`](../evidence/03-dram-1967-1982-grounding.md);
-- bounded controller-state deepening: [`../evidence/03-intel-1982-1984-hidden-refresh-controller-state-deepening.md`](../evidence/03-intel-1982-1984-hidden-refresh-controller-state-deepening.md) — Intel 2164A hidden refresh plus 8203 timer/counter/arbitration separate payload retention from refresh-control state and fix `hidden refresh != autonomous refresh`.
+- bounded controller-state deepening: [`../evidence/03-intel-1982-1984-hidden-refresh-controller-state-deepening.md`](../evidence/03-intel-1982-1984-hidden-refresh-controller-state-deepening.md) — Intel 2164A hidden refresh plus 8203 timer/counter/arbitration separate payload retention from refresh-control state and fix `hidden refresh != autonomous refresh`;
+- bounded on-chip coverage-state deepening: [`../evidence/03-1984-1988-cbr-onchip-refresh-counter-boundary-deepening.md`](../evidence/03-1984-1988-cbr-onchip-refresh-counter-boundary-deepening.md) — TI CAS-before-RAS documentation moves refresh-address generation / coverage state on-chip while NEC's 1984-filed record keeps a distinct timer-backed self-refresh mode, fixing `on-chip coverage != autonomous cadence`.
 
 ---
 
@@ -34,6 +35,8 @@ The 1968 patent is titled **"Field-effect transistor memory"**, not "DRAM". It s
 Modern terminology such as **1T1C DRAM**, **refresh**, and **dynamic memory** is useful for classification, but it should not replace the patent's own vocabulary when describing what Dennard actually claimed.
 
 A later Intel data catalog explicitly calls the 1103 a **1024-bit dynamic memory** and specifies a **refresh period**. Intel's 1982 2164A documentation uses `RAS-only refresh` and `Hidden Refresh`; the 1984 8203 controller documentation separately names a `refresh timer`, `refresh counter`, and refresh/access arbitration.
+
+Later period sources add still more specific control vocabulary. TI documentation uses `CAS-before-RAS refresh` and `on-chip refresh counter`; NEC's 1984-filed / 1986-published patent explicitly distinguishes a `CAS-before-RAS refresh mode` from a `self-refresh mode`. These labels should be preserved rather than normalized into one timeless category such as `automatic refresh`.
 
 ---
 
@@ -114,6 +117,31 @@ The controller documentation does not describe these timer/counter states as non
 
 **Deepening record:** [`../evidence/03-intel-1982-1984-hidden-refresh-controller-state-deepening.md`](../evidence/03-intel-1982-1984-hidden-refresh-controller-state-deepening.md).
 
+### H/P — TI CAS-before-RAS moves refresh-address generation on-chip without moving cadence authority
+
+The inspected Texas Instruments TMS4256/TMS4257 production datasheet is marked `MAY 1983 — REVISED JANUARY 1988`. It requires refresh of the 256 refresh rows within a 4 ms period. During CAS-before-RAS refresh, the external address is ignored and the refresh address is generated internally.
+
+TI's 1986 *MOS Memory Data Book* applications material makes the control state more explicit: it describes an **on-chip refresh counter** that removes the need for an external refresh counter, while the CAS-before-RAS sequence itself is still invoked by externally supplied CAS/RAS timing. The adjacent RAS-only discussion describes the older external timer/counter arrangement.
+
+This is a bounded relocation of **coverage state**, not evidence that all refresh control has become autonomous.
+
+**Deepening record:** [`../evidence/03-1984-1988-cbr-onchip-refresh-counter-boundary-deepening.md`](../evidence/03-1984-1988-cbr-onchip-refresh-counter-boundary-deepening.md).
+
+### H/P — NEC explicitly separates CAS-before-RAS refresh from timer-backed self-refresh
+
+NEC's JPS6157097A was filed on 27 August 1984 and published on 22 March 1986. Its translated description treats a CAS-before-RAS arrangement with an internal refresh/address counter as the starting point, then adds a timer and refresh-timing generator so the device can enter a distinct self-refresh mode.
+
+This primary patent evidence establishes a period control distinction:
+
+```text
+internal refresh-address / coverage state
+    != internal refresh-cadence generation
+```
+
+The patent is not used as proof that a shipping NEC product implemented the design in 1984, nor as an invention-priority claim.
+
+**Deepening record:** [`../evidence/03-1984-1988-cbr-onchip-refresh-counter-boundary-deepening.md`](../evidence/03-1984-1988-cbr-onchip-refresh-counter-boundary-deepening.md).
+
 ---
 
 ## Retained state
@@ -137,11 +165,14 @@ The 2164A/8203 deepening adds a third category that should not be folded into ei
 
 - **maintenance-control state** — timer phase, next-row/coverage position, and arbitration/request state used to make refresh occur in time and over the required address set.
 
+The later CAS-before-RAS deepening shows that even this maintenance-control state has no single necessary location: the next-row / coverage counter can move from a separate controller into the DRAM package while the cadence trigger remains external.
+
 Thus:
 
 ```text
 state being retained
     != state required to retain it
+    != fixed physical location of the maintenance-control state
 ```
 
 ---
@@ -162,7 +193,7 @@ This is a recurring retention pattern:
 
 > density at the retained-state site can increase by moving maintenance work into shared infrastructure.
 
-The later Intel controller comparison makes that displacement concrete at system scale: refresh timing, address progression, and access arbitration can reside in a dedicated controller rather than in the payload-bearing cell array.
+The later controller/device comparisons make that displacement concrete at system scale: refresh timing, address progression, and access arbitration can reside in a dedicated controller, while a later device can internalize the refresh-address counter without necessarily internalizing refresh cadence.
 
 ---
 
@@ -182,7 +213,7 @@ It is better described as:
 
 A DRAM cell can be left electrically undisturbed for a while, but not indefinitely.
 
-The 8203 deepening further shows that scheduled restoration itself can require multiple control variables: a timer for **when**, a counter for **which refresh address**, and arbitration for **when maintenance may occupy the shared memory interface**.
+The controller/device deepening further shows that scheduled restoration can require separable control variables: a cadence trigger for **when**, a counter for **which refresh address**, and arbitration for **when maintenance may occupy the shared memory interface**. Those variables need not reside in the same component.
 
 ---
 
@@ -205,6 +236,8 @@ periodic regeneration revisits the array
 The address looks timeless only because the maintenance schedule is hidden below it.
 
 Intel's 2164A/8203 pair sharpens that statement: ordinary access addresses and refresh addresses share part of the same physical address path, while the controller can substitute a refresh-counter value during a maintenance cycle. Stable logical addressability therefore coexists with a second, maintenance-specific traversal of the row-address space.
+
+The later TI CAS-before-RAS evidence moves that maintenance traversal boundary again: during the documented CBR cycle the external address is ignored and the refresh address is generated internally. The DRAM can therefore own the next-row / coverage progression while still depending on external CAS/RAS timing to make another refresh opportunity occur.
 
 ---
 
@@ -235,6 +268,8 @@ They are separable mechanisms.
 ### Boundary: output visibility is not maintenance autonomy
 
 Intel's 2164A can keep useful output data valid during a hidden refresh sequence. That is a read-interface property. It does not mean refresh has disappeared, that the row-selection obligation has vanished, or that the DRAM device itself owns all timing/coverage state needed to maintain the array.
+
+The later TI evidence also warns against assuming that the same label fixes the same address locus forever: on the inspected CBR-capable TI device, hidden refresh can use internally generated refresh addressing. `Hidden` remains an interface/service description, not a synonym for `self-refresh`.
 
 ---
 
@@ -268,6 +303,8 @@ The system-maintenance schedule chosen to revisit state before the retention int
 
 The Intel 8203 comparison adds a controller timescale inside the refresh interval: a timer determines when another refresh request becomes due, while a row counter determines which refresh address comes next. These are not the payload's retention time; they are operational state used to satisfy it.
 
+The TI/NEC deepening shows that those two control variables need not migrate together. A DRAM may internalize the coverage counter while cadence remains externally invoked; a distinct self-refresh design can then add timer/timing-generation circuitry.
+
 ### Temperature-dependent leakage timescale
 
 The patent explicitly connects leakage, and thus usable storage time, to junction temperature.
@@ -300,7 +337,7 @@ It is also a redistribution of complexity:
 
 > **fewer devices per stored bit, more coordinated maintenance around the array.**
 
-The 2164A/8203 pair makes the redistribution unusually visible: `hidden` maintenance at one interface still depends on explicit controller state elsewhere.
+The Intel 2164A/8203 pair makes one redistribution unusually visible: `hidden` maintenance at one interface can still depend on explicit controller state elsewhere. The later TI/NEC comparison shows a second redistribution: the next-row counter can move inward without abolishing the external timing obligation, and a later self-refresh design can internalize still more of that control.
 
 ---
 
@@ -364,6 +401,35 @@ maintenance hidden from one interface
     != maintenance-control state durable
 ```
 
+The later TI device sharpens the warning: a hidden-refresh implementation can also use internally generated refresh addresses, so the label itself does not fix the location of coverage state.
+
+### E — coverage-state integration is independent of cadence autonomy
+
+The paired Intel/TI/NEC evidence supports a more precise control decomposition:
+
+```text
+external-controller arrangement
+    timer/cadence external
+    + next-row counter external
+
+CAS-before-RAS arrangement
+    refresh opportunity externally invoked
+    + next-row counter on-chip
+
+self-refresh arrangement (bounded NEC patent witness)
+    next-row counter on-chip
+    + timer/timing generation on-chip
+```
+
+Therefore:
+
+```text
+on-chip coverage authority
+    != autonomous cadence authority
+```
+
+This is an engineering reconstruction from the named sources, not a claim of direct product genealogy.
+
 ### E — The logical bit survives repeated analog replacement
 
 After regeneration, the charge configuration is newly established. The system treats that restored physical state as the continuation of the same logical bit.
@@ -399,9 +465,9 @@ These are engineering categories first. They should not yet be promoted into a u
 
 To software, a memory location appears simply available at its address. Physically, the cell's state is decaying and must be restored on schedule.
 
-The 2164A/8203 evidence sharpens the point: part of that discipline can be displaced into timer, counter, and arbitration infrastructure that is not itself the represented payload and may be hidden from the data interface.
+The controller/device evidence sharpens the point: part of that discipline can be displaced into timer, counter, and arbitration infrastructure that is not itself the represented payload; individual control variables can also migrate across the package boundary without the retention relation becoming independent of the rest of the system.
 
-The philosophical value of the case is therefore not that DRAM is a metaphor for human memory. It is that it demonstrates mechanically how **stable availability can be an effect produced by hidden temporal organization**.
+The philosophical value of the case is therefore not that DRAM is a metaphor for human memory. It is that it demonstrates mechanically how **stable availability can be an effect produced by hidden temporal organization whose technical boundary can move without eliminating dependency**.
 
 That observation can later be tested against Ernst's operational / microtemporal account. It should not yet be equated with Stiegler's tertiary retention or Heidegger's `Bestand`.
 
@@ -429,7 +495,7 @@ But:
 
 ### A — similarity to later maintenance-control metadata is functional only
 
-The 8203 timer/counter and later repository cases involving scrub checkpoints, repair maps, or retained maintenance policy all encode control state about maintenance. But their persistence horizons are different. The 8203 state is ordinary powered controller state; later systems may checkpoint maintenance progress durably.
+The 8203 timer/counter, later on-chip refresh counters, and repository cases involving scrub checkpoints, repair maps, or retained maintenance policy can all encode control state about maintenance. But their persistence horizons, physical locations, and authority are different. The early DRAM control state discussed here is ordinary powered operational state; later systems may checkpoint maintenance progress durably.
 
 Therefore:
 
@@ -440,17 +506,30 @@ maintenance-control state
 
 No historical genealogy is implied.
 
+### A — relation to Case 09 `automatic refresh` terminology is functional only
+
+Case 09's 1972 Signetics evidence shows that `automatic refresh` could name access/address-coupled internal restoration without autonomous recurring cadence. The present slice adds a different arrangement: CAS-before-RAS can internalize coverage/address progression while refresh opportunities remain externally invoked, and the NEC patent then adds timing generation for a distinct self-refresh mode.
+
+Thus:
+
+```text
+same broad maintenance function
+    != same control split
+    != same historical term
+    != shared genealogy
+```
+
 ### Limit — not every DRAM read is destructive
 
 The Intel 1103 boundary case and nondestructive embodiments in Dennard's own patent show that `dynamic` cannot be defined merely by destructive readout.
 
-### Limit — `hidden refresh` does not mean self-refresh
+### Limit — `hidden refresh` and CAS-before-RAS do not mean self-refresh
 
-For the 2164A evidence used here, hidden refresh preserves output availability while a refresh cycle occurs, but the refreshed row remains externally addressed. The term must not be silently replaced by later meanings of CAS-before-RAS refresh or self-refresh.
+For the 2164A evidence used here, hidden refresh preserves output availability while a refresh cycle occurs but the refreshed row remains externally addressed. In the later TI CBR-capable device, hidden refresh can use internally generated refresh addressing. The same `hidden` label therefore does not even guarantee a fixed address-generation locus, and neither arrangement should be silently renamed `self-refresh`.
 
 ### Limit — not a complete modern DRAM account
 
-Modern DRAM adds much richer sensing, row-buffer, refresh, error, packaging, power, and controller behavior. This case deliberately does not project later architecture backward into the 1967 patent or the 1982 Intel device/controller pair.
+Modern DRAM adds much richer sensing, row-buffer, refresh, error, packaging, power, and controller behavior. This case deliberately does not project later architecture backward into the 1967 patent or turn the 1980s examples into a complete genealogy.
 
 ---
 
@@ -481,6 +560,10 @@ The 1982–1984 Intel deepening adds another:
 
 > **the state being maintained can be different from the control state that schedules and covers the maintenance.**
 
+The 1984-filed/1986–1988 deepening adds a third:
+
+> **maintenance-control state can migrate across a device boundary one variable at a time: internal coverage state does not imply internal cadence authority.**
+
 This will matter later for Flash retention/read-disturb management, SSD background work, scrubbing, replica repair, lease renewal, and long-term archival migration — but those comparisons must be established case by case rather than assumed now.
 
 ---
@@ -498,7 +581,11 @@ This will matter later for Flash retention/read-disturb management, SSD backgrou
 | Dynamic retention is therefore not identical to destructive read | E | bounded inference from the patent + Intel commercial comparison |
 | Intel 2164A documentation combines a 128-cycle/2 ms refresh requirement with Hidden Refresh that keeps output data valid while refresh remains row-addressed | H/P | Intel 2164A datasheet, pp. 3-219, 3-229–3-230 |
 | Intel 8203 documentation places refresh timing, next-row coverage state, and refresh/access arbitration in a dedicated controller | H/P | Intel 1984 Memory Components Handbook, 8203 §§2.2.2–2.2.6 |
+| TI's inspected TMS4256/TMS4257 revision requires 256-row/4 ms refresh and generates the CBR refresh address internally while ignoring the external address | H/P | TI TMS4256/TMS4257 production datasheet, printed p. 4-5 |
+| TI's 1986 applications material names an on-chip refresh counter that eliminates the external refresh counter for CBR | H/P | TI *MOS Memory Data Book* (1986), Applications Information p. 9-52 |
+| NEC's 1984-filed/1986-published patent distinguishes CAS-before-RAS refresh from a timer/timing-generator-backed self-refresh mode | H/P | JPS6157097A abstract and description |
 | Hidden refresh is not evidence of autonomous or durable refresh-control state | E | bounded device/controller reconstruction |
+| On-chip refresh coverage is not evidence of autonomous cadence | E | bounded TI + NEC reconstruction |
 | DRAM exposes periodic deadline-driven maintenance as distinct from continuous circulation and access-triggered restore | E/I | cross-case reconstruction |
 | DRAM is identical to tertiary retention or `Bestand` | X | explicitly unsupported |
 
@@ -510,7 +597,15 @@ This will matter later for Flash retention/read-disturb management, SSD backgrou
 
 That repository currently identifies SRAM / DRAM / ROM / EEPROM / Flash / cache / ECC as a missing historical middle. A future full technical history of semiconductor memory should be developed there. This case should remain focused on the retention problem and link outward rather than pre-empting that work.
 
-A direct search for `2164A`, `8202A`, `8203`, and the paired hidden-refresh/controller-state question did not find an existing companion-repository treatment during this deepening, so only the retention-specific slice is added here. Broader controller genealogy, CAS-before-RAS history, self-refresh history, and semiconductor-memory generation history remain better candidates for `computing-archaeology`.
+A direct search for `2164A`, `8202A`, `8203`, and the paired hidden-refresh/controller-state question did not find an existing companion-repository treatment during the earlier deepening. A fresh search for `CAS-before-RAS refresh TMS4256` likewise found no dedicated packet to reuse. This repository therefore keeps only the retention-specific seam:
+
+```text
+external coverage state
+    -> on-chip coverage state
+    -> separately internalized cadence/timing generation
+```
+
+Broader controller genealogy, first-invention/first-shipment chronology, vendor-by-vendor CBR adoption, JEDEC history, self-refresh genealogy, and semiconductor-memory generation history remain better candidates for `computing-archaeology`.
 
 Current relevant memory track:
 
@@ -518,7 +613,7 @@ Current relevant memory track:
 
 ### `tmzncty/problem-history`
 
-Use its anti-anachronism rule here: `DRAM`, `refresh`, and `1T1C` are useful modern organizing terms, but the 1968 patent's own wording is `Field-effect transistor memory`, `regeneration`, `destructive memory`, and `retained in storage`. Likewise, Intel's 1982 term `Hidden Refresh` should not be silently replaced by later self-refresh terminology.
+Use its anti-anachronism rule here: `DRAM`, `refresh`, and `1T1C` are useful modern organizing terms, but the 1968 patent's own wording is `Field-effect transistor memory`, `regeneration`, `destructive memory`, and `retained in storage`. Likewise, Intel's `Hidden Refresh`, TI's `CAS-before-RAS refresh`, and NEC's `self-refresh mode` should not be silently collapsed into one later vocabulary.
 
 ---
 
@@ -541,16 +636,27 @@ Use its anti-anachronism rule here: `DRAM`, `refresh`, and `1T1C` are useful mod
    - p. 3-230: hidden-refresh row-address boundary, DOUT behavior, and initialization after extended bias without clocks.
 4. Intel Corporation, **`8203 — 64K DYNAMIC RAM CONTROLLER`**, reproduced in *Intel Memory Components Handbook* (1984). Bitsavers archive: <https://www.bitsavers.org/components/intel/_dataBooks/1984_Intel_Memory_Components_Handbook.pdf>. Alternative archive: <https://deramp.com/downloads/mfe_archive/050-Component%20Specifications/Intel/Memory%20Components/1984_Intel_Memory_Components_Handbook.pdf>.
    - p. 3-82: refresh/access arbiter; refresh timer and counter; refresh-address multiplexer; internal/external refresh description.
+5. Texas Instruments, **`TMS4256, TMS4257 — 262,144-BIT DYNAMIC RANDOM-ACCESS MEMORIES`**, inspected manufacturer scan; device section marked `MAY 1983 — REVISED JANUARY 1988`: <https://www.ardent-tool.com/datasheets/TI_TMS4256_7.pdf>.
+   - printed p. 4-3: revision line and feature list;
+   - printed p. 4-5: 4 ms / 256-row refresh requirement; CBR external-address-ignore and internal refresh-address generation.
+6. Texas Instruments, **MOS Memory Data Book** (1986), Applications Information. Canonical archive: <https://bitsavers.org/components/ti/_dataBooks/1986_SMYD006_TI_MOS_Memory_Data_Book.pdf>. Section mirror: <https://garyopa.hopto.org/WHTech/ftp.whtech.com/datasheets%20and%20manuals/Datasheets%20-%20TI/MOSMemory-1986/MOSMemory-1986-09-Applications%20Information.pdf>.
+   - printed p. 9-52: external timer/counter description for RAS-only refresh; on-chip refresh counter for CAS-before-RAS.
+7. Kazuo Nakaizumi / NEC Corporation, **`Dynamic semiconductor memory`**, JP59177905A / JPS6157097A, filed 27 August 1984, published 22 March 1986: <https://patents.google.com/patent/JPS6157097A/en>.
+   - translated abstract/description: refresh/address counter; timer; refresh timing generator; separate CAS-before-RAS and self-refresh modes.
+8. Samsung Semiconductor, **1988 MOS Memory Data Book**, KM41256A/KM41257A device-operation section. Public converted transcript: <https://manuals.plus/m/85b83593adbc036de4142423dbf452ec188a6445ad476820abc659b82e7f2ade>.
+   - corroborates on-chip CBR refresh-address counter increment and counter-test behavior; not used for fine diagram interpretation.
 
 ### Institutional secondary / artifact context
 
-5. Computer History Museum, **"1970: Semiconductors Compete with Magnetic Cores,"** *The Storage Engine*: <https://www.computerhistory.org/storageengine/semiconductors-compete-with-magnetic-cores/>.
+9. Computer History Museum, **"1970: Semiconductors Compete with Magnetic Cores,"** *The Storage Engine*: <https://www.computerhistory.org/storageengine/semiconductors-compete-with-magnetic-cores/>.
    - useful for placing Intel 1103's three-transistor dynamic cell in the early semiconductor-memory transition;
    - not used as the primary source for Dennard's 1T1C mechanism.
-6. Computer History Museum, **Intel 1103 1024-bit (1K) DRAM** object record: <https://www.computerhistory.org/revolution/memory-storage/8/368/1017>.
+10. Computer History Museum, **Intel 1103 1024-bit (1K) DRAM** object record: <https://www.computerhistory.org/revolution/memory-storage/8/368/1017>.
 
 ## Source notes
 
 The patent is the authoritative source for what Dennard disclosed and for the distinction between destructive read and periodic regeneration. The 1975 Intel catalog is later than the 1103's 1970 introduction, so it should be treated as primary manufacturer documentation of the product family rather than as evidence for the exact first-shipment specification. The 1103 comparison is intentionally used to bound the concept of dynamic retention, not to claim that the 1103 implements Dennard's exact one-transistor cell.
 
-The 2164A scan was directly inspected at printed pp. 3-219, 3-229, and 3-230, including the Hidden Refresh timing diagram and Power On section. The 8203 handbook text is used to locate refresh timer/counter/arbitration state in a named Intel controller; it is not used to claim invention priority or universal 1980s practice. See the dedicated deepening record for the full non-claim and source ledger.
+The 2164A scan was directly inspected at printed pp. 3-219, 3-229, and 3-230, including the Hidden Refresh timing diagram and Power On section. The 8203 handbook text is used to locate refresh timer/counter/arbitration state in a named Intel controller; it is not used to claim invention priority or universal 1980s practice.
+
+For the later deepening, the TI TMS4256/TMS4257 scan was directly inspected at printed pp. 4-3 and 4-5. The inspected copy is explicitly a **January 1988 revision**, so no visible feature is silently back-projected into the original May-1983 revision. The 1986 TI applications prose is used only for its explicit external-counter/on-chip-counter distinction. The NEC patent is a primary filing but the accessible English text is a translation, so it is used for structural mode/control distinctions rather than delicate wording claims. The Samsung 1988 source is a converted transcript and is corroborative. See the dedicated deepening records for full non-claim and source ledgers.
