@@ -2,15 +2,20 @@
 
 ## Scope
 
-- **Object / system:** Dell PowerEdge RAID Controller (PERC) Background Patrol Read in 2005 documentation, with later LSI MegaRAID patrol-read / consistency-check continuity bounded by the 2009 revision of the MegaRAID SAS Software User Guide.
+- **Object / system:** Dell PowerEdge RAID Controller (PERC) Background Patrol Read in 2005 documentation, with later LSI MegaRAID patrol-read / consistency-check continuity bounded by a directly inspected June-2007 Version 2.0 / Rev. B manual and the later 2009 revision of the MegaRAID SAS Software User Guide.
 - **Retention question:** what changes when proactive maintenance is moved above an individual disk into a RAID controller that can both exercise physical media and use redundant array state, while still keeping media verification distinct from redundancy-consistency verification?
 - **Status:** `grounded`.
+
+Grounding/deepening navigation:
+
+- canonical 2005 Dell / later MegaRAID boundary: this file;
+- June-2007 scheduling / coverage / observability deepening: [`../evidence/102-lsi-2007-patrol-read-scheduling-observability-deepening.md`](../evidence/102-lsi-2007-patrol-read-scheduling-observability-deepening.md).
 
 This is **not** a complete history of RAID scrubbing, SCSI VERIFY, T10 Background Medium Scan, parity checking, SMART, PERC firmware, LSI/MegaRAID genealogy, or latent-sector-error mitigation. Case 101 already grounds the 2004–2007 device-side SCSI Background Medium Scan (BMS) boundary. Case 102 takes the next bounded controller-level slice:
 
 > **How did period PERC documentation distinguish Background Patrol Read from Consistency Check, and what retention relations become visible when a controller can discover media defects before demand while separately validating RAID redundancy?**
 
-The project terms `media-readability qualification`, `redundancy-consistency qualification`, `maintenance locus`, and `coverage certificate` below are **engineering reconstructions**, not Dell or LSI historical vocabulary.
+The project terms `media-readability qualification`, `redundancy-consistency qualification`, `maintenance locus`, `coverage certificate`, `maintenance admission`, and `observability channel` below are **engineering reconstructions**, not Dell or LSI historical vocabulary.
 
 ---
 
@@ -28,10 +33,12 @@ The inspected sources directly use terms including:
 - `reallocate` / `remap`;
 - `data parity`;
 - `Automatic` / `Manual` patrol-read modes;
+- `Disabled` and `Continuous Patrolling` in the 2007 MegaRAID interface;
 - `Patrol Read Rate`;
 - `Consistency Check rate`;
 - `hot spare`;
-- `virtual drive` in later MegaRAID documentation.
+- `virtual drive` / `virtual disk` in later MegaRAID documentation;
+- `event log` and task `status`.
 
 Do not silently normalize these terms into T10 `Background Medium Scan`, ZFS `scrub`, HDFS `BlockScanner`, or a universal `scrubbing` state machine. They can be compared functionally while their implementation layers and historical vocabularies remain distinct.
 
@@ -98,24 +105,80 @@ But that capability must not be converted into a guarantee:
 
 Double faults, degraded arrays, absent redundancy, or additional unreadable sectors can remove that path. Case 17 remains the canonical parity-reconstructability case; Case 14 remains the canonical logical-block / physical-reassignment case.
 
+### H/P — June-2007 MegaRAID Version 2.0 directly preserves the task distinction
+
+The directly inspected **LSI MegaRAID SAS Software User’s Guide, 80-00156-01 Rev. B, Version 2.0, June 2007** now closes part of the version-text debt that previously relied on the later Rev. F continuity witness. Its revision history records an initial Version 1.0 in December 2005, Version 1.1 in August 2006, and the inspected Version 2.0 in June 2007. Exact Version-2.0 wording is direct evidence; the revision table is not treated as proof that every sentence existed unchanged in Versions 1.0/1.1.
+
+Version 2.0 defines `Consistency Check` around correctness of redundant virtual disks (RAID 1, 5, 10, 50, 60); its parity example computes data and compares it with parity. It separately describes `Patrol Read` around possible **physical-disk errors** that could lead to failure and corrective action conditioned by array configuration and error type.
+
+The direct 2007 relation is therefore:
+
+```text
+physical-disk Patrol Read
+    !=
+redundant-virtual-disk Consistency Check
+```
+
+### H/P — Version 2.0 exposes scheduling, admission, rate, scope, and status as separate controls
+
+The June-2007 manual exposes `Auto`, `Manual`, and `Disabled` Patrol Read modes. Its MegaRAID Storage Manager instructions give a default frequency of **7 days / 168 hours**, offer `Continuous Patrolling`, and expose a Patrol Read task rate. The command interface separately provides enable/disable/manual/start/stop/info operations and a delay between iterations.
+
+The manual also says Patrol Read starts only after an idle interval when no other background task is active, yet can continue during heavy foreground I/O after it has started. Thus:
+
+```text
+start-admission condition
+    !=
+whole-run execution condition
+```
+
+The seven-day value is a software default, not a seven-day latent-defect law or a proof that every pass completes before the next nominal interval.
+
+### H/P — Version 2.0 makes observability itself a bounded interface relation
+
+The Version-2.0 Patrol Read instructions say that the running operation does not report progress through the same interactive path and that status is reported in the event log. The command interface exposes mode, delay, and status through `-Info`. The event table separately includes Patrol Read progress, corrected-medium-error, uncorrectable-medium-error, and bad-block-puncture events.
+
+Consistency Check has a different UI/command observability path: its progress can be monitored through the Group Show Progress / consistency-check controls.
+
+The safe historical/engineering reading is not `Patrol Read has no progress state`; it is:
+
+```text
+internal / logged progress evidence may exist
+    !=
+progress is exposed through the same UI channel
+```
+
+and:
+
+```text
+progress/status evidence
+    !=
+coverage completion
+    !=
+repair success
+```
+
+The detailed source/custody and non-claim ledger is in [`evidence/102-lsi-2007-patrol-read-scheduling-observability-deepening.md`](../evidence/102-lsi-2007-patrol-read-scheduling-observability-deepening.md).
+
 ### H/P — later LSI MegaRAID documentation retains Patrol Read and Consistency Check as distinct controller tasks
 
-The LSI **MegaRAID SAS Software User Guide**, document family `80-00156-01`, has a revision table showing Version 1.0 in December 2005, Version 1.1 in August 2006, Version 2.0 / Rev. B in June 2007, Version 2.1 / Rev. C in July 2007, and later revisions through Rev. F in March 2009.
+The LSI **MegaRAID SAS Software User Guide**, document family `80-00156-01`, continues through Version 2.1 / Rev. C in July 2007 and later revisions through Rev. F in March 2009.
 
 The inspected Rev. F text describes Patrol Read as reviewing the system for drive errors that could lead to failure and taking corrective action depending on drive-group configuration and error type. It exposes controller-level automatic/manual/disabled modes, patrol-read rates, execution delay, and status. Elsewhere, it defines Consistency Check as verifying correctness of data in redundant virtual drives; in parity layouts, that means computing data and comparing it with parity.
 
 The same guide says Patrol Read can verify sectors of drives connected to the controller, including system-reserved areas on configured drives, and can cover all RAID levels and hot spares. Consistency Check, by contrast, is scoped to redundant virtual drives.
 
-This is a **later continuity witness**, not proof that every sentence in the 2009 Rev. F text was already present in the December 2005 or June 2007 editions. The revision table anchors the document family chronology; exact wording is attributed only to the inspected later revision.
+The 2009 manual remains a **later continuity witness**. The newly inspected June-2007 Version 2.0 establishes many of these task/scheduling/scope distinctions directly by 2007, but neither document alone proves the exact Version-1.0 December-2005 wording.
 
-### H/P — later MegaRAID event vocabulary preserves distinct maintenance outcomes
+### H/P — MegaRAID event vocabulary preserves distinct maintenance outcomes
 
-The inspected MegaRAID guide's event table contains separate patrol-read events for a corrected medium error, an uncorrectable medium error, and bad-block puncturing. Consistency Check has its own events for corrected medium errors, completion with corrections, uncorrectable double medium errors, and inconsistent parity.
+The inspected MegaRAID event tables contain separate patrol-read events for progress, a corrected medium error, an uncorrectable medium error, and bad-block puncturing. Consistency Check has its own events for corrected medium errors, completion with corrections, uncorrectable double medium errors, and inconsistent parity in later documentation.
 
 These event classes are especially useful retention evidence because they prevent one generic `scan found a problem` state:
 
 ```text
 maintenance task identity
+    !=
+maintenance progress
     !=
 medium-error severity
     !=
@@ -148,17 +211,17 @@ Mirrored or parity information is retained separately from the mere readability 
 
 Drive grown-defect lists, remapped locations, and controller knowledge of bad blocks condition whether a physical location remains eligible for future service.
 
-### 5. Maintenance scheduling / rate state
+### 5. Maintenance scheduling / admission / rate state
 
-Automatic versus manual Patrol Read, execution delay, task rate, and idle/background scheduling determine when proactive verification gets maintenance opportunity.
+Automatic versus manual versus disabled Patrol Read, execution delay, continuous mode, task rate, idle/background admission, and scope selection determine when and how proactive verification receives maintenance opportunity.
 
-This control state is neither payload nor proof of media health.
+This control state is neither payload nor proof of media health. The 2007 evidence also shows that the condition admitting a pass can differ from the conditions under which it later continues.
 
 ### 6. Maintenance evidence / event state
 
-Task status, discovered medium errors, inconsistent parity events, corrections, and failed/uncorrectable outcomes retain evidence about what the controller observed and attempted.
+Task status, progress, discovered medium errors, inconsistent parity events, corrections, and failed/uncorrectable outcomes retain evidence about what the controller observed and attempted.
 
-This evidence can guide later action without being equivalent to the repaired state itself.
+This evidence can guide later action without being equivalent to the repaired state itself. `status/progress evidence != coverage completion` is now a directly motivated Version-2.0 interface boundary rather than only a generic project warning.
 
 ---
 
@@ -168,17 +231,28 @@ The controller-level case exposes several non-identical clocks and scopes:
 
 1. time since the last Patrol Read pass;
 2. automatic/manual maintenance schedule;
-3. foreground-I/O load and controller maintenance opportunity;
-4. Patrol Read physical-drive coverage;
-5. Consistency Check virtual-drive/redundancy coverage;
-6. defect creation time, usually unknown;
-7. defect discovery time;
-8. correction/reallocation/reconstruction time;
-9. later verification time after repair.
+3. configured inter-pass delay or continuous mode;
+4. admission opportunity under idle/no-other-background-task conditions;
+5. foreground-I/O load and controller maintenance opportunity after admission;
+6. Patrol Read physical-drive coverage;
+7. Consistency Check virtual-drive/redundancy coverage;
+8. defect creation time, usually unknown;
+9. defect discovery time;
+10. correction/reallocation/reconstruction time;
+11. progress/status observation time;
+12. later verification time after repair.
 
 Thus:
 
 > **maintenance schedule ≠ physical hazard clock.**
+
+and:
+
+> **start admission ≠ whole-run exclusivity.**
+
+and:
+
+> **progress/status ≠ coverage completion.**
 
 and:
 
@@ -196,13 +270,13 @@ and:
 
 Case 101 is device-side. Its T10 proposal intentionally moves scanning into the SCSI device server and emphasizes that ordinary SCSI-interface bandwidth need not be consumed by the background operation.
 
-Case 102 is controller-level. Dell describes PERC Background Patrol Read as a controller maintenance feature operating across configured physical disks, while RAID redundancy can participate in remediation.
+Case 102 is controller-level. Dell describes PERC Background Patrol Read as a controller maintenance feature operating across configured physical disks, while RAID redundancy can participate in remediation. The 2007 LSI interface adds controller-visible scheduling, rate, scope and event/status state.
 
 The functional similarity is real: both proactively exercise medium readability before application demand. The historical identity is not established:
 
 > **drive-internal BMS ≠ RAID-controller Patrol Read.**
 
-No `BMS -> PERC Patrol Read` genealogy is asserted here.
+No `BMS -> PERC/MegaRAID Patrol Read` genealogy is asserted here.
 
 ### Case 14 — SCSI defect reassignment
 
@@ -245,9 +319,11 @@ This case makes **no invention-priority claim** for:
 
 The July 2005 Dell document supports a narrow statement that a feature named `Background Patrol Read` was introduced in specified PERC firmware/driver updates. It does not establish first invention of the function.
 
-Likewise, the later LSI manual demonstrates the persistence of a controller-level `Patrol Read` / `Consistency Check` distinction in a MegaRAID document family. This case does **not** infer a direct PERC-to-MegaRAID implementation lineage merely from shared terminology or known industry relationships. A proper genealogy would require controller silicon/firmware lineage, release notes, OEM mappings, and earlier vendor documentation.
+The June-2007 LSI manual now directly grounds Version-2.0 scheduling/scope/observability wording. Its revision table anchors a Version-1.0 initial release in December 2005 and Version 1.1 in August 2006, but exact earlier wording remains uninspected. The later Rev. F manual remains a continuity witness rather than a license to back-project every later field or event into 2005.
 
-A fresh repository search found no dedicated Patrol Read history in `tmzncty/computing-archaeology`. Broader controller genealogy should be coordinated there rather than grown opportunistically inside this retention case.
+Likewise, shared terminology between PERC and MegaRAID does **not** prove direct implementation lineage. A proper genealogy would require controller silicon/firmware lineage, release notes, OEM mappings, and earlier vendor documentation.
+
+A fresh repository search again found no dedicated `MegaRAID Patrol Read` packet in `tmzncty/computing-archaeology`. Broader controller genealogy should be coordinated there rather than grown opportunistically inside this retention case.
 
 ---
 
@@ -267,7 +343,12 @@ Case 102 adds these controlled relations:
 10. `maintenance event/progress state ≠ user payload state`;
 11. `named PERC feature introduction ≠ invention of background disk verification`;
 12. `shared Patrol Read terminology/function ≠ proven controller genealogy`;
-13. `media readability ≠ parity consistency ≠ end-to-end checksum integrity`.
+13. `media readability ≠ parity consistency ≠ end-to-end checksum integrity`;
+14. `maintenance configured ≠ maintenance executing`;
+15. `start-admission condition ≠ whole-run execution condition`;
+16. `progress/status evidence ≠ coverage completion`;
+17. `software default cadence ≠ physical defect-arrival clock`;
+18. `document-family chronology ≠ proof of identical earlier wording`.
 
 These are project analytical statements, not a claim that Dell or LSI engineers used this ontology.
 
@@ -277,7 +358,9 @@ These are project analytical statements, not a claim that Dell or LSI engineers 
 
 Case 102 gives a precise example of **layered technical confidence**. A RAID controller may need evidence that physical sectors remain readable and separate evidence that redundant representations remain mutually consistent. The logical object can therefore depend on several maintenance judgments that are produced by different operations at different scopes.
 
-This does not mean that redundancy is a philosophical form of memory or that verification creates persistence by observation. The technical point is narrower: **continued availability can depend on maintaining both embodiments and the relations that authorize reconstruction among them.**
+The 2007 interface adds a second bounded point: a maintenance policy can persist as configuration while evidence that the policy has actually been fulfilled must be produced by execution. Mode, delay, rate and scope are not themselves proof that a pass ran; progress/status are not themselves proof that coverage completed; completion is not a timeless future-health certificate.
+
+This does not mean that redundancy is a philosophical form of memory or that verification creates persistence by observation. The technical point is narrower: **continued availability can depend on maintaining both embodiments and the relations that authorize reconstruction among them, while operator-visible evidence about that maintenance remains a separate retained state.**
 
 ---
 
@@ -288,7 +371,10 @@ Still open after this case:
 - direct archived facsimiles from Dell rather than text mirrors for the July and November 2005 documents;
 - the February 2006 Dell Power Solutions article as a directly inspected primary facsimile;
 - exact PERC firmware release-note chronology and controller/OEM hardware lineage;
-- exact text comparison across MegaRAID document versions 1.0, 1.1, 2.0, 2.1, and later revisions;
+- direct Version 1.0 (December 2005), Version 1.1 (August 2006), and Version 2.1 / Rev. C text comparison against the now-inspected Version 2.0;
+- controller reboot / power-loss behavior while Patrol Read is in progress;
+- whether Patrol Read coverage position is checkpointed, restarted, or discarded across reset/firmware update;
+- persistence semantics of Patrol Read event/status records;
 - host-driven SCSI VERIFY scrub history;
 - IBM ServeRAID, Adaptec, HP Smart Array, and other controller terminology/history;
 - cross-vendor `Patrol Read` / `Media Patrol` / `Consistency Check` genealogy;
@@ -302,4 +388,22 @@ Still open after this case:
 
 **Grounded.**
 
-The 2005 Dell material directly establishes a named PERC Background Patrol Read regime and, crucially, explicitly separates physical-media verification from Consistency Check's data/parity verification. Later LSI MegaRAID documentation supplies a bounded continuity witness for controller-level scheduling, scope, task-specific events, and the continued separation of Patrol Read from redundant-virtual-drive consistency checking. The case therefore closes one named-controller slice without converting functional similarity into a universal scrub model or a historical genealogy.
+The 2005 Dell material directly establishes a named PERC Background Patrol Read regime and, crucially, explicitly separates physical-media verification from Consistency Check's data/parity verification. The directly inspected June-2007 LSI MegaRAID Version 2.0 manual now adds version-specific grounding for controller scheduling, admission, scope, resource-rate and observability state while preserving that task distinction; later Rev. F material remains a bounded continuity witness.
+
+The case therefore now supports the more precise retention decomposition:
+
+```text
+maintenance policy / schedule
+    !=
+maintenance admission
+    !=
+maintenance execution
+    !=
+progress / status evidence
+    !=
+coverage completion
+    !=
+repair / redundancy re-qualification
+```
+
+without converting one controller family's interface into a universal scrub model or a historical genealogy.
