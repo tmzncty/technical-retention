@@ -32,6 +32,16 @@ Synthesis documents compare relations already grounded in individual cases. They
 | [`27 — Retention-Policy Evidence Validity`](SYNTHESIS_27_RETENTION_POLICY_EVIDENCE_VALIDITY.md) | bounded | When is a sensor, proxy, retained profile, status field, or error observation sufficiently representative and current to drive maintenance policy? |
 | [`28 — Reclamation Authority After Retirement`](SYNTHESIS_28_RECLAMATION_AUTHORITY_AFTER_RETIREMENT.md) | bounded | What authority, cleanup obligations, preservation work, and closure evidence sit between logical retirement and reuse? |
 | [`29 — Maintenance Observability: Schedule, Admission, Coverage, Accounting, and Closure`](SYNTHESIS_29_MAINTENANCE_OBSERVABILITY_COVERAGE_ACCOUNTING.md) | **bounded / current** | What is an observer actually entitled to infer from maintenance configuration, progress, counters, events, and completion surfaces? |
+| [`29 — Semantic Persistence and Restart Continuation`](SYNTHESIS_29_SEMANTIC_PERSISTENCE_AND_RESTART_CONTINUATION.md) | bounded | When a usable relation survives interruption, what survives: representation, meaning, progress, relation, or restart authority? |
+| [`30 — Maintenance Coverage: Local Work, Domain Completion, and Completion Evidence`](SYNTHESIS_30_MAINTENANCE_COVERAGE_COMPLETION_EVIDENCE.md) | bounded | What connects local maintenance actions to protected-domain coverage, completion evidence, and renewed future obligation? |
+
+### Numbering note
+
+The repository currently contains **two files titled `Synthesis 29`**. This index preserves their existing filenames and titles rather than silently renumbering one and risking broken cross-references. A future repository-wide renumbering should be treated as a separate navigation cleanup with link auditing, not folded into an unrelated research slice.
+
+## Focused synthesis deepenings
+
+- [`Synthesis 29 deepening — maintenance-history loss, future control, and distinguishability`](../evidence/synthesis29-maintenance-history-loss-control-state-deepening.md) — grounded Cases 38 and 83 now distinguish **representational collapse** (S3700 AFh saturation / event-class omission) from **premature deletion of decision-bearing completion history** (HDFS verification-log rollover). The bounded result is `maintenance history retained != exact history retained`, and, separately, `historical record != retrospective-only state`: recent completion evidence can be consumed by future maintenance eligibility. This closes only the saturation / premature-rollover portion of Synthesis 29's telemetry-loss debt; reset and wrap counterexamples remain open.
 
 ## Synthesis audits
 
