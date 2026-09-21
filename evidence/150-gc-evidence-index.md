@@ -5,7 +5,7 @@
 - [`../cases/150-crucial-m550-active-garbage-collection.md`](../cases/150-crucial-m550-active-garbage-collection.md)
 - Canonical maturity remains **`grounded`**.
 
-This is a case-local navigation aid, not a replacement for `CASE_INDEX.md`. The repository-level `CASE_INDEX.md` is currently empty even though `ROADMAP.md` still describes it as the authoritative maturity ledger; this index therefore records only the already-established Case 150 status and does not attempt to rebuild the global ledger.
+This is a case-local navigation aid, not a replacement for `CASE_INDEX.md`. The repository-level `CASE_INDEX.md` currently parses as empty even though `ROADMAP.md` still describes it as the authoritative maturity ledger; this index therefore records only the already-established Case 150 status and does not attempt to rebuild the global ledger.
 
 ## Evidence chain
 
@@ -62,6 +62,16 @@ This is a case-local navigation aid, not a replacement for `CASE_INDEX.md`. The 
   - a 2016 Micron-domain engineering statement separates protection of already-written / old data during internal activity such as GC from protection of the entire volatile host-write cache;
   - fixes `TRIM advertised != queued-TRIM path trusted`, `firmware fix exists != field fleet converged`, and `maintenance-transaction safety != full in-flight-write durability`.
 
+### 8. 2014 blacklist identity coverage / policy applicability
+
+- [`150-linux-2014-m550-blacklist-identity-coverage-deepening.md`](150-linux-2014-m550-blacklist-identity-coverage-deepening.md)
+  - upstream Linux `d121f7d0...` on 2 April 2014 records the M550 queued-TRIM safety rule before the firmware fix was available;
+  - the original Crucial matcher used `Crucial_CT???M550SSD*`, encoding a fixed-width capacity-field assumption;
+  - upstream `2a13772a...` on 18 August 2014 widens that predicate to `Crucial_CT*M550SSD*` because the four-character `1024` capacity string escaped the blacklist;
+  - contemporaneous Ubuntu bug 1363462 provides field corroboration for the uncovered 1 TB model but is kept below controlled-reproducer strength;
+  - connects the August 2014 widening to the March 2015 firmware-qualified narrowing without collapsing model identity and firmware identity;
+  - fixes `compatibility knowledge retained != correct referent coverage != workaround selected != unsafe command path withheld`.
+
 ## Current bounded comparison map
 
 ```text
@@ -69,9 +79,13 @@ host retires logical data
     ↓
 retirement intent exists
     ↓
-command path must be admissible for model + firmware
+runtime model + firmware identity is classified
     ↓
-retirement/deallocation knowledge reaches controller
+compatibility policy is selected for that identity
+    ↓
+command path is admitted or withheld
+    ↓
+retirement/deallocation knowledge may reach controller
     ↓
 controller distinguishes live from stale embodiments
     ↓
@@ -94,6 +108,11 @@ host retirement decision
     != physical erase
     != sanitization
 
+retained compatibility rule
+    != complete identity coverage
+    != selected workaround
+    != enforced command-path restriction
+
 host idle
     != controller idle
     != maintenance completion
@@ -111,6 +130,7 @@ same model family
 - **Case 15** — SSD power-loss durability handoff: volatile staging, flush, orderly shutdown, capacitor-backed transfer, recovery defects.
 - **Case 39** — FTL recovery: payload survival versus mapping/currentness reconstruction.
 - **Case 44 / 47** — deallocation and sanitize: ordinary retirement/reclamation must not be confused with sanitization.
+- **Case 79** — HDFS SafeMode: useful functional comparison for `safety policy exists != every relevant execution/applicability path is covered`; no implementation genealogy claimed.
 - **Case 145** — JFFS2 garbage collection: raw-Flash-filesystem current-node relocation and erase-qualified reuse.
 - **Case 153** — Ceph snap-trim: distributed asynchronous reclamation; functional comparison only.
 
@@ -119,22 +139,32 @@ same model family
 `tmzncty/computing-archaeology` remains the home for a broad chronology of:
 
 - ATA Data Set Management / NCQ TRIM development;
+- libata compatibility-table and model-string matching genealogy;
 - SSD-controller and FTL architecture history;
 - Crucial/Micron product and firmware genealogy;
 - controller-vendor implementation archaeology;
 - performance and deployment history.
 
-A fresh search for `M550 queued TRIM MU02` found no dedicated companion packet to reuse. Case 150 therefore retains only the bounded retention question: **how retirement authority, compatibility state, maintenance execution, and physical reclamation remain separate even inside one named SSD family.**
+A fresh search for `M550 queued TRIM` found no dedicated companion packet to reuse. Case 150 therefore retains only the bounded retention question: **how retirement authority, compatibility state, applicability predicates, maintenance execution, and physical reclamation remain separate even inside one named SSD family.**
+
+## Latest closed debt
+
+This round closes a narrow evidence gap left by the firmware-qualified trust slice:
+
+- the host may already retain the correct safety rule while a syntactic device-identity predicate under-covers one affected SKU;
+- the August 2014 Linux change is therefore a policy-**applicability** correction, not a newly invented queued-TRIM theory;
+- later firmware qualification shows that compatibility maintenance can require both widening and narrowing over time.
 
 ## Remaining evidence debt
 
 Case 150 remains `grounded`. The highest-value open work is now narrower:
 
-- exact M550 MU01 queued-TRIM failure mechanism and original reproducer traces;
+- recover the original kernel Bugzilla 81071 body/attachments or another stable archival copy if available;
+- exact M550 MU01 queued-TRIM failure mechanism and a controlled minimal reproducer;
 - controlled MU01 vs MU02 hardware tests;
 - power-cut fault injection during GC;
 - exact GC transaction/progress recovery after interruption;
 - exact victim-selection/live-page publication ordering;
 - raw-NAND observation of stale embodiments before/after reclaim;
 - period-origin Crucial support captures that can authenticate the 2013–2014 wording chain;
-- broader managed-SSD GC genealogy in `computing-archaeology` rather than duplicated here.
+- broader libata model-string / blacklist genealogy in `computing-archaeology` rather than duplicated here.
