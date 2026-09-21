@@ -233,6 +233,36 @@ currently readable / serviceable
 trusted for future long powered-off retention
 ```
 
+### 9. Intel firmware-versioned NAND refresh policy, 2018–2020
+
+- [`111-intel-2018-2020-firmware-refresh-policy-versioning-deepening.md`](111-intel-2018-2020-firmware-refresh-policy-versioning-deepening.md)
+
+Bounded role:
+
+- Intel's later first-party firmware revision histories record explicit NAND-refresh-algorithm changes for named SSD families;
+- the Intel SSD 540s July-2020 `043C/017C` entry says “Optimizations for NAND data refresh algorithms” while the family remains a named 16 nm TLC product line;
+- Intel also records “Improved NAND data refresh algorithms” for Pro 5450s firmware in October 2018 and “Improved NAND refresh algorithms” for 760p firmware in September 2018;
+- therefore firmware revision is a retention-relevant implementation variable, not merely administrative metadata;
+- the release notes do not expose thresholds, traversal, restart semantics, completion telemetry, or measured retention gain.
+
+Critical boundary:
+
+```text
+same product family
+    !=
+same retention-maintenance policy
+```
+
+and:
+
+```text
+firmware update installed
+    !=
+all existing payload refreshed
+```
+
+This packet does **not** bridge Coulson's Intel-assigned 2009-public patent mechanism to a named shipping Intel SSD implementation.
+
 ## Cross-layer state model
 
 The evidence now supports a deliberately layered model:
@@ -241,29 +271,33 @@ The evidence now supports a deliberately layered model:
 A. media condition
     retained charge / error margin / wear history
 
-B. device-local policy evidence
+B. policy-bearing implementation epoch
+    product family + firmware revision
+    may change refresh algorithms without changing inventory-level family name
+
+C. device-local policy evidence
     retained age / schedule
     OR newly observed error burden
 
-C. device-local maintenance admission
+D. device-local maintenance admission
     boot / power-up / idle / threshold / periodic policy
 
-D. device-local maintenance execution
+E. device-local maintenance execution
     monitor / scan / correct / rewrite / relocate
 
-E. device-local progress / completion
+F. device-local progress / completion
     may or may not be exposed or persisted
 
-F. system-level maintenance admission
+G. system-level maintenance admission
     long-offline trigger / scrub scheduling
 
-G. operator policy
+H. operator policy
     calendar intervention / powered dwell / read sweep / backup / environment
 
-H. operator-visible completion evidence
+I. operator-visible completion evidence
     e.g. named system scrub completion
 
-I. future-offline admission
+J. future-offline admission
     wear / rated-life / policy judgment
 ```
 
@@ -273,7 +307,7 @@ The repository should not replace this with one boolean `healthy` or `refreshed`
 
 ### Filing / priority is not publication
 
-The new prior-art packet makes chronology explicit:
+The prior-art packet makes chronology explicit:
 
 ```text
 priority date
@@ -302,6 +336,22 @@ implementation proof
 The 5-April-2010 Pulsar manual remains the earliest directly inspected **named enterprise-SSD product-manual** witness currently used by Case 111.
 
 That does not make Seagate the inventor of Flash refresh or boot/power-up retention maintenance.
+
+### Product identity is not retention-policy identity
+
+Intel's preserved revision histories now add a different source-critical distinction:
+
+```text
+same model / family name
+    !=
+same firmware revision
+    !=
+same documented NAND-refresh policy
+```
+
+For retention experiments and field comparisons, firmware revision is therefore a required control variable whenever the claim depends on controller-local refresh behavior.
+
+The release-history wording still does not reveal the internal algorithm or prove a quantified improvement.
 
 ### Power is an opportunity, not a completion certificate
 
@@ -334,6 +384,7 @@ Across Case 111 and adjacent prior art, `refresh` can refer to:
 - timestamp / age / boot-triggered renewal;
 - SSD error-threshold rewrite or relocation;
 - product-manual monitor / refresh behavior;
+- firmware-versioned NAND-refresh algorithms;
 - later operator-level retention tasks.
 
 The shared word does not establish a shared trigger, geometry, scheduler, mapping semantics, or genealogy.
@@ -344,6 +395,7 @@ Useful internal comparisons, without asserting historical continuity:
 
 - **Case 36** — Flash Correct-and-Refresh: academic algorithm / ECC-margin maintenance, not proven to be the vendor implementations here;
 - **Case 37** — Samsung 840 EVO old-data performance restoration: powered periodic product episode with different symptom framing and product class;
+- **Case 43** — AVATAR VRT-aware DRAM refresh: a bounded functional comparison for mutable maintenance-policy infrastructure, not a NAND/DRAM genealogy;
 - **Case 52** — NAND read disturb: another case where present observation / retained policy can generate future maintenance obligations;
 - **Case 55** — NVMe SMART / Health endurance telemetry: model-derived endurance state can alter operator judgment without being an immediate-failure bit;
 - **Case 67** — OCP `Refresh Counts`: telemetry/accounting vocabulary must not be merged with product-manual `refresh memory cells` wording;
@@ -351,11 +403,12 @@ Useful internal comparisons, without asserting historical continuity:
 
 ## Related-repository routing
 
-Fresh exact-number code search in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) did not surface a dedicated `US20090327581A1` packet during the current slice.
+Fresh exact-number / topic code search in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) did not surface a dedicated `US20090327581A1` or Intel SSD power-up-refresh packet during these slices.
 
 Keep `technical-retention` focused on:
 
 - retained policy state versus re-observed evidence;
+- firmware revision as a retention-policy implementation variable;
 - maintenance admission / opportunity / progress / completion;
 - future-offline admissibility;
 - chronology and evidence-layer distinctions.
@@ -363,7 +416,7 @@ Keep `technical-retention` focused on:
 Prefer `computing-archaeology` for broad histories of:
 
 - M-Systems / SanDisk controller and product genealogy;
-- Intel X25 controller / firmware genealogy;
+- Intel X25 and later Intel controller / firmware genealogy;
 - the larger Flash-refresh patent network;
 - SSD market chronology;
 - exact commercial adoption and silicon/firmware implementation.
@@ -381,10 +434,10 @@ Highest-value unresolved slices are:
 5. **controller-specific Dell behavior** — a named controller/firmware family for the read-triggered retention task;
 6. **completion telemetry below the storage-system layer** — device-local evidence, if any, that a retention-maintenance pass finished;
 7. **capacity / used-data scaling** — direct evidence for how maintenance duration scales rather than inferring a formula from operator guidance;
-8. **later NAND-generation drift** — how the operator schedule changes as ECC, NAND generation, and controller policy change.
+8. **measured firmware-policy / NAND-generation drift** — Intel release notes now prove that named firmware revisions can change NAND-refresh algorithms, but direct evidence is still needed to connect a specific revision to measured retention margin, restart behavior, completion time, or changed operator power-on/off guidance.
 
 ## Status decision
 
 **No maturity promotion.**
 
-Case 111 remains `grounded` because the new packet improves mechanism chronology and the evidence graph, but it does not close the product-implementation and independent-validation gaps strongly enough to justify a stronger status.
+Case 111 remains `grounded` because the firmware packet adds a new control-variable boundary and strengthens the evidence graph, but it does not close the product-implementation, restart-semantics, completion-telemetry, or independent-validation gaps strongly enough to justify a stronger status.
