@@ -100,7 +100,47 @@ CAS-before-RAS refresh
 self-refresh
 ```
 
-The new MK4164 deepening changes the chronological prior-art floor for **on-chip refresh counting**; it does not replace this later evidence about CAS-before-RAS and timer-backed self-refresh semantics.
+The MK4164 deepening changes the chronological prior-art floor for **on-chip refresh counting**; it does not replace this later evidence about CAS-before-RAS and timer-backed self-refresh semantics.
+
+### 7. 1979–1984 cross-vendor 64K refresh organization
+
+[`03-1979-1984-64k-dram-refresh-organization-cross-vendor-deepening.md`](03-1979-1984-64k-dram-refresh-organization-cross-vendor-deepening.md)
+
+Mostek MK4164, TI TMS4164, and Intel 2164A manufacturer records now close the previously open bounded comparison at the interface-contract level. The devices share the broad 64K × 1 generation but do **not** expose one uniform maintenance contract:
+
+```text
+Mostek MK4164
+    128 cycles / 2 ms
+    pin 1 = RFSH
+    on-chip next-refresh-row counter in RFSH mode
+
+TI TMS4164
+    256 rows / 4 ms
+    pin 1 = NC
+    externally presented refresh row in RAS-only mode
+
+Intel 2164A
+    128 cycles / 2 ms
+    externally presented refresh row in bounded RAS-only / hidden mode
+```
+
+The comparison establishes:
+
+```text
+same logical capacity
+    !=
+same refresh-coverage cardinality
+    !=
+same refresh deadline
+    !=
+same coverage-state locus
+
+package compatibility
+    !=
+maintenance-control compatibility
+```
+
+It is not an invention-priority, transistor-topology, or product-interchangeability claim.
 
 ---
 
@@ -115,6 +155,8 @@ maintenance deadline
     !=
 refresh invocation / cadence
     !=
+refresh-address / coverage cardinality
+    !=
 refresh-address / coverage state
     !=
 restore execution
@@ -124,14 +166,26 @@ access arbitration
 useful-service visibility
 ```
 
-And the Mostek MK4164 adds:
+The Mostek MK4164 adds:
 
 ```text
 state coordinating maintenance
     can itself be dynamic retained state
 ```
 
-The existence of one recurrent RFSH stream servicing both the array and the counter does not collapse them into one retained object.
+The cross-vendor 64K comparison adds:
+
+```text
+logical capacity
+    !=
+maintenance geometry
+
+package/pin compatibility
+    !=
+maintenance-semantic identity
+```
+
+The existence of one recurrent RFSH stream servicing both the array and the counter does not collapse them into one retained object. Likewise, a family resemblance at the package or logical-capacity level does not establish one shared refresh-control topology.
 
 ---
 
@@ -139,19 +193,20 @@ The existence of one recurrent RFSH stream servicing both the array and the coun
 
 **Case 03 remains `grounded`.**
 
-The 1979–1980 Mostek slice deepens prior art and the maintenance-control-state model. It does not justify a maturity promotion because important work remains outside the bounded evidence:
+The cross-vendor 64K slice closes the previously listed interface-level refresh-organization comparison debt for the bounded Mostek / TI / Intel set. It does not justify a maturity promotion because important work remains outside the bounded evidence:
 
 - invention / priority history for the earliest on-chip DRAM refresh counter;
 - verified first-silicon and first-shipment chronology for MK4164 RFSH;
 - exact internal counter circuit topology;
-- cross-vendor 64K DRAM refresh-organization comparison;
+- transistor-level comparison of the named 64K DRAM refresh organizations;
 - controlled hardware observation of counter-phase loss or corruption;
+- board-level substitution / mixed-vendor compatibility evidence if such a claim is ever needed;
 - broader semiconductor-memory genealogy, which should be routed to `tmzncty/computing-archaeology` rather than duplicated here.
 
 ---
 
 ## Related-repository routing
 
-Searches of `tmzncty/computing-archaeology` for `MK4164 RFSH refresh battery backup Mostek` and `Mostek DRAM refresh` returned no dedicated technical-history packet at the time of this deepening.
+Earlier searches of `tmzncty/computing-archaeology` for `MK4164 RFSH refresh battery backup Mostek` and `Mostek DRAM refresh` returned no dedicated technical-history packet. A fresh search for `MK4164` during the cross-vendor deepening likewise returned no dedicated packet to reuse.
 
 If that repository later develops the 64K-DRAM product/genealogy story, Case 03 should link it and retain only the retention-specific distinctions above.
