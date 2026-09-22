@@ -13,6 +13,7 @@
 | **2008–2011 early source genealogy** | [`153-ceph-2008-2011-snaptrim-obligation-completion-genealogy-deepening.md`](153-ceph-2008-2011-snaptrim-obligation-completion-genealogy-deepening.md) | Nov-2008 `snap_trim_wq`; May-2010 `purged_snaps` retained completion state plus activation-time reconstruction of runtime `snap_trimq`; 2011 replica/repop completion-ordering evidence | early snapshot collections are not later `SnapMapper`; worker embodiment is not retained cleanup obligation |
 | **2010 `purged_snaps` release boundary** | [`153-ceph-2010-purged-snaps-v021-release-boundary-deepening.md`](153-ceph-2010-purged-snaps-v021-release-boundary-deepening.md) | direct tagged-source inspection shows `v0.20.1` and `v0.20.2` still encode PG-info v21 `snap_trimq`, while `v0.21` contains PG-info v22 `purged_snaps` plus activation reconstruction `cached_removed_snaps - purged_snaps`; Ceph publicly announced v0.21 on 29-Jul-2010 | development commit date != maintenance-release inclusion; later wall-clock release != inclusion proof; tagged source/release provenance != runtime correctness or bit-for-bit tarball verification |
 | **2010 PG-info v21→v22 migration semantics** | [`153-ceph-2010-pginfo-v21-v22-snaptrim-migration-deepening.md`](153-ceph-2010-pginfo-v21-v22-snaptrim-migration-deepening.md) | v21 retains the pending `snap_trimq`; the v22 legacy decoder parses that old field into a local temporary and does not translate it into `purged_snaps`; activation regenerates runtime work from pool-known removed snapshots minus retained purged/completion evidence; 19-May code makes `purged_snaps` explicit trim-completion state | legacy bytes decodable != legacy progress partition preserved; schema compatibility != lossless semantic migration; reconstructable obligation != universal role/propagation correctness |
+| **2011 replica-apply / completion ordering** | [`153-ceph-2011-snaptrimmer-replica-apply-completion-ordering-deepening.md`](153-ceph-2011-snaptrimmer-replica-apply-completion-ordering-deepening.md) | the `34cb737f` → `923617dc` state-machine series turns a documented race into an explicit `TrimmingObjects` → `WaitingOnReplicas` gate before advancing `purged_snaps` and sharing newer PG info; `3f4e11e1` then regenerates replica collection cleanup from retained `purged_snaps` after recovery qualification | repops issued != replica apply/ack gate cleared != completion relation advanced != PG info published; state transition != worker wakeup != proven local/remote durable commit |
 | **2013 bounded grounding** | [`153-ceph-2013-snaptrim-asynchronous-reclamation-grounding.md`](153-ceph-2013-snaptrim-asynchronous-reclamation-grounding.md) | first canonical grounding of asynchronous snapshot retirement/reclamation from a first-party source-tree document plus maintained documentation | logical snapshot retirement != completed clone reclamation != sanitization |
 | **2016 activation reconstruction** | [`153-ceph-2016-pg-activation-trim-obligation-reconstruction-deepening.md`](153-ceph-2016-pg-activation-trim-obligation-reconstruction-deepening.md) | activation reconstructs trim work from retained removed-vs-purged relations | retained cleanup obligation != retained byte-identical worker queue or exact cursor |
 | **2017 observability / error stop** | [`153-ceph-2017-snaptrim-observability-error-stop-deepening.md`](153-ceph-2017-snaptrim-observability-error-stop-deepening.md) | `snaptrim_wait`, `snaptrim`, and `snaptrim_error` distinguish queued/waiting, executing, and error-stopped reclamation | status publication != successful reclamation completion |
@@ -45,7 +46,13 @@ worker scheduling / reservation state
     !=
 active trim execution
     !=
-distributed application / completion ordering
+replicated cleanup operation issued
+    !=
+replica application / acknowledgement gate
+    !=
+completion relation advanced / published
+    !=
+local or remote durable commit proven
     !=
 operator-visible maintenance status
     !=
@@ -132,7 +139,7 @@ first numbered release inclusion
 
 The first inspected numbered public release carrying the May-2010 `purged_snaps` relation is **v0.21**. This remains a source/release provenance claim, not a proof that every runtime fault path was already correct or that the historical tarball has been independently hash-matched to the tag.
 
-The new migration-semantics slice adds a fifth boundary: **being able to decode old PG-info is not the same thing as translating the old maintenance-progress semantics into the new representation**.
+The migration-semantics slice adds a fifth boundary: **being able to decode old PG-info is not the same thing as translating the old maintenance-progress semantics into the new representation**.
 
 The parent v21 source directly persists:
 
@@ -175,29 +182,55 @@ The same behavior is present in the tagged v0.21 source, so this is not merely a
 
 This does not imply that conservative reconstruction is universally harmless. January-2011 fixes document real cases where `snap_trimq` and `purged_snaps` interacted incorrectly, including already-purged snaps reappearing in the trim queue and replicas queueing the trimmer under an invalid role/state condition. The state model and its implementation correctness therefore remain distinct questions.
 
-These dates and representations do **not** imply that the August-2008, tagged 2008/2009, May-2010, v0.21, 2016, or 2017–2019 implementations are identical. The useful continuity is the bounded engineering relation, not a claim of unchanged data structures or direct genealogy across every internal refactor.
+The June-2011 state-machine slice adds a sixth boundary: **completion evidence may be representable before it is safe to publish as authoritative completion**. Commit `34cb737f` documents an ordering race in which newer PG info could reach a replica before replicated object-removal effects had been applied, causing premature collection removal and `ENOTEMPTY`. Its direct child `923617dc` retains in-flight repops in `WaitingOnReplicas` and advances `purged_snaps` only after its application/acknowledgement gate clears. The worker wakeup path separately waits for both acknowledgement and disk waiter sets to empty, so wakeup and transition predicates are not identical.
+
+```text
+object-removal repops issued
+    !=
+state-machine apply/ack gate cleared
+    !=
+`purged_snaps` advanced
+    !=
+newer PG info published
+    !=
+primary/replica durable-media commit proven
+```
+
+The inspected state-machine source queues the primary-local `write_info + remove_collection` transaction before setting the share flag, but this slice does not find an additional callback that proves that newly queued local transaction has durably committed before `share_pg_info()` runs. The correct conclusion is therefore an **application/publication ordering** result, not a universal durable-commit result.
+
+The direct child `3f4e11e1` adds a complementary recovery relation. Old shipped replica collection-removal side effects were not represented in the recovery log; the replacement path waits for sufficient replica recovery progress and derives local collection cleanup from retained `purged_snaps` plus local `snap_collections`. Therefore:
+
+```text
+historical cleanup operation not replayable
+    !=
+cleanup obligation lost
+```
+
+provided the retained completion relation, currentness qualification, and local cleanup relation are still available.
+
+These dates and representations do **not** imply that the August-2008, tagged 2008/2009, May-2010, v0.21, June-2011, 2016, or 2017–2019 implementations are identical. The useful continuity is the bounded engineering relation, not a claim of unchanged data structures or direct genealogy across every internal refactor.
 
 ## Historical / engineering / analogy / interpretation boundary
 
 ### Historical record
 
-Use exact Ceph source commits, parent/source state, exact tag refs, tagged files, serialization code, packaging metadata, release announcements, and source-tree documents to establish what a particular version/date actually represented and executed. The August-2008 parent/child diff is a source-tree introduction boundary. The `v0.4`/`v0.5`/`v0.6` work is an early numbered-tag ancestry boundary. The v0.20.x/v0.21 comparison is a later source-to-public-release boundary. The v21→v22 decoder comparison is a schema/retained-state migration boundary. None is automatically an invention, runtime-correctness, deployment, or sanitization claim.
+Use exact Ceph source commits, parent/source state, exact tag refs, tagged files, serialization code, packaging metadata, release announcements, and source-tree documents to establish what a particular version/date actually represented and executed. The August-2008 parent/child diff is a source-tree introduction boundary. The `v0.4`/`v0.5`/`v0.6` work is an early numbered-tag ancestry boundary. The v0.20.x/v0.21 comparison is a later source-to-public-release boundary. The v21→v22 decoder comparison is a schema/retained-state migration boundary. The June-2011 patch series is an apply/acknowledgement/completion-publication ordering boundary plus a recovery-qualified replica-cleanup reconstruction boundary. None is automatically an invention, full runtime-correctness, deployment, durable-media, or sanitization claim.
 
 ### Engineering reconstruction
 
-Project terms such as `cleanup obligation`, `completion frontier`, `worker embodiment`, `introduction boundary`, `tag inclusion boundary`, `release-line inclusion`, `progress partition`, `semantic migration`, and `reconstructed maintenance debt` describe relations visible in the source. They are not silently attributed to Ceph developers as historical vocabulary.
+Project terms such as `cleanup obligation`, `completion frontier`, `worker embodiment`, `introduction boundary`, `tag inclusion boundary`, `release-line inclusion`, `progress partition`, `semantic migration`, `reconstructed maintenance debt`, `completion publication`, and `cleanup authority` describe relations visible in the source. They are not silently attributed to Ceph developers as historical vocabulary.
 
 ### Functional analogy
 
-Comparisons to orphan cleanup, repair retry, HDFS restart re-observation, filesystem GC, firmware/version qualification, branch maintenance, or other retention cases are limited to explicit functions such as `obligation survives one execution episode`, `operational work can be reconstructed from retained/re-observed relations`, `retirement creates later cleanup work`, or `version/date label does not itself prove inclusion/runtime behavior`. They are not implementation or invention genealogies.
+Comparisons to orphan cleanup, repair retry, HDFS restart re-observation, filesystem GC, replicated-log frontiers, firmware/version qualification, branch maintenance, or other retention cases are limited to explicit functions such as `obligation survives one execution episode`, `operational work can be reconstructed from retained/re-observed relations`, `retirement creates later cleanup work`, `completion publication waits for qualifying subordinate progress`, or `version/date label does not itself prove inclusion/runtime behavior`. They are not implementation or invention genealogies.
 
 ### Philosophical interpretation
 
-Any interpretation about forgetting/reclamation or historical identity remains downstream of the exact mechanism. `purged`, `removed`, `snaptrim_error`, commit dates, and version labels are not generic philosophical categories and do not imply secure erasure, complete behavioral identity, or complete archive identity. The narrow interpretive lesson from the migration slice is only that continuity of an obligation need not imply continuity of its serialized representation.
+Any interpretation about forgetting/reclamation or historical identity remains downstream of the exact mechanism. `purged`, `removed`, `snaptrim_error`, commit dates, version labels, and apply/ack predicates are not generic philosophical categories and do not imply secure erasure, complete behavioral identity, or complete archive identity. The narrow interpretive lessons are only that continuity of an obligation need not imply continuity of its serialized representation, and that retained completion information can have ordering/currentness conditions before it becomes safe authority for later action.
 
 ## Related-repository routing
 
-A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `purged_snaps` found no dedicated packet to reuse in this round.
+A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `SnapTrimmer`, `purged_snaps`, and Ceph snapshot trimming found no dedicated packet to reuse in this round.
 
 Keep in `technical-retention`:
 
@@ -206,12 +239,15 @@ Keep in `technical-retention`:
 - exact numbered-tag/release provenance where it prevents an incorrect source/release chronology;
 - exact compatibility-decoder behavior where it changes what maintenance progress survives a version transition;
 - restart/activation reconstruction of cleanup obligation;
+- replica apply/ack ordering where it changes when retained completion state can safely advance or be published;
+- recovery qualification where it changes whether a retained completion marker authorizes replica-local cleanup;
 - maintenance observability and authority/currentness boundaries;
 - bounded cross-case comparison.
 
 Route primarily to `computing-archaeology` if pursued:
 
 - broad Ceph snapshot API and clone-history archaeology;
+- complete `RepGather` / FileStore / journal acknowledgement history beyond the retention seam;
 - FileStore/SnapMapper implementation genealogy beyond the retention seam;
 - full PG-info serialization/feature-bit genealogy;
 - complete v0.3–v0.6 or v0.20.x branch/package infrastructure history;
@@ -220,14 +256,14 @@ Route primarily to `computing-archaeology` if pursued:
 
 ## Remaining debt
 
-The case remains **`grounded`**. The August-2008 slice closed the public-tree introduction debt, the early tag-provenance slice closed the numbered-tag mapping for the August/September/October/November-2008 source states, the v0.20.x/v0.21 slice closed the first-numbered-release mapping for the May-2010 `purged_snaps` / reconstructed-queue transition, and the new migration slice closes the source-level **PG-info v21→v22 compatibility/migration semantics** debt. None justifies a maturity promotion.
+The case remains **`grounded`**. The August-2008 slice closed the public-tree introduction debt, the early tag-provenance slice closed the numbered-tag mapping for the August/September/October/November-2008 source states, the v0.20.x/v0.21 slice closed the first-numbered-release mapping for the May-2010 `purged_snaps` / reconstructed-queue transition, the migration slice closed the source-level **PG-info v21→v22 compatibility/migration semantics** debt, and the June-2011 state-machine slice closes the **replica-apply acknowledgement / completion-publication ordering** debt. None justifies a maturity promotion.
 
 Still open:
 
 - establish the first source/runtime point at which the 2008 trimmer can be demonstrated functional rather than merely present/fixed/tagged;
 - if bit-for-bit distribution provenance becomes necessary, retrieve and hash/inspect the historical `ceph-0.21.tar.gz` archive against the v0.21 tag rather than assuming identity from the release announcement;
-- finish the June-2011 state-machine series around replica-apply acknowledgement and completion publication;
-- fault-inject interruption at clone removal, replicated application, PG-info update, and collection-removal boundaries;
+- inspect FileStore/ObjectStore callback and crash semantics if a stronger claim about **primary-local durable completion before PG-info publication** becomes necessary;
+- fault-inject interruption at object-removal application, PG-info publication, collection removal, and replica-local regenerated-cleanup boundaries;
 - trace later peering/currentness repair for stale or divergent `purged_snaps` state;
 - trace lower-layer allocator reuse separately from RADOS logical reclamation;
 - keep sanitization / forensic remanence as separate evidence questions.
