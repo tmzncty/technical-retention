@@ -178,6 +178,37 @@ shipping implementation
 
 This slice does not establish invention priority, named TI product adoption, or a TI→Mostek circuit genealogy.
 
+### 9. 1979-filed Mostek counter topology and hidden-state testability
+
+[`03-mostek-1979-refresh-counter-topology-testability-deepening.md`](03-mostek-1979-refresh-counter-topology-testability-deepening.md)
+
+Two Mostek-assigned 1979 patent families now narrow the previously broad MK4164 topology debt without pretending to identify the production mask set.
+
+Proebsting's 15-May-1979-priority refresh-counter test filing treats an on-chip counter as hidden state whose output cannot simply be read directly. It explains why bounded payload survival is not enough to prove correct refresh coverage: cells may retain data far beyond the guaranteed minimum, masking a row skipped by a faulty counter. The proposed test instead makes the counter-selected row produce a controlled write side effect that can be checked through ordinary readback.
+
+Eaton / Schroeder's 13-Aug-1979 filing gives a concrete Mostek counter embodiment. It reuses ordinary address-buffer circuitry, transfers buffer outputs into refresh-storage nodes, conditionally inverts selected bits at the end of a refresh cycle, and describes the refresh storage as a cross-coupled two-MOSFET flip-flop. The preferred embodiment is a binary up-counter, while the patent allows other counting arrangements.
+
+Bounded results:
+
+```text
+payload survives a test interval
+    !=
+refresh coverage proven correct
+
+hidden maintenance-control state
+    -> may require a separate observability path
+
+logical function separation
+    !=
+physical circuit separation
+
+same-vendor contemporary patent topology
+    !=
+verified MK4164 production implementation
+```
+
+This is company-level circuit and testability evidence. No checked source names `MK4164` in either patent or links either patent number to the product, so the exact patent-to-product mapping remains open.
+
 ---
 
 ## Current bounded decomposition
@@ -202,6 +233,8 @@ restore execution
 access arbitration
     !=
 useful-service visibility
+    !=
+maintenance-state observability / verification
 ```
 
 The Mostek MK4164 adds:
@@ -239,7 +272,27 @@ sufficient state to continue maintenance
 complete history of maintenance events
 ```
 
-The existence of one recurrent RFSH stream servicing both the array and the counter does not collapse them into one retained object. Likewise, a family resemblance at the package or logical-capacity level does not establish one shared refresh-control topology. Finally, a patent filing, a public patent publication, a product-document witness, and a shipping implementation are separate provenance claims even when they concern a similar function.
+The Mostek patent/testability slice adds:
+
+```text
+payload correctness observed now
+    !=
+maintenance coverage proven correct
+
+state being retained
+    !=
+state coordinating retention
+    !=
+evidence that the coordination is correct
+
+named-product behavior
+    !=
+company-level patent embodiment
+    !=
+verified product transistor topology
+```
+
+The existence of one recurrent RFSH stream servicing both the array and the counter does not collapse them into one retained object. Likewise, a family resemblance at the package or logical-capacity level does not establish one shared refresh-control topology. A patent filing, a public patent publication, a product-document witness, and a shipping implementation remain separate provenance claims even when they concern a similar function. Finally, successful payload readback can coexist for a time with a latent maintenance-control fault, so verification of the preserved object and verification of the preservation process are separate evidence layers.
 
 ---
 
@@ -247,13 +300,17 @@ The existence of one recurrent RFSH stream servicing both the array and the coun
 
 **Case 03 remains `grounded`.**
 
-The cross-vendor 64K slice closed the previously listed interface-level refresh-organization comparison debt for the bounded Mostek / TI / Intel set. The new TI / GTE prior-art slice **partially closes and sharply narrows** the earlier invention/priority debt: it establishes a 26-Jun-1978 TI filing/priority floor for the currently inspected same-die refresh-counter sources, a 9-Jan-1980 British-family public-patent floor, and an earlier 1971-filed / 1973-public system-level autonomous-refresh counter boundary. It does not justify a maturity promotion because important work remains outside the bounded evidence:
+The cross-vendor 64K slice closed the previously listed interface-level refresh-organization comparison debt for the bounded Mostek / TI / Intel set. The TI / GTE prior-art slice partially closed and sharply narrowed the invention/priority debt by establishing a 26-Jun-1978 TI filing/priority floor for the currently inspected same-die refresh-counter sources, a 9-Jan-1980 British-family public-patent floor, and an earlier 1971-filed / 1973-public system-level autonomous-refresh counter boundary.
+
+The new Mostek patent/testability slice **partially closes the exact-topology debt in a different direction**: a concrete Mostek company-level counter circuit is now directly documented, as is a contemporary Mostek technique for verifying hidden counter coverage. It does not justify a maturity promotion because the central unresolved question is now narrower rather than eliminated:
 
 - pre-26-Jun-1978 same-die refresh-counter prior art / true invention-priority history remains open;
 - named TI product adoption of the White/Rao architecture remains unproven;
 - verified first-silicon and first-shipment chronology for MK4164 RFSH remains open;
-- exact **MK4164** internal counter circuit topology remains open — a contemporary TI latch/adder embodiment is now explicit but must not be projected onto Mostek;
+- exact **MK4164** production counter topology remains unproven — a contemporary Mostek candidate circuit now exists, but no checked source maps `US4296480A` or the Proebsting test family to the named product;
+- the relationship between the MK4164 manual's `dynamic` counter wording and Eaton / Schroeder's illustrated cross-coupled refresh-storage unit remains unresolved;
 - transistor-level comparison of the named 64K DRAM refresh organizations remains open;
+- production use of the Proebsting counter-test method remains unproven;
 - controlled hardware observation of counter-phase loss or corruption remains open;
 - board-level substitution / mixed-vendor compatibility evidence remains optional unless such a claim becomes necessary;
 - broader semiconductor-memory genealogy should be routed to `tmzncty/computing-archaeology` rather than duplicated here.
@@ -262,6 +319,6 @@ The cross-vendor 64K slice closed the previously listed interface-level refresh-
 
 ## Related-repository routing
 
-Earlier searches of `tmzncty/computing-archaeology` for `MK4164 RFSH refresh battery backup Mostek`, `Mostek DRAM refresh`, and `MK4164` returned no dedicated technical-history packet. During the present TI prior-art deepening, fresh searches for `US4207618A` and `on-chip refresh dynamic memory` likewise returned no dedicated packet to reuse.
+Earlier searches of `tmzncty/computing-archaeology` for `MK4164 RFSH refresh battery backup Mostek`, `Mostek DRAM refresh`, `MK4164`, `US4207618A`, and `on-chip refresh dynamic memory` returned no dedicated technical-history packet. During the present Mostek topology/testability deepening, fresh searches for `US4296480A` and `MK4164` likewise returned no dedicated packet to reuse.
 
 If that repository later develops the 64K-DRAM product/genealogy story, Case 03 should link it and retain only the retention-specific distinctions above.
