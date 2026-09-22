@@ -263,6 +263,44 @@ all existing payload refreshed
 
 This packet does **not** bridge Coulson's Intel-assigned 2009-public patent mechanism to a named shipping Intel SSD implementation.
 
+### 10. Oracle F640 / 6.4 TB NVMe SSD v1 — full-media coverage duration and RF30
+
+- [`111-oracle-f640-rf30-full-media-refresh-duration-deepening.md`](111-oracle-f640-rf30-full-media-refresh-duration-deepening.md)
+
+Bounded role:
+
+- Oracle's November-2021 first-party product notes identify Bug ID `27759886` as fixed in firmware RF30 for the Oracle 6.4 TB NVMe SSD v1 / related F640 product context;
+- after an extended unpowered interval, Oracle documents possible uncorrectable errors or ASSERT behavior;
+- while powered, firmware policy refreshes media in the background;
+- Oracle says the policy must reach **all bits**, that this takes **approximately 14 days** for the documented product and varies by product, and recommends a two-week powered interval before use as the non-destructive workaround;
+- Oracle separately offers secure erase as an immediate but destructive remediation path;
+- the packet therefore adds a named-capacity / named-product maintenance-duration witness without inferring a universal capacity-scaling law;
+- it still does not expose device-local progress percentage, completion telemetry, or restart semantics after interrupted power.
+
+Critical boundary:
+
+```text
+power restored
+    !=
+all-bit maintenance coverage complete
+```
+
+and:
+
+```text
+non-destructive powered background refresh
+    !=
+destructive secure erase remediation
+```
+
+and:
+
+```text
+named 6.4 TB product + ~14-day documented coverage
+    !=
+universal capacity / throughput scaling law
+```
+
 ## Cross-layer state model
 
 The evidence now supports a deliberately layered model:
@@ -287,6 +325,8 @@ E. device-local maintenance execution
 
 F. device-local progress / completion
     may or may not be exposed or persisted
+    Oracle adds one explicit product-level coverage-duration witness:
+    approximately 14 days to apply background refresh policy to all bits
 
 G. system-level maintenance admission
     long-offline trigger / scrub scheduling
@@ -363,7 +403,19 @@ power restored
 background scan / scrub complete
 ```
 
-The Coulson design explicitly advances a background scan during idle opportunity; Dell assigns a minimum powered interval; IBM ESS provides a distinct system-layer completion witness.
+The Coulson design explicitly advances a background scan during idle opportunity; Dell assigns a minimum powered interval; IBM ESS provides a distinct system-layer completion witness; Oracle now supplies a named-product approximately-14-day all-bit background-coverage witness.
+
+### Destructive remediation is not retained-payload maintenance
+
+Oracle makes this boundary unusually visible:
+
+```text
+secure erase removes the old-media condition
+    !=
+existing payload retained through the remediation
+```
+
+The fact that secure erase can immediately return the medium to a favorable state does not make it equivalent to non-destructive background refresh.
 
 ### Readability is not future-retention confidence
 
@@ -385,6 +437,7 @@ Across Case 111 and adjacent prior art, `refresh` can refer to:
 - SSD error-threshold rewrite or relocation;
 - product-manual monitor / refresh behavior;
 - firmware-versioned NAND-refresh algorithms;
+- Oracle's product-level background policy applied across all bits;
 - later operator-level retention tasks.
 
 The shared word does not establish a shared trigger, geometry, scheduler, mapping semantics, or genealogy.
@@ -399,17 +452,19 @@ Useful internal comparisons, without asserting historical continuity:
 - **Case 52** — NAND read disturb: another case where present observation / retained policy can generate future maintenance obligations;
 - **Case 55** — NVMe SMART / Health endurance telemetry: model-derived endurance state can alter operator judgment without being an immediate-failure bit;
 - **Case 67** — OCP `Refresh Counts`: telemetry/accounting vocabulary must not be merged with product-manual `refresh memory cells` wording;
-- **Case 76** — JESD218 SSD endurance/retention qualification: qualification relation is not the same as autonomous maintenance or a field runbook.
+- **Case 76** — JESD218 / OCP SSD endurance-retention qualification: qualification relation is not the same as autonomous maintenance, a field runbook, or Oracle's RF30 all-bit recovery procedure.
 
 ## Related-repository routing
 
-Fresh exact-number / topic code search in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) did not surface a dedicated `US20090327581A1` or Intel SSD power-up-refresh packet during these slices.
+Fresh exact-number / topic code search in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) did not surface a dedicated `US20090327581A1`, Intel SSD power-up-refresh, or Oracle F640 / RF30 retention packet during these slices.
 
 Keep `technical-retention` focused on:
 
 - retained policy state versus re-observed evidence;
 - firmware revision as a retention-policy implementation variable;
 - maintenance admission / opportunity / progress / completion;
+- product-specific coverage duration versus unsupported scaling inference;
+- destructive remediation versus payload-preserving maintenance;
 - future-offline admissibility;
 - chronology and evidence-layer distinctions.
 
@@ -417,6 +472,7 @@ Prefer `computing-archaeology` for broad histories of:
 
 - M-Systems / SanDisk controller and product genealogy;
 - Intel X25 and later Intel controller / firmware genealogy;
+- Oracle F640 / Intel OEM platform genealogy beyond the retention-specific boundary;
 - the larger Flash-refresh patent network;
 - SSD market chronology;
 - exact commercial adoption and silicon/firmware implementation.
@@ -429,15 +485,16 @@ Highest-value unresolved slices are:
 
 1. **pre-5-April-2010 named-product evidence** — direct product manual / firmware note / qualification material showing powered retention renewal;
 2. **Intel implementation bridge** — evidence connecting Coulson's 2009-public mechanism to a named shipping SSD, or evidence showing that no such attribution can safely be made;
-3. **maintenance-progress restart semantics** — whether a real product persists, reconstructs, or discards scan/scrub progress after reset or interrupted power;
+3. **maintenance-progress restart semantics** — whether a real product persists, reconstructs, or discards scan/scrub progress after reset or interrupted power; Oracle's approximately-14-day pass makes this question especially concrete;
 4. **independent validation** — controlled tests of error margin before and after retention renewal;
 5. **controller-specific Dell behavior** — a named controller/firmware family for the read-triggered retention task;
-6. **completion telemetry below the storage-system layer** — device-local evidence, if any, that a retention-maintenance pass finished;
-7. **capacity / used-data scaling** — direct evidence for how maintenance duration scales rather than inferring a formula from operator guidance;
-8. **measured firmware-policy / NAND-generation drift** — Intel release notes now prove that named firmware revisions can change NAND-refresh algorithms, but direct evidence is still needed to connect a specific revision to measured retention margin, restart behavior, completion time, or changed operator power-on/off guidance.
+6. **completion telemetry below the storage-system layer** — device-local evidence, if any, that a retention-maintenance pass finished; Oracle supplies a duration and all-bit completion claim but not an inspected host-visible completion indicator;
+7. **capacity / used-data scaling** — Oracle now supplies one direct named-capacity point (6.4 TB, approximately 14 days to all-bit coverage), but a scaling law, used-data dependence, throughput relation, and cross-capacity measurements remain open;
+8. **measured firmware-policy / NAND-generation drift** — Intel release notes prove named firmware revisions can change NAND-refresh algorithms, and Oracle RF30 ties a firmware epoch to a concrete extended-offline issue and operator recovery window; direct algorithm-delta evidence and before/after retention-margin measurement remain open;
+9. **Oracle RF30 historical floor** — find an older contemporaneous Oracle product-note / advisory revision that dates Bug `27759886` and the two-week guidance more tightly than the maintained November-2021 document.
 
 ## Status decision
 
 **No maturity promotion.**
 
-Case 111 remains `grounded` because the firmware packet adds a new control-variable boundary and strengthens the evidence graph, but it does not close the product-implementation, restart-semantics, completion-telemetry, or independent-validation gaps strongly enough to justify a stronger status.
+Case 111 remains `grounded` because the Oracle packet materially strengthens the product-specific duration / coverage / firmware evidence, but it still does not close restart semantics, device-local completion telemetry, a capacity-scaling law, or independent validation strongly enough to justify a stronger status.
