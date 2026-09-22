@@ -86,7 +86,7 @@ Role:
 
 - moves RTC-related reliability lineage back to **e.MMC 4.5 / June 2011**;
 - uses JEDEC's later Annex C revision history to assign RTC to the 4.41 -> 4.5 transition;
-- uses `mmc-utils` as implementation corroboration that `PERIODIC_WAKEUP[131]` is B45-generation;
+- uses `mmc-utils` as implementation corroboration that `PERIODIC_WAKEUP[131]` is B45-generation EXT_CSD state;
 - inserts e.MMC 4.51 / June 2012 as an explicit intermediate standards epoch;
 - rejects the false inference that e.MMC 5.0 was the origin of the feature.
 
@@ -97,6 +97,35 @@ feature present by e.MMC 4.5
     !=
 every e.MMC 5.0 clause proven textually identical in 4.5
 ```
+
+### 5. Named Micron e.MMC 4.51 RTC / `PERIODIC_WAKEUP` product witness
+
+[`135-micron-2013-2014-emmc451-rtc-periodic-wakeup-product-deepening.md`](135-micron-2013-2014-emmc451-rtc-periodic-wakeup-product-deepening.md)
+
+Role:
+
+- inserts a named Micron component between standards-era prior art and the 2021+ Armadillo/Micron integration;
+- identifies **MT29PZZZ4D4BKESK-18 W.94H** as a documented 4GB e.MMC + 4Gb LPDDR2 MCP;
+- anchors the datasheet to **Rev. A 10/13** through inspected **Rev. D 05/14**;
+- records product-level e.MMC 4.51 compliance and `Real-time clock` capability;
+- directly exposes `PERIODIC_WAKEUP[131]` in the product EXT_CSD table;
+- records the field's `R/W/E` persistence class across power cycle, `RST_n`, and `CMD0` reset;
+- separates retained periodic-wakeup policy from BKOPS enable/start state;
+- uses the same-package LPDDR2 `SELF REFRESH` section as an anti-collapse counterexample.
+
+Boundary:
+
+```text
+named 4.51 product document
+    !=
+named 4.5 product document
+    !=
+shipment chronology
+    !=
+full SET_TIME/CMD49 clause reproduction
+```
+
+This closes the weaker product-adoption gap — RTC and `PERIODIC_WAKEUP` are no longer only standards-history abstractions before 2021 — while leaving the direct 4.5-device and B45/B451 normative-text debts open.
 
 ## Chronology
 
@@ -112,6 +141,15 @@ e.MMC 4.5 / 15 Jun 2011
 e.MMC 4.51 / Jun 2012
     intervening revision / clarification epoch
         ↓
+Micron MT29PZZZ4D4BKESK-18 W.94H / Rev. A Oct 2013
+    named 4.51-generation product document
+    RTC advertised
+    PERIODIC_WAKEUP[131] exposed
+    R/W/E persistence class documented
+        ↓
+Micron product datasheet Rev. D / May 2014
+    inspected revision in this evidence slice
+        ↓
 e.MMC 5.0 / Sep 2013
     direct clause-level repository floor for
     SET_TIME / RTC / PERIODIC_WAKEUP semantics
@@ -123,7 +161,7 @@ Armadillo-IoT G4 / Micron / 2021+
     named vendor product self-refresh path
 ```
 
-The chronology is intentionally evidence-layered. Publication of a standard, implementation in silicon, product enablement, and customer deployment are not treated as one event.
+The chronology is intentionally evidence-layered. Publication of a standard, implementation in a named product document, shipment, product enablement, and customer deployment are not treated as one event. The 2013 Micron product-document witness and the September-2013 e.MMC 5.0 standards epoch overlap chronologically but answer different provenance questions.
 
 ## Technical decomposition
 
@@ -139,6 +177,8 @@ host temporal source
 host-supplied absolute or relative time evidence
     ↓
 device temporal relation
+    ↓
+retained periodic-wakeup policy configuration
     ↓
 time-based maintenance eligibility
     ↓
@@ -159,6 +199,28 @@ retained progress / history / counters
 
 None of the arrows should be collapsed into a single state named `refresh`.
 
+The named Micron 4.51 datasheet further sharpens the policy-state horizon:
+
+```text
+PERIODIC_WAKEUP field implemented
+    !=
+field configured nonzero
+    !=
+wakeup event occurred
+    !=
+maintenance admitted
+    !=
+maintenance completed
+```
+
+and:
+
+```text
+reset-surviving policy configuration
+    !=
+restart-surviving maintenance progress
+```
+
 ## Evidence-layer boundaries
 
 ### Historical record
@@ -167,6 +229,8 @@ Direct or near-direct sources can establish:
 
 - which standard revision names a feature;
 - which command/register exists;
+- which named product exposes a field or capability;
+- which reset/power transitions a vendor register table says preserve a configuration value;
 - which product manual describes a behavior;
 - which vendor document names Self Refresh;
 - which implementation source maps a field to a standards generation.
@@ -178,9 +242,11 @@ They do not automatically establish the physical NAND operation behind the inter
 Project-level reconstruction can separate:
 
 - temporal evidence from maintenance execution;
+- retained policy configuration from a wakeup event;
 - wakeup opportunity from admission;
 - admission from completion;
 - standard revision from device implementation epoch;
+- product-document availability from shipment/deployment;
 - retained payload from second-order maintenance metadata.
 
 These are analytical decompositions, not vendor terminology.
@@ -191,13 +257,16 @@ Useful controlled comparisons include:
 
 - Case 111 power-up re-observation versus Case 135 time-state reconstitution;
 - Case 43 policy metadata versus Case 135 temporal maintenance evidence;
-- Case 03 cadence locus versus Case 135 wakeup/authority locus.
+- Case 03 cadence locus versus Case 135 wakeup/authority locus;
+- the named Micron MCP's e.MMC `PERIODIC_WAKEUP` policy versus its separate LPDDR2 `SELF REFRESH` mechanism as a vocabulary-collision counterexample.
 
 No shared implementation ancestry is implied by those comparisons.
 
 ### Philosophical interpretation
 
 The case can support the bounded proposition that preservation may depend on retaining or reconstructing **enough state to make a future maintenance decision**, rather than preserving a complete history of every event.
+
+The named Micron product adds a particularly concrete version: a future-preservation rule can itself have a persistence horizon across resets and power cycles without thereby becoming completed preservation work.
 
 That interpretation must remain downstream of the technical evidence.
 
@@ -209,7 +278,10 @@ That interpretation must remain downstream of the technical evidence.
 4. e.MMC 5.0 is **not** the origin of RTC-related reliability support: e.MMC 4.5 publicly introduced the RTC capability in June 2011.
 5. JEDEC's own later revision history assigns `real time clock` to the 4.41 -> 4.5 transition.
 6. `mmc-utils` corroborates `PERIODIC_WAKEUP[131]` as B45-generation EXT_CSD state.
-7. The exact B45/B451 clause-level identity with later B50 semantics remains open.
+7. A named Micron 4.51-generation component document from 2013–2014 explicitly advertises e.MMC `Real-time clock` and exposes `PERIODIC_WAKEUP[131]`.
+8. In that named product's register table, `PERIODIC_WAKEUP` is `R/W/E`, and the datasheet defines that persistence class as surviving power cycle, `RST_n`, and `CMD0` reset.
+9. The same Micron MCP datasheet separately documents LPDDR2 `SELF REFRESH`; same package/vendor/vocabulary does not make the DRAM and e.MMC mechanisms identical.
+10. The exact B45/B451 clause-level identity with later B50 semantics remains open.
 
 ## Explicit non-collapse rules
 
@@ -224,7 +296,25 @@ maintenance executed
 
 PERIODIC_WAKEUP field exists
     !=
-every device requires periodic wakeup
+PERIODIC_WAKEUP configured nonzero
+
+PERIODIC_WAKEUP configured
+    !=
+wakeup event occurred
+
+wakeup event
+    !=
+maintenance completion
+
+reset-surviving policy
+    !=
+restart-surviving maintenance progress
+
+PERIODIC_WAKEUP
+    !=
+BKOPS_START
+    !=
+BKOPS_EN
 
 maintenance opportunity
     !=
@@ -238,9 +328,17 @@ standard revision
     !=
 device firmware revision
 
+product document
+    !=
+shipment / deployment proof
+
 product manual behavior
     !=
 generic e.MMC behavior
+
+e.MMC periodic-wakeup maintenance
+    !=
+LPDDR2 self refresh
 
 current payload is readable
     !=
@@ -254,12 +352,19 @@ Priority order for another bounded pass:
 1. **Direct JESD84-B45 clause inspection** — exact RTC, `SET_TIME`, and `PERIODIC_WAKEUP` text.
 2. **Direct JESD84-B451 clause inspection** — exact delta against B45 and B50.
 3. Determine whether `PERIODIC_WAKEUP` encoding, reset/default behavior, optionality, or completion language changed from 4.5 -> 4.51 -> 5.0.
-4. Find a **named shipping e.MMC 4.5 component** whose datasheet explicitly exposes RTC / periodic-wakeup support, rather than relying only on version compliance.
-5. Trace host-software adoption only if it helps explain the control boundary; do not turn this case into a generic Linux MMC history.
-6. Obtain stronger Micron primary material if it becomes publicly inspectable, especially for the internal selective-refresh algorithm, while avoiding inference from generic JEDEC language.
+4. Find a **named e.MMC 4.5 component** — not merely 4.51 — whose own datasheet explicitly exposes RTC / periodic-wakeup support.
+5. Find contemporaneous ordering/shipment or board/BOM evidence if a claim about actual 2011–2013 deployment is needed; do not infer shipment from datasheet revision date.
+6. Trace host-software adoption only if it helps explain the control boundary; do not turn this case into a generic Linux MMC history.
+7. Obtain stronger Micron primary material if it becomes publicly inspectable, especially for the internal selective-refresh algorithm, while avoiding inference from generic JEDEC language.
+
+## Related-repository routing
+
+A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `eMMC PERIODIC_WAKEUP RTC SET_TIME` found no dedicated reusable module in this pass.
+
+Broader e.MMC standards genealogy, Micron MCP product-line history, controller-market history, host-driver adoption, and mobile-platform deployment remain `computing-archaeology` work. This case keeps only the retention-specific relation among temporal evidence, retained wakeup policy, execution opportunity, selective renewal, and maintenance completion/history state.
 
 ## Status decision
 
 **Remain `grounded`.**
 
-The 2011–2012 chronology correction materially strengthens prior art and prevents a false e.MMC 5.0 origin claim. It does not yet close the exact B45/B451 normative delta or provide a named early shipping device implementation, so promotion would be premature.
+The named 2013–2014 Micron 4.51 component closes a real evidence gap by moving RTC / `PERIODIC_WAKEUP` from standards-history abstraction into a product-specific register table and by directly exposing a reset/power-cycle persistence class. It does not yet close the exact B45/B451 normative delta, provide a named 4.5 device, prove 2011–2013 shipment/deployment, or establish the physical implementation of the retained policy field, so promotion would be premature.
