@@ -14,6 +14,7 @@
 | **2010 `purged_snaps` release boundary** | [`153-ceph-2010-purged-snaps-v021-release-boundary-deepening.md`](153-ceph-2010-purged-snaps-v021-release-boundary-deepening.md) | direct tagged-source inspection shows `v0.20.1` and `v0.20.2` still encode PG-info v21 `snap_trimq`, while `v0.21` contains PG-info v22 `purged_snaps` plus activation reconstruction `cached_removed_snaps - purged_snaps`; Ceph publicly announced v0.21 on 29-Jul-2010 | development commit date != maintenance-release inclusion; later wall-clock release != inclusion proof; tagged source/release provenance != runtime correctness or bit-for-bit tarball verification |
 | **2010 PG-info v21→v22 migration semantics** | [`153-ceph-2010-pginfo-v21-v22-snaptrim-migration-deepening.md`](153-ceph-2010-pginfo-v21-v22-snaptrim-migration-deepening.md) | v21 retains the pending `snap_trimq`; the v22 legacy decoder parses that old field into a local temporary and does not translate it into `purged_snaps`; activation regenerates runtime work from pool-known removed snapshots minus retained purged/completion evidence; 19-May code makes `purged_snaps` explicit trim-completion state | legacy bytes decodable != legacy progress partition preserved; schema compatibility != lossless semantic migration; reconstructable obligation != universal role/propagation correctness |
 | **2011 replica-apply / completion ordering** | [`153-ceph-2011-snaptrimmer-replica-apply-completion-ordering-deepening.md`](153-ceph-2011-snaptrimmer-replica-apply-completion-ordering-deepening.md) | the `34cb737f` → `923617dc` state-machine series turns a documented race into an explicit `TrimmingObjects` → `WaitingOnReplicas` gate before advancing `purged_snaps` and sharing newer PG info; `3f4e11e1` then regenerates replica collection cleanup from retained `purged_snaps` after recovery qualification | repops issued != replica apply/ack gate cleared != completion relation advanced != PG info published; state transition != worker wakeup != proven local/remote durable commit |
+| **2011 primary-local safe / publication boundary** | [`153-ceph-2011-filestore-local-safe-publication-boundary-deepening.md`](153-ceph-2011-filestore-local-safe-publication-boundary-deepening.md) | at `923617dc`, SnapTrimmer queues `write_info + remove_collection` through FileStore's no-`ondisk` convenience overload, then the outer worker may call `share_pg_info()` without waiting for local apply/readable or journal/commit-safe callbacks; FileStore/JournalingObjectStore expose those as distinct milestones | replica apply/ack ordering != primary-local apply barrier != primary-local safe/durable barrier; queue return != onreadable != ondisk; absence of barrier != demonstrated crash-loss outcome |
 | **2013 bounded grounding** | [`153-ceph-2013-snaptrim-asynchronous-reclamation-grounding.md`](153-ceph-2013-snaptrim-asynchronous-reclamation-grounding.md) | first canonical grounding of asynchronous snapshot retirement/reclamation from a first-party source-tree document plus maintained documentation | logical snapshot retirement != completed clone reclamation != sanitization |
 | **2016 activation reconstruction** | [`153-ceph-2016-pg-activation-trim-obligation-reconstruction-deepening.md`](153-ceph-2016-pg-activation-trim-obligation-reconstruction-deepening.md) | activation reconstructs trim work from retained removed-vs-purged relations | retained cleanup obligation != retained byte-identical worker queue or exact cursor |
 | **2017 observability / error stop** | [`153-ceph-2017-snaptrim-observability-error-stop-deepening.md`](153-ceph-2017-snaptrim-observability-error-stop-deepening.md) | `snaptrim_wait`, `snaptrim`, and `snaptrim_error` distinguish queued/waiting, executing, and error-stopped reclamation | status publication != successful reclamation completion |
@@ -50,9 +51,15 @@ replicated cleanup operation issued
     !=
 replica application / acknowledgement gate
     !=
-completion relation advanced / published
+completion relation advanced
     !=
-local or remote durable commit proven
+primary-local transaction queued
+    !=
+primary-local readable / applied milestone
+    !=
+primary-local journal / commit-safe milestone
+    !=
+completion relation published to peers
     !=
 operator-visible maintenance status
     !=
@@ -60,6 +67,8 @@ lower-layer physical-space reclamation
     !=
 media sanitization
 ```
+
+The ordering arrows between those states must be established per source path rather than inferred from the list. In particular, the June-2011 source establishes a replica apply/ack gate before completion publication, but the primary-local FileStore deepening shows that publication is **not gated on** the local transaction's apply/readable or `ondisk` callback milestones at the inspected call site.
 
 Four early provenance boundaries should remain separate.
 
@@ -196,7 +205,22 @@ newer PG info published
 primary/replica durable-media commit proven
 ```
 
-The inspected state-machine source queues the primary-local `write_info + remove_collection` transaction before setting the share flag, but this slice does not find an additional callback that proves that newly queued local transaction has durably committed before `share_pg_info()` runs. The correct conclusion is therefore an **application/publication ordering** result, not a universal durable-commit result.
+The primary-local FileStore slice adds a seventh boundary and strengthens the earlier negative result. At `923617dc`, `WaitingOnReplicas` submits the local `write_info + remove_collection` transaction with FileStore's convenience `queue_transaction(&pg->osr, t)` overload. That overload supplies an `onreadable` transaction-lifetime callback but no `ondisk` callback; FileStore's actual apply work and its journal/commit-safe completion are separately staged. The outer `snap_trimmer()` can then call `share_pg_info()` on the `need_share_pg_info` flag without waiting for either local milestone.
+
+Therefore the exact source-level result is:
+
+```text
+replica apply/ack barrier before completion publication
+    = established
+
+primary-local apply/readable barrier before publication
+    = not enforced at this call site
+
+primary-local ondisk/journal-safe barrier before publication
+    = not enforced at this call site
+```
+
+This is not by itself a demonstrated crash-loss bug. FileStore journal replay, PG peering, and reconstruction paths can change the eventual restart result. It does, however, close the callback/order question that the previous slice left open.
 
 The direct child `3f4e11e1` adds a complementary recovery relation. Old shipped replica collection-removal side effects were not represented in the recovery log; the replacement path waits for sufficient replica recovery progress and derives local collection cleanup from retained `purged_snaps` plus local `snap_collections`. Therefore:
 
@@ -214,23 +238,23 @@ These dates and representations do **not** imply that the August-2008, tagged 20
 
 ### Historical record
 
-Use exact Ceph source commits, parent/source state, exact tag refs, tagged files, serialization code, packaging metadata, release announcements, and source-tree documents to establish what a particular version/date actually represented and executed. The August-2008 parent/child diff is a source-tree introduction boundary. The `v0.4`/`v0.5`/`v0.6` work is an early numbered-tag ancestry boundary. The v0.20.x/v0.21 comparison is a later source-to-public-release boundary. The v21→v22 decoder comparison is a schema/retained-state migration boundary. The June-2011 patch series is an apply/acknowledgement/completion-publication ordering boundary plus a recovery-qualified replica-cleanup reconstruction boundary. None is automatically an invention, full runtime-correctness, deployment, durable-media, or sanitization claim.
+Use exact Ceph source commits, parent/source state, exact tag refs, tagged files, serialization code, packaging metadata, release announcements, ObjectStore/FileStore callback signatures, and source-tree documents to establish what a particular version/date actually represented and executed. The August-2008 parent/child diff is a source-tree introduction boundary. The `v0.4`/`v0.5`/`v0.6` work is an early numbered-tag ancestry boundary. The v0.20.x/v0.21 comparison is a later source-to-public-release boundary. The v21→v22 decoder comparison is a schema/retained-state migration boundary. The June-2011 patch series is an apply/acknowledgement/completion-publication ordering boundary plus a recovery-qualified replica-cleanup reconstruction boundary. The FileStore slice separately establishes that the inspected SnapTrimmer path does not bind local apply/readable or `ondisk` completion as a prerequisite for `share_pg_info()`. None is automatically an invention, deployment, demonstrated crash-loss outcome, hardware durability theorem, or sanitization claim.
 
 ### Engineering reconstruction
 
-Project terms such as `cleanup obligation`, `completion frontier`, `worker embodiment`, `introduction boundary`, `tag inclusion boundary`, `release-line inclusion`, `progress partition`, `semantic migration`, `reconstructed maintenance debt`, `completion publication`, and `cleanup authority` describe relations visible in the source. They are not silently attributed to Ceph developers as historical vocabulary.
+Project terms such as `cleanup obligation`, `completion frontier`, `worker embodiment`, `introduction boundary`, `tag inclusion boundary`, `release-line inclusion`, `progress partition`, `semantic migration`, `reconstructed maintenance debt`, `completion publication`, `publication barrier`, `local-safe milestone`, and `cleanup authority` describe relations visible in the source. They are not silently attributed to Ceph developers as historical vocabulary.
 
 ### Functional analogy
 
-Comparisons to orphan cleanup, repair retry, HDFS restart re-observation, filesystem GC, replicated-log frontiers, firmware/version qualification, branch maintenance, or other retention cases are limited to explicit functions such as `obligation survives one execution episode`, `operational work can be reconstructed from retained/re-observed relations`, `retirement creates later cleanup work`, `completion publication waits for qualifying subordinate progress`, or `version/date label does not itself prove inclusion/runtime behavior`. They are not implementation or invention genealogies.
+Comparisons to orphan cleanup, repair retry, HDFS restart re-observation, filesystem GC, replicated-log frontiers, firmware/version qualification, branch maintenance, or the repository's earlier EBOFS persistence-boundary evidence are limited to explicit functions such as `obligation survives one execution episode`, `operational work can be reconstructed from retained/re-observed relations`, `retirement creates later cleanup work`, `completion publication waits for some qualifying subordinate progress but not necessarily every local persistence stage`, or `version/date label does not itself prove inclusion/runtime behavior`. They are not implementation or invention genealogies.
 
 ### Philosophical interpretation
 
-Any interpretation about forgetting/reclamation or historical identity remains downstream of the exact mechanism. `purged`, `removed`, `snaptrim_error`, commit dates, version labels, and apply/ack predicates are not generic philosophical categories and do not imply secure erasure, complete behavioral identity, or complete archive identity. The narrow interpretive lessons are only that continuity of an obligation need not imply continuity of its serialized representation, and that retained completion information can have ordering/currentness conditions before it becomes safe authority for later action.
+Any interpretation about forgetting/reclamation or historical identity remains downstream of the exact mechanism. `purged`, `removed`, `snaptrim_error`, commit dates, version labels, callback names, and apply/ack predicates are not generic philosophical categories and do not imply secure erasure, complete behavioral identity, or complete archive identity. The narrow interpretive lessons are only that continuity of an obligation need not imply continuity of its serialized representation, retained completion information can have ordering/currentness conditions before it becomes safe authority for later action, and published completion can be temporally distinct from the strongest local persistence milestone exposed by the storage layer.
 
 ## Related-repository routing
 
-A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `SnapTrimmer`, `purged_snaps`, and Ceph snapshot trimming found no dedicated packet to reuse in this round.
+A fresh search of [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) for `SnapTrimmer`, `purged_snaps`, `FileStore`, and `RepGather` found no dedicated packet to reuse in this round.
 
 Keep in `technical-retention`:
 
@@ -240,6 +264,7 @@ Keep in `technical-retention`:
 - exact compatibility-decoder behavior where it changes what maintenance progress survives a version transition;
 - restart/activation reconstruction of cleanup obligation;
 - replica apply/ack ordering where it changes when retained completion state can safely advance or be published;
+- primary-local FileStore callback ordering where it changes whether publication is conditioned on local apply/safe milestones;
 - recovery qualification where it changes whether a retained completion marker authorizes replica-local cleanup;
 - maintenance observability and authority/currentness boundaries;
 - bounded cross-case comparison.
@@ -256,14 +281,15 @@ Route primarily to `computing-archaeology` if pursued:
 
 ## Remaining debt
 
-The case remains **`grounded`**. The August-2008 slice closed the public-tree introduction debt, the early tag-provenance slice closed the numbered-tag mapping for the August/September/October/November-2008 source states, the v0.20.x/v0.21 slice closed the first-numbered-release mapping for the May-2010 `purged_snaps` / reconstructed-queue transition, the migration slice closed the source-level **PG-info v21→v22 compatibility/migration semantics** debt, and the June-2011 state-machine slice closes the **replica-apply acknowledgement / completion-publication ordering** debt. None justifies a maturity promotion.
+The case remains **`grounded`**. The August-2008 slice closed the public-tree introduction debt, the early tag-provenance slice closed the numbered-tag mapping for the August/September/October/November-2008 source states, the v0.20.x/v0.21 slice closed the first-numbered-release mapping for the May-2010 `purged_snaps` / reconstructed-queue transition, the migration slice closed the source-level **PG-info v21→v22 compatibility/migration semantics** debt, the June-2011 state-machine slice closed the **replica-apply acknowledgement / completion-publication ordering** debt, and the FileStore slice now closes the **source-level primary-local callback/publication ordering** debt. None justifies a maturity promotion.
 
 Still open:
 
 - establish the first source/runtime point at which the 2008 trimmer can be demonstrated functional rather than merely present/fixed/tagged;
 - if bit-for-bit distribution provenance becomes necessary, retrieve and hash/inspect the historical `ceph-0.21.tar.gz` archive against the v0.21 tag rather than assuming identity from the release announcement;
-- inspect FileStore/ObjectStore callback and crash semantics if a stronger claim about **primary-local durable completion before PG-info publication** becomes necessary;
-- fault-inject interruption at object-removal application, PG-info publication, collection removal, and replica-local regenerated-cleanup boundaries;
+- fault-inject the `923617dc` path at `share_pg_info()` versus FileStore apply/journal-safe boundaries under selected journal modes, and trace the resulting restart/peering behavior;
+- determine whether and when later Ceph revisions changed this primary-local publication barrier;
 - trace later peering/currentness repair for stale or divergent `purged_snaps` state;
 - trace lower-layer allocator reuse separately from RADOS logical reclamation;
+- keep hardware persistence validation below FileStore's software safe boundary separate;
 - keep sanitization / forensic remanence as separate evidence questions.
