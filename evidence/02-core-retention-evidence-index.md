@@ -16,6 +16,7 @@ This is a **focused navigation index**, not a claim that every Case-02-adjacent 
 | --- | --- | --- | --- |
 | **1951–1954 core grounding** | [`02-magnetic-core-1951-1954-grounding.md`](02-magnetic-core-1951-1954-grounding.md) | remanent binary state, coincident-current selection, destructive read and restore in the bounded classic scheme, implemented MIT read–rewrite cycle, contemporary nondestructive-read counterexamples | quiescent nonvolatility != read invariance; classic destructive read != essence of all magnetic-core memory |
 | **RCA 1952 `static` / no-holding-power deepening** | [`02-rca-1952-static-memory-no-holding-power-read-restore-deepening.md`](02-rca-1952-static-memory-no-holding-power-read-restore-deepening.md) | period `Static Magnetic Matrix Memory` vocabulary, no-holding-power quiescent retention, operating 256-bit experimental model, and read-triggered conditional restoration in one source | `static` != physically untouched during access; no holding power != no operating energy / support apparatus; experimental model != shipping product |
+| **RCA/Rajchman 1952–1959 filing / publication provenance** | [`02-rca-1952-1959-magnetic-memory-patent-publication-provenance-deepening.md`](02-rca-1952-1959-magnetic-memory-patent-publication-provenance-deepening.md) | later primary patents attest an 8-Mar-1952 application filing and a 25-Nov-1952 parent filing while preserving June-1952 public-paper and 1956–1959 patent-publication dates as different event types | application filing != public technical disclosure != patent publication / issue != product embodiment != invention-priority adjudication |
 | **IBM 705 1954–1955 retention vocabulary** | [`02-ibm-705-1954-1955-indefinite-retention-vocabulary-deepening.md`](02-ibm-705-1954-1955-indefinite-retention-vocabulary-deepening.md) | bounded product-facing use of apparently horizonless `indefinitely` language | period adjective != quantified retention specification / warranty / infinite lifetime |
 | **IBM 7090 1960–1962 startup policy** | [`02-ibm-7090-1960-1962-power-on-clear-retention-policy-deepening.md`](02-ibm-7090-1960-1962-power-on-clear-retention-policy-deepening.md) | Reset can preserve core while ordinary power-on path includes clear/zeroing policy | material nonvolatility != restart preservation policy |
 | **TCM-32 1964 clear/write scope** | [`02-1964-tcm32-clear-write-memory-clear-deepening.md`](02-1964-tcm32-clear-write-memory-clear-deepening.md) | selected-address clear/write versus whole-stack memory clear in a later production system | rewrite / clear scope != Flash-style erase != secure sanitization |
@@ -52,7 +53,7 @@ post-restart control state
 secure erasure / sanitization state
 ```
 
-The new RCA 1952 slice sharpens the first four relations because one period source itself combines:
+The RCA 1952 mechanism slice sharpens the first four relations because one period source itself combines:
 
 ```text
 `static` memory vocabulary
@@ -79,6 +80,22 @@ static with respect to quiescent holding-energy demand
 static with respect to access trajectory
 ```
 
+The RCA/Rajchman provenance slice adds an orthogonal source-control decomposition:
+
+```text
+application filing event
+    !=
+public technical disclosure
+    !=
+patent publication / issue
+    !=
+named-product embodiment
+    !=
+invention-priority adjudication
+```
+
+A later patent's recital of an earlier filing can improve chronology without silently moving the public-document floor backward.
+
 ---
 
 ## Historical / engineering / analogy / interpretation boundary
@@ -87,7 +104,7 @@ static with respect to access trajectory
 
 Use period papers, patents, manuals, maintenance documents, and artifacts to state what a particular system called its operations and what behavior it actually documented.
 
-For the new 1952 slice, historically attested terms include:
+For the 1952 RCA mechanism slice, historically attested terms include:
 
 - `Static Magnetic Matrix Memory`;
 - stable physical states;
@@ -96,7 +113,9 @@ For the new 1952 slice, historically attested terms include:
 - an operating 256-bit experimental model;
 - a read / restoration sequence.
 
-Do not silently replace those terms with later `SRAM`, standardized `NVM`, persistence-domain, or crash-consistency vocabulary.
+For the provenance slice, keep the event types attached to their records: an 8-March-1952 application filing is retrospectively attested by later patent text; the June-1952 RCA Review paper is a public technical disclosure; later issued patents have their own 1956–1959 publication dates.
+
+Do not silently replace those terms with later `SRAM`, standardized `NVM`, persistence-domain, or crash-consistency vocabulary, and do not turn filing order into invention order.
 
 ### Engineering reconstruction
 
@@ -106,12 +125,13 @@ Project terms such as:
 - `access-retention contract`;
 - `logical nondestructiveness as a restored service property`;
 - `power-transition boundary`;
+- `filing floor` versus `public-document floor`;
 
-are modern mechanism descriptions. They are useful only when attached to explicit period behavior.
+are modern mechanism or evidence-control descriptions. They are useful only when attached to explicit period behavior or explicit document metadata.
 
 ### Functional analogy
 
-Comparisons to DRAM restore, later nonvolatile memory, Flash retention, or restart-preservation mechanisms are allowed only at named functions such as:
+Comparisons to DRAM restore, later nonvolatile memory, Flash retention, restart-preservation mechanisms, or versioned technical contracts are allowed only at named relations such as:
 
 ```text
 access creates a restore obligation
@@ -123,13 +143,21 @@ or:
 quiescent substrate retention does not determine restart policy
 ```
 
+or, for provenance:
+
+```text
+current visible record can preserve evidence about an earlier event
+```
+
 They are not mechanism or invention genealogies.
 
 ### Philosophical interpretation
 
 Case 02 supports the bounded interpretation that technical `stillness` is relation-specific: a state may need no continuous holding power yet still depend on active reconstruction when accessed.
 
-That is a project-level conceptual result. It is not a historical claim that Rajchman, Papian, Forrester, IBM, or DEC formulated a philosophy of retention.
+The provenance deepening adds a separate methodological observation: an event can precede the surviving public record that later makes the event visible. That is a statement about evidence custody, not a claim that patent archives and magnetic memory are the same technical mechanism.
+
+These are project-level conceptual results. They are not historical claims that Rajchman, Papian, Forrester, IBM, DEC, or patent examiners formulated a philosophy of retention.
 
 ---
 
@@ -164,15 +192,55 @@ Source genre and mechanism remain part of the evidence.
 
 ---
 
+## Filing / publication provenance boundary
+
+The new RCA/Rajchman slice is deliberately not a legal priority study. Its purpose is to keep historical document events typed correctly.
+
+The bounded chronology is:
+
+```text
+8-Mar-1952
+    later-attested application filing
+
+June-1952
+    directly inspected public RCA Review paper
+
+25-Nov-1952
+    parent application expressly identified by a later continuation
+
+1956–1959
+    public patent issue / publication records inspected here
+```
+
+Therefore:
+
+```text
+earlier application filing
+    !=
+earlier proven public disclosure
+
+continuation relation
+    !=
+proof that every later technical sentence existed unchanged in the parent
+
+citation as prior literature
+    !=
+direct implementation genealogy
+```
+
+The exact original contents of Serial No. 275,622 and the complete public mapping/disposition of every related serial-number application remain separate archival questions.
+
+---
+
 ## Related-repository routing
 
 The broad engineering history remains in:
 
 - [`tmzncty/computing-archaeology/docs/memory/why-core-memory-was-worth-weaving.md`](https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md).
 
-That repository already covers core-memory selection, Whirlwind, destructive readout, system tradeoffs, and manufacturing. Keep `technical-retention` focused on the retained state, maintenance/restore obligations, transition boundaries, policy semantics, evidence lifetime, and controlled cross-mechanism comparison.
+That repository already covers core-memory selection, Whirlwind, destructive readout, system tradeoffs, and manufacturing. Keep `technical-retention` focused on the retained state, maintenance/restore obligations, transition boundaries, policy semantics, evidence lifetime, source provenance, and controlled cross-mechanism comparison.
 
-A fresh repository search for a dedicated Rajchman-1952 retention packet found no narrower `computing-archaeology` artifact to reuse in this round.
+Fresh repository searches found no dedicated Rajchman/RCA filing-provenance packet to reuse in this round. A broader RCA patent-family, laboratory, personnel, and device genealogy should continue to route primarily to `computing-archaeology` rather than being recreated here.
 
 ---
 
@@ -180,14 +248,15 @@ A fresh repository search for a dedicated Rajchman-1952 retention packet found n
 
 Case 02 remains **`grounded`**.
 
-The RCA 1952 deepening improves:
+The RCA mechanism and provenance deepenings improve:
 
 - period terminology;
 - cross-vendor prior-art control;
 - direct evidence for `quiescent no-holding-power != access-triggered restore`;
-- the chronology of public no-holding-power / apparently horizonless retention language.
+- the chronology of public no-holding-power / apparently horizonless retention language;
+- the separation of filing dates from public-disclosure and patent-publication dates.
 
-It does **not** justify a promotion because substantial open work remains around material distributions, early production correspondence, exact power-transition behavior in the earliest experimental systems, cross-machine reliability distributions, and broader genealogy.
+They do **not** justify a promotion because substantial open work remains around material distributions, early production correspondence, exact power-transition behavior in the earliest experimental systems, cross-machine reliability distributions, and broader genealogy.
 
 ---
 
@@ -195,12 +264,12 @@ It does **not** justify a promotion because substantial open work remains around
 
 High-value follow-ons include:
 
-- earlier RCA internal / patent / conference wording before June 1952;
-- exact patent chronology around Rajchman/Rosenberg without treating filing order as invention priority;
+- obtain and directly inspect Rajchman **Serial No. 275,622** or a contemporaneous pre-June-1952 archival record; the later patent recital establishes filing metadata but not complete original contents or public availability on filing day;
+- resolve the exact public mapping / disposition of **Serial No. 327,234** from a direct primary record rather than title/date inference;
 - direct power-off / power-on evidence for the 1952 RCA 256-bit experimental unit;
 - quantitative dormant-remanence evidence under specified material / temperature conditions;
 - cross-vendor terminology at Burroughs, Remington Rand/UNIVAC, DEC, and other early systems;
 - cross-machine operating-margin distributions and earlier production correspondence;
 - repository-wide repair of the currently empty `CASE_INDEX.md` maturity ledger in a dedicated scaffold-maintenance slice, rather than silently reconstructing it inside one case.
 
-Broader institutional and device genealogy should continue to route primarily to `computing-archaeology`.
+Broader institutional, legal-priority, and device genealogy should continue to route primarily to `computing-archaeology` or a separately scoped historical project.
