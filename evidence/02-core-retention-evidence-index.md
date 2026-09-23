@@ -4,7 +4,7 @@
 
 **Current maturity:** `grounded` in the canonical case and ROADMAP. **No maturity promotion is made by this navigation file.**
 
-> Repository-state note: `CASE_INDEX.md` is currently an empty file on `main`, although `ROADMAP.md` describes it as the authoritative maturity ledger. This index therefore does not invent or silently reconstruct a missing ledger entry; it records the status already present in the canonical Case 02 and ROADMAP until the repository-wide ledger inconsistency is repaired in a separate bounded slice.
+> Repository-state note: `CASE_INDEX.md` does not currently return usable content through the connector's large-file read path. This index therefore does not invent or silently reconstruct a ledger entry; it preserves the `grounded` status already present in the canonical Case 02 and ROADMAP.
 
 This is a **focused navigation index**, not a claim that every Case-02-adjacent file is listed. Its purpose is to keep the main retention boundaries legible as the evidence chain grows.
 
@@ -22,6 +22,7 @@ This is a **focused navigation index**, not a claim that every Case-02-adjacent 
 | **TCM-32 1964 clear/write scope** | [`02-1964-tcm32-clear-write-memory-clear-deepening.md`](02-1964-tcm32-clear-write-memory-clear-deepening.md) | selected-address clear/write versus whole-stack memory clear in a later production system | rewrite / clear scope != Flash-style erase != secure sanitization |
 | **IBM 1401 / DEC PDP-7 1965–1966 power transition** | [`02-1965-1966-core-power-transition-retention-deepening.md`](02-1965-1966-core-power-transition-retention-deepening.md) | controlled power sequencing can preserve core while control state is separately reset | unpowered retention != transition immunity != whole-machine restart continuity |
 | **DEC PDP-8 1966–1969 power-cycle diagnostic** | [`02-dec-1966-1969-pdp8-memory-power-cycle-diagnostic-deepening.md`](02-dec-1966-1969-pdp8-memory-power-cycle-diagnostic-deepening.md) | explicit machine test for bit dropout/pickup after simulated power failure plus bounded later restoration observations | diagnostic requirement/pass != universal substrate lifetime; observed wrong bit != proven ferrite-remanence decay |
+| **DEC PDP-8/E 1973 current-cycle power-fail closure** | [`02-dec-pdp8e-1973-power-fail-current-cycle-closure-deepening.md`](02-dec-pdp8e-1973-power-fail-current-cycle-closure-deepening.md) | production maintenance manual explicitly states that POWER OK loss stops normal timing while the current memory cycle completes, with X/Y current-source shutdown delayed sufficiently to finish WRITE | stopping new/normal timing != truncating already-admitted destructive-read work; quiescent nonvolatility != in-flight closure; documented cycle completion != universal brownout survival distribution |
 | **1963–1972 thermal-control / access-throttling prior art** | [`02-1963-1972-core-thermal-control-prior-art-access-throttling-deepening.md`](02-1963-1972-core-thermal-control-prior-art-access-throttling-deepening.md) | later operating-control strategies around temperature / service conditions | quiescent remanence != unconstrained powered operating service |
 | **1970–1973 temperature compensation / margin control** | [`02-1970-1973-core-temperature-compensation-operating-margin-deepening.md`](02-1970-1973-core-temperature-compensation-operating-margin-deepening.md) | temperature-dependent drive/inhibit control as one later design strategy | retained payload != temperature-independent operating margin; one strategy != universal architecture |
 | **1991 clearing / purging / degaussing vocabulary** | [`02-1991-ncsc-core-clearing-purging-degaussing-deepening.md`](02-1991-ncsc-core-clearing-purging-degaussing-deepening.md) | later security-assurance vocabulary around removal of recoverable information | overwrite / clearing != purging != generic `forgetting`; later security terms must not be projected backward |
@@ -96,6 +97,20 @@ invention-priority adjudication
 
 A later patent's recital of an earlier filing can improve chronology without silently moving the public-document floor backward.
 
+The PDP-8/E power-fail slice now adds a named implementation answer for the access/power boundary:
+
+```text
+power-fail detection
+    -> stop normal timing progression
+    != immediate withdrawal of core-drive capability
+
+current cycle already admitted
+    -> retain X/Y drive long enough for WRITE closure
+    -> then remove the current source
+```
+
+This closes the qualitative current-cycle question without turning one manual into a measured worst-case brownout distribution.
+
 ---
 
 ## Historical / engineering / analogy / interpretation boundary
@@ -115,7 +130,9 @@ For the 1952 RCA mechanism slice, historically attested terms include:
 
 For the provenance slice, keep the event types attached to their records: an 8-March-1952 application filing is retrospectively attested by later patent text; the June-1952 RCA Review paper is a public technical disclosure; later issued patents have their own 1956–1959 publication dates.
 
-Do not silently replace those terms with later `SRAM`, standardized `NVM`, persistence-domain, or crash-consistency vocabulary, and do not turn filing order into invention order.
+For the 1973 PDP-8/E slice, the historical implementation vocabulary is DEC's own `POWER OK`, memory-cycle `READ` / `WRITE`, timing chain, X/Y current source, Memory Register, and the documented fast-on/slow-off power-fail circuit.
+
+Do not silently replace those terms with later `SRAM`, standardized `NVM`, persistence-domain, transaction-drain, or crash-consistency vocabulary, and do not turn filing order into invention order.
 
 ### Engineering reconstruction
 
@@ -125,16 +142,23 @@ Project terms such as:
 - `access-retention contract`;
 - `logical nondestructiveness as a restored service property`;
 - `power-transition boundary`;
+- `drain-before-withdraw`;
 - `filing floor` versus `public-document floor`;
 
 are modern mechanism or evidence-control descriptions. They are useful only when attached to explicit period behavior or explicit document metadata.
 
 ### Functional analogy
 
-Comparisons to DRAM restore, later nonvolatile memory, Flash retention, restart-preservation mechanisms, or versioned technical contracts are allowed only at named relations such as:
+Comparisons to DRAM restore, later nonvolatile memory, Flash retention, restart-preservation mechanisms, distributed repair, or modern in-flight drain protocols are allowed only at named relations such as:
 
 ```text
 access creates a restore obligation
+```
+
+or:
+
+```text
+failure detection can change admission before completion capability is withdrawn
 ```
 
 or:
@@ -154,6 +178,8 @@ They are not mechanism or invention genealogies.
 ### Philosophical interpretation
 
 Case 02 supports the bounded interpretation that technical `stillness` is relation-specific: a state may need no continuous holding power yet still depend on active reconstruction when accessed.
+
+The PDP-8/E deepening adds a second bounded observation: continuity across a boundary event can require preserving not only state but also enough **completion capability** to finish a reconstruction already in progress.
 
 The provenance deepening adds a separate methodological observation: an event can precede the surviving public record that later makes the event visible. That is a statement about evidence custody, not a claim that patent archives and magnetic memory are the same technical mechanism.
 
@@ -194,7 +220,7 @@ Source genre and mechanism remain part of the evidence.
 
 ## Filing / publication provenance boundary
 
-The new RCA/Rajchman slice is deliberately not a legal priority study. Its purpose is to keep historical document events typed correctly.
+The RCA/Rajchman slice is deliberately not a legal priority study. Its purpose is to keep historical document events typed correctly.
 
 The bounded chronology is:
 
@@ -240,7 +266,7 @@ The broad engineering history remains in:
 
 That repository already covers core-memory selection, Whirlwind, destructive readout, system tradeoffs, and manufacturing. Keep `technical-retention` focused on the retained state, maintenance/restore obligations, transition boundaries, policy semantics, evidence lifetime, source provenance, and controlled cross-mechanism comparison.
 
-Fresh repository searches found no dedicated Rajchman/RCA filing-provenance packet to reuse in this round. A broader RCA patent-family, laboratory, personnel, and device genealogy should continue to route primarily to `computing-archaeology` rather than being recreated here.
+Fresh repository searches found no dedicated PDP-8/E memory-cycle power-fail packet to reuse in this round. A broader PDP-8/E power-supply, maintenance, product-family, and field-service history should continue to route primarily to `computing-archaeology` rather than being recreated here.
 
 ---
 
@@ -248,28 +274,8 @@ Fresh repository searches found no dedicated Rajchman/RCA filing-provenance pack
 
 Case 02 remains **`grounded`**.
 
-The RCA mechanism and provenance deepenings improve:
+The PDP-8/E maintenance-manual slice materially improves one previously open boundary: a named production implementation now explicitly documents completion of the current core-memory cycle after power-fail detection, with X/Y current-source shutdown delayed until the write portion can complete.
 
-- period terminology;
-- cross-vendor prior-art control;
-- direct evidence for `quiescent no-holding-power != access-triggered restore`;
-- the chronology of public no-holding-power / apparently horizonless retention language;
-- the separation of filing dates from public-disclosure and patent-publication dates.
+This closes the **qualitative P1 current-cycle policy** that remained open after the Victor slice. It does not yet supply a numeric slow-off delay, worst-case aged-component timing margin, external restore-complete indication, or phase-by-phase destructive power-cut experiment.
 
-They do **not** justify a promotion because substantial open work remains around material distributions, early production correspondence, exact power-transition behavior in the earliest experimental systems, cross-machine reliability distributions, and broader genealogy.
-
----
-
-## Remaining bounded debt
-
-High-value follow-ons include:
-
-- obtain and directly inspect Rajchman **Serial No. 275,622** or a contemporaneous pre-June-1952 archival record; the later patent recital establishes filing metadata but not complete original contents or public availability on filing day;
-- resolve the exact public mapping / disposition of **Serial No. 327,234** from a direct primary record rather than title/date inference;
-- direct power-off / power-on evidence for the 1952 RCA 256-bit experimental unit;
-- quantitative dormant-remanence evidence under specified material / temperature conditions;
-- cross-vendor terminology at Burroughs, Remington Rand/UNIVAC, DEC, and other early systems;
-- cross-machine operating-margin distributions and earlier production correspondence;
-- repository-wide repair of the currently empty `CASE_INDEX.md` maturity ledger in a dedicated scaffold-maintenance slice, rather than silently reconstructing it inside one case.
-
-Broader institutional, legal-priority, and device genealogy should continue to route primarily to `computing-archaeology` or a separately scoped historical project.
+The case therefore has stronger implementation grounding without a maturity promotion. The next highest-value work is phase-specific validation and quantitative threshold/hold-up evidence, plus a counterexample controller that handles the same boundary differently.
