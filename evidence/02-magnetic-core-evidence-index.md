@@ -165,7 +165,7 @@ The quantitative pulse-pattern and margin analysis remains owned by Case 70 rath
 
 **Record:** [`02-victor-1974-1975-core-power-fail-inflight-restore-boundary-deepening.md`](02-victor-1974-1975-core-power-fail-inflight-restore-boundary-deepening.md)
 
-**Role:** new power/access-pipeline boundary.
+**Role:** power/access-pipeline boundary.
 
 U.S. Patent 3,906,453 places in one named design:
 
@@ -182,7 +182,29 @@ power-fail command gating
 proof that an already-started destructive-read restore completed
 ```
 
-The source does not provide the needed rail-hold-up/current-cycle timing proof. This is therefore a sharpened boundary, not a claim that Victor hardware was unsafe.
+The source does not provide the needed rail-hold-up/current-cycle timing proof. This remains a valid boundary for Victor; it is not a claim that Victor hardware was unsafe.
+
+### Chain 9 — 1973 PDP-8/E: power-fail detection drains the current memory cycle
+
+**Record:** [`02-dec-pdp8e-1973-power-fail-current-cycle-closure-deepening.md`](02-dec-pdp8e-1973-power-fail-current-cycle-closure-deepening.md)
+
+**Role:** named production/service-manual closure of the highest-value current-cycle policy debt.
+
+DEC's September-1973 maintenance manual documents a stronger relation than the Victor patent slice. When `POWER OK` falls, normal timing is shut off, yet the manual explicitly says that the current memory cycle completes. It further states that the X/Y current source is turned off only after a delay sufficient to complete the `WRITE` operation.
+
+The bounded relation is:
+
+```text
+power-fail detection
+    -> stop normal timing progression
+    != immediate loss of completion capability
+
+current memory cycle already admitted
+    -> retain X/Y drive long enough for WRITE closure
+    -> then remove current source
+```
+
+This closes the **qualitative current-cycle policy** for this named implementation. It does not establish a numerical worst-case slow-off margin, every brownout waveform, or phase-by-phase destructive power-cut statistics.
 
 ---
 
@@ -238,6 +260,8 @@ cell/word restore closure
 whole-machine continuation closure
 ```
 
+The PDP-8/E 1973 deepening makes the lower-level side explicit: completing one already-started core-memory cycle before X/Y drive is withdrawn does not by itself prove that CPU registers, peripherals, or an emergency-save routine also reached closure.
+
 ### Case 03 — DRAM destructive sensing / restoration
 
 DRAM is useful only as a functional analogy for the relation:
@@ -254,7 +278,7 @@ It must not be treated as the same physical retention mechanism. DRAM charge sto
 
 [`synthesis26-reset-event-state-persistence-horizon-deepening.md`](synthesis26-reset-event-state-persistence-horizon-deepening.md)
 
-The Victor deepening reinforces the synthesis rule that an event label such as `power fail` or `reset` is insufficient by itself.
+The Victor and PDP-8/E deepenings reinforce the synthesis rule that an event label such as `power fail` or `reset` is insufficient by itself.
 
 The evidence must identify at least:
 
@@ -328,7 +352,8 @@ The repository has period or named-product evidence for:
 - maintenance testing of power-cycle bit preservation;
 - temperature-dependent access-margin control;
 - later security clearing/purging/degaussing vocabulary;
-- a 1974–1975 controller combining destructive read/restore phases with a power-fail admission signal.
+- a 1974–1975 controller combining destructive read/restore phases with a power-fail admission signal;
+- and a 1973 PDP-8/E production maintenance manual in which power-fail detection stops normal timing while deliberately preserving X/Y drive long enough for the already-started memory cycle's WRITE portion to complete.
 
 ### Engineering reconstruction presently warranted
 
@@ -350,21 +375,34 @@ diagnostic qualification
 security sanitization
 ```
 
-It also supports the new in-flight relation:
+It also supports two distinct in-flight relations:
 
 ```text
+general boundary:
 stop admitting new memory work
     !=
 prove already-admitted destructive work reached stable closure
+
+named PDP-8/E implementation:
+power-fail detection
+    -> normal timing stops
+    + completion capability is retained temporarily
+    -> current WRITE closes before X/Y current source is removed
 ```
+
+The second relation does not erase the first; it supplies one production implementation that explicitly answers it.
 
 ### What remains only functional analogy
 
 Comparisons to DRAM, later destructive-read NVM, transaction drain, persistence-domain closure, or distributed repair are useful only at the relation level unless direct historical lineage is separately established.
 
+The project phrase `drain-before-withdraw` is therefore an engineering reconstruction for the PDP-8/E relation, not DEC period terminology.
+
 ### Philosophical interpretation ceiling
 
 Case 02 can support the bounded observation that logical continuity may depend on reconstruction after an act of observation.
+
+The PDP-8/E slice adds a second bounded observation: continuity across a boundary event can require preserving enough **completion capability** to finish reconstruction already in progress.
 
 It does not establish a universal philosophy of memory, identity, observation, or forgetting.
 
@@ -387,6 +425,12 @@ read result available
 power-fail signal asserted
     = in-flight destructive read safely closed
 
+PDP-8/E documented WRITE completion
+    = measured survival under every brownout waveform
+
+memory-cycle closure
+    = whole-machine emergency-save completion
+
 main-memory payload survived
     = CPU/peripheral execution state survived
 
@@ -407,19 +451,19 @@ modern destructive-read NVM mitigation
 
 ## Open research debt, ordered by value
 
-### P1 — current-cycle behavior after power-fail detection
+### Closed in this slice — qualitative current-cycle behavior after power-fail detection
 
-Find a production controller/service manual that explicitly answers:
+The previous P1 asked for a production controller/service manual that explicitly answered whether an already-underway core-memory cycle is completed after power-fail detection.
 
-- whether a memory cycle already underway is completed;
-- whether new cycles are inhibited before sense;
-- where the power-fail threshold lies relative to the current regulators;
-- what hold-up time remains after detection;
-- and whether restore completion is observable.
+DEC's September-1973 PDP-8/E maintenance manual now supplies that witness:
 
-This is now the highest-value Case 02 retention gap.
+- `POWER OK` loss stops normal timing;
+- the current memory cycle is explicitly described as completed;
+- X/Y current-source shutdown is delayed sufficiently to complete `WRITE`.
 
-### P2 — phase-specific power-failure diagnostics
+This closes the **qualitative current-cycle policy** for the named PDP-8/E implementation.
+
+### P1 — phase-specific power-failure diagnostics
 
 Look for maintenance procedures or engineering reports that interrupt power at controlled points in read/regenerate timing.
 
@@ -433,9 +477,22 @@ vs
 after restore
 ```
 
+This is now the highest-value Case 02 gap because it would move from documented controller policy to observed phase-specific failure behavior.
+
+### P2 — quantitative PDP-8/E slow-off / threshold margin
+
+Find engineering drawings, component values, adjustment procedures, oscilloscope waveforms, or power-supply documentation that quantify:
+
+- the memory-side `POWER OK` threshold;
+- the delay before X/Y current-source removal;
+- worst-case remaining rail/current margin;
+- and whether a completion state is externally observable.
+
+The manual establishes the ordering relation but not the complete quantitative margin envelope in the passage used here.
+
 ### P3 — named-machine hold-up evidence beyond PDP-8/E
 
-Case 86 already has later KP8-E capacitor-hold-up evidence. The next step is a separate named core-memory controller where the hold-up relation is documented at the **memory-cycle** level rather than only at the whole-machine emergency-save level.
+Case 86 already has later KP8-E capacitor-hold-up evidence. The next step is a separate named core-memory controller where the hold-up relation is documented at the **memory-cycle** level, ideally using a strategy that differs from PDP-8/E's delayed current-source shutdown.
 
 ### P4 — product/circuit provenance for Victor US 3,906,453
 
@@ -448,8 +505,8 @@ The patent alone should remain a design/document witness until that link is esta
 Find a core-memory design that solves the same boundary differently, for example:
 
 - suppress destructive sense early enough that no restore debt is created;
-- guarantee drain of the current cycle after fail detection;
-- retain enough analog energy for one final regenerate;
+- use a different explicit drain policy;
+- retain enough analog energy for one final regenerate through another circuit topology;
 - or explicitly treat interrupted cycles as invalid and recover by another mechanism.
 
 A strong counterexample would improve the comparison more than another generic core-memory description.
@@ -463,7 +520,7 @@ The broader history of core-memory invention, ferrite materials, weaving/manufac
 - [`tmzncty/computing-archaeology/docs/memory/why-core-memory-was-worth-weaving.md`](https://github.com/tmzncty/computing-archaeology/blob/main/docs/memory/why-core-memory-was-worth-weaving.md)
 - [`tmzncty/computing-archaeology/experiments/core-memory/`](https://github.com/tmzncty/computing-archaeology/tree/main/experiments/core-memory)
 
-Case 02 should reuse that work and add only retention-specific evidence and comparisons.
+A fresh repository search found no dedicated PDP-8/E power-fail / memory-cycle packet to reuse for this slice. Broader PDP-8/E maintenance and product-family history should still route to `computing-archaeology`; this repository keeps only the retention-specific access/power boundary.
 
 ---
 
@@ -471,11 +528,18 @@ Case 02 should reuse that work and add only retention-specific evidence and comp
 
 **Case 02 remains `grounded`.**
 
-The new Victor evidence improves the power/access boundary but does not justify a promotion because the most interesting new question is deliberately still open at the implementation level:
+The PDP-8/E manual closes a meaningful named-implementation gap left open by the Victor slice: the repository now has direct production/service-manual evidence that one destructive-read core-memory implementation deliberately completes the already-started memory cycle and delays X/Y current-source removal until the WRITE phase can finish after power-fail detection.
+
+That is substantial implementation grounding, but it does not yet justify a maturity promotion because the strongest remaining work is empirical and quantitative:
 
 ```text
-how is an already-started destructive-read cycle closed
-when power-fail detection races the read/restore sequence?
+phase-specific power interruption
++
+measured threshold / slow-off margin
++
+post-transition validation
++
+a contrasting implementation strategy
 ```
 
-A future promotion should require at least one named implementation with direct current-cycle/hold-up evidence or an equivalent phase-specific validation record, not simply more secondary statements that core is nonvolatile.
+The historical claim should therefore stay narrow: **PDP-8/E documents current-cycle closure; it does not prove a universal magnetic-core power-fail rule.**
