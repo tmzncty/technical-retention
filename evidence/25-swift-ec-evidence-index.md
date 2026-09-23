@@ -12,8 +12,8 @@ The current evidence chain separates at least:
 
 ```text
 fragment payload identity
-    != timestamp-cohort identity
-    != durable/current cohort evidence
+    != filesystem persistence completion
+    != Swift durable/current cohort evidence
     != durability-witness representation
     != placement/currentness evidence
     != authority to retire a handoff embodiment
@@ -40,7 +40,7 @@ The canonical case establishes the broad technical structure, including:
 - the evolution from separate `.durable` witnesses to durable state encoded in fragment filenames;
 - the later `commit_window` boundary.
 
-Use the canonical case for the overall architecture and maturity claim. Use the evidence deepenings below for narrow revision or disposal boundaries.
+Use the canonical case for the overall architecture and maturity claim. Use the evidence deepenings below for narrow revision, persistence, or disposal boundaries.
 
 ---
 
@@ -126,7 +126,61 @@ payload-bearing handoff state
     != authority to stop retaining the handoff copy
 ```
 
-**Do not infer:** that SSYNC success proves stable-on-media persistence under every storage stack, that the local handoff was the last usable fragment, or that the cleanup decision by itself proves whole-object EC reconstructability.
+**Do not infer:** that local handoff state was the last usable fragment, that the cleanup decision by itself proves whole-object EC reconstructability, or that current all-destination intersection semantics existed unchanged in the earliest EC reconstructor.
+
+---
+
+## Evidence chain 3 — SSYNC receiver filesystem persistence and EC durability qualification
+
+### E25-3 — receiver persistence boundary before SSYNC success
+
+[`25-swift-ec-ssync-receiver-persistence-boundary-deepening.md`](25-swift-ec-ssync-receiver-persistence-boundary-deepening.md)
+
+**Question:** what filesystem persistence actions occur on the receiving object server before a normal durable-fragment SSYNC update can be reported as successful?
+
+**Pinned current implementation (`openstack/swift` `6b83d7f3fcf95539b17dc1e3f5f1074c29afc487`, 2026-09-20):**
+
+```text
+source durable fragment
+    -> SSYNC PUT without X-Backend-No-Commit
+    -> receiver routes PUT to object server
+    -> payload written to temp file
+    -> object metadata written
+    -> fsync(fragment file)
+    -> non-durable EC pathname published
+    -> destination directory path(s) fsynced
+    -> EC commit renames to durable-name form
+    -> object data directory fsynced
+    -> object server returns HTTP success
+    -> receiver reports clean UPDATES completion
+    -> sender accepts session success
+```
+
+The current POSIX diskfile implementation therefore gives direct source-level support for a lower-layer persistence chain beneath SSYNC's protocol acknowledgement.
+
+But the same code also makes two boundaries explicit.
+
+First, a non-durable source fragment is transferred with:
+
+```text
+X-Backend-No-Commit: True
+```
+
+so the receiver may complete ordinary file finalization and filesystem sync work while deliberately skipping the EC durable-name transition:
+
+```text
+filesystem-persisted fragment
+    != Swift-qualified durable EC fragment
+```
+
+Second, if the receiver already has the exact offered fragment but lacks durable state, `_check_local()` can call `writer.commit()` locally and become durably in-sync without retransmitting the payload:
+
+```text
+receiver becomes durably in-sync
+    != payload bytes necessarily moved in this SSYNC exchange
+```
+
+**Important limit:** the implementation proves that Swift requests and waits for file/directory synchronization at these boundaries. It does **not** by itself prove survival under every kernel/filesystem/HBA/controller/device-cache/firmware or arbitrary power-loss failure model. Physical power-cut validation remains separate work.
 
 ---
 
@@ -141,12 +195,19 @@ logical object/version
 same-timestamp EC fragment cohort
     |
     +--> fragment-index identity / coded payload
+    |        |
+    |        +--> receiver-side file persistence work
+    |                 |
+    |                 +--> payload + metadata fsync
+    |                 +--> pathname publication + directory sync
     |
     +--> durable/current cohort evidence
              |
              +--> old representation: separate .durable inode
              |
              +--> newer representation: #d in data filename
+                          |
+                          +--> current commit rename + directory fsync
     |
     +--> placement state
              |
@@ -155,17 +216,23 @@ same-timestamp EC fragment cohort
              +--> temporary handoff embodiment
                         |
                         v
-                  SSYNC reversion evidence
+                  SSYNC synchronization evidence
+                        |
+                        v
+              all-required-destination intersection
                         |
                         v
                   source-retirement authority
 ```
 
-Three kinds of continuity therefore need separate language:
+Four kinds of continuity therefore need separate language:
 
 1. **payload continuity** — usable coded fragment state remains available;
-2. **currentness/durability continuity** — the implementation retains enough evidence to identify the relevant committed timestamped state;
-3. **placement continuity** — temporary and primary embodiments change without prematurely discarding the only state that a repair/reversion path is still obliged to retain.
+2. **filesystem persistence continuity** — the current implementation has completed the file/directory sync operations associated with publishing receiver-side state;
+3. **currentness/durability continuity** — Swift retains enough evidence to identify the relevant committed timestamped state;
+4. **placement continuity** — temporary and primary embodiments change without prematurely discarding a copy that a repair/reversion path is still obliged to retain.
+
+These layers compose, but they are not synonyms.
 
 ---
 
@@ -173,7 +240,7 @@ Three kinds of continuity therefore need separate language:
 
 ### Case 04 — flash virtual mapping
 
-[`../cases/04-flash-virtual-mapping.md`](../cases/04-flash-virtual-mapping.md)
+[`../cases/04-flash-virtual-mapping-logical-identity.md`](../cases/04-flash-virtual-mapping-logical-identity.md)
 
 Functional analogy only:
 
@@ -191,7 +258,18 @@ There is **no genealogy claim** that Swift derived this pattern from flash trans
 
 [`../cases/88-linux-md-raid5-partial-parity-log.md`](../cases/88-linux-md-raid5-partial-parity-log.md)
 
-A weaker functional comparison is possible: both distinguish payload/home state from separate evidence or obligations that govern when an earlier protection mechanism may retire. The mechanisms are otherwise very different; PPL crash-recovery evidence should not be equated with Swift placement synchronization evidence.
+A bounded functional comparison is now stronger than before: both cases separate an upper-layer completion decision from lower persistence work and from later authority/retirement state.
+
+For Case 25:
+
+```text
+receiver update success
+    != mere byte receipt
+    != universal stable-media theorem
+    != whole-object reconstructability
+```
+
+For Case 88, asynchronous completion, cache-flush success, member authority, and recovery obligation likewise remain distinct. The mechanisms and histories are otherwise different.
 
 ---
 
@@ -205,7 +283,15 @@ The current Case 25 package now has direct or implementation-level support for:
 - temporary handoff embodiments as a distinct placement state;
 - current EC reconstructor cleanup being gated by successful destination SSYNC outcomes;
 - per-object cleanup eligibility being an intersection of destination-specific in-sync results in the pinned current implementation;
-- local handoff purge being placement cleanup rather than logical object deletion.
+- local handoff purge being placement cleanup rather than logical object deletion;
+- current SSYNC receiver success being downstream of actual object-server subrequest success rather than mere network receipt;
+- current POSIX diskfile finalization writing metadata then fsyncing the fragment file before publishing its pathname;
+- rename/link publication using directory synchronization in the current helpers;
+- EC durable-state publication performing an additional durable-name rename plus object-directory fsync before the normal durable PUT can return success;
+- non-durable SSYNC transfer deliberately preserving the distinction between filesystem-persisted fragment state and Swift durable qualification;
+- commit-only promotion allowing already-present payload to acquire durable state without retransmitting payload bytes.
+
+The former top-priority debt — tracing receiver persistence work far enough to state what precedes SSYNC success — is therefore closed for the pinned current implementation.
 
 Case 25 remains `grounded`. None of these narrow deepenings alone justify a maturity promotion.
 
@@ -215,15 +301,15 @@ Case 25 remains `grounded`. None of these narrow deepenings alone justify a matu
 
 Priority order for future one-round slices:
 
-### 1. Receiver persistence boundary
+### 1. Physical power-cut validation of the receiver persistence path
 
-Trace a successful SSYNC update through the object server and diskfile implementation far enough to state exactly what filesystem persistence actions occur before the receiver reports success.
+Find or build named-stack fault-injection evidence at exact cut points around file fsync, pathname publication, EC durable-name rename, directory fsync, and SSYNC response.
 
 Target distinction:
 
 ```text
-object-server subrequest succeeded
-    != automatically proven stable-on-media under arbitrary power loss
+Swift requested/completed filesystem sync calls
+    != empirically validated survival under every lower-stack failure model
 ```
 
 ### 2. Crash after remote success but before local purge
@@ -244,28 +330,42 @@ Do not infer this from current code silence alone.
 
 Determine how a later pass recognizes receiver state created during an earlier partially successful pass and whether that history is represented only by receiver disk state rather than durable sender-side session metadata.
 
-### 4. Ring/rebalance movement during a reversion job
+### 4. Historical evolution of receiver persistence semantics
+
+Find the exact historical commits that introduced or materially changed:
+
+- file fsync-before-publish behavior;
+- directory syncing in rename/link helpers;
+- EC durable filename publication;
+- `X-Backend-No-Commit` handling;
+- commit-only durable promotion during missing-check.
+
+The pinned current implementation is not evidence that all of these were present unchanged in the first EC release.
+
+### 5. Ring/rebalance movement during a reversion job
 
 Bound destination identity/currentness when placement changes while reversion is in progress.
 
-### 5. Historical evolution of modern intersection semantics
+### 6. Historical evolution of modern all-destination intersection semantics
 
 Find the exact commit(s) that introduced or materially changed the current per-object/all-destination intersection rule. The original EC reconstructor proves only the weaker historical fact that cleanup followed successful reversion work.
 
-### 6. Whole-object reconstructability under correlated placement failures
+### 7. Whole-object reconstructability under correlated placement failures
 
-Keep this separate from local source-retirement logic. A local purge gate is not by itself a theorem about all cluster-wide failure combinations.
+Keep this separate from local source-retirement logic. A local purge gate and one receiver's durable-state publication are not by themselves a theorem about all cluster-wide failure combinations.
 
 ---
 
 ## Source-custody note
 
-For the handoff-retirement deepening, current implementation claims are pinned to OpenStack Swift commit:
+For the handoff-retirement and receiver-persistence deepenings, current implementation claims are pinned to OpenStack Swift commit:
 
 `6b83d7f3fcf95539b17dc1e3f5f1074c29afc487` — **2026-09-20**.
 
-Historical introduction is anchored at:
+Historical reconstructor introduction remains anchored at:
 
 `647b66a2ce4c85c43dcca49776d35c5ebb9cf15e`.
 
-The evidence files preserve the distinction between what the historical change proves and what only the modern implementation proves. This avoids silently projecting present-day cleanup semantics backward across the entire Swift EC history.
+The receiver-persistence deepening deliberately treats the current sender, receiver, object-server, diskfile, and filesystem-helper paths as a **current implementation witness** rather than silently projecting their exact ordering backward across Swift's history.
+
+A fresh companion search found no dedicated Swift EC / SSYNC packet in `tmzncty/computing-archaeology`; broader Swift, filesystem, XFS, block-flush, controller, and storage-hardware history therefore remains outside this evidence index unless a retention-specific boundary requires it.
