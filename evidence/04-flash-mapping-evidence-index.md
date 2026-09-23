@@ -92,7 +92,35 @@ This patent does not define every later FTL, every modern garbage collector, eve
 
 ---
 
-## Evidence chain 3 — FTL terminology / standardization chronology
+## Evidence chain 3 — Ban issued-patent facsimile and relocation-ordering boundary
+
+**Packet:** [`04-ban-1993-1995-patent-facsimile-ordering-boundary-deepening.md`](04-ban-1993-1995-patent-facsimile-ordering-boundary-deepening.md)
+
+### What it establishes
+
+Direct inspection of the issued U.S. Patent 5,404,485 facsimile adds printed-page / figure / claim anchors for the mapping case and exposes an important limit in the source itself.
+
+The high-level write paragraph on printed p. 5 reads as though allocation/currentness changes and the map update precede the replacement data write. The immediately following FIG. 6 explanation instead gives `write replacement data -> update allocation tables -> update map`; claim 1 on printed p. 8 likewise places replacement-data write before allocation-map and virtual-map changes.
+
+Therefore:
+
+```text
+patent contains all functional transition types
+    !=
+patent specifies one unambiguous update ordering
+    !=
+patent proves crash-atomic publication semantics
+```
+
+The same facsimile directly anchors the transfer-unit rule, stable logical-unit identity across physical movement, Flash-resident primary map, out-of-place map-block update, and startup reconstruction of the volatile secondary map.
+
+### Boundary
+
+The inspected PDF is an issued-patent facsimile served by Google Patent Images, not an independently inspected USPTO-hosted archival copy. More importantly, textual step order is not automatically a durability barrier or firmware implementation guarantee.
+
+---
+
+## Evidence chain 4 — FTL terminology / standardization chronology
 
 **Packet:** [`04-ftl-1995-1996-terminology-standardization-addendum.md`](04-ftl-1995-1996-terminology-standardization-addendum.md)
 
@@ -116,7 +144,7 @@ Historical vocabulary remains source-sensitive. `FTL`, `garbage collection`, and
 
 ---
 
-## Evidence chain 4 — FTL power-off recovery and reconstructed authority
+## Evidence chain 5 — FTL power-off recovery and reconstructed authority
 
 **Packet:** [`04-2008-2014-ftl-power-off-crash-recovery-deepening.md`](04-2008-2014-ftl-power-off-crash-recovery-deepening.md)
 
@@ -147,7 +175,7 @@ The DCR implementation is a specific FTL design, not a universal commercial-SSD 
 
 ---
 
-## Evidence chain 5 — raw-NAND Copy-Back integrity boundary
+## Evidence chain 6 — raw-NAND Copy-Back integrity boundary
 
 **Packet:** [`04-samsung-2004-2010-nand-copyback-integrity-boundary-deepening.md`](04-samsung-2004-2010-nand-copyback-integrity-boundary-deepening.md)
 
@@ -177,7 +205,7 @@ Copy-Back is a raw NAND primitive. The Samsung device datasheets do not establis
 
 ## Unified evidence model
 
-The five chains now support the following layered model without pretending every historical system implemented every layer in the same way:
+The six chains now support the following layered model without pretending every historical system implemented every layer in the same way:
 
 ```text
 logical address / logical object
@@ -204,6 +232,10 @@ The most important result is not that Flash is “nonvolatile.” It is that a r
 3. **integrity persistence** — the representation remains acceptable under ECC / correctness rules;
 4. **authority persistence** — enough control evidence survives to decide which mapping counts after restart;
 5. **maintenance capacity** — free / transfer space and reclaim work remain available so the service can continue changing state.
+
+The facsimile-ordering packet adds a sixth discipline to the evidence model:
+
+6. **publication-order evidence** — knowing that all transition steps exist is weaker than knowing their durable ordering under interruption.
 
 ---
 
@@ -247,6 +279,7 @@ Directly sourced statements include:
 
 - NAND device operation geometry in late-1980s papers;
 - Ban's virtual/physical mapping and transfer-unit procedures;
+- the Ban patent's printed-page write/FIG. 6/claim ordering witnesses and their internal mismatch;
 - contemporary / near-contemporary FTL terminology milestones;
 - DCR's volatile-map / durable-checkpoint recovery structure;
 - Samsung Copy-Back mechanics, error-propagation warning, and later check/correct procedure.
@@ -259,6 +292,14 @@ Project-level engineering conclusions include:
 physical survival
     !=
 logical currentness
+
+replacement payload existence
+    !=
+authoritative publication
+
+functional step order
+    !=
+durable / crash-atomic order
 
 relocation completion
     !=
@@ -281,7 +322,7 @@ Comparisons to copy-on-write, journals/WALs, distributed repair, or redundancy-m
 
 ### Philosophical interpretation
 
-Claims about identity, forgetting, or continuity are downstream interpretations. They must remain visibly downstream of the engineering record and are not attributed to NAND vendors, FTL authors, or standards bodies.
+Claims about identity, forgetting, publication, or continuity are downstream interpretations. They must remain visibly downstream of the engineering record and are not attributed to NAND vendors, FTL authors, or standards bodies.
 
 ---
 
@@ -289,14 +330,15 @@ Claims about identity, forgetting, or continuity are downstream interpretations.
 
 Case 04 remains `grounded`. The highest-value remaining work is now more specific than “find more Flash history”:
 
-1. **Power-fail ordering around relocation** — a named controller / firmware / patent source that orders destination validation, mapping publication, old-page invalidation, and later erase.
+1. **Power-fail ordering around relocation** — the Ban facsimile now shows that the 1993–1995 patent is insufficient as a unique crash-ordering witness because its write-path descriptions differ. Find a named implementation / firmware / later patent / fault-injection source that explicitly orders destination validation, durable mapping publication, old-page retirement, and later erase.
 2. **Copy-Back interruption** — named-device or fault-injection evidence for reset / power loss during source read, internal-buffer residency, or destination programming.
 3. **Original PORCE full text** — upgrade remaining later-reported PORCE details to directly inspected page-anchored primary evidence.
 4. **Named shipping SSD / controller mapping format** — show persistent map/checkpoint/rebuild behavior in an identified product.
 5. **On-die ECC relocation** — establish how later NAND internal ECC changes controller-visible integrity qualification around relocation.
 6. **Wear leveling** — add a bounded early source rather than equating reclamation with wear leveling.
 7. **Host deallocation / secure erase** — keep TRIM, DEALLOCATE, controller invalidation, physical erase, and crypto-erase as a separate later slice.
-8. **Torn-program / atomicity boundary** — do not let DCR or Copy-Back evidence stand in for a universal host-FLUSH / PLP / torn-NAND contract.
+8. **Torn-program / atomicity boundary** — do not let DCR, the Ban claim sequence, or Copy-Back evidence stand in for a universal host-FLUSH / PLP / torn-NAND contract.
+9. **Patent custody cleanup** — if useful, inspect an independently hosted USPTO facsimile for archival custody; the current page anchors come from the issued-patent facsimile served by Google Patent Images.
 
 ---
 
@@ -306,8 +348,8 @@ Case 04 remains `grounded`. The highest-value remaining work is now more specifi
 
 Broader NAND / SSD technical genealogy belongs there: device generations, vendor chronology, command-family history, controller architecture, and exact Copy-Back lineage.
 
-A fresh repository search for `copyback` / `copy-back` found no dedicated companion packet to reuse in this pass, so this index links only retention-specific work in `technical-retention`.
+A fresh repository search for `US5404485`, `Flash file system`, and `Amir Ban` found no dedicated companion packet to reuse in this pass, so the new facsimile-ordering record stays narrowly scoped to retention/currentness semantics here.
 
 ### `tmzncty/problem-history`
 
-Use that repository's anti-anachronism discipline when asking when terms such as `Flash Translation Layer`, `garbage collection`, `copy-on-write`, or `currentness` entered particular actor vocabularies. Case 04 may use those concepts analytically, but must continue to preserve source-era language.
+Use that repository's anti-anachronism discipline when asking when terms such as `Flash Translation Layer`, `garbage collection`, `copy-on-write`, `publication`, or `currentness` entered particular actor vocabularies. Case 04 may use those concepts analytically, but must continue to preserve source-era language.
