@@ -17,8 +17,10 @@ physical nonvolatility
     != integrity qualification
     != crash-recoverable mapping authority
     != reclaim eligibility
+    != erase request acceptance
     != erase completion
     != erase success
+    != post-erase format preparation
     != future reuse admission
 ```
 
@@ -45,8 +47,6 @@ NAND page/block geometry
 
 The Amir Ban / M-Systems `Flash file system` patent directly grounds virtual versus physical address space, a retained virtual map, out-of-place replacement, logical-unit continuity across physical movement, logical invalidation before later physical erase, and relocation of still-current data before reclaim.
 
-Core relation:
-
 ```text
 same logical object
     != same physical location
@@ -64,8 +64,6 @@ This source does not define every later FTL or a universal power-failure protoco
 **Packet:** [`04-ban-1993-1995-patent-facsimile-ordering-boundary-deepening.md`](04-ban-1993-1995-patent-facsimile-ordering-boundary-deepening.md)
 
 Direct inspection of U.S. Patent 5,404,485 adds page/figure/claim anchors but also exposes an important internal ordering limit. One high-level write paragraph can be read as allocation/currentness changes before replacement-data write, while the FIG. 6 explanation and claim 1 put replacement-data write before allocation/map changes.
-
-Therefore:
 
 ```text
 all transition steps appear in the patent
@@ -133,8 +131,6 @@ The device datasheets do not establish FTL publication order, old-page retiremen
 
 M-Systems evidence adds a distinct erase-interruption seam. A power failure during destructive maintenance cannot be treated as though erase completion were self-evident; persistent pending/completed state participates in restart recovery.
 
-The key boundary is:
-
 ```text
 erase was initiated
     != erase completion was established
@@ -143,7 +139,7 @@ controller restarted
     != interrupted destructive maintenance can be forgotten
 ```
 
-This chain concerns **absence of a trustworthy completion verdict after interruption**. It must remain distinct from Evidence chain 10 below, where an operation reaches the status-verdict point and explicitly reports failure.
+This chain concerns **absence of a trustworthy completion verdict after interruption**. It remains distinct from chain 10, where the operation reaches a status-verdict point, and chain 11, where a named FTL consumes erase-completion evidence and still requires a later preparation/admission step.
 
 ---
 
@@ -169,7 +165,7 @@ This is mapping-recovery evidence, not proof of a universal SSD FTL or a univers
 
 **Packet:** [`04-t13-2007-2010-trim-logical-invalidation-read-semantics-deepening.md`](04-t13-2007-2010-trim-logical-invalidation-read-semantics-deepening.md)
 
-This chain keeps host-visible deallocation separate from physical erasure. TRIM/DATA SET MANAGEMENT can communicate that logical ranges are no longer needed, while subsequent read behavior and actual physical reclamation remain separately specified/implemented.
+This chain keeps host-visible deallocation separate from physical erasure. TRIM / DATA SET MANAGEMENT can communicate that logical ranges are no longer needed, while subsequent read behavior and actual physical reclamation remain separately specified/implemented.
 
 ```text
 host deallocation intent
@@ -188,8 +184,6 @@ It should not be used to back-project modern TRIM semantics onto the 1993 mappin
 
 Micron first-party raw-NAND documentation and bad-block-management guidance add a lower-level qualification step after an erase command has stopped being busy.
 
-The named device contract separates:
-
 ```text
 ERASE accepted
     -> BUSY
@@ -200,36 +194,63 @@ ERASE accepted
         -> erase failure / retirement path
 ```
 
-Micron's datasheet distinguishes `RDY` from `FAIL`: readiness answers whether the target/operation remains busy, while the status verdict answers whether PROGRAM/ERASE/READ succeeded. Bad-block guidance separately treats runtime PROGRAM/ERASE errors as evidence for developed bad blocks, and current Micron support guidance explicitly sends an ERASE-failed block to retirement.
+Micron's datasheet distinguishes `RDY` from `FAIL`: readiness answers whether the target/operation remains busy, while the status verdict answers whether PROGRAM/ERASE/READ succeeded. Bad-block guidance separately treats runtime PROGRAM/ERASE errors as evidence for developed bad blocks.
 
-The resulting **engineering reconstruction** is:
+The resulting engineering reconstruction remains:
 
 ```text
 logical reclaim eligibility
     != erase command admission
     != temporal completion / ready
     != erase success
-    != allocator reuse admission
 ```
 
-`reuse authority`, `reuse eligibility`, `completion authority`, and `media-admissibility evidence` are repository terms, not Micron historical vocabulary.
+This packet alone does not establish higher-level allocator admission.
+
+---
+
+## Evidence chain 11 — Linux v2.6.12 FTL erase completion -> preparation -> transfer-unit admission
+
+**Packet:** [`04-linux-ftl-2005-transfer-unit-reuse-admission-deepening.md`](04-linux-ftl-2005-transfer-unit-reuse-admission-deepening.md)
+
+Released Linux v2.6.12 source provides the named implementation bridge that chain 10 intentionally left open.
+
+The driver explicitly distinguishes:
+
+```text
+XFER_UNKNOWN
+XFER_ERASING
+XFER_ERASED
+XFER_PREPARED
+XFER_FAILED
+```
+
+`erase_xfer()` submits an asynchronous erase and leaves completion to `ftl_erase_callback()`. Only `MTD_ERASE_DONE` changes the unit to `XFER_ERASED`; another callback outcome sends it to `XFER_FAILED`.
+
+`XFER_ERASED` is still not an allocator/reclaimer admission state. `prepare_xfer()` writes the FTL header and BAM stub and sets `XFER_PREPARED` only after those writes succeed. `reclaim_block()` chooses candidates only in the `XFER_PREPARED` branch.
+
+The bounded historical implementation therefore supports:
+
+```text
+erase request accepted
+    != erase completed successfully
+    != FTL metadata preparation succeeded
+    != transfer unit admitted as relocation destination
+```
+
+It also exposes a persistence-horizon boundary: startup `build_maps()` can reconstruct a transfer unit as `XFER_PREPARED` from a valid FTL header with `LogicalEUN == 0xffff`, so the volatile enum instance is not the only evidence of preparedness.
 
 ### Boundary
 
-This packet does **not** establish that:
+This is a PCMCIA-style Linux software FTL over MTD Flash, not evidence for a modern NAND SSD firmware state machine. Its `prepared transfer unit` is also not identical to an ordinary free 512-byte data block; the same source separately tracks `EUNInfo[].Free`, `FreeTotal`, and BAM `BLOCK_FREE` entries.
 
-- successful raw-NAND erase automatically inserts a block into an FTL free pool;
-- the documented raw-NAND family is the medium inside any named Crucial/Micron SSD;
-- erase success equals sanitization or secure deletion;
-- factory bad blocks and developed bad blocks have the same cause;
-- a current Micron FAQ can be backdated unchanged to 2011;
-- raw-NAND status semantics are a host-visible managed-SSD contract.
+The packet therefore closes the previous highest-priority **named FTL reusable-capacity admission** debt only in this bounded implementation form.
 
 ---
 
 ## Unified evidence model
 
-The ten chains now support a more complete transition model without pretending every historical implementation contained every layer:
+The eleven chains now support a more complete transition model without pretending every historical implementation contained every layer:
 
 ```text
 logical address / object
@@ -244,47 +265,66 @@ integrity qualification of the replacement
     ↓
 destination physical embodiment
     ↓
-durable publication of current mapping
+durable publication / reconstructable currentness evidence
     ↓
 old embodiment logically retired
     ↓
-old block becomes reclaim-eligible
+old capacity becomes reclaim-eligible
     ↓
-erase attempt
+erase lifecycle
     ├─ interrupted -> completion not established -> recovery/recheck path
-    └─ reaches status verdict
-          ├─ PASS -> medium-level reuse candidate
-          └─ FAIL -> bad-block retirement / replacement-capacity path
-    ↓
-implementation-specific allocator admission
+    └─ reaches result
+          ├─ failure -> retirement/failure path
+          └─ success -> post-erase control preparation may still be required
+                           ↓
+                    implementation-specific reuse admission
 ```
 
-Two different negative erase outcomes must remain separate:
+For Linux v2.6.12 FTL specifically:
+
+```text
+XFER_UNKNOWN
+    -> erase request
+    -> XFER_ERASING
+    -> MTD_ERASE_DONE
+    -> XFER_ERASED
+    -> FTL header/BAM preparation
+    -> XFER_PREPARED
+    -> eligible relocation destination
+```
+
+Two different negative erase outcomes remain separate:
 
 ```text
 power failed before a trustworthy completion verdict existed
     !=
-operation completed far enough to return FAIL
+operation reached a failure verdict
 ```
 
-They may both prevent ordinary reuse, but they arise from different evidence and can demand different recovery state.
+And the new source-level evidence adds a third boundary:
+
+```text
+erase completed successfully
+    != higher-level reuse metadata is prepared
+```
 
 ---
 
-## Retained-state classes now visible in Case 04
+## Retained/control-state classes now visible in Case 04
 
-Case 04 is no longer only a mapping story. The evidence now exposes at least these distinct retained/control-state classes:
+Case 04 now exposes at least these distinct classes:
 
-1. **payload state** — the user data representation;
-2. **identity/currentness state** — which physical embodiment counts for a logical object;
-3. **integrity state** — whether a moved/read representation is accepted under ECC/correctness rules;
-4. **recovery-base state** — checkpoints/log evidence sufficient to reconstruct current mapping after restart;
-5. **reclaim state** — whether an old embodiment is logically eligible for destructive maintenance;
-6. **erase-operation state** — whether destructive maintenance is pending/in progress/completed;
-7. **media-admissibility state** — whether the physical block is still considered usable or has been retired;
-8. **capacity-management state** — free/reserve space needed to continue relocation and absorb failures.
+1. **payload state** — user data representation;
+2. **identity/currentness state** — which embodiment counts for a logical object;
+3. **integrity state** — whether a moved/read representation is accepted;
+4. **recovery-base state** — checkpoints/log/on-media evidence sufficient to reconstruct current mapping;
+5. **reclaim state** — whether an old embodiment is eligible for destructive maintenance;
+6. **erase-operation state** — pending/in-progress/done/failed destructive maintenance;
+7. **media-admissibility state** — whether physical media remains acceptable or is retired;
+8. **post-erase format/preparation state** — whether control metadata required for safe higher-level use has been established;
+9. **capacity-management state** — free/reserve/prepared capacity available to continue relocation and absorb failures.
 
-These classes can interact, but they are not synonyms.
+These classes interact but are not synonyms.
 
 ---
 
@@ -303,7 +343,8 @@ Directly sourced records include:
 - Samsung Copy-Back integrity constraints;
 - T13 host deallocation/read-semantics contracts;
 - DCR checkpoint/recovery reconstruction;
-- Micron `RDY`/`FAIL`, ERASE BLOCK qualification, error management, and bad-block handling.
+- Micron `RDY` / `FAIL`, ERASE qualification, error management, and bad-block handling;
+- Linux v2.6.12 FTL transfer-unit states, MTD erase callback qualification, post-erase preparation, and prepared-only relocation selection.
 
 ### Engineering reconstruction
 
@@ -326,24 +367,21 @@ logical invalidation
     != physical erase
 
 reclaim eligibility
+    != erase request acceptance
     != erase success
-
-erase ready
-    != erase pass
-
-erase pass
-    != allocator free-pool insertion
+    != post-erase preparation
+    != reuse admission
 ```
 
-These relations are analytical reconstructions grounded in source mechanisms, not quotations attributed to all vendors or eras.
+`reuse authority`, `reuse admission`, `qualification`, and `control-state persistence horizon` are analytical terms, not words attributed to all vendors/implementations.
 
 ### Functional analogy
 
-Comparisons to copy-on-write, WAL/journaling, distributed repair, redundancy-mode conversion, SSD garbage collection, or storage-retirement authority are structural only unless an explicit historical lineage is separately sourced.
+Comparisons to copy-on-write, WAL/journaling, distributed repair, SSD garbage collection, bad-block retirement, or storage-retirement authority are structural only unless an explicit historical lineage is separately sourced.
 
 ### Philosophical interpretation
 
-Any language about identity, forgetting, publication, authority, or continuity remains downstream of the engineering record. NAND vendors, standards bodies, and FTL authors are not retroactively credited with those philosophical claims.
+Any language about identity, forgetting, publication, authority, continuity, or `trusted empty space` remains downstream of the engineering record. Flash vendors, Linux MTD developers, standards bodies, and FTL authors are not retroactively credited with those philosophical claims.
 
 ---
 
@@ -351,39 +389,46 @@ Any language about identity, forgetting, publication, authority, or continuity r
 
 ### Case 03 — DRAM refresh
 
-DRAM commonly regenerates state while retaining the same addressable identity; Case 04 allows identity to persist through deliberate physical relocation.
-
 ```text
 regeneration in place
     != identity continuity through remapping
 ```
 
-### Case 24 — Azure LRC source-replica retirement
+DRAM commonly reconstructs state while keeping a stable addressable location relation; Case 04 allows identity to persist through deliberate physical relocation.
 
-Case 24 distinguishes representation publication/retirement from deletion/reclamation. Case 04 exposes an analogous local-media sequence:
+### Case 24 — Azure LRC source-replica retirement
 
 ```text
 old embodiment no longer needed
-    != erase completed successfully
-    != physical block admitted for future use
+    != cleanup completed
+    != resource admitted for future reuse
 ```
 
-No Azure genealogy from NAND is asserted.
+This is a structural comparison only; no Azure-from-Flash genealogy is asserted.
+
+### Case 78 — NAND bad-block knowledge
+
+```text
+physical/media exclusion evidence
+    != FTL transfer-unit preparation
+```
+
+Both can constrain reuse, but they are different retained relations with different persistence/recovery paths.
 
 ### Case 150 — managed-SSD garbage collection
 
-Case 150 separates background erase opportunity/execution/completion at a managed-device layer. Case 04 chain 10 contributes a lower raw-NAND distinction:
+Case 150 separates maintenance opportunity, execution, and completion at a managed-device layer. Chains 10–11 now add lower/raw and software-FTL distinctions:
 
 ```text
 not busy
-    != passed
+    != erase passed
+    != higher-level preparation complete
+    != reusable-capacity admission
 ```
 
-This does not prove that a named SSD firmware exposes or preserves the same state machine.
+No claim is made that a named SSD firmware exposes the Linux FTL state machine.
 
 ### Case 134 — interrupted Copyback quarantine
-
-The shared functional shape is:
 
 ```text
 physical operation attempted
@@ -396,28 +441,41 @@ The command family, fault model, and historical evidence remain different.
 
 ## Open evidence debt
 
-Case 04 remains `grounded`. The highest-value remaining work is now narrower than `find more Flash history`:
+Case 04 remains `grounded`. The previous highest-priority debt — a named FTL in which successful erase qualification precedes a separate reusable-capacity admission state — is now closed by chain 11 in the bounded Linux v2.6.12 implementation.
 
-1. **Named FTL free-pool transition** — source-level firmware/patent/implementation evidence that a block joins a reusable/free pool only after successful erase qualification.
-2. **Erase-failure fault trace** — a named raw-NAND/controller experiment that captures `BUSY -> READY -> FAIL -> bad-block retirement/remap` end to end.
-3. **Interrupted/no-verdict vs completed/FAIL** — a named controller showing how restart logic distinguishes `no trustworthy verdict because power died` from `operation returned failure`.
-4. **Bad-block retirement durability** — determine exactly when a newly developed bad-block record itself becomes crash-durable and how torn retirement metadata is recovered.
-5. **Relocation publication ordering** — named implementation/fault-injection evidence ordering destination validation, durable mapping publication, source retirement, and later erase.
-6. **Copy-Back interruption** — source/fault evidence for reset or power loss during source-read, internal-buffer, and destination-program phases.
-7. **Original PORCE full text** — upgrade remaining later-reported PORCE details to directly inspected primary evidence.
+Highest-value remaining work is now:
+
+1. **Linux FTL cut-point fault trace** — interrupt around asynchronous erase completion, FTL-header write, BAM-stub write, and the next reclaim cycle; observe restart classification and whether `build_maps()` ever admits an incompletely prepared transfer unit.
+2. **Erase-failure fault trace** — capture `BUSY/ERASING -> failure -> retirement/non-admission` end to end on a named raw-Flash/controller path.
+3. **Interrupted/no-verdict vs completed/FAIL** — show how one named controller distinguishes power-loss ambiguity from an explicit negative completion verdict.
+4. **Bad-block retirement durability** — determine when a newly developed bad-block record becomes crash-durable and how torn retirement metadata is recovered.
+5. **Relocation publication ordering** — named implementation/fault injection ordering destination validation, durable mapping publication, source retirement, and later erase.
+6. **Copy-Back interruption** — reset/power-loss evidence for source-read, internal-buffer, and destination-program phases.
+7. **Original PORCE full text** — upgrade later-reported PORCE details to directly inspected primary evidence.
 8. **Named shipping SSD/controller mapping format** — persistent map/checkpoint/rebuild behavior in an identified product.
-9. **On-die ECC relocation** — establish how later NAND internal ECC changes controller-visible relocation qualification.
-10. **Wear-leveling boundary** — add bounded early evidence rather than equating reclamation, reserve replacement, and wear leveling.
-11. **Host deallocation / sanitization boundary** — continue to keep TRIM, controller invalidation, physical erase, secure erase, and crypto-erase distinct.
-12. **Reserve exhaustion** — connect accumulated media retirement to a documented capacity/end-of-life threshold without overgeneralizing one vendor.
+9. **Modern NAND/SSD free/reserve-pool transition** — find an open firmware/controller implementation connecting NAND erase qualification to block-pool admission without assuming Linux PCMCIA FTL semantics.
+10. **On-die ECC relocation** — establish how later NAND internal ECC changes controller-visible relocation qualification.
+11. **Wear-leveling boundary** — add bounded early evidence rather than equating reclamation, reserve replacement, and wear leveling.
+12. **Host deallocation / sanitization boundary** — continue to keep TRIM, controller invalidation, physical erase, secure erase, and crypto-erase distinct.
+13. **Reserve exhaustion** — connect accumulated media retirement to a documented capacity/end-of-life threshold without overgeneralizing one vendor.
 
 ---
 
 ## Navigation / coverage note
 
-This index previously lagged behind the repository and omitted three already-landed Case-04 deepening packets (`interrupted erase`, `TrueFFS power-failure reconstruction`, and `T13 TRIM`) even though those files were already part of the evidence tree. This revision routes those packets together with the new Micron raw-NAND erase-status packet so the case's navigation reflects the actual evidence set.
+This index now routes eleven Case-04 evidence chains. The latest addition is the released Linux v2.6.12 FTL source-level path:
 
-No maturity promotion follows merely from repairing navigation.
+```text
+MTD erase completion
+    -> XFER_ERASED
+    -> FTL metadata preparation
+    -> XFER_PREPARED
+    -> relocation admission
+```
+
+It replaces the earlier generic `erase pass != allocator free-pool insertion` debt with a narrower set of fault-injection and modern-controller questions.
+
+No maturity promotion follows from this navigation update.
 
 ---
 
@@ -425,18 +483,18 @@ No maturity promotion follows merely from repairing navigation.
 
 ### `tmzncty/computing-archaeology`
 
-Broader NAND/SSD technical genealogy belongs there: device generations, vendor chronology, command-family history, controller architecture, ONFI/status evolution, product lineage, and cross-vendor bad-block-management history.
+Broader NAND/SSD/Flash-card technical genealogy belongs there: device generations, PCMCIA FTL standardization, Linux MTD/Card Services history, M-Systems licensing/patent lineage, controller architecture, ONFI/status evolution, product lineage, and later SSD free-pool/over-provisioning implementations.
 
-A fresh search in this pass for `NAND bad block erase failure` and `MT29F` found no dedicated packet that could be directly reused. Accordingly, this repository keeps the new work narrowly on the retention/control seam:
+A fresh search in this pass for `ftl.c`, `Flash Translation Layer David Hinds`, and the Linux FTL driver found no dedicated packet that could be reused. Accordingly, this repository keeps the new work narrowly on the retention/control seam:
 
 ```text
-operation readiness
-    != operation success
-    != future media admissibility
+erase completion evidence
+    != post-erase preparation
+    != reuse admission
 ```
 
-This is a result of the current search, not a claim that `computing-archaeology` contains no NAND material anywhere.
+This is a result of the current search, not a claim that `computing-archaeology` contains no Flash material anywhere.
 
 ### `tmzncty/problem-history`
 
-Continue to use that repository's anti-anachronism discipline when asking when terms such as `Flash Translation Layer`, `garbage collection`, `copy-on-write`, `publication`, `currentness`, or `retirement` entered particular actor vocabularies. Case 04 may use them analytically only when they are labeled as reconstruction rather than historical quotation.
+Continue to use that repository's anti-anachronism discipline when asking when terms such as `Flash Translation Layer`, `garbage collection`, `free pool`, `copy-on-write`, `publication`, `currentness`, `retirement`, or `reuse authority` entered particular actor vocabularies. Case 04 may use modern analytical terms only when they are labeled as reconstruction rather than historical quotation.
