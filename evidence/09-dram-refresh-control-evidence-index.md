@@ -107,7 +107,22 @@ Role:
 - keeps eight initialization cycles distinct from the documented 512-cycle full refresh coverage requirement;
 - refuses to infer a hidden normal-mode counter reset value that the product sheet does not expose.
 
-This closes the previously underdeveloped seam `continued power == continued refresh-control qualification?` for one bounded product. The answer, at the published interface-contract level, is **no**.
+This closes the seam `continued power == continued refresh-control qualification?` for one bounded 1992 product. The answer, at the published interface-contract level, is **no**.
+
+### 9. Mosel Vitelic 1997 cross-vendor powered-clockless witness
+
+[`09-mosel-1997-powered-clockless-reinitialization-cross-vendor-deepening.md`](09-mosel-1997-powered-clockless-reinitialization-cross-vendor-deepening.md)
+
+Role:
+
+- independently corroborates the Hyundai powered-clockless rule in a different manufacturer's product documentation;
+- grounds Mosel Vitelic V53C16129H Rev. 1.2 (July 1997), with a 512-cycle / 8 ms refresh contract and an internal nine-bit CBR row counter;
+- grounds a 200 µs power-on pause plus eight RAS-bearing initialization cycles;
+- grounds renewed eight-cycle initialization after **extended periods of bias without clocks greater than the Refresh Interval**;
+- upgrades the pattern from one named product witness to a bounded **cross-vendor product-contract pattern**;
+- explicitly refuses to infer a shared standard, copied wording, identical silicon cause, universal asynchronous-DRAM behavior, or a known counter reset value.
+
+This closes the previous highest-value debt `find a second vendor witness` at a bounded level. It leaves genealogy and hidden-state cause open.
 
 ---
 
@@ -143,13 +158,15 @@ DRAM package
         +-- later self-refresh recurrence after mode entry
 ```
 
-The Hyundai packet adds another axis:
+The Hyundai + Mosel pair adds another axis:
 
 ```text
 VDD continuity
     != qualifying refresh activity continuity
     != immediate post-interruption qualification
 ```
+
+For both named products, one continuously powered interval can contain a prolonged clockless segment after which initialization is required again.
 
 This should not be collapsed into one generic property called `refresh state`.
 
@@ -173,7 +190,7 @@ Use source terms as written when making historical claims:
 - `refresh counter`;
 - `AUTO REFRESH`;
 - `SELF REFRESH`;
-- Hyundai's `initialization cycles` and `extended periods of bias without clocks`.
+- Hyundai and Mosel Vitelic's `initialization cycles` and `extended periods of bias without clocks`.
 
 ### Engineering reconstruction vocabulary
 
@@ -185,7 +202,8 @@ The following are repository analytical terms, not retroactive historical quotat
 - `maintenance-qualified epoch`;
 - `powered-bias requalification boundary`;
 - `control-state qualification`;
-- `coverage obligation`.
+- `coverage obligation`;
+- `cross-vendor product-contract pattern`.
 
 Use these only when the source-level facts have already been stated and bounded.
 
@@ -226,6 +244,12 @@ maintenance-control persistence
 
 powered continuously
     != continuously maintenance-qualified
+
+two vendor product sheets with similar rule
+    != universal DRAM behavior
+
+near-identical wording
+    != proven standard provenance or direct copying
 ```
 
 This anti-collapse map is the preferred starting point for future Case 09 work.
@@ -263,15 +287,15 @@ Case 83 provides a very different persistence contract for maintenance traversal
 
 ### Case 101 — SCSI Background Medium Scan
 
-Case 101 distinguishes power-epoch observability from maintenance progress. Hyundai's powered-clockless rule complements it by showing that a single gross power interval can contain more than one maintenance-qualified regime.
+Case 101 distinguishes power-epoch observability from maintenance progress. The Hyundai + Mosel pair complements it by showing that a single gross power interval can contain more than one maintenance-qualified regime.
 
 ---
 
 ## Prior-art and related-repository boundary
 
-`tmzncty/computing-archaeology` has been searched for dedicated HY534256 / CBR-initialization packets. No directly reusable packet was identified in the current pass.
+`tmzncty/computing-archaeology` has been searched for dedicated HY534256, V53C16129H, CBR-initialization, and `extended periods of bias without clocks` packets. No directly reusable packet was identified in the current passes.
 
-Therefore this repository retains only the **retention-specific control boundaries** needed for Case 09. A broader history of asynchronous DRAM startup rules, counter-test modes, vendor families, or JEDEC-era refresh evolution should be developed in `computing-archaeology` and linked back rather than duplicated here.
+Therefore this repository retains only the **retention-specific control boundaries** needed for Case 09. A broader history of asynchronous DRAM startup rules, repeated vendor wording, standards provenance, counter-test modes, or vendor families should be developed in `computing-archaeology` and linked back rather than duplicated here.
 
 The existing repository-level link in [`../RELATED_REPOS.md`](../RELATED_REPOS.md) remains the correct boundary marker.
 
@@ -292,21 +316,28 @@ The evidence base now covers:
 - maintenance-counter initialization/testability;
 - contemporary autonomous-self-refresh publications;
 - later AUTO REFRESH vs SELF REFRESH interface partition;
-- a named powered-but-clockless reinitialization boundary.
+- a named 1992 Hyundai powered-but-clockless reinitialization boundary;
+- an independent 1997 Mosel Vitelic product witness publishing the same bounded operational relation.
 
-What it still does **not** contain is a real hardware fault trace tying the powered-clockless initialization rule to a measured internal state transition.
+The earlier question `is this only a Hyundai-specific published contract?` is now answered **no** for the public record inspected here.
+
+What the evidence still does **not** contain is:
+
+- a provenance chain explaining why the two vendors publish near-identical wording;
+- a manufacturer explanation binding the renewed initialization requirement to one specific internal state;
+- a real hardware trace tying the published rule to measured hidden-state and payload behavior.
 
 ---
 
 ## Highest-value remaining debt
 
-1. **Cross-vendor powered-clockless wording.** Find one or more period vendor product sheets that independently require initialization after prolonged bias without clocks; determine whether Hyundai's wording was a broad family convention or product-specific contract.
+1. **Genealogy / standard provenance.** Search earlier vendor handbooks, JEDEC material, application notes, or controller design guides for the source of the near-identical powered-clockless initialization wording. Put broad technical history in `tmzncty/computing-archaeology` and link back.
 2. **Hidden-state binding.** Find a manufacturer source that explicitly identifies which internal state makes the reinitialization sequence necessary after prolonged clocklessness.
-3. **Hardware trace.** Hold VDD continuously, sweep clockless gaps across the refresh interval, then separately measure payload correctness, initialization behavior, and CBR counter-test progression.
-4. **Counter initialization discipline.** Continue refusing to infer normal-mode counter values from diagnostic test-mode behavior unless a product source explicitly binds them.
-5. **Historical offload.** If broader DRAM initialization genealogy is pursued, build it in `tmzncty/computing-archaeology` and link the retention-relevant result back here.
+3. **Earlier independent witness.** Find a late-1980s/early-1990s non-Hyundai product sheet with the same rule if available; keep publication floor separate from invention priority.
+4. **Hardware trace.** Hold VDD continuously, sweep clockless gaps across the refresh interval, then separately measure payload correctness, initialization behavior, and CBR counter-test progression.
+5. **Counter initialization discipline.** Continue refusing to infer normal-mode counter values from diagnostic test-mode behavior unless a product source explicitly binds them.
 
-A useful next experimental matrix is:
+A useful next experimental matrix remains:
 
 ```text
 A: VDD removed and restored
@@ -321,4 +352,4 @@ observe independently:
     counter-test progression
 ```
 
-Until such a trace exists, the Hyundai result remains a strong **product-interface contract**, not a transistor-level explanation.
+Until such a trace exists, the Hyundai and Mosel results remain strong **product-interface contracts**, not transistor-level explanations.
