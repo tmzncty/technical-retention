@@ -143,9 +143,57 @@ This closes the **earlier named-product manufacturer-document witness** debt whi
 
 ---
 
+### 7. Circuit-level self-refresh phase, completion, and multi-horizon control state
+
+- [`03-hitachi-1993-1995-self-refresh-multi-horizon-counter-deepening.md`](03-hitachi-1993-1995-self-refresh-multi-horizon-counter-deepening.md)
+
+Hitachi's 1993-priority / 1994-publication patent family exposes a self-refresh controller in much finer internal detail than the named-product data sheets.
+
+One oscillator-driven binary counter is reused sequentially for:
+
+```text
+mode-entry dwell qualification
+    -> whole-array refresh-operation completion count
+    -> inter-burst maximum-pause timing
+```
+
+while a **separate refresh-address counter** carries next-row / coverage-position state.
+
+The same design can also terminate the pause early from dummy-cell leakage or supply-voltage disturbance evidence. This fixes several new boundaries:
+
+```text
+control-state semantic role
+    !=
+physical counter embodiment
+```
+
+```text
+coverage-position state
+    !=
+coverage-completion evidence
+```
+
+```text
+nominal pause deadline
+    !=
+sole trigger for renewed maintenance
+```
+
+and:
+
+```text
+self-refresh mode
+    !=
+current maintenance phase
+```
+
+This closes the **circuit-level architecture** part of the timer/counter debt at patent-design level. It does **not** prove that a named shipping Hitachi DRAM implemented this exact architecture.
+
+---
+
 ## Cross-chain model
 
-The six evidence chains now support a more explicit Case 03 decomposition:
+The seven evidence chains now support a more explicit Case 03 decomposition:
 
 ```text
 payload charge state
@@ -154,7 +202,11 @@ sense / restore correctness
     ↓
 refresh cadence
     ↓
-refresh-address coverage
+refresh-address / next-target state
+    ↓
+coverage-completion evidence
+    ↓
+maintenance phase / deadline state
     ↓
 maintenance admission / arbitration
     ↓
@@ -171,7 +223,7 @@ These relations are coupled but not interchangeable.
 
 A correct statement about one layer must not be silently promoted into a claim about the others.
 
-The newest Micron witness also makes the authority transfer more explicit:
+The Micron witness makes the authority transfer explicit:
 
 ```text
 ordinary CBR:
@@ -187,7 +239,20 @@ external cadence authority must be re-established
     under vendor-specific coverage/deadline rules
 ```
 
-This is an engineering reconstruction of the documented behavior, not Micron's own taxonomy.
+The Hitachi patent deepening then adds an orthogonal rule about the state *inside* the autonomous regime:
+
+```text
+one hardware counter
+    can successively represent
+    several different maintenance horizons
+
+while
+
+another counter
+    carries refresh-address progression
+```
+
+These are engineering reconstructions of documented behavior, not vendor taxonomies.
 
 ---
 
@@ -202,6 +267,7 @@ The case currently has historical evidence for:
 - hidden refresh as an interface behavior;
 - on-chip CBR refresh-address generation;
 - patent-level timer-backed self-refresh architecture;
+- a 1993-priority Hitachi patent design with a low-current oscillator, shared multi-purpose count state, separate refresh-address progression, whole-array completion detection, pause timing, and optional condition-triggered early pause termination;
 - a March-1993 named Micron product document with internal self-refresh clocking, internal refresh counter/controller behavior, and explicit exit-side handoff rules;
 - a later 1996–1997 named Hitachi product witness with explicit self-refresh entry/exit coverage obligations.
 
@@ -213,6 +279,7 @@ The case does **not** yet establish:
 - first JEDEC standardization of self-refresh;
 - that Micron's 1993 `industry standard` wording maps to a particular JEDEC ballot/revision date;
 - one continuous genealogy from early controller designs to later on-chip self-refresh;
+- that a named shipping Hitachi DRAM used the exact `JPH06282985A` / `US5453959A` circuit;
 - a universal internal architecture for self-refresh;
 - a universal cross-vendor exit protocol;
 - a host-visible completion proof for every refresh-coverage obligation.
@@ -231,6 +298,10 @@ state required to retain it
 correctness of maintenance-control state
     !=
 location of maintenance-control state
+    !=
+semantic role of one control-state value
+    !=
+physical embodiment of that control state
     !=
 maintenance-regime transition correctness
     !=
@@ -251,15 +322,33 @@ SELF REFRESH can temporarily move cadence authority internal
 without making post-exit external maintenance irrelevant
 ```
 
-Do not collapse these into a single claim that `DRAM requires refresh`.
+The Hitachi patent adds a different decomposition:
 
-The useful retention problem is how deadlines, coverage, control-state placement, admission, authority transfer, and mode handoff cooperate to make a stable logical address appear continuously available.
+```text
+entry timer role
+refresh-pass completion-count role
+pause timer role
+```
+
+may share one physical counter because those phases are mutually exclusive, while:
+
+```text
+refresh-address position
+```
+
+can remain a separate state machine synchronized to the same maintenance rhythm.
+
+Do not collapse these into a single claim that `DRAM requires refresh` or a single category called `refresh counter state`.
+
+The useful retention problem is how deadlines, coverage position, completion evidence, phase, control-state placement, admission, authority transfer, and mode handoff cooperate to make a stable logical address appear continuously available.
 
 ---
 
 ## Functional-comparison boundaries
 
-The Micron and Hitachi self-refresh witnesses may be compared functionally because both expose transition-side retention obligations.
+The Micron and Hitachi named-product self-refresh witnesses may be compared functionally because both expose transition-side retention obligations.
+
+The Hitachi patent may also be compared to those product documents for the narrower question of internal control decomposition.
 
 But:
 
@@ -273,13 +362,22 @@ shared circuit implementation
 direct historical genealogy
 ```
 
+and:
+
+```text
+same vendor
+    + plausible date order
+    !=
+proof that a later named Hitachi product implements the patent
+```
+
 Micron's own cross-vendor warning is positive evidence that the repository should preserve vendor-specific transition contracts rather than synthesize one timeless `self-refresh exit` rule.
 
 ---
 
 ## Related-repository routing
 
-Fresh searches of `tmzncty/computing-archaeology` for `MT4C8512` and `self refresh DRAM` found no dedicated reusable packet for this slice. Earlier Case 03 searches for `HM5118165` likewise found no dedicated packet.
+Fresh searches of `tmzncty/computing-archaeology` for `MT4C8512`, `HM51S4170C`, `self refresh`, and `5453959` found no dedicated reusable packet for these slices. Earlier Case 03 searches for `HM5118165` likewise found no dedicated packet.
 
 Keep in this repository:
 
@@ -287,15 +385,19 @@ Keep in this repository:
 - maintenance-control-state distinctions;
 - self-refresh handoff obligations;
 - cadence-authority transfer;
+- control-state role versus physical embodiment;
+- coverage position versus completion evidence;
+- maintenance phase versus mode membership;
+- deadline-triggered versus condition-triggered recurrence;
 - evidence boundaries between payload, mode, coverage, and service availability;
-- distinction between manufacturer documentation status and production/shipment evidence.
+- distinction between patent design, manufacturer documentation, and production/shipment evidence.
 
 Route primarily to `computing-archaeology`:
 
 - broad DRAM/EDO/SDRAM product genealogy;
 - semiconductor process history;
 - vendor competition and market chronology;
-- exact circuit genealogy of on-chip self-refresh timers/counters;
+- exact circuit genealogy of on-chip self-refresh timers/counters across vendors;
 - shipment/adoption history not needed for the retention argument.
 
 ---
@@ -303,10 +405,11 @@ Route primarily to `computing-archaeology`:
 ## Remaining high-value work
 
 1. **Earlier or contemporary production-status / shipping self-refresh DRAM primary witness.** The March-1993 Micron `MT4C8512/3 S` closes the named-product documentation floor but is marked `ADVANCE`.
-2. **Named-product internal timer/oscillator + row-counter architecture.** The Micron source directly establishes internal clocking and refresh counter/controller behavior, but not enough circuit detail to reconstruct the exact oscillator/timer architecture.
+2. **Named-product linkage for detailed timer/oscillator + row-counter architecture.** The Hitachi 1993-priority patent now closes the circuit-level architecture debt at design level, but no inspected source maps that exact oscillator / multi-purpose counter / separate refresh-address-counter design onto a named shipping product.
 3. **JEDEC self-refresh revision chronology**, kept separate from vendor product chronology and from Micron's own `industry standard` wording.
 4. **Controller/board evidence** for satisfying entry/exit refresh handoff rules against a named DRAM.
-5. **Fault-injection or hardware validation** around malformed entry, interrupted self-refresh, and missed transition-side coverage obligations.
-6. **Temperature-conditioned self-refresh behavior** only where a source exposes the exact policy/state relation.
+5. **Fault-injection or hardware validation** around malformed entry, interrupted self-refresh, damaged oscillator/count state, and missed transition-side coverage obligations.
+6. **Host-visible completion evidence** if any period device/controller exposes proof that a whole internal refresh pass completed rather than only exposing mode timing.
+7. **Temperature-conditioned self-refresh behavior** only where a source exposes the exact policy/state relation.
 
-Case 03 remains **grounded**. The new Micron evidence deepens the maintenance-authority / handoff model and closes one earlier-document witness debt, but it does not justify a maturity promotion by itself.
+Case 03 remains **grounded**. The new Hitachi patent evidence deepens internal maintenance-control-state architecture and closes one circuit-design debt, but it does not justify a maturity promotion or a named-product implementation claim by itself.
