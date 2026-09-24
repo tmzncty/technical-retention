@@ -23,15 +23,15 @@ standards retention qualification
 
 ---
 
-## 1. IBM / Dell extended-shutdown operator policy
+## Evidence chain
+
+### 1. IBM / Dell extended-shutdown operator policy
 
 [`111-ibm-dell-2020-2026-ssd-extended-shutdown-grounding.md`](111-ibm-dell-2020-2026-ssd-extended-shutdown-grounding.md)
 
 **Role:** canonical operator-policy grounding.
 
 Establishes that enterprise-SSD power-off retention guidance can become an operational schedule involving backup, temperature/environment, conservative off-time, powered dwell after extended shutdown, and Dell's alternate full-read trigger path.
-
-Core boundary:
 
 ```text
 JEDEC qualification interval
@@ -41,9 +41,7 @@ power restored
     != maintenance proven complete
 ```
 
----
-
-## 2. NetApp wear-state gate — current serviceability versus future offline retention
+### 2. NetApp wear-state gate — current serviceability versus future offline retention
 
 [`111-netapp-rated-life-offline-retention-telemetry-deepening.md`](111-netapp-rated-life-offline-retention-telemetry-deepening.md)
 
@@ -57,11 +55,7 @@ rated-life estimate
     != immediate failure verdict
 ```
 
-This is a replacement/admission policy, not another periodic refresh cadence.
-
----
-
-## 3. IBM ESS — system-level scrub completion witness
+### 3. IBM ESS — system-level scrub completion witness
 
 [`111-ibm-ess-post-offline-scrub-completion-deepening.md`](111-ibm-ess-post-offline-scrub-completion-deepening.md)
 
@@ -76,9 +70,7 @@ calendar intervention point
 
 The ESS completion message is authority for the named scrub run only. It does not prove every hidden SSD-internal retention task or every physical NAND cell was refreshed.
 
----
-
-## 4. IBM / Lenovo — cadence variance and documentation lineage
+### 4. IBM / Lenovo — cadence variance and documentation lineage
 
 [`111-ibm-lenovo-2020-2022-shutdown-cadence-lineage-deepening.md`](111-ibm-lenovo-2020-2022-shutdown-cadence-lineage-deepening.md)
 
@@ -91,11 +83,7 @@ standards qualification horizon
     != scrub completion
 ```
 
-It also prevents closely related IBM/Lenovo documentation from being double-counted as automatically independent engineering witnesses.
-
----
-
-## 5. Seagate Pulsar.2 — 2012 MLC powered retention maintenance
+### 5. Seagate Pulsar.2 — 2012 MLC powered retention maintenance
 
 [`111-seagate-pulsar2-2012-powered-retention-refresh-prior-art-deepening.md`](111-seagate-pulsar2-2012-powered-retention-refresh-prior-art-deepening.md)
 
@@ -105,20 +93,14 @@ It also prevents closely related IBM/Lenovo documentation from being double-coun
 power applied
     -> retention monitoring available
     -> conditional cell rewrite / refresh
-```
 
-while the same product family says no routine scheduled preventive maintenance is required.
-
-```text
 no operator-scheduled preventive maintenance
     != no internal maintenance
 ```
 
 The source does not recover controller thresholds, scan cursor, exact rewrite geometry, or retention-completion telemetry.
 
----
-
-## 6. Seagate Pulsar XT.2 — 2011 SLC powered-retention witness and revision-history boundary
+### 6. Seagate Pulsar XT.2 — 2011 SLC powered-retention witness
 
 [`111-seagate-xt2-2011-powered-retention-refresh-prior-art-deepening.md`](111-seagate-xt2-2011-powered-retention-refresh-prior-art-deepening.md)
 
@@ -132,9 +114,7 @@ direct Rev. B text — June 2011
 
 XT.2 is SLC; later Pulsar.2 is MLC. Similar wording does not prove identical firmware or maintenance mechanism.
 
----
-
-## 7. First-generation Seagate Pulsar — 2010 named-product floor
+### 7. First-generation Seagate Pulsar — 2010 named-product floor
 
 [`111-seagate-pulsar-2010-powered-retention-refresh-prior-art-deepening.md`](111-seagate-pulsar-2010-powered-retention-refresh-prior-art-deepening.md)
 
@@ -149,24 +129,15 @@ shipment date
     != invention date
 ```
 
-The September-2009 shipment date is commercialization chronology only.
-
----
-
-## 8. Pulsar XT.2 maintenance observability — BMS/DST versus retention completion
+### 8. Pulsar XT.2 maintenance observability — BMS/DST versus retention completion
 
 [`111-seagate-xt2-maintenance-observability-boundary-deepening.md`](111-seagate-xt2-maintenance-observability-boundary-deepening.md)
 
 **Role:** device-level observability deepening.
 
-The same June-2011 SSD that documents powered retention monitoring/rewrite also exposes explicit host-visible state for other subsystems:
-
 ```text
 Background Media Scan
-    -> status
-    -> progress
-    -> scan counts
-    -> results / errors
+    -> status / progress / counts / results
 
 Drive Self Test
     -> persistent result entry
@@ -177,108 +148,116 @@ Data Retention monitoring/rewrite
     -> no analogous public retention-specific completion surface identified
 ```
 
-Bounded result:
-
 ```text
 maintenance telemetry exists
     != retention-maintenance completion authority
 ```
 
-This packet reuses Case 67's OCP result rather than duplicating it: counted integrity-maintenance activity does not prove whole-device refresh coverage completion.
-
----
-
-## 9. eMMC 4.41→5.1 — BKOPS maintenance debt, periodic wake-up, and completion scope
+### 9. eMMC 4.41→5.1 — BKOPS maintenance debt, periodic wake-up, and completion scope
 
 [`111-emmc-441-51-bkops-periodic-wakeup-maintenance-cadence-deepening.md`](111-emmc-441-51-bkops-periodic-wakeup-maintenance-cadence-deepening.md)
 
 **Role:** standards/prior-art control-surface deepening; not an enterprise-SSD implementation claim.
 
-JEDEC's revision history places Background Operations and HPI in the 4.41 change set. The 5.1 standard then exposes a much richer generic maintenance relation:
+JEDEC e.MMC exposes:
+
+- `BKOPS_STATUS` maintenance-debt / urgency levels;
+- host-triggered `BKOPS_START`;
+- HPI preemption;
+- autonomous background-operation control;
+- `PERIODIC_WAKEUP` cadence;
+- a separate Power Off Notification relation.
 
 ```text
 BKOPS support
     != current BKOPS debt / urgency
     != BKOPS run admitted
     != BKOPS run completed
-```
 
-The interface provides:
-
-- `BKOPS_STATUS` levels from no operation required through critical outstanding maintenance;
-- host-triggered `BKOPS_START`;
-- HPI preemption of an unfinished background operation;
-- autonomous background-operation control in the 5.1 interface;
-- `PERIODIC_WAKEUP`, which can require the host to wake the device at a configured cadence and let at least one BKOPS run finish **without interruption** before powering down again;
-- a separate Power Off Notification completion relation.
-
-The key Case-111 boundary is:
-
-```text
-maintenance cadence can be interface-defined
-    != cadence proves work ran
-    != generic BKOPS completion proves retention-refresh completion
-```
-
-and:
-
-```text
 BKOPS run complete
+    != retention-refresh completion proved
     != power-off preparation complete
     != future offline-retention guarantee
 ```
 
-This evidence therefore sharpens, rather than closes, the open retention-specific completion target.
+### 10. Micron industrial e.MMC — named refresh versus generic BKOPS
+
+[`111-micron-2023-2025-industrial-emmc-refresh-vs-bkops-boundary-deepening.md`](111-micron-2023-2025-industrial-emmc-refresh-vs-bkops-boundary-deepening.md)
+
+**Role:** named commercial product boundary for P6; strengthens rather than closes the retention-specific completion target.
+
+Micron's 32/64/128/256GB industrial e.MMC Rev. F (10/2023) and Rev. I (01/2025) publicly list all of the following on the same product family:
+
+```text
+BKOPS control
+Auto initiated refresh
+Host initiated refresh
+```
+
+Rev. I's public ECSD table separately exposes the standard generic background-operation fields:
+
+```text
+BKOPS_SUPPORT   [502]
+BKOPS_STATUS    [246]
+BKOPS_START     [164]
+BKOPS_EN        [163]
+PERIODIC_WAKEUP [131]
+```
+
+but the inspected public datasheet does not identify a refresh-specific progress/completion field and does not state that `BKOPS_STATUS` certifies Micron refresh completion.
+
+Therefore:
+
+```text
+same product has BKOPS
+    + same product has named refresh
+    != BKOPS completion is a refresh-completion certificate
+
+host can initiate refresh
+    != public whole-device refresh coverage authority
+```
+
+Rev. F also placed explicit retention values on the feature page (1 year at 55°C at maximum PE; 2 years at 55°C at 10% of maximum PE). Rev. I says those retention values were removed from Features while keeping refresh features documented. Treat that as documentation lineage, not a physical-behavior transition.
 
 ---
 
-## Evidence-chain summary
+## Unified evidence model
 
-### Chain A — standards / product / operator layers
+### A. Standards / product / operator layers
 
 ```text
-SSD retention qualification relation
-    -> named product has powered internal retention maintenance
+retention qualification relation
+    -> named product has powered maintenance / refresh
     -> long shutdown removes maintenance opportunity
     -> vendor/system publishes conservative operator cadence
 ```
 
 This is a cross-layer operationalization chain, not a genealogy claim.
 
-### Chain B — opportunity, obligation, execution, completion
+### B. Opportunity, obligation, execution, completion
 
 ```text
 power available
     != maintenance debt absent
     != maintenance admitted
     != maintenance running
-    != maintenance complete
+    != generic maintenance complete
+    != retention-specific refresh complete
 ```
 
-The eMMC BKOPS evidence adds an explicit interface-level obligation/urgency and bounded-run completion relation; IBM ESS supplies a system-level named scrub completion witness.
+IBM ESS supplies a system-level named scrub-completion witness. eMMC supplies a generic maintenance-run completion relation. The new Micron product witness shows that a product can name refresh separately while still leaving the public BKOPS→refresh completion binding unestablished.
 
-Neither proves retention-specific whole-device refresh completion for a named enterprise SSD.
-
-### Chain C — observability is subsystem-specific
+### C. Observability is subsystem- and maintenance-class-specific
 
 ```text
-same SSD may expose
-    BMS progress/result
-    + DST terminal result
-    + autonomous retention monitoring/rewrite
+maintenance telemetry exists
+    != every maintenance class is separately observable
 
-therefore:
-maintenance observability is not all-or-nothing
+named refresh capability exists
+    != refresh progress / coverage / terminal result is publicly exposed
 ```
 
-The eMMC comparison adds a second version of the same lesson at interface level:
-
-```text
-generic background-maintenance completion observable
-    != hidden maintenance class individually identified
-```
-
-### Chain D — current health versus future offline admission
+### D. Current health versus future offline admission
 
 ```text
 current readable payload
@@ -286,21 +265,17 @@ current readable payload
     != future long-offline retention qualification
 ```
 
-NetApp supplies the strongest operator-facing wear-state gate in the current Case-111 evidence set.
-
-### Chain E — maintenance cadence versus maintenance meaning
+### E. Maintenance cadence versus maintenance meaning
 
 ```text
 configured wake cadence
     -> obligation to provide a maintenance opportunity
-    -> required bounded run may have completion evidence
+    -> generic bounded run may have completion evidence
 
 but:
-completion of generic maintenance class
-    != completion of retention-specific maintenance class
+generic run completion
+    != source-identified retention-refresh completion
 ```
-
-This is the main addition from the eMMC standards slice.
 
 ---
 
@@ -322,19 +297,13 @@ Functional comparison only: powered controller work can renew NAND-resident stat
 
 ### Case 36 — Flash Correct-and-Refresh
 
-Case 36 provides a research mechanism/evaluation. Seagate `monitor / refresh / rewrite` wording and generic eMMC BKOPS do not establish that exact algorithm.
+Case 36 provides a research mechanism/evaluation. Seagate or Micron refresh wording does not establish that exact algorithm.
 
 ### Case 67 — read reclaim / OCP `Refresh Counts`
 
 Reuse: [`67-2020-2025-ocp-refresh-count-semantics-deepening.md`](67-2020-2025-ocp-refresh-count-semantics-deepening.md).
 
 ```text
-OCP SMART-10
-    = integrity-maintenance block-reallocation accounting
-
-OCP background refresh
-    = whole-device powered-on coverage obligation
-
 counter increment
     != whole-device coverage completion
 ```
@@ -348,11 +317,11 @@ generic background-maintenance completion
     != retention-specific self-refresh completion
 ```
 
-unless a named product source explicitly binds the two.
+The Micron evidence now provides an independent named-product reason to keep those classes separate unless a source explicitly binds them.
 
 ### Case 150 — managed-SSD garbage collection
 
-Case 150 studies reclaim/erase scheduling and power-loss boundaries. eMMC BKOPS is useful only as functional prior art for host-visible managed-Flash maintenance scheduling.
+Functional comparison only:
 
 ```text
 eMMC BKOPS completion
@@ -361,11 +330,9 @@ eMMC BKOPS completion
     != M550 erase completion
 ```
 
-No eMMC→M550 genealogy is claimed.
-
 ### Case 20 — storage-interface shutdown state machines
 
-Power Off Notification is functionally comparable to other host/device shutdown handshakes because it separates host intent from device-side completion/readiness. No protocol genealogy is asserted here.
+Power Off Notification is functionally comparable to other host/device shutdown handshakes because it separates host intent from device-side completion/readiness. No protocol genealogy is asserted.
 
 ---
 
@@ -381,7 +348,9 @@ Safe source-level claims include:
 - IBM/Dell publish extended-shutdown procedures;
 - IBM ESS exposes a named scrub-completion message;
 - NetApp exposes rated-life/offline-retention policy;
-- JEDEC eMMC exposes BKOPS obligation/urgency, execution control, periodic wake-up, and separate power-off coordination.
+- JEDEC e.MMC exposes BKOPS obligation/urgency, execution control, periodic wake-up, and separate power-off coordination;
+- Micron industrial e.MMC Rev. F / Rev. I name `BKOPS control`, `Auto initiated refresh`, and `Host initiated refresh` separately;
+- Micron's public ECSD table exposes generic BKOPS fields but does not publicly label one as refresh-specific completion authority.
 
 ### Engineering reconstruction
 
@@ -393,11 +362,13 @@ Project terms include:
 - `maintenance admission`;
 - `maintenance activity/progress evidence`;
 - `maintenance completion evidence`;
+- `maintenance-class attribution`;
+- `retention-specific completion authority`;
 - `operator completion authority`;
 - `power-removal authority`;
 - `offline-retention admission`.
 
-These organize source relations; they are not retroactively attributed to Seagate, IBM, Dell, Lenovo, NetApp, JEDEC, OCP, or Linux developers.
+These organize source relations; they are not retroactively attributed to the vendors, JEDEC, OCP, or Linux developers.
 
 ### Functional analogy
 
@@ -405,9 +376,7 @@ Useful analogies compare where work is admitted, observed, preempted, scheduled,
 
 ### Philosophical interpretation
 
-A narrow permissible interpretation is that long-term availability can depend on maintenance obligations whose visibility and authority change across device, interface, system, and operator layers.
-
-Do not turn that into a claim that every powered interval is maintenance, every counter is proof, or every hidden background task is equivalent.
+A narrow permissible interpretation is that maintenance can be technically real, invocable, and still only partially observable at the public interface. Do not turn that into a universal claim that all firmware-local work is unknowable.
 
 ---
 
@@ -438,6 +407,12 @@ BKOPS_STATUS = 0
 BKOPS run complete
     != retention-refresh completion proved
 
+same product supports BKOPS + refresh
+    != BKOPS completion identifies refresh completion
+
+host-initiated refresh
+    != public whole-device coverage certificate
+
 PERIODIC_WAKEUP configured
     != required work already executed
 
@@ -463,16 +438,21 @@ same vendor/product family
 
 ### P1 — retention-specific device completion authority
 
-Find a first-party **named SSD/NVMe/SAS device** interface where a host-visible field is explicitly tied to completion or whole-device coverage of **retention refresh / data-retention maintenance itself**.
+Find a first-party **named SSD/NVMe/SAS/eMMC device** interface where a host-visible field is explicitly tied to completion or whole-device coverage of **retention refresh / data-retention maintenance itself**.
 
-The eMMC slice makes the evidentiary bar clearer:
+The evidentiary bar is now stronger:
 
 ```text
 generic background-work completion
     != retention-specific completion
+
+and
+
+same product naming BKOPS + refresh
+    != source-level binding between them
 ```
 
-A source must bind the visible completion evidence to the retention-maintenance obligation being claimed.
+A source must bind visible completion evidence to the retention-maintenance obligation being claimed.
 
 ### P2 — Dell affected-drive implementation mapping
 
@@ -482,13 +462,9 @@ Identify controller/firmware families under Dell article 000198930 and determine
 
 Find first-party engineering evidence explaining how maintenance time scales with capacity, used NAND, wear state, temperature history, and controller/background scheduling.
 
-Dell says larger capacities can require longer powered time; the implementation relation remains unresolved.
-
 ### P4 — earliest Dell publication floor
 
 Recover the first publication date/revision lineage of Dell article 000198930 before the surviving version-3 modification date.
-
-This is source chronology, not mechanism evidence.
 
 ### P5 — controlled device-level experiment
 
@@ -496,17 +472,19 @@ Where hardware is available, correlate power-on dwell, full-read sweep, maintena
 
 ### P6 — named commercial eMMC maintenance-class binding
 
-Find a first-party product manual in which a specific `BKOPS_STATUS` / completed BKOPS run is explicitly tied to a named hidden maintenance class such as retention refresh, reclamation, wear leveling, or bad-block management.
+**Partially sharpened, not closed.** The Micron industrial e.MMC family now proves that a named commercial product can publicly expose generic BKOPS and separately name host/auto refresh, while the public datasheet still does not bind `BKOPS_STATUS` or completed BKOPS to refresh completion.
 
-This is a product-interface question, not permission to infer every BKOPS implementation from JEDEC's generic maintenance contract.
+The remaining target is therefore narrower:
+
+> Find a first-party product manual, vendor command specification, or host-visible status/result definition that explicitly says a particular BKOPS terminal state, vendor status bit, progress field, or completion code corresponds to retention-refresh / data-refresh completion or coverage.
 
 ---
 
 ## Reuse boundary
 
-Fresh repository searches found no dedicated `BKOPS` packet in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) during this pass.
+Fresh companion searches found no dedicated Micron e.MMC refresh packet in [`tmzncty/computing-archaeology`](https://github.com/tmzncty/computing-archaeology) during this pass.
 
-Broader histories of SCSI Background Media Scan, SAS SSD diagnostics, eMMC/MMC standards evolution, JEDEC proposal/ballot history, Linux MMC host-stack evolution, mobile-storage product adoption, and eMMC→UFS maintenance interfaces belong primarily in `computing-archaeology` if pursued.
+Broader histories of Micron embedded-flash generations, eMMC/MMC standards evolution, JEDEC proposal/ballot history, Linux MMC host-stack evolution, product adoption, vendor-specific commands, and eMMC→UFS maintenance interfaces belong primarily in `computing-archaeology` if pursued.
 
 Case 111 should remain focused on retention qualification, powered maintenance, operator policy, observability, completion scope, and future-offline admission.
 
@@ -516,8 +494,6 @@ Case 111 should remain focused on retention qualification, powered maintenance, 
 
 **Case 111 remains `grounded`.**
 
-The new eMMC standards slice adds a strong generic maintenance-cadence/completion counterexample but does **not** satisfy the retention-specific device-completion requirement and therefore does not justify maturity promotion.
+The Micron product slice materially improves the product-level prior-art boundary: the same named product family publicly exposes both generic BKOPS and separately named refresh features, but the inspected public interface still does not establish retention-specific completion authority.
 
-The most valuable next evidence remains:
-
-> **a named first-party SSD/NVMe/SAS interface that explicitly tells the host when retention-specific maintenance or its whole-device coverage obligation is complete.**
+No maturity promotion is justified. The highest-value next evidence remains a named first-party host-visible terminal state or coverage indicator explicitly bound to retention refresh itself.
