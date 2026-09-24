@@ -246,11 +246,61 @@ This is a PCMCIA-style Linux software FTL over MTD Flash, not evidence for a mod
 
 The packet therefore closes the previous highest-priority **named FTL reusable-capacity admission** debt only in this bounded implementation form.
 
+
+---
+
+## Evidence chain 12 — PCMCIA/JEIDA duplicate-LogicalEUN recovery overlap
+
+**Packet:** [`04-pcmcia-1999-linux-2005-duplicate-logicaleun-recovery-boundary-deepening.md`](04-pcmcia-1999-linux-2005-duplicate-logicaleun-recovery-boundary-deepening.md)
+
+PCMCIA/JEIDA Release 7.0 Unit Recovery explicitly permits a bounded post-copy state in which two physical erase units carry the same logical designation and data after the destination has been promoted but before the old source is erased. Linux v2.6.12 `build_maps()` concretely collapses such a duplicate by scan order: the first valid in-range `LogicalEUN` becomes the data unit and a later duplicate becomes a transfer unit.
+
+This supports the bounded relation:
+
+```text
+duplicate physical designation
+    != necessarily conflicting logical versions
+
+destination promotion
+    != old embodiment already retired
+```
+
+The packet treats **embodiment-equivalence overlap** and **restart collapse authority** as repository engineering terms, not historical vocabulary. It does not generalize the standard's successful-copy case to arbitrary duplicate metadata or torn field programming.
+
+---
+
+## Evidence chain 13 — Linux v2.6.12 header-before-BAM restart admission
+
+**Packet:** [`04-linux-ftl-2005-header-before-bam-restart-admission-deepening.md`](04-linux-ftl-2005-header-before-bam-restart-admission-deepening.md)
+
+This packet resolves the source-level seam left open by chain 11.
+
+`prepare_xfer()` writes an FTL header with `LogicalEUN == FFFFh` before finishing the BAM control stub, while restart `build_maps()` can classify that header as `XFER_PREPARED` without reading the transfer-unit BAM. But source tracing shows that this does not expose the partial transfer-unit BAM as the live logical map:
+
+- `find_free()` allocates ordinary free blocks only from `EUNInfo[]` data units, not `XferInfo[]`;
+- `XFER_PREPARED` is consumed as a relocation destination by `reclaim_block()`;
+- `copy_erase_unit()` reads the source BAM, copies live blocks, writes a complete source-derived BAM to the destination, and only then promotes the destination from `7FFFh` to the source `LogicalEUN`.
+
+The resulting bounded relation is:
+
+```text
+restart role admission from FFFFh header
+    != proof BAM-stub preparation completed before crash
+
+but also
+
+partial pre-relocation BAM stub
+    != live logical-map publication
+```
+
+This closes the **software/control-path** header-before-BAM question. Lower-media torn-write, persistence-order, reprogramming legality, and named-card fault behavior remain open.
+
+
 ---
 
 ## Unified evidence model
 
-The eleven chains now support a more complete transition model without pretending every historical implementation contained every layer:
+The thirteen chains now support a more complete transition model without pretending every historical implementation contained every layer:
 
 ```text
 logical address / object
@@ -445,7 +495,7 @@ Case 04 remains `grounded`. The previous highest-priority debt — a named FTL i
 
 Highest-value remaining work is now:
 
-1. **Linux FTL cut-point fault trace** — interrupt around asynchronous erase completion, FTL-header write, BAM-stub write, and the next reclaim cycle; observe restart classification and whether `build_maps()` ever admits an incompletely prepared transfer unit.
+1. **Linux FTL lower-media cut-point fault trace** — chain 13 closes the software/control-path meaning of a clean durable `FFFFh` header plus incomplete BAM stub. Remaining work is physical: inject reset/power loss around EUH programming, partial `30h` BAM-entry programming, source-derived BAM reconstruction, and post-BAM/pre-`LogicalEUN` promotion; distinguish readable durable markers from torn/unreadable fields and device-level program failures.
 2. **Erase-failure fault trace** — capture `BUSY/ERASING -> failure -> retirement/non-admission` end to end on a named raw-Flash/controller path.
 3. **Interrupted/no-verdict vs completed/FAIL** — show how one named controller distinguishes power-loss ambiguity from an explicit negative completion verdict.
 4. **Bad-block retirement durability** — determine when a newly developed bad-block record becomes crash-durable and how torn retirement metadata is recovered.
@@ -463,17 +513,22 @@ Highest-value remaining work is now:
 
 ## Navigation / coverage note
 
-This index now routes eleven Case-04 evidence chains. The latest addition is the released Linux v2.6.12 FTL source-level path:
+This index now routes thirteen Case-04 evidence chains. The latest additions extend the released Linux v2.6.12 / PCMCIA path through both relocation overlap and restart admission:
 
 ```text
 MTD erase completion
     -> XFER_ERASED
-    -> FTL metadata preparation
+    -> EUH/BAM preparation
     -> XFER_PREPARED
-    -> relocation admission
+    -> restart may recover transfer role from FFFFh header
+    -> source-derived BAM reconstruction
+    -> 7FFFh recovery-in-progress state
+    -> destination LogicalEUN promotion
+    -> bounded duplicate-embodiment overlap
+    -> old embodiment retirement
 ```
 
-It replaces the earlier generic `erase pass != allocator free-pool insertion` debt with a narrower set of fault-injection and modern-controller questions.
+This replaces the earlier generic `header-before-BAM -> unknown safety` debt with lower-media torn-write/program-order testing, while keeping transfer-role admission separate from live logical-map publication.
 
 No maturity promotion follows from this navigation update.
 
