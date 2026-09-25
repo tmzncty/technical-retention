@@ -1,6 +1,6 @@
 # Case 111 navigation addendum — NVMe Host-Initiated Refresh
 
-Case 111 remains **grounded**. This addendum routes the standards-level HIR observability and terminal-outcome slices without changing the repository-wide maturity ledger.
+Case 111 remains **grounded**. This addendum routes the standards-level HIR observability, terminal-outcome, product-adoption, and reset-contract comparison slices without changing the repository-wide maturity ledger.
 
 ## Evidence
 
@@ -23,10 +23,19 @@ Case 111 remains **grounded**. This addendum routes the standards-level HIR obse
    - rejects `NVMe 2.1 + Device Self-test = HIR implemented`;
    - treats absence from a marketing feature list as insufficient to prove implementation absence.
 
+4. [Case 111 / Case 148 Device Self-test reset-contract divergence](111-148-nvme-dst-reset-contract-divergence-deepening.md)
+   - compares short DST, extended DST, and HIR inside the shared Device Self-test framework;
+   - records short DST reset-abort versus extended DST reset/power-restoration resume;
+   - records HIR abort on a Controller Level Reset affecting the performing controller, while a reset on another controller does not impact that HIR;
+   - rejects `same Device Self-test command/log family = same persistence horizon`;
+   - introduces `operation-coded persistence contract` only as project engineering vocabulary.
+
 ## Read with
 
 - [Case 111 evidence index](111-enterprise-ssd-extended-shutdown-evidence-index.md)
-- [Micron industrial eMMC refresh-vs-BKOPS boundary](111-micron-2023-2025-industrial-emmc-refresh-vs-bkops-boundary-deepening.md)
+- [Case 111 / Case 148 reset-contract navigation](111-148-nvme-dst-reset-contract-divergence-navigation.md)
+- [Case 148 named Device Self-test reset-conformance witness](148-ulink-2026-lexar-dst-controller-reset-conformance-deepening.md)
+- [Micron industrial eMMC refresh-vs-BKOPS boundary](111-micron-2023-2025-industrial-emmc-refresh-vs-bkops-completion-boundary-deepening.md)
 - [Alliance Memory Auto Read Refresh boundary](111-alliance-2023-auto-read-refresh-vs-bkops-completion-boundary-deepening.md)
 
 ## Updated bounded model
@@ -53,16 +62,24 @@ terminal result
     != exact internal refresh trajectory
     != future offline-retention guarantee
 
+same Device Self-test command/log family
+    != same reset/power continuity contract
+
+extended DST reset/power resume
+    != HIR reset resume
+
 standards-defined HIR
     != named commercial implementation
 ```
 
 ## Debt update
 
-The standards-level questions “can refresh-specific progress be public?” and “can a HIR episode have a refresh-specific terminal outcome distinct from command completion?” are now boundedly closed.
+The standards-level questions “can refresh-specific progress be public?”, “can a HIR episode have a refresh-specific terminal outcome distinct from command completion?”, and “does the shared Device Self-test framework imply one common reset-persistence model?” are now boundedly closed.
 
 Case-111 P1 should next target **named product adoption**: a first-party shipping SSD/NVMe product or strong named-device record that advertises HIR and exposes `RHIRI`, `HIRT`, current progress, and terminal result behavior. A real device trace through successful completion and at least one interruption/reset path would be stronger still.
 
 The PBlaze7 guardrail sharpens this target: **NVMe 2.1 conformance, Advanced Device Self-Test, and a power-off-retention rating are still insufficient to attribute optional HIR to a named product.** Require explicit HIR naming, Identify Controller evidence, a named conformance artifact, or a device trace.
 
-Fresh companion searches for `Host-Initiated Refresh`, `TP4058`, and `Device Self-test refresh` found no dedicated packet in `tmzncty/computing-archaeology`; broad NVMe feature genealogy and product-adoption history remain routed there.
+Case 148 retains a separate implementation debt: the public extended-DST contract requires operation continuity across reset/power restoration, but the exact hidden checkpoint/reconstitution embodiment remains undisclosed.
+
+Fresh companion searches for `Host-Initiated Refresh`, `TP4058`, `Device Self-test reset Host-Initiated Refresh`, and `NVMe extended self-test reset` found no dedicated packet in `tmzncty/computing-archaeology`; broad NVMe feature/Device-Self-test genealogy and product-adoption history remain routed there.
