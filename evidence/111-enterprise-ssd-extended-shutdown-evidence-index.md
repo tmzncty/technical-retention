@@ -219,6 +219,75 @@ host can initiate refresh
 
 Rev. F also placed explicit retention values on the feature page (1 year at 55°C at maximum PE; 2 years at 55°C at 10% of maximum PE). Rev. I says those retention values were removed from Features while keeping refresh features documented. Treat that as documentation lineage, not a physical-behavior transition.
 
+### 11. Alliance Memory industrial eMMC — Auto Read Refresh versus generic BKOPS
+
+[`111-alliance-2023-auto-read-refresh-vs-bkops-completion-boundary-deepening.md`](111-alliance-2023-auto-read-refresh-vs-bkops-completion-boundary-deepening.md)
+
+**Role:** independent named-product witness that retention-targeted refresh can coexist with generic BKOPS without a public refresh-specific completion binding.
+
+```text
+Auto Read Refresh exists
+    != BKOPS completion identifies Auto Read Refresh completion
+
+interruptible refresh work
+    != whole-device refresh coverage proved
+```
+
+### 12. NVMe 2.1 HIR — refresh-specific scheduling, progress, and scope
+
+[`111-nvme21-2024-host-initiated-refresh-progress-completion-deepening.md`](111-nvme21-2024-host-initiated-refresh-progress-completion-deepening.md)
+
+**Role:** standards-level proof that a public interface can expose refresh-specific scheduling and live progress.
+
+```text
+RHIRI
+    -> recommended scheduling horizon
+
+HIRT
+    -> nominal duration
+
+Current Percentage Complete
+    -> live HIR progress
+```
+
+The standards capability is optional and does not itself establish adoption by any named SSD.
+
+### 13. NVMe 2.1/2.2 HIR — terminal outcome and reset boundary
+
+[`111-nvme21-22-hir-terminal-outcome-reset-boundary-deepening.md`](111-nvme21-22-hir-terminal-outcome-reset-boundary-deepening.md)
+
+**Role:** separates command acceptance, live maintenance work, terminal result, and restartability.
+
+```text
+Device Self-test command completion
+    != HIR operation completion
+
+Controller Level Reset
+    -> aborted HIR episode + result record
+    != exact-progress resume
+```
+
+### 14. Memblaze PBlaze7 — NVMe 2.1 product-adoption guardrail
+
+[`111-memblaze-pblaze7-nvme21-hir-adoption-guardrail-deepening.md`](111-memblaze-pblaze7-nvme21-hir-adoption-guardrail-deepening.md)
+
+**Role:** named-product source-strength counterexample to inferring optional HIR from a protocol-revision label or generic Device Self-test support.
+
+Memblaze's dated 3-Sep-2024 PBlaze7 7A40 launch record advertises NVMe 2.0, while the current product page retrieved 25-Sep-2026 advertises NVMe 2.1, Advanced Device Self-Test, and three-month / 40°C power-off retention. The inspected current feature list does not explicitly name HIR, `RHIRI`, or `HIRT`.
+
+```text
+NVMe 2.1 compliance
+    + Advanced Device Self-Test
+    + power-off retention rating
+    != named-product HIR adoption proved
+
+absence from a marketing feature list
+    != implementation absence proved
+
+current conformance label
+    != launch-day conformance label
+```
+
 ---
 
 ## Unified evidence model
@@ -430,6 +499,15 @@ no scheduled preventive maintenance
 
 same vendor/product family
     != same firmware mechanism
+
+NVMe 2.1 compliance
+    != optional HIR adoption proved
+
+Advanced Device Self-Test
+    != HIR support proved
+
+current product-page protocol label
+    != launch-day protocol label
 ```
 
 ---
@@ -450,6 +528,11 @@ and
 
 same product naming BKOPS + refresh
     != source-level binding between them
+
+and
+
+NVMe 2.1 + Device Self-test support
+    != named-product HIR adoption
 ```
 
 A source must bind visible completion evidence to the retention-maintenance obligation being claimed.
@@ -494,6 +577,6 @@ Case 111 should remain focused on retention qualification, powered maintenance, 
 
 **Case 111 remains `grounded`.**
 
-The Micron product slice materially improves the product-level prior-art boundary: the same named product family publicly exposes both generic BKOPS and separately named refresh features, but the inspected public interface still does not establish retention-specific completion authority.
+The Micron and Alliance product slices establish that named eMMC products can explicitly name refresh while leaving generic-BKOPS completion insufficient as refresh-completion authority. The NVMe 2.1/2.2 slices independently establish a standards-level refresh-specific progress and terminal-result surface. The PBlaze7 product guardrail then prevents overreach in the other direction: a named NVMe-2.1 product page plus Advanced Device Self-Test and a retention rating still does not prove optional HIR adoption.
 
-No maturity promotion is justified. The highest-value next evidence remains a named first-party host-visible terminal state or coverage indicator explicitly bound to retention refresh itself.
+No maturity promotion is justified. The highest-value next evidence remains a first-party named SSD/NVMe implementation that explicitly advertises HIR or exposes the HIR support indication, `RHIRI`/`HIRT`, progress, and terminal-result behavior.
